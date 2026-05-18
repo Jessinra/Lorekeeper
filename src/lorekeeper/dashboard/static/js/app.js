@@ -19,6 +19,7 @@ import {
 } from './links.js';
 import { runQuery, registerQuerySelectMemory } from './query.js';
 import { loadConfig, saveConfig, onCfgChange } from './config.js';
+import { loadRuns } from './runs.js';
 
 // ── Wire cross-module callbacks to break circular deps ──
 
@@ -26,6 +27,7 @@ import { loadConfig, saveConfig, onCfgChange } from './config.js';
 registerTabCallbacks({
   onTabLinks:  loadLinks,
   onTabConfig: loadConfig,
+  onTabRuns:   loadRuns,
 });
 
 // detail.js needs loadMemories, renderList, loadLinks

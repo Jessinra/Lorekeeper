@@ -1,3 +1,5 @@
+import json
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -13,6 +15,9 @@ from lorekeeper.server import get_service, init_service
 
 log = structlog.get_logger()
 STATIC_DIR = Path(__file__).parent / "static"
+# Project root: src/lorekeeper/dashboard/app.py → 4 levels up
+_PROJECT_DIR = Path(os.environ.get("LORE_PROJECT_DIR", str(Path(__file__).resolve().parent.parent.parent.parent)))
+_RUN_LOG = _PROJECT_DIR / "loop" / "run_log.jsonl"
 
 
 @asynccontextmanager
@@ -208,6 +213,24 @@ def update_config(body: ConfigUpdate) -> dict[str, bool]:
         if key not in _READONLY_KEYS:
             setattr(s, key, value)
     return {"ok": True}
+
+
+@app.get("/api/runs")
+def list_runs(limit: int = 50) -> list[dict[str, Any]]:
+    if not _RUN_LOG.exists():
+        return []
+    runs: list[dict[str, Any]] = []
+    for line in reversed(_RUN_LOG.read_text().splitlines()):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            runs.append(json.loads(line))
+        except json.JSONDecodeError as exc:
+            log.warning("run_log_parse_error", line=line[:80], error=str(exc))
+        if len(runs) >= limit:
+            break
+    return runs
 
 
 @app.post("/api/search")

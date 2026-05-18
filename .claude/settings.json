@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run *)",
+      "Bash(curl -s http://localhost:7777/api/memories?include_deleted=false)",
+      "Bash(python3 -c \"import sys, json; d=json.load\\(sys.stdin\\); print\\(f'OK: {len\\(d\\)} memories'\\)\")",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(git commit:*)",
+      "Bash(git branch *)",
+      "Bash(cat)",
+      "Bash(chmod +x /tmp/git-rebase-sequence.sh)",
+      "Bash(git remote *)",
+      "Bash(git push *)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "find \"$(git -C \"$(dirname \"$0\")\" rev-parse --show-toplevel 2>/dev/null || echo .)\" -maxdepth 1 -name '*.skill' -delete"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -20,6 +20,7 @@
   <button class="tab"        onclick="switchTab('detail')">Detail</button>
   <button class="tab"        onclick="switchTab('links')">Links</button>
   <button class="tab"        onclick="switchTab('query')">Query</button>
+  <button class="tab"        onclick="switchTab('runs')">Runs</button>
   <button class="tab"        onclick="switchTab('config')">Config</button>
 </nav>
 
@@ -124,6 +125,42 @@
     </div>
   </div>
   <div id="query-results"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     Tab: Runs
+═════════════════════════════════════════════════════ -->
+<div id="tab-runs" class="tab-pane">
+  <div class="panel-controls">
+    <span class="item-count" id="runs-status"></span>
+    <span class="panel-divider"></span>
+    <button class="btn-ghost btn-sm" onclick="loadRuns(true)" title="Refresh">↺</button>
+  </div>
+  <div class="metrics-strip">
+    <div class="metric-item"><span class="metric-value" id="run-met-total">—</span><span class="metric-label">runs</span></div>
+    <div class="metric-sep"></div>
+    <div class="metric-item"><span class="metric-value" id="run-met-inserted">—</span><span class="metric-label">memories added</span></div>
+    <div class="metric-sep"></div>
+    <div class="metric-item"><span class="metric-value" id="run-met-updated">—</span><span class="metric-label">updated</span></div>
+    <div class="metric-sep"></div>
+    <div class="metric-item"><span class="metric-value" id="run-met-last">—</span><span class="metric-label">last run</span></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>When / trigger</th>
+          <th class="col-num">New logs</th>
+          <th class="col-num">Skipped</th>
+          <th class="col-num">Inserted</th>
+          <th class="col-num">Updated</th>
+          <th class="col-num">Deleted</th>
+          <th>Topics</th>
+        </tr>
+      </thead>
+      <tbody id="run-rows"></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════

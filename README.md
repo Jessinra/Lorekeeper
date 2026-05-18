@@ -274,7 +274,7 @@ uv run lorekeeper-dashboard
 
 Hot-reload is **on by default** — Python file changes restart the server automatically. Disable with `LORE_DASH_RELOAD=0`. HTML edits are instant without restart (served fresh from disk on every request, just refresh the browser).
 
-The UI has four tabs:
+The UI has five tabs:
 
 | Tab | Purpose |
 |-----|---------|
@@ -282,6 +282,7 @@ The UI has four tabs:
 | **Detail** | Edit a memory's title/description/content/score, soft-delete/restore, hard-delete, manage links. |
 | **Links** | Flat sortable table of all links with source → relation → target. Click titles to navigate to that memory. |
 | **Query** | Large text box for ad-hoc search. Shows combined/semantic/keyword scores and a relevance bar per result. |
+| **Runs** | History of `/recap-sessions` runs. Shows date, trigger (manual/cron), sessions processed, memories inserted/updated/soft-deleted. Click a row to expand the memory list for that run. |
 
 ### API endpoints
 
@@ -295,6 +296,7 @@ The UI has four tabs:
 | `POST` | `/api/links` | Create a link between two memories |
 | `DELETE` | `/api/links/{id}` | Delete a link |
 | `POST` | `/api/search` | Search with `{ query, limit, min_score }` |
+| `GET` | `/api/runs` | List `/recap-sessions` run history from `loop/run_log.jsonl` (`?limit=50`) |
 
 The dashboard connects to the same SQLite + ChromaDB store as the MCP server. Both can technically run at the same time (SQLite WAL mode supports concurrent readers/writers), but the in-memory BM25 index in each process won't see the other's inserts until restart.
 
@@ -344,14 +346,22 @@ src/lorekeeper/
 
 ## Agentic loop
 
-This repo also demonstrates a self-improving agent pattern. Every session leaves a log in `loop/sessions/`. Periodically, `/recap-sessions` and `/lorekeeper-reconcile` consolidate those logs into CLAUDE.md updates and Lorekeeper memories — so the agent gets smarter over time without manual curation.
+This repo also demonstrates a self-improving agent pattern. Every session leaves a log in `loop/sessions/`. `/recap-sessions` processes those transcripts, extracts learnings into Lorekeeper, and writes a run summary to `loop/run_log.jsonl` — visible in the dashboard's **Runs** tab.
 
 ```
-Session ends → loop/hooks/post_session.sh writes stub to loop/sessions/
-                           ↓
-              /recap-sessions generates full recap from transcript
-                           ↓
-         /lorekeeper-reconcile extracts learnings → lore_insert
-                           ↓
-              Proposed CLAUDE.md diffs → git commit (auditable)
+/recap-sessions (manual or daily cron at 09:00 via launchd)
+    ↓
+Scans ~/.claude/projects/.../*.jsonl for unrecorded sessions
+    ↓
+Writes session logs to loop/sessions/YYYY-MM-DD-{topic}.md
+    ↓
+Updates Lorekeeper: lore_insert/update + feedback on existing memories
+    ↓
+Appends run summary to loop/run_log.jsonl → visible in dashboard Runs tab
+```
+
+To schedule daily runs via crontab (runs at 09:30):
+
+```bash
+(crontab -l 2>/dev/null; echo "30 9 * * * LORE_RECAP_TRIGGER=cron /Users/jessin.donnyson/.local/bin/claude --print '/recap-sessions' >> /tmp/recap-sessions.log 2>&1") | crontab -
 ```
