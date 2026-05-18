@@ -1,0 +1,266 @@
+// ── Detail tab ──
+import { api, showToast }      from './api.js';
+import * as state              from './state.js';
+import { esc, scoreClass, fmt2, fmtDate, isToday } from './utils.js';
+import { switchTab }           from './tab.js';
+
+// Cross-module callbacks — wired by app.js to break circular deps.
+let _loadMemories    = async () => {};
+let _renderList      = () => {};
+let _loadLinks       = async () => {};
+
+export function registerDetailCallbacks({ loadMemories, renderList, loadLinks }) {
+  _loadMemories = loadMemories;
+  _renderList   = renderList;
+  _loadLinks    = loadLinks;
+}
+
+export async function selectMemory(id) {
+  state.setSelectedId(id);
+  state.setDetailEditMode(false);
+  switchTab('detail');
+  _renderList();
+
+  let data;
+  try { data = await api('GET', `/api/memories/${id}`); }
+  catch (e) { showToast(e.message, 'error'); return; }
+
+  state.setDetailData(data);
+  _renderDetail(data, false);
+}
+
+export function enterEditMode()  { state.setDetailEditMode(true);  _renderDetail(state.detailData, true);  }
+export function cancelEditMode() { state.setDetailEditMode(false); _renderDetail(state.detailData, false); }
+
+export function _renderDetail(data, editMode) {
+  document.getElementById('detail-placeholder').classList.add('hidden');
+  document.getElementById('detail-page').classList.remove('hidden');
+  document.getElementById('tab-detail').scrollTop = 0;
+
+  const m     = data.memory;
+  const links = data.links;
+  const conf  = m.confidence != null ? fmt2(m.confidence) : '—';
+
+  const headerActions = editMode
+    ? ''
+    : `<button class="btn-secondary btn-sm" onclick="enterEditMode()">Edit</button>`;
+
+  // Returns a field-group cell. In edit mode renders editHTML; in view mode renders viewHTML.
+  const field = (label, viewHTML, editHTML, spanClass = '') =>
+    `<div class="field-group${spanClass ? ' ' + spanClass : ''}">
+      <label>${label}</label>
+      ${editMode ? editHTML : viewHTML}
+    </div>`;
+
+  const bodyHTML = `
+    <div class="detail-grid">
+      ${editMode ? field('Title',
+        `<div class="field-value fv-prominent">${esc(m.title)}</div>`,
+        `<input type="text" id="d-title" value="${esc(m.title)}">`,
+        'span-2') : ''}
+      ${field('Description',
+        m.description
+          ? `<div class="field-value fv-secondary">${esc(m.description)}</div>`
+          : `<div class="field-value fv-empty">—</div>`,
+        `<input type="text" id="d-description" value="${esc(m.description ?? '')}">`,
+        'span-2')}
+      ${field('Content',
+        `<div class="field-value fv-content">${esc(m.content)}</div>`,
+        `<textarea id="d-content" rows="8">${esc(m.content)}</textarea>`,
+        'span-2')}
+      ${field('Score',
+        `<div class="field-value"><span class="score-badge ${scoreClass(m.score)}">${fmt2(m.score)}</span></div>`,
+        `<input type="number" id="d-score" value="${fmt2(m.score)}" min="0" max="10" step="0.01">`)}
+      ${field('Confidence / Samples',
+        `<div class="field-value">${conf} / ${m.confidence_count}</div>`,
+        `<div class="field-value">${conf} / ${m.confidence_count}</div>`)}
+      ${field('Usage count',
+        `<div class="field-value">${m.usage_count}</div>`,
+        `<div class="field-value">${m.usage_count}</div>`)}
+      ${field('Status',
+        `<div class="field-value">${m.soft_deleted ? '<span class="badge badge-deleted">soft deleted</span>' : 'Active'}</div>`,
+        `<div class="field-value">${m.soft_deleted ? '<span class="badge badge-deleted">soft deleted</span>' : 'Active'}</div>`)}
+      ${field('Updated',
+        `<div class="field-value">${fmtDate(m.updated_at)}</div>`,
+        `<div class="field-value">${fmtDate(m.updated_at)}</div>`)}
+      ${field('Created',
+        `<div class="field-value">${fmtDate(m.created_at)}</div>`,
+        `<div class="field-value">${fmtDate(m.created_at)}</div>`)}
+    </div>
+    ${editMode ? `
+    <div class="action-bar">
+      <button class="btn-primary" onclick="saveMemory('${m.id}')">Save</button>
+      <button class="btn-secondary" onclick="cancelEditMode()">Cancel</button>
+      <span style="flex:1"></span>
+      <button class="btn-warning" onclick="toggleSoftDelete('${m.id}', ${!!m.soft_deleted})">
+        ${m.soft_deleted ? 'Restore' : 'Soft Delete'}
+      </button>
+      <button class="btn-danger" onclick="confirmDelete('${m.id}')">Hard Delete</button>
+    </div>
+    ` : ''}
+  `;
+
+  const linksHTML = `
+    <div class="links-section">
+      <div class="links-section-header">
+        <span class="links-section-title">Links</span>
+        ${links.length > 0 ? `<span class="links-total-count">${links.length}</span>` : ''}
+      </div>
+      ${_renderGroupedLinks(links, m.id)}
+      <div class="add-link-form">
+        <h4>Add Link</h4>
+        <div class="add-link-row">
+          <select id="link-target">
+            <option value="">Target memory…</option>
+            ${state.allMemories.filter(x => x.id !== m.id).map(x =>
+              `<option value="${x.id}">${esc(x.title.slice(0, 70))}</option>`
+            ).join('')}
+          </select>
+          <select id="link-relation">
+            <option value="related_to">related_to</option>
+            <option value="used_in">used_in</option>
+            <option value="used_for">used_for</option>
+            <option value="used_by">used_by</option>
+            <option value="used_as">used_as</option>
+          </select>
+        </div>
+        <textarea id="link-reason" placeholder="Reason for this link…" rows="2"></textarea>
+        <button class="btn-primary btn-sm" onclick="submitAddLink('${m.id}')">Add Link</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-header">
+      <button class="btn-ghost btn-sm" onclick="switchTab('memories')">← Back</button>
+      <h2>${isToday(m.created_at) ? '<span class="new-dot"></span>' : ''}${esc(m.title)}</h2>
+      <span class="id-badge" title="Click to copy ID" onclick="copyId('${m.id}')">${m.id.slice(0, 8)}…</span>
+      ${headerActions}
+    </div>
+    ${bodyHTML}
+    ${linksHTML}
+  `;
+}
+
+function _renderGroupedLinks(links, memoryId) {
+  if (links.length === 0) return '<div class="no-links">No links yet.</div>';
+
+  const groups = {};
+  for (const link of links) {
+    const rt = link.relation_type;
+    if (!groups[rt]) groups[rt] = [];
+    groups[rt].push(link);
+  }
+
+  return Object.entries(groups).map(([relType, groupLinks]) => `
+    <details class="link-group">
+      <summary>
+        <span class="link-group-chevron">›</span>
+        <span class="relation-badge link-group-label">${esc(relType)}</span>
+        <span class="link-group-count">${groupLinks.length}</span>
+      </summary>
+      <div class="link-group-items">
+        ${groupLinks.map(l => renderLinkItem(l, memoryId)).join('')}
+      </div>
+    </details>
+  `).join('');
+}
+
+export function renderLinkItem(link, currentId) {
+  const isSource   = link.source_memory_id === currentId;
+  const otherId    = isSource ? link.target_memory_id : link.source_memory_id;
+  const other      = state.allMemories.find(m => m.id === otherId);
+  const otherTitle = other ? other.title : otherId.slice(0, 12) + '…';
+  const reason     = (link.reason || '').slice(0, 120);
+  return `
+    <div class="link-item">
+      <span class="link-direction">${isSource ? '→' : '←'}</span>
+      <span class="link-target" onclick="selectMemory('${otherId}')" title="${esc(otherTitle)}">${esc(otherTitle)}</span>
+      <button class="btn-sm btn-danger link-del-btn" onclick="deleteLink('${link.id}','${currentId}')">×</button>
+      ${reason ? `<span class="link-reason">${esc(reason)}</span>` : ''}
+    </div>`;
+}
+
+// ── Memory CRUD ──
+
+export async function saveMemory(id) {
+  const body = {
+    title:       document.getElementById('d-title').value,
+    description: document.getElementById('d-description').value,
+    content:     document.getElementById('d-content').value,
+    score:       parseFloat(document.getElementById('d-score').value),
+  };
+  try {
+    await api('PATCH', `/api/memories/${id}`, body);
+    showToast('Saved');
+    state.setDetailEditMode(false);
+    await _loadMemories();
+    selectMemory(id);
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+export async function toggleSoftDelete(id, current) {
+  try {
+    await api('PATCH', `/api/memories/${id}`, { soft_deleted: !current });
+    showToast(current ? 'Restored' : 'Soft deleted');
+    await _loadMemories();
+    selectMemory(id);
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+export async function confirmDelete(id) {
+  if (!confirm('Hard-delete this memory and all its links? This cannot be undone.')) return;
+  try {
+    await api('DELETE', `/api/memories/${id}`);
+    showToast('Deleted');
+    state.setSelectedId(null);
+    document.getElementById('detail-placeholder').classList.remove('hidden');
+    document.getElementById('detail-page').classList.add('hidden');
+    await _loadMemories();
+    if (state.linksLoaded) _loadLinks();
+    switchTab('memories');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+export async function deleteLink(linkId, memoryId) {
+  try {
+    await api('DELETE', `/api/links/${linkId}`);
+    if (state.linksLoaded) _loadLinks();
+    selectMemory(memoryId);
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+export async function submitAddLink(sourceId) {
+  const targetId = document.getElementById('link-target').value;
+  const relation = document.getElementById('link-relation').value;
+  const reason   = (document.getElementById('link-reason').value || '').trim();
+  if (!targetId) { showToast('Select a target memory', 'error'); return; }
+  if (!reason)   { showToast('Enter a reason for the link', 'error'); return; }
+  try {
+    await api('POST', '/api/links', {
+      source_memory_id: sourceId,
+      target_memory_id: targetId,
+      relation_type:    relation,
+      reason,
+    });
+    showToast('Link added');
+    if (state.linksLoaded) _loadLinks();
+    selectMemory(sourceId);
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+export async function copyId(id) {
+  await navigator.clipboard.writeText(id);
+  showToast('ID copied');
+}
+
+// Expose onclick targets on window
+window.selectMemory    = selectMemory;
+window.enterEditMode   = enterEditMode;
+window.cancelEditMode  = cancelEditMode;
+window.saveMemory      = saveMemory;
+window.toggleSoftDelete = toggleSoftDelete;
+window.confirmDelete   = confirmDelete;
+window.deleteLink      = deleteLink;
+window.submitAddLink   = submitAddLink;
+window.copyId          = copyId;

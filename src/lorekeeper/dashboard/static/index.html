@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lorekeeper</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <h1><span>Lore</span>keeper</h1>
+  <span class="header-meta" id="header-meta"></span>
+</header>
+
+<!-- ── Tab bar ── -->
+<nav class="tab-bar">
+  <button class="tab active" onclick="switchTab('memories')">Memories</button>
+  <button class="tab"        onclick="switchTab('detail')">Detail</button>
+  <button class="tab"        onclick="switchTab('links')">Links</button>
+  <button class="tab"        onclick="switchTab('query')">Query</button>
+  <button class="tab"        onclick="switchTab('config')">Config</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════
+     Tab: Memories
+═════════════════════════════════════════════════════ -->
+<div id="tab-memories" class="tab-pane active">
+  <div class="panel-controls">
+    <div class="filter-wrap">
+      <input type="text" id="mem-filter" class="filter-input" placeholder="Filter… (/ to focus, Esc to clear)"
+             oninput="onFilterInput()">
+      <button id="mem-filter-clear" class="filter-clear hidden" onclick="clearFilter()">×</button>
+    </div>
+    <div class="time-filter-group">
+      <button class="time-filter-btn active" data-days="" onclick="setTimeFilter(this, '')">All</button>
+      <button class="time-filter-btn" data-days="0" onclick="setTimeFilter(this, 0)">Today</button>
+      <button class="time-filter-btn" data-days="3" onclick="setTimeFilter(this, 3)">3d</button>
+      <button class="time-filter-btn" data-days="7" onclick="setTimeFilter(this, 7)">1w</button>
+    </div>
+    <span class="item-count" id="memory-count"></span>
+    <span class="panel-divider"></span>
+    <button id="btn-show-deleted" class="btn-secondary btn-sm" onclick="toggleShowDeleted()">Show deleted</button>
+    <button class="btn-ghost btn-sm" onclick="loadMemories()" title="Refresh">↺</button>
+  </div>
+  <div class="metrics-strip">
+    <div class="metric-item"><span class="metric-value" id="met-total">—</span><span class="metric-label">memories</span></div>
+    <div class="metric-sep"></div>
+    <div class="metric-item"><span class="metric-value" id="met-avg">—</span><span class="metric-label">avg score</span></div>
+    <div class="metric-sep"></div>
+    <div class="metric-item"><span class="metric-value" id="met-uses">—</span><span class="metric-label">total uses</span></div>
+    <div class="metric-sep"></div>
+    <div class="metric-item"><span class="metric-value" id="met-updated">—</span><span class="metric-label">last updated</span></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-status"></th>
+          <th class="sortable"           onclick="setMemSort('title')"       id="th-title">Title <span class="sort-arrow"></span></th>
+          <th class="sortable col-score" onclick="setMemSort('score')"       id="th-score">Score <span class="sort-arrow">↓</span></th>
+          <th class="sortable col-conf"  onclick="setMemSort('confidence')"  id="th-confidence">Conf <span class="sort-arrow"></span></th>
+          <th class="sortable col-usage" onclick="setMemSort('usage_count')" id="th-usage_count">Uses <span class="sort-arrow"></span></th>
+          <th class="sortable col-links" onclick="setMemSort('link_count')"  id="th-link_count">Links <span class="sort-arrow"></span></th>
+          <th class="sortable col-date"  onclick="setMemSort('updated_at')"  id="th-updated_at">Date <span class="sort-arrow">↓</span></th>
+        </tr>
+      </thead>
+      <tbody id="memory-rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     Tab: Detail
+═════════════════════════════════════════════════════ -->
+<div id="tab-detail" class="tab-pane">
+  <div id="detail-placeholder">
+    <span>Select a memory from the Memories tab</span>
+    <button class="btn-secondary btn-sm" onclick="switchTab('memories')">← Memories</button>
+  </div>
+  <div id="detail-page" class="detail-page hidden">
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     Tab: Links
+═════════════════════════════════════════════════════ -->
+<div id="tab-links" class="tab-pane">
+  <div class="panel-controls">
+    <label><input type="checkbox" id="links-show-deleted" onchange="loadLinks()"> Include deleted memories</label>
+    <span class="item-count" id="links-count"></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable"           onclick="setLinkSort('source_title')"  id="lth-source_title">Source <span class="sort-arrow"></span></th>
+          <th class="sortable"           onclick="setLinkSort('relation_type')" id="lth-relation_type">Relation <span class="sort-arrow"></span></th>
+          <th class="sortable"           onclick="setLinkSort('target_title')"  id="lth-target_title">Target <span class="sort-arrow"></span></th>
+          <th class="col-reason">Reason</th>
+          <th class="sortable col-score" onclick="setLinkSort('score')"         id="lth-score">Score <span class="sort-arrow">↓</span></th>
+          <th class="sortable col-usage" onclick="setLinkSort('usage_count')"   id="lth-usage_count">Uses <span class="sort-arrow"></span></th>
+          <th class="col-actions"></th>
+        </tr>
+      </thead>
+      <tbody id="link-rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     Tab: Query
+═════════════════════════════════════════════════════ -->
+<div id="tab-query" class="tab-pane">
+  <div class="query-form">
+    <textarea id="q-text" rows="4" placeholder="Search query… (Cmd/Ctrl+Enter to search)"></textarea>
+    <div class="query-params">
+      <label>Limit <input type="number" id="q-limit" value="10" min="1" max="50"></label>
+      <label>Min score <input type="number" id="q-min" value="0.10" min="0" max="1" step="0.05"></label>
+      <label><input type="checkbox" id="q-deleted"> Include deleted</label>
+      <button class="btn-primary" onclick="runQuery()">Search</button>
+    </div>
+  </div>
+  <div id="query-results"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     Tab: Config
+═════════════════════════════════════════════════════ -->
+<div id="tab-config" class="tab-pane">
+  <div class="config-page">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;flex-wrap:wrap">
+      <div style="flex:1">
+        <h2>Configuration</h2>
+        <p style="font-size:13px;color:var(--subtle);margin-top:3px">Live settings for this session. Changes apply immediately but reset on restart. Set <code style="font-size:11px;background:#f3f4f6;padding:1px 5px;border-radius:3px">LORE_*</code> env vars to persist.</p>
+      </div>
+      <button class="btn-secondary btn-sm" onclick="loadConfig()" title="Refresh">↺</button>
+    </div>
+
+    <div class="config-section">
+      <div class="config-section-title">Search weights <span style="font-weight:400;text-transform:none;letter-spacing:0">(must sum to 1.0)</span></div>
+      <div id="cfg-weights"></div>
+    </div>
+    <div class="config-section">
+      <div class="config-section-title">Quality signals</div>
+      <div id="cfg-quality"></div>
+    </div>
+    <div class="config-section">
+      <div class="config-section-title">Limits</div>
+      <div id="cfg-limits"></div>
+    </div>
+    <div class="config-section">
+      <div class="config-section-title">Read-only <span style="font-weight:400;text-transform:none;letter-spacing:0">(requires restart to change)</span></div>
+      <div id="cfg-readonly"></div>
+    </div>
+
+    <div class="config-actions">
+      <span class="config-unsaved" id="cfg-unsaved">Unsaved changes</span>
+      <button class="btn-primary" onclick="saveConfig()">Save Changes</button>
+      <button class="btn-secondary" onclick="loadConfig()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

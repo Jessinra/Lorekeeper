@@ -189,6 +189,16 @@ class LinkStore:
         )
         self._conn.commit()
 
+    def all_links(self) -> list[MemoryLink]:
+        rows = self._conn.execute(
+            "SELECT * FROM memory_links ORDER BY created_at DESC"
+        ).fetchall()
+        return [_row_to_link(r) for r in rows]
+
+    def delete_link(self, link_id: str) -> None:
+        self._conn.execute("DELETE FROM memory_links WHERE id = ?", (link_id,))
+        self._conn.commit()
+
     def close(self) -> None:
         self._conn.close()
 

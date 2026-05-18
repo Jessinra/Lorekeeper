@@ -19,10 +19,6 @@ from lorekeeper.services.search import SearchResult, rank_results
 log = structlog.get_logger()
 
 
-def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
 class MemoryService:
     def __init__(
         self,
@@ -119,11 +115,10 @@ class MemoryService:
         title = m["title"]
         description = m.get("description", "")
         content = m.get("content", "")
-        score = float(m.get("score", 1.0))
+        score = float(m.get("score", 5.0))
+        text = f"{title} {description} {content}"
 
         if not force:
-            # Check for duplicates via hybrid score
-            text = f"{title} {description} {content}"
             sem_hits = self._engine.search(text, limit=5)
             kw_hits = self._kw.search_normalized(text)
             for hit in sem_hits:
@@ -140,8 +135,7 @@ class MemoryService:
                         }}
 
         lore_id = str(uuid.uuid4())
-        now = _now()
-        text = f"{title} {description} {content}"
+        now = datetime.now(timezone.utc).isoformat()
         self._engine.add(text, lore_id)
         self._store.upsert_memory_row(
             id=lore_id, title=title, description=description, content=content,

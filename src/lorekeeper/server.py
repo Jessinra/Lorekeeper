@@ -2,7 +2,7 @@ import structlog
 from fastmcp import FastMCP
 
 from lorekeeper.config import Settings
-from lorekeeper.handlers import handle_insert, handle_search, handle_update
+from lorekeeper.handlers import handle_search
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_engine import MemoryEngine, build_mem0
@@ -56,16 +56,16 @@ async def lore_search(
 
 @mcp.tool(name="lore_insert")
 async def lore_insert(
-    memories: list[dict] = [],
-    links: list[dict] = [],
+    memories: list[dict] | None = None,
+    links: list[dict] | None = None,
     force: bool = False,
 ) -> dict:
-    return handle_insert(get_service(), memories, links, force)
+    return get_service().insert(memories or [], links or [], force)
 
 
 @mcp.tool(name="lore_update")
 async def lore_update(
-    memory_feedback: list[dict] = [],
-    link_feedback: list[dict] = [],
+    memory_feedback: list[dict] | None = None,
+    link_feedback: list[dict] | None = None,
 ) -> dict:
-    return handle_update(get_service(), memory_feedback, link_feedback)
+    return get_service().update(memory_feedback or [], link_feedback or [])

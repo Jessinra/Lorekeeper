@@ -50,20 +50,19 @@ class MemoryEngine:
         Probe by inserting a known text, querying with the same text, and checking
         whether the score is near 0 (distance) or near 1 (similarity).
         """
-        probe_id = "__lorekeeper_probe__"
         probe_text = "probe: semantic scale detection"
+        mem0_id: str | None = None
         try:
-            self._mem0.add(
+            add_result = self._mem0.add(
                 probe_text,
                 user_id=LORE_USER_ID,
-                metadata={"lore_id": probe_id},
+                metadata={"lore_id": "__lorekeeper_probe__"},
                 infer=False,
             )
-            results = self._mem0.search(
-                probe_text,
-                top_k=1,
-                filters={"user_id": LORE_USER_ID},
-            )
+            add_items = add_result.get("results") if isinstance(add_result, dict) else add_result
+            mem0_id = add_items[0]["id"] if add_items else None
+
+            results = self._mem0.search(probe_text, top_k=1, filters={"user_id": LORE_USER_ID})
             items = results.get("results") if isinstance(results, dict) else results
             if items:
                 score = items[0].get("score", 0.5)
@@ -76,16 +75,11 @@ class MemoryEngine:
         except Exception as e:
             log.warning("semantic_scale_probe_failed", error=str(e))
         finally:
-            try:
-                all_items = self._mem0.get_all(filters={"user_id": LORE_USER_ID}, top_k=500)
-                items_list = all_items.get("results") if isinstance(all_items, dict) else all_items
-                for item in (items_list or []):
-                    meta = item.get("metadata") or {}
-                    if meta.get("lore_id") == probe_id:
-                        self._mem0.delete(item["id"])
-                        break
-            except Exception:
-                pass
+            if mem0_id:
+                try:
+                    self._mem0.delete(mem0_id)
+                except Exception:
+                    pass
 
     def normalize_score(self, raw: float) -> float:
         if self._score_is_distance:
@@ -140,9 +134,3 @@ class MemoryEngine:
 
     def delete_by_mem0_id(self, mem0_id: str) -> None:
         self._mem0.delete(mem0_id)
-
-    def find_mem0_id(self, lore_id: str) -> str | None:
-        for entry in self.get_all():
-            if entry["lore_id"] == lore_id:
-                return entry["mem0_id"]
-        return None

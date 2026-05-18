@@ -1,0 +1,281 @@
+# Lorekeeper
+
+Personal AI memory MCP server. Stores facts, decisions, and domain knowledge so AI agents can recall them across sessions.
+
+Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB. Exposes three MCP tools over stdio: `lore_search`, `lore_insert`, `lore_update`.
+
+**Features**
+
+- **Hybrid search** — combines semantic vector similarity (Mem0 + ChromaDB) with BM25 keyword search, re-ranked by a weighted formula
+- **Relevance feedback** — agents report which memories were useful; scores drift up or down over time, unreliable memories are soft-deleted
+- **Duplicate detection** — new inserts are checked against existing memories; blocked when similarity exceeds threshold (overridable with `force`)
+- **Memory linking** — memories connect via typed, scored relationships forming a lightweight knowledge graph
+- **Dashboard** — local web UI to browse, search, edit, and delete memories and links
+
+---
+
+## How it works
+
+Two stores work together:
+
+| Store | What it holds |
+|-------|--------------|
+| **Mem0 + ChromaDB** | Vector embeddings (384-dim `all-MiniLM-L6-v2`) for semantic search |
+| **SQLite sidecar** | Memory metadata (score, confidence, usage count, soft-deleted flag) + all link rows + BM25 index source |
+
+Every memory has a canonical `lore_id` UUID that lives in Mem0's metadata. The SQLite DB is the source of truth for everything else — scores, links, deletion state.
+
+### Hybrid search scoring
+
+Results are ranked by a weighted combination:
+
+```
+combined = 0.45·semantic + 0.30·keyword + 0.15·(score/10) + 0.10·log_usage_norm
+```
+
+Semantic candidates come from Mem0 (top 200). Keyword candidates come from BM25. Both pools are unioned and re-ranked.
+
+### Quality signals
+
+Each time you call `lore_update` with feedback:
+
+- `useful=true` → score bumped up, weighted by confidence
+- `useful=false` → score bumped down
+- `useful=false` + `confidence ≤ 2` → memory soft-deleted (never returned again)
+
+Confidence is stored as a running EMA over the last 20 ratings.
+
+---
+
+## MCP tools
+
+### `lore_search`
+
+```json
+{
+  "query": "checkout payment flow",
+  "limit": 10,
+  "min_score": 0.1,
+  "include_links": true,
+  "include_deleted": false
+}
+```
+
+Returns ranked memories with relevance scores and linked memories.
+
+### `lore_insert`
+
+```json
+{
+  "memories": [
+    {
+      "title": "Mutable default args in Python",
+      "description": "def f(x=[]) shares the list across all calls — use None instead.",
+      "content": "..."
+    }
+  ],
+  "links": [
+    {
+      "source_memory_id": "<uuid>",
+      "target_memory_id": "<uuid>",
+      "relation_type": "related_to",
+      "reason": "Both about Python gotchas"
+    }
+  ],
+  "force": false
+}
+```
+
+Duplicate detection runs automatically. Before inserting, the server computes a dedup score (`0.6·semantic + 0.4·keyword`). If it meets or exceeds `LORE_DUPLICATE_THRESHOLD` (default 0.85), the insert is blocked and the existing memory is returned. Use `force: true` to override.
+
+### `lore_update`
+
+```json
+{
+  "memory_feedback": [
+    { "id": "<uuid>", "useful": true, "confidence": 8 }
+  ],
+  "link_feedback": [
+    { "id": "<uuid>", "useful": false }
+  ]
+}
+```
+
+Drives the quality signal loop. Call this after every `lore_search` to keep scores calibrated.
+
+---
+
+## Setup
+
+**Requirements**: Python 3.11+, [`uv`](https://github.com/astral-sh/uv)
+
+```bash
+# Install dependencies
+uv sync
+
+# Run the MCP server (stdio transport)
+uv run lorekeeper
+```
+
+Data is stored at `~/.lorekeeper/` by default:
+
+```
+~/.lorekeeper/
+├── chroma/          # ChromaDB vector store
+└── lorekeeper.db    # SQLite metadata + links
+```
+
+### Configuration
+
+All settings use the `LORE_` prefix and can be set via environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LORE_DATA_DIR` | `~/.lorekeeper` | Storage directory |
+| `LORE_EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model |
+| `LORE_DUPLICATE_THRESHOLD` | `0.85` | Similarity above which inserts are blocked |
+| `LORE_W_SEMANTIC` | `0.45` | Semantic score weight |
+| `LORE_W_KEYWORD` | `0.30` | BM25 keyword score weight |
+| `LORE_W_MEMORY` | `0.15` | Memory score weight |
+| `LORE_W_USAGE` | `0.10` | Usage frequency weight |
+| `LORE_SCORE_BUMP_UP` | `0.1` | Score increase on positive feedback |
+| `LORE_SCORE_BUMP_DOWN` | `0.05` | Score decrease on negative feedback |
+| `LORE_SOFT_DELETE_CONFIDENCE_THRESHOLD` | `2` | Confidence ≤ this + `useful=false` triggers soft-delete |
+| `LORE_CONFIDENCE_WINDOW_SIZE` | `20` | Rolling window size for confidence EMA |
+| `LORE_DASH_PORT` | `7777` | Dashboard HTTP port |
+| `LORE_DASH_RELOAD` | `1` | Dashboard hot-reload (`0` to disable) |
+
+---
+
+## Claude Code integration
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "lorekeeper": {
+      "command": "uv",
+      "args": ["--directory", "/path/to/lorekeeper", "run", "lorekeeper"],
+      "env": {}
+    }
+  }
+}
+```
+
+Then in any project's `CLAUDE.md`, instruct the agent to check Lorekeeper at the start of every task:
+
+```markdown
+At the start of any task, run `lore_search` with the task topic before writing code or making decisions.
+After the task, save new discoveries with `lore_insert` and `lore_update`.
+```
+
+---
+
+## Skills
+
+Three Claude Code skills ship with Lorekeeper and work with any project that has the MCP server configured.
+
+| Skill | Purpose |
+|-------|---------|
+| `lorekeeper-search` | Search memories with mandatory relevance feedback after every result set |
+| `lorekeeper-memorize` | Proactively capture facts, search for related memories, insert, and link |
+| `lorekeeper-reconcile` | Consolidate session logs into CLAUDE.md updates and long-term memories |
+
+Skills live in the old v1 repo at `/Users/jessin.donnyson/Code/Shopee/docs/mcp/lorekeeper/assets/skills/` and are imported into `~/.claude/skills/` via the prompt repo's `update-skills.sh`.
+
+---
+
+## Dashboard
+
+A local read/write web UI for browsing and managing your memory store. Requires the `dashboard` extras:
+
+```bash
+uv sync --extra dashboard
+uv run lorekeeper-dashboard
+# → http://127.0.0.1:7777  (override with LORE_DASH_PORT)
+```
+
+Hot-reload is **on by default** — Python file changes restart the server automatically. Disable with `LORE_DASH_RELOAD=0`. HTML edits are instant without restart (served fresh from disk on every request, just refresh the browser).
+
+The UI has four tabs:
+
+| Tab | Purpose |
+|-----|---------|
+| **Memories** | Sortable table with live filter (type `/` to focus, `Esc` to clear). Shows title + description subtitle, score badge, confidence, usage count, dates. Score stats (high/mid/low) in the toolbar. Click a row to open it in Detail. |
+| **Detail** | Edit a memory's title/description/content/score, soft-delete/restore, hard-delete, manage links. |
+| **Links** | Flat sortable table of all links with source → relation → target. Click titles to navigate to that memory. |
+| **Query** | Large text box for ad-hoc search. Shows combined/semantic/keyword scores and a relevance bar per result. |
+
+### API endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/memories` | List all memories (`?include_deleted=true` to include soft-deleted) |
+| `GET` | `/api/memories/{id}` | Get a single memory with its links |
+| `PATCH` | `/api/memories/{id}` | Update fields: `title`, `description`, `content`, `score`, `soft_deleted` |
+| `DELETE` | `/api/memories/{id}` | Hard-delete a memory (cascades to links) |
+| `GET` | `/api/links` | List all links with source/target titles (`?include_deleted=true`) |
+| `POST` | `/api/links` | Create a link between two memories |
+| `DELETE` | `/api/links/{id}` | Delete a link |
+| `POST` | `/api/search` | Search with `{ query, limit, min_score }` |
+
+The dashboard connects to the same SQLite + ChromaDB store as the MCP server. Both can technically run at the same time (SQLite WAL mode supports concurrent readers/writers), but the in-memory BM25 index in each process won't see the other's inserts until restart.
+
+---
+
+## Development
+
+```bash
+# Run tests
+uv run pytest
+
+# Lint
+uv run ruff check src tests
+
+# Type check
+uv run mypy src
+
+# Optional: run the dashboard (requires dashboard extras)
+uv sync --extra dashboard
+uv run lorekeeper-dashboard
+```
+
+---
+
+## Project layout
+
+```
+src/lorekeeper/
+├── __main__.py              # Entrypoint — init_service() + mcp.run(stdio)
+├── server.py                # FastMCP tool definitions (lore_search/insert/update)
+├── handlers.py              # Request handling + response serialisation
+├── config.py                # Settings (pydantic-settings, LORE_ prefix)
+├── models.py                # Memory + MemoryLink Pydantic models, RelationType
+├── dashboard/               # Optional web UI (FastAPI + uvicorn)
+├── logging_setup.py         # structlog config (stderr only — stdout is MCP protocol)
+└── services/
+    ├── orchestrator.py      # MemoryService — coordinates all sub-services
+    ├── memory_engine.py     # Mem0 + ChromaDB wrapper, semantic scale probe
+    ├── link_store.py        # SQLite — memory rows, links, BM25 source
+    ├── keyword_index.py     # BM25 index (rank-bm25)
+    ├── search.py            # Hybrid ranking, SearchResult type
+    ├── dedup.py             # Duplicate detection
+    └── feedback.py          # Score delta, confidence EMA, soft-delete logic
+```
+
+---
+
+## Agentic loop
+
+This repo also demonstrates a self-improving agent pattern. Every session leaves a log in `loop/sessions/`. Periodically, `/recap-sessions` and `/lorekeeper-reconcile` consolidate those logs into CLAUDE.md updates and Lorekeeper memories — so the agent gets smarter over time without manual curation.
+
+```
+Session ends → loop/hooks/post_session.sh writes stub to loop/sessions/
+                           ↓
+              /recap-sessions generates full recap from transcript
+                           ↓
+         /lorekeeper-reconcile extracts learnings → lore_insert
+                           ↓
+              Proposed CLAUDE.md diffs → git commit (auditable)
+```

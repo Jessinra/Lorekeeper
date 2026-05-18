@@ -152,6 +152,30 @@ For v2, the scope is: **MCP server + hybrid search + quality signals + migration
 
 ---
 
+## Post-Change Rule
+
+After **every set of code changes**, run `/after-changes`. It covers three steps in order:
+1. Code review (`/simplify`) — fix reuse, quality, and efficiency issues
+2. README consistency check — update `README.md` for anything that drifted
+3. Git commit — stage and commit with a descriptive message
+
+Do not skip this. It is the discipline that keeps the repo clean and auditable.
+
+---
+
+## README Consistency
+
+When editing any file in `src/lorekeeper/`, `pyproject.toml`, or `loop/`, check `README.md` for claims about that file and verify they are still accurate. Key things to watch:
+
+- **Config defaults** — `config.py` field defaults must match the README config table
+- **Env var names** — derived from field names + `LORE_` prefix (pydantic-settings)
+- **Tool signatures** — `server.py` parameter names and defaults must match README tool examples
+- **Dashboard port** — `dashboard/__init__.py` default port must match README
+- **Dedup formula** — `services/dedup.py` weights must match README description
+- **Project layout** — new or renamed modules must be reflected in the README layout tree
+
+---
+
 ## What's NOT in Scope for v2
 
 - Auto-extraction from session transcripts (`infer=True`)

@@ -22,9 +22,15 @@ dev = [
   "ruff>=0.5",
   "mypy>=1.10",
 ]
+dashboard = [
+  "fastapi>=0.111",
+  "uvicorn[standard]>=0.30",
+  "aiofiles>=23.0",
+]
 
 [project.scripts]
 lorekeeper = "lorekeeper.__main__:main"
+lorekeeper-dashboard = "lorekeeper.dashboard:main"
 
 [build-system]
 requires = ["hatchling"]
