@@ -6,7 +6,6 @@ The repo serves two purposes:
 1. **The product**: MCP server providing `lore_search`, `lore_insert`, `lore_update`. Replaces the Node.js v1 with Python + Mem0.
 2. **The demonstration**: The development process itself is looped. Session learnings are captured → consolidated → applied back to agent config. This repo is the proof of concept.
 
-**Source (v1)**: `/Users/jessin.donnyson/Code/Shopee/docs/mcp/lorekeeper`  
 **Data dir**: `~/.lorekeeper` (Chroma + SQLite; controlled by `LORE_DATA_DIR`)
 
 ---

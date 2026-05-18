@@ -110,11 +110,24 @@ Drives the quality signal loop. Call this after every `lore_search` to keep scor
 **Requirements**: Python 3.11+, [`uv`](https://github.com/astral-sh/uv)
 
 ```bash
-# Install dependencies
-uv sync
+git clone <repo-url> lorekeeper
+cd lorekeeper
+bash scripts/setup.sh
+```
 
-# Run the MCP server (stdio transport)
-uv run lorekeeper
+The script installs deps, creates `~/.lorekeeper/`, registers the MCP server in `~/.claude/settings.json`, and installs the three Claude Code skills. Restart Claude Code after running it.
+
+To migrate data from a v1 `memories.json`:
+
+```bash
+V1_JSON=/path/to/memories.json bash scripts/setup.sh
+```
+
+**Manual install** (if you prefer step by step):
+
+```bash
+uv sync --extra dashboard   # install dependencies
+uv run lorekeeper           # run the MCP server (stdio transport)
 ```
 
 Data is stored at `~/.lorekeeper/` by default:
@@ -172,17 +185,80 @@ After the task, save new discoveries with `lore_insert` and `lore_update`.
 
 ---
 
+## Distribution
+
+### Share as a git repo (recommended)
+
+Clone and run the setup script — covers everything in one step:
+
+```bash
+git clone <repo-url> lorekeeper
+cd lorekeeper
+bash scripts/setup.sh
+```
+
+### Build a wheel
+
+To distribute without requiring a git clone (e.g. to teammates):
+
+```bash
+uv build                            # produces dist/lorekeeper-2.0.0-py3-none-any.whl
+```
+
+Recipient installs the wheel and then runs setup for MCP registration + skills:
+
+```bash
+pip install lorekeeper-2.0.0-py3-none-any.whl
+# then in the cloned repo:
+bash scripts/setup.sh
+```
+
+Or install globally as a `uv` tool so `lorekeeper` is on PATH without `uv run`:
+
+```bash
+uv tool install ./dist/lorekeeper-2.0.0-py3-none-any.whl
+```
+
+Then update `~/.claude/settings.json` to use the tool directly instead of `uv run`:
+
+```json
+{
+  "mcpServers": {
+    "lorekeeper": {
+      "command": "lorekeeper",
+      "args": [],
+      "env": { "LORE_DATA_DIR": "~/.lorekeeper" }
+    }
+  }
+}
+```
+
+### What `setup.sh` does
+
+| Step | Action |
+|------|--------|
+| 1 | Checks Python 3.11+ and `uv` are available |
+| 2 | Runs `uv sync --extra dashboard` |
+| 3 | Creates `$LORE_DATA_DIR` (default `~/.lorekeeper`) |
+| 4 | Adds `lorekeeper` entry to `~/.claude/settings.json` |
+| 5 | Copies `assets/skills/lorekeeper-*/` to `~/.claude/skills/` |
+| 6 | Migrates from v1 `memories.json` if `V1_JSON` env var is set |
+
+The script is idempotent — safe to re-run after updates.
+
+---
+
 ## Skills
 
-Three Claude Code skills ship with Lorekeeper and work with any project that has the MCP server configured.
+Three Claude Code skills ship in `assets/skills/` and are installed by `setup.sh`:
 
 | Skill | Purpose |
 |-------|---------|
 | `lorekeeper-search` | Search memories with mandatory relevance feedback after every result set |
 | `lorekeeper-memorize` | Proactively capture facts, search for related memories, insert, and link |
-| `lorekeeper-reconcile` | Consolidate session logs into CLAUDE.md updates and long-term memories |
+| `lorekeeper-reconcile` | Verify memories against source materials, update scores, soft-delete incorrect facts |
 
-Skills live in the old v1 repo at `/Users/jessin.donnyson/Code/Shopee/docs/mcp/lorekeeper/assets/skills/` and are imported into `~/.claude/skills/` via the prompt repo's `update-skills.sh`.
+Skills are installed to `~/.claude/skills/` and work with any project that has the MCP server configured.
 
 ---
 
