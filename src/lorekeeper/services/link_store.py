@@ -58,6 +58,54 @@ class LinkStore:
         self._conn.row_factory = sqlite3.Row
         self._conn.executescript(SCHEMA)
         self._conn.commit()
+        self._migrate()
+
+    def _migrate(self) -> None:
+        """Idempotent migrations run after schema creation."""
+        self._migrate_dedup_links()
+        self._migrate_dedup_memories()
+
+    def _migrate_dedup_links(self) -> None:
+        idx = self._conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_links_unique_pair'"
+        ).fetchone()
+        if idx:
+            return
+        self._conn.execute("""
+            DELETE FROM memory_links WHERE rowid NOT IN (
+                SELECT MIN(rowid)
+                FROM memory_links
+                GROUP BY source_memory_id, target_memory_id, relation_type
+            )
+        """)
+        self._conn.execute("""
+            CREATE UNIQUE INDEX idx_links_unique_pair
+            ON memory_links(source_memory_id, target_memory_id, relation_type)
+        """)
+        self._conn.commit()
+
+    def _migrate_dedup_memories(self) -> None:
+        idx = self._conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_memories_unique_title'"
+        ).fetchone()
+        if idx:
+            return
+        # Keep the highest-score row per title; delete the rest
+        self._conn.execute("""
+            DELETE FROM memories WHERE rowid NOT IN (
+                SELECT rowid FROM memories m1
+                WHERE rowid = (
+                    SELECT rowid FROM memories m2
+                    WHERE m2.title = m1.title
+                    ORDER BY m2.score DESC, m2.created_at ASC
+                    LIMIT 1
+                )
+            )
+        """)
+        self._conn.execute("""
+            CREATE UNIQUE INDEX idx_memories_unique_title ON memories(title)
+        """)
+        self._conn.commit()
 
     # ── Memory rows (managed here so FKs are satisfied) ──────────────────────
 
@@ -98,6 +146,12 @@ class LinkStore:
             "SELECT * FROM memories WHERE id = ?", (id,)
         ).fetchone()
 
+    def get_memory_row_by_title(self, title: str) -> sqlite3.Row | None:
+        return self._conn.execute(
+            "SELECT * FROM memories WHERE title = ? AND soft_deleted = 0 ORDER BY score DESC LIMIT 1",
+            (title,),
+        ).fetchone()
+
     def all_memory_rows(self, include_deleted: bool = False) -> list[sqlite3.Row]:
         if include_deleted:
             return self._conn.execute("SELECT * FROM memories").fetchall()
@@ -135,29 +189,51 @@ class LinkStore:
         relation_type: str,
         reason: str,
         score: float = 1.0,
+        id: str | None = None,
+        created_at: str | None = None,
+        updated_at: str | None = None,
+        usage_count: int = 0,
+        confidence: float | None = None,
+        confidence_count: int = 0,
     ) -> MemoryLink:
         now = _now()
         link = MemoryLink(
-            id=str(uuid.uuid4()),
+            id=id or str(uuid.uuid4()),
             source_memory_id=source_memory_id,
             target_memory_id=target_memory_id,
             relation_type=relation_type,  # type: ignore[arg-type]
             reason=reason,
             score=score,
-            created_at=now,
-            updated_at=now,
+            created_at=created_at or now,
+            updated_at=updated_at or now,
+            usage_count=usage_count,
+            confidence=confidence,
+            confidence_count=confidence_count,
         )
-        self._conn.execute(
-            """
-            INSERT INTO memory_links
-              (id, source_memory_id, target_memory_id, relation_type, reason,
-               score, created_at, updated_at, usage_count, confidence, confidence_count)
-            VALUES (?,?,?,?,?,?,?,?,0,NULL,0)
-            """,
-            (link.id, link.source_memory_id, link.target_memory_id,
-             link.relation_type, link.reason, link.score, link.created_at, link.updated_at),
-        )
-        self._conn.commit()
+        try:
+            self._conn.execute(
+                """
+                INSERT INTO memory_links
+                  (id, source_memory_id, target_memory_id, relation_type, reason,
+                   score, created_at, updated_at, usage_count, confidence, confidence_count)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                """,
+                (link.id, link.source_memory_id, link.target_memory_id,
+                 link.relation_type, link.reason, link.score, link.created_at, link.updated_at,
+                 link.usage_count, link.confidence, link.confidence_count),
+            )
+            self._conn.commit()
+        except sqlite3.IntegrityError:
+            # Duplicate (source, target, relation_type) — return the existing link
+            row = self._conn.execute(
+                """
+                SELECT * FROM memory_links
+                WHERE source_memory_id = ? AND target_memory_id = ? AND relation_type = ?
+                """,
+                (link.source_memory_id, link.target_memory_id, link.relation_type),
+            ).fetchone()
+            if row:
+                return _row_to_link(row)
         return link
 
     def links_for_memory(self, memory_id: str) -> list[MemoryLink]:

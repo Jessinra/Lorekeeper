@@ -11,6 +11,7 @@ Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB. Exposes t
 - **Duplicate detection** — new inserts are checked against existing memories; blocked when similarity exceeds threshold (overridable with `force`)
 - **Memory linking** — memories connect via typed, scored relationships forming a lightweight knowledge graph
 - **Dashboard** — local web UI to browse, search, edit, and delete memories and links
+- **Backup / restore** — export all memories + links to a portable JSON file; import with dedup preview
 
 ---
 
@@ -274,7 +275,7 @@ uv run lorekeeper-dashboard
 
 Hot-reload is **on by default** — Python file changes restart the server automatically. Disable with `LORE_DASH_RELOAD=0`. HTML edits are instant without restart (served fresh from disk on every request, just refresh the browser).
 
-The UI has five tabs:
+The UI has seven tabs:
 
 | Tab | Purpose |
 |-----|---------|
@@ -283,6 +284,8 @@ The UI has five tabs:
 | **Links** | Flat sortable table of all links with source → relation → target. Click titles to navigate to that memory. |
 | **Query** | Large text box for ad-hoc search. Shows combined/semantic/keyword scores and a relevance bar per result. |
 | **Runs** | History of `/recap-sessions` runs. Shows date, trigger (manual/cron), sessions processed, memories inserted/updated/soft-deleted. Click a row to expand the memory list for that run. |
+| **Config** | Live settings editor for search weights, quality signals, and limits. Changes apply immediately but reset on restart; use `LORE_*` env vars to persist. |
+| **Backup** | Export all memories + links as a JSON file. Import a backup with dedup preview (shows counts and a scrollable list of each new memory/link to be inserted) before confirming. |
 
 ### API endpoints
 
@@ -297,6 +300,9 @@ The UI has five tabs:
 | `DELETE` | `/api/links/{id}` | Delete a link |
 | `POST` | `/api/search` | Search with `{ query, limit, min_score }` |
 | `GET` | `/api/runs` | List `/recap-sessions` run history from `loop/run_log.jsonl` (`?limit=50`) |
+| `GET` | `/api/export` | Download all memories + links as JSON (`?include_deleted=true` to include soft-deleted) |
+| `POST` | `/api/import/preview` | Dry-run import: returns counts + full list of memories/links that would be inserted, without writing |
+| `POST` | `/api/import/confirm` | Actual import: inserts new memories + links, skips IDs already present |
 
 The dashboard connects to the same SQLite + ChromaDB store as the MCP server. Both can technically run at the same time (SQLite WAL mode supports concurrent readers/writers), but the in-memory BM25 index in each process won't see the other's inserts until restart.
 

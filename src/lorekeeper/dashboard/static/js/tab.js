@@ -1,7 +1,7 @@
 // ── Tab switching ──
 import * as state from './state.js';
 
-export const TAB_ORDER = ['memories', 'detail', 'links', 'query', 'runs', 'config'];
+export const TAB_ORDER = ['memories', 'detail', 'links', 'query', 'runs', 'config', 'backup'];
 
 // Cross-module callbacks — wired up by app.js after all modules are imported.
 export let _onTabLinks  = () => {};

@@ -18,13 +18,23 @@ export function fmt2(n) { return (n ?? 0).toFixed(2); }
 
 export function fmtDate(iso) {
   if (!iso) return '';
-  // "2026-05-18T14:32:00Z" → "2026-05-18 14:32"
-  const s = iso.replace('T', ' ');
-  return s.slice(0, 16);
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const _today = new Date().toISOString().slice(0, 10);
-export function isToday(iso) { return (iso || '').slice(0, 10) === _today; }
+const _todayLocal = (() => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+})();
+export function isToday(iso) {
+  if (!iso) return false;
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  const local = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  return local === _todayLocal;
+}
 
 export function clientSort(data, field, dir) {
   return [...data].sort((a, b) => {

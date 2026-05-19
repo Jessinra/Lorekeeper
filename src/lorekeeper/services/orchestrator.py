@@ -119,6 +119,15 @@ class MemoryService:
         text = f"{title} {description} {content}"
 
         if not force:
+            # Exact title match is a definitive duplicate — skip semantic search
+            existing_by_title = self._store.get_memory_row_by_title(title)
+            if existing_by_title:
+                return {"duplicate": {
+                    "input_title": title,
+                    "existing_memory": dict(existing_by_title),
+                    "similarity": 1.0,
+                }}
+
             sem_hits = self._engine.search(text, limit=5)
             kw_hits = self._kw.search_normalized(text)
             for hit in sem_hits:
@@ -157,6 +166,122 @@ class MemoryService:
             "source_memory_id": link.source_memory_id,
             "target_memory_id": link.target_memory_id,
             "relation_type": link.relation_type,
+        }
+
+    # ── Import (backup restore) ───────────────────────────────────────────────
+
+    def import_dump(
+        self,
+        memories: list[dict],
+        links: list[dict],
+        dry_run: bool = False,
+    ) -> dict:
+        memories_inserted = 0
+        memories_skipped = 0
+        links_inserted = 0
+        links_skipped = 0
+        links_error = 0
+        errors: list[str] = []
+        preview_memories: list[dict] = []
+        preview_links: list[dict] = []
+
+        # Track IDs that exist or were just inserted (for FK validation)
+        valid_ids: set[str] = {r["id"] for r in self._store.all_memory_rows(include_deleted=True)}
+
+        for m in memories:
+            mid = m.get("id", "")
+            if not mid:
+                errors.append(f"memory missing id: {m.get('title', '?')}")
+                continue
+            if mid in valid_ids:
+                memories_skipped += 1
+                continue
+            if dry_run:
+                preview_memories.append({
+                    "id": mid,
+                    "title": m.get("title", ""),
+                    "description": m.get("description", ""),
+                    "type": m.get("type", ""),
+                })
+            else:
+                try:
+                    text = f"{m.get('title', '')} {m.get('description', '')} {m.get('content', '')}"
+                    self._engine.add(text, mid)
+                    self._store.upsert_memory_row(
+                        id=mid,
+                        title=m.get("title", ""),
+                        description=m.get("description", ""),
+                        content=m.get("content", ""),
+                        created_at=m.get("created_at", ""),
+                        updated_at=m.get("updated_at", ""),
+                        usage_count=int(m.get("usage_count", 0)),
+                        score=float(m.get("score", 1.0)),
+                        soft_deleted=bool(m.get("soft_deleted", False)),
+                        confidence=m.get("confidence"),
+                        confidence_count=int(m.get("confidence_count", 0)),
+                    )
+                    log.info("import_memory_inserted", lore_id=mid, title=m.get("title", ""))
+                except Exception as e:
+                    errors.append(f"memory {mid}: {e}")
+                    continue
+            valid_ids.add(mid)
+            memories_inserted += 1
+
+        if not dry_run and memories_inserted:
+            self._rebuild_kw()
+
+        existing_link_ids: set[str] = {lnk.id for lnk in self._store.all_links()}
+
+        for lnk in links:
+            lid = lnk.get("id", "")
+            if not lid:
+                errors.append(f"link missing id: {lnk}")
+                continue
+            if lid in existing_link_ids:
+                links_skipped += 1
+                continue
+            src = lnk.get("source_memory_id", "")
+            tgt = lnk.get("target_memory_id", "")
+            if src not in valid_ids or tgt not in valid_ids:
+                links_error += 1
+                continue
+            if dry_run:
+                preview_links.append({
+                    "id": lid,
+                    "source_memory_id": src,
+                    "target_memory_id": tgt,
+                    "relation_type": lnk.get("relation_type", "related_to"),
+                    "reason": lnk.get("reason", ""),
+                })
+            else:
+                try:
+                    self._store.insert_link(
+                        id=lid,
+                        source_memory_id=src,
+                        target_memory_id=tgt,
+                        relation_type=lnk.get("relation_type", "related_to"),
+                        reason=lnk.get("reason", ""),
+                        score=float(lnk.get("score", 1.0)),
+                        created_at=lnk.get("created_at"),
+                        updated_at=lnk.get("updated_at"),
+                        usage_count=int(lnk.get("usage_count", 0)),
+                        confidence=lnk.get("confidence"),
+                        confidence_count=int(lnk.get("confidence_count", 0)),
+                    )
+                except Exception as e:
+                    errors.append(f"link {lid}: {e}")
+                    continue
+            links_inserted += 1
+
+        return {
+            "memories_inserted": memories_inserted,
+            "memories_skipped": memories_skipped,
+            "links_inserted": links_inserted,
+            "links_skipped": links_skipped,
+            "links_error": links_error,
+            "errors": errors,
+            "preview_memories": preview_memories,
+            "preview_links": preview_links,
         }
 
     # ── Update (feedback) ────────────────────────────────────────────────────

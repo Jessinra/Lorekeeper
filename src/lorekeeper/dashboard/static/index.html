@@ -22,6 +22,7 @@
   <button class="tab"        onclick="switchTab('query')">Query</button>
   <button class="tab"        onclick="switchTab('runs')">Runs</button>
   <button class="tab"        onclick="switchTab('config')">Config</button>
+  <button class="tab"        onclick="switchTab('backup')">Backup</button>
 </nav>
 
 <!-- ══════════════════════════════════════════════════
@@ -43,7 +44,7 @@
     <span class="item-count" id="memory-count"></span>
     <span class="panel-divider"></span>
     <button id="btn-show-deleted" class="btn-secondary btn-sm" onclick="toggleShowDeleted()">Show deleted</button>
-    <button class="btn-ghost btn-sm" onclick="loadMemories()" title="Refresh">↺</button>
+    <button id="btn-refresh-memories" class="btn-ghost btn-sm btn-refresh" onclick="triggerRefresh()" title="Refresh memories (auto-refreshes every 30s)"><span class="refresh-icon">↺</span> Refresh</button>
   </div>
   <div class="metrics-strip">
     <div class="metric-item"><span class="metric-value" id="met-total">—</span><span class="metric-label">memories</span></div>
@@ -198,6 +199,56 @@
       <button class="btn-primary" onclick="saveConfig()">Save Changes</button>
       <button class="btn-secondary" onclick="loadConfig()">Reset</button>
     </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     Tab: Backup
+═════════════════════════════════════════════════════ -->
+<div id="tab-backup" class="tab-pane">
+  <div class="config-page">
+
+    <!-- Export -->
+    <div style="margin-bottom:32px">
+      <h2>Export</h2>
+      <p style="font-size:13px;color:var(--subtle);margin:4px 0 16px">Download all memories and links as a portable JSON file.</p>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="triggerExport()">Export All Memories</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px">
+          <input type="checkbox" id="export-include-deleted">
+          Include soft-deleted
+        </label>
+      </div>
+    </div>
+
+    <!-- Import -->
+    <div>
+      <h2>Import</h2>
+      <p style="font-size:13px;color:var(--subtle);margin:4px 0 16px">Upload a Lorekeeper export file. A preview will load automatically — review counts before confirming.</p>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <label class="btn-secondary btn-sm" style="cursor:pointer">
+          Choose file…
+          <input type="file" id="import-file" accept=".json" style="display:none">
+        </label>
+        <span id="import-filename" style="font-size:13px;color:var(--subtle)">No file chosen</span>
+      </div>
+      <div id="backup-preview" style="display:none;margin-bottom:16px">
+        <div class="metrics-strip" style="margin-bottom:12px">
+          <div class="metric-item"><span class="metric-value" id="bk-mem-insert">—</span><span class="metric-label">memories to insert</span></div>
+          <div class="metric-sep"></div>
+          <div class="metric-item"><span class="metric-value" id="bk-mem-skip">—</span><span class="metric-label">memories to skip</span></div>
+          <div class="metric-sep"></div>
+          <div class="metric-item"><span class="metric-value" id="bk-lnk-insert">—</span><span class="metric-label">links to insert</span></div>
+          <div class="metric-sep"></div>
+          <div class="metric-item"><span class="metric-value" id="bk-lnk-skip">—</span><span class="metric-label">links to skip</span></div>
+          <div class="metric-sep"></div>
+          <div class="metric-item"><span class="metric-value" id="bk-lnk-err">—</span><span class="metric-label">links broken FK</span></div>
+        </div>
+        <div id="bk-detail-list" style="display:none;max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px 0;background:var(--surface)"></div>
+      </div>
+      <button id="btn-confirm-import" class="btn-primary" onclick="confirmImport()" disabled>Import</button>
+    </div>
+
   </div>
 </div>
 

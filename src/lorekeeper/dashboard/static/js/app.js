@@ -20,6 +20,7 @@ import {
 import { runQuery, registerQuerySelectMemory } from './query.js';
 import { loadConfig, saveConfig, onCfgChange } from './config.js';
 import { loadRuns } from './runs.js';
+import { initBackup } from './backup.js';
 
 // ── Wire cross-module callbacks to break circular deps ──
 
@@ -28,6 +29,7 @@ registerTabCallbacks({
   onTabLinks:  loadLinks,
   onTabConfig: loadConfig,
   onTabRuns:   loadRuns,
+  onTabBackup: () => {},
 });
 
 // detail.js needs loadMemories, renderList, loadLinks
@@ -46,6 +48,40 @@ registerQuerySelectMemory(selectMemory);
 // memories.js renderList calls selectMemory via window.selectMemory (already set
 // in detail.js window assignments), but we also register it for any internal use.
 registerSelectMemory(selectMemory);
+
+// ── Auto-refresh ──
+
+const AUTO_REFRESH_MS = 30_000;
+let _autoRefreshTimer = null;
+
+function activeTabRefresher() {
+  const active = document.querySelector('.tab.active');
+  if (!active) return loadMemories;
+  const tab = active.dataset.tab || active.textContent.trim().toLowerCase();
+  if (tab === 'runs')   return () => loadRuns(false);
+  return loadMemories;
+}
+
+async function triggerRefresh() {
+  const btn  = document.getElementById('btn-refresh-memories');
+  const icon = btn?.querySelector('.refresh-icon');
+  if (icon) icon.classList.add('spinning');
+  btn?.setAttribute('disabled', '');
+  try {
+    await activeTabRefresher()();
+  } finally {
+    if (icon) icon.classList.remove('spinning');
+    btn?.removeAttribute('disabled');
+    scheduleAutoRefresh();
+  }
+}
+
+function scheduleAutoRefresh() {
+  clearTimeout(_autoRefreshTimer);
+  _autoRefreshTimer = setTimeout(triggerRefresh, AUTO_REFRESH_MS);
+}
+
+window.triggerRefresh = triggerRefresh;
 
 // ── Init ──
 
@@ -66,9 +102,19 @@ function init() {
     }
   });
 
+  initBackup();
+
   // Bootstrap the memories tab sort headers and load data
   updateSortHeaders('th-', state.memSort, ['title', 'score', 'confidence', 'usage_count', 'link_count', 'updated_at']);
-  loadMemories();
+
+  // Inject local timezone label into DATE column header
+  const tzOffset = -new Date().getTimezoneOffset() / 60;
+  const tzLabel  = `GMT${tzOffset >= 0 ? '+' : ''}${tzOffset}`;
+  const dateHeader = document.getElementById('th-updated_at');
+  if (dateHeader) dateHeader.innerHTML = `Date <span class="tz-label">${tzLabel}</span> <span class="sort-arrow">↓</span>`;
+
+  // Load memories + links eagerly so header-meta shows correct link count immediately
+  Promise.all([loadMemories(), loadLinks()]).then(scheduleAutoRefresh);
 }
 
 init();
