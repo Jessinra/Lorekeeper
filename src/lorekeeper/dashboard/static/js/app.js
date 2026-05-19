@@ -19,17 +19,15 @@ import {
 } from './links.js';
 import { runQuery, registerQuerySelectMemory } from './query.js';
 import { loadConfig, saveConfig, onCfgChange } from './config.js';
-import { loadRuns } from './runs.js';
+import { loadSessions } from './sessions.js';
 import { initBackup } from './backup.js';
 
 // ── Wire cross-module callbacks to break circular deps ──
 
-// tab.js needs to trigger loadLinks / loadConfig when switching tabs
 registerTabCallbacks({
-  onTabLinks:  loadLinks,
-  onTabConfig: loadConfig,
-  onTabRuns:   loadRuns,
-  onTabBackup: () => {},
+  onTabLinks:    loadLinks,
+  onTabConfig:   loadConfig,
+  onTabSessions: loadSessions,
 });
 
 // detail.js needs loadMemories, renderList, loadLinks
@@ -58,7 +56,7 @@ function activeTabRefresher() {
   const active = document.querySelector('.tab.active');
   if (!active) return loadMemories;
   const tab = active.dataset.tab || active.textContent.trim().toLowerCase();
-  if (tab === 'runs')   return () => loadRuns(false);
+  if (tab === 'sessions') return () => loadSessions(false);
   return loadMemories;
 }
 

@@ -69,3 +69,41 @@ async def lore_update(
     link_feedback: list[dict] | None = None,
 ) -> dict:
     return get_service().update(memory_feedback or [], link_feedback or [])
+
+
+@mcp.tool(name="lore_processed_sessions")
+async def lore_processed_sessions() -> dict:
+    """Return all session IDs that have been marked as processed via lore_reflect."""
+    return {"session_ids": get_service().get_processed_session_ids()}
+
+
+@mcp.tool(name="lore_reflect")
+async def lore_reflect(
+    session_id: str,
+    summary: str,
+    session_date: str | None = None,
+    topic: str | None = None,
+    task_type: str | None = None,
+    what_was_done: str | None = None,
+    decisions: str | None = None,
+    lessons_learnt: list[str] | None = None,
+    good_patterns: list[str] | None = None,
+    user_profile_updates: list[str] | None = None,
+    factual_discoveries: list[str] | None = None,
+    memory_ids: list[str] | None = None,
+) -> dict:
+    """Call once per session — reflect on one session, submit, then move to the next."""
+    return get_service().submit_reflection(
+        session_id=session_id,
+        session_date=session_date,
+        topic=topic,
+        task_type=task_type,
+        what_was_done=what_was_done,
+        decisions=decisions,
+        lessons_learnt=lessons_learnt or [],
+        good_patterns=good_patterns or [],
+        user_profile_updates=user_profile_updates or [],
+        factual_discoveries=factual_discoveries or [],
+        summary=summary,
+        memory_ids=memory_ids or [],
+    )

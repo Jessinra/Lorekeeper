@@ -2,7 +2,7 @@
 
 Personal AI memory MCP server. Stores facts, decisions, and domain knowledge so AI agents can recall them across sessions.
 
-Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB. Exposes three MCP tools over stdio: `lore_search`, `lore_insert`, `lore_update`.
+Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB. Exposes five MCP tools over stdio: `lore_search`, `lore_insert`, `lore_update`, `lore_reflect`, `lore_processed_sessions`.
 
 **Features**
 
@@ -22,7 +22,7 @@ Two stores work together:
 | Store | What it holds |
 |-------|--------------|
 | **Mem0 + ChromaDB** | Vector embeddings (384-dim `all-MiniLM-L6-v2`) for semantic search |
-| **SQLite sidecar** | Memory metadata (score, confidence, usage count, soft-deleted flag) + all link rows + BM25 index source |
+| **SQLite sidecar** | Memory metadata (score, confidence, usage count, soft-deleted flag) + link rows + reflection records + session records + BM25 index source |
 
 Every memory has a canonical `lore_id` UUID that lives in Mem0's metadata. The SQLite DB is the source of truth for everything else — scores, links, deletion state.
 
@@ -103,6 +103,25 @@ Duplicate detection runs automatically. Before inserting, the server computes a 
 ```
 
 Drives the quality signal loop. Call this after every `lore_search` to keep scores calibrated.
+
+### `lore_reflect`
+
+```json
+{
+  "session_id": "uuid1",
+  "summary": "Implemented reflect integration; extracted 3 lessons.",
+  "session_date": "2026-05-19",
+  "topic": "reflect-integration",
+  "task_type": "build",
+  "what_was_done": "Built the reflect integration...",
+  "decisions": "- Used single-session submit for context efficiency",
+  "lessons_learnt": ["Don't skip dedup check before inserting"],
+  "good_patterns": ["Parallelise independent API calls"],
+  "memory_ids": ["uuid-a", "uuid-b"]
+}
+```
+
+Marks one session as processed and stores its content in the dashboard Sessions tab. Call once per session — reflect, submit, then move to the next. Returns `{ reflection_id, session_id, created_at }`.
 
 ---
 
@@ -283,7 +302,7 @@ The UI has seven tabs:
 | **Detail** | Edit a memory's title/description/content/score, soft-delete/restore, hard-delete, manage links. |
 | **Links** | Flat sortable table of all links with source → relation → target. Click titles to navigate to that memory. |
 | **Query** | Large text box for ad-hoc search. Shows combined/semantic/keyword scores and a relevance bar per result. |
-| **Runs** | History of `/recap-sessions` runs. Shows date, trigger (manual/cron), sessions processed, memories inserted/updated/soft-deleted. Click a row to expand the memory list for that run. |
+| **Sessions** | All processed Claude sessions. Sidebar has session ID search (substring) and task-type filter chips. Date column is sortable (click header). Each row shows the review timestamp in UTC+8 with a relative time label below (e.g. "2h ago"), truncated session ID (hover for full UUID), topic, task type, and a summary of what was done. Stub sessions (no content) are hidden by default — toggle with the **Hide stubs** button. Click a row to expand full content: what was done, decisions, lessons learnt, good patterns, user profile observations, and discoveries. |
 | **Config** | Live settings editor for search weights, quality signals, and limits. Changes apply immediately but reset on restart; use `LORE_*` env vars to persist. |
 | **Backup** | Export all memories + links as a JSON file. Import a backup with dedup preview (shows counts and a scrollable list of each new memory/link to be inserted) before confirming. |
 
@@ -299,7 +318,10 @@ The UI has seven tabs:
 | `POST` | `/api/links` | Create a link between two memories |
 | `DELETE` | `/api/links/{id}` | Delete a link |
 | `POST` | `/api/search` | Search with `{ query, limit, min_score }` |
-| `GET` | `/api/runs` | List `/recap-sessions` run history from `loop/run_log.jsonl` (`?limit=50`) |
+| `GET` | `/api/sessions` | Sessions with content (`?with_content=false` to include all) |
+| `GET` | `/api/sessions/{id}` | Single session with its reflection metadata |
+| `GET` | `/api/reflections` | List all reflection run records, newest first |
+| `GET` | `/api/reflections/{id}` | Single reflection with sessions covered |
 | `GET` | `/api/export` | Download all memories + links as JSON (`?include_deleted=true` to include soft-deleted) |
 | `POST` | `/api/import/preview` | Dry-run import: returns counts + full list of memories/links that would be inserted, without writing |
 | `POST` | `/api/import/confirm` | Actual import: inserts new memories + links, skips IDs already present |
@@ -332,16 +354,16 @@ uv run lorekeeper-dashboard
 ```
 src/lorekeeper/
 ├── __main__.py              # Entrypoint — init_service() + mcp.run(stdio)
-├── server.py                # FastMCP tool definitions (lore_search/insert/update)
+├── server.py                # FastMCP tool definitions (lore_search/insert/update/reflect/processed_sessions)
 ├── handlers.py              # Request handling + response serialisation
 ├── config.py                # Settings (pydantic-settings, LORE_ prefix)
-├── models.py                # Memory + MemoryLink Pydantic models, RelationType
+├── models.py                # Memory, MemoryLink, Reflection, SessionRecord Pydantic models
 ├── dashboard/               # Optional web UI (FastAPI + uvicorn)
 ├── logging_setup.py         # structlog config (stderr only — stdout is MCP protocol)
 └── services/
     ├── orchestrator.py      # MemoryService — coordinates all sub-services
     ├── memory_engine.py     # Mem0 + ChromaDB wrapper, semantic scale probe
-    ├── link_store.py        # SQLite — memory rows, links, BM25 source
+    ├── link_store.py        # SQLite — memory rows, links, reflections, sessions, BM25 source
     ├── keyword_index.py     # BM25 index (rank-bm25)
     ├── search.py            # Hybrid ranking, SearchResult type
     ├── dedup.py             # Duplicate detection
@@ -352,18 +374,20 @@ src/lorekeeper/
 
 ## Agentic loop
 
-This repo also demonstrates a self-improving agent pattern. Every session leaves a log in `loop/sessions/`. `/recap-sessions` processes those transcripts, extracts learnings into Lorekeeper, and writes a run summary to `loop/run_log.jsonl` — visible in the dashboard's **Runs** tab.
+This repo also demonstrates a self-improving agent pattern. Every session leaves a log in `loop/sessions/`. `/reflect` processes those transcripts, extracts learnings into Lorekeeper, and calls `lore_reflect` to mark sessions as processed — visible in the dashboard's **Sessions** tab.
 
 ```
-/recap-sessions (manual or daily cron at 09:00 via launchd)
+/reflect (manual or scheduled)
     ↓
-Scans ~/.claude/projects/.../*.jsonl for unrecorded sessions
+Checks sessions table to find unprocessed Claude transcripts
     ↓
 Writes session logs to loop/sessions/YYYY-MM-DD-{topic}.md
     ↓
 Updates Lorekeeper: lore_insert/update + feedback on existing memories
     ↓
-Appends run summary to loop/run_log.jsonl → visible in dashboard Runs tab
+Calls lore_reflect once per session → marks session processed, stores content
+    ↓
+Dashboard Sessions tab shows all processed sessions with full content
 ```
 
 To schedule daily runs via crontab (runs at 09:30):

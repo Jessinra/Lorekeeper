@@ -3,7 +3,11 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+import structlog
+
 from lorekeeper.models import MemoryLink
+
+log = structlog.get_logger()
 
 SCHEMA = """
 PRAGMA journal_mode = WAL;
@@ -44,6 +48,32 @@ CREATE TABLE IF NOT EXISTS memory_links (
 
 CREATE INDEX IF NOT EXISTS idx_links_source ON memory_links(source_memory_id);
 CREATE INDEX IF NOT EXISTS idx_links_target ON memory_links(target_memory_id);
+
+CREATE TABLE IF NOT EXISTS reflections (
+  id                   TEXT PRIMARY KEY,
+  created_at           TEXT NOT NULL,
+  session_count        INTEGER NOT NULL,
+  lessons_learnt       TEXT NOT NULL,
+  good_patterns        TEXT,
+  user_profile_updates TEXT,
+  factual_discoveries  TEXT,
+  summary              TEXT NOT NULL,
+  memory_ids           TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_reflections_created_at ON reflections(created_at);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  session_id    TEXT PRIMARY KEY,
+  session_date  TEXT,
+  topic         TEXT,
+  task_type     TEXT,
+  reviewed_at   TEXT NOT NULL,
+  reflection_id TEXT,
+  FOREIGN KEY (reflection_id) REFERENCES reflections(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_reflection_id ON sessions(reflection_id);
 """
 
 
@@ -64,6 +94,27 @@ class LinkStore:
         """Idempotent migrations run after schema creation."""
         self._migrate_dedup_links()
         self._migrate_dedup_memories()
+        self._migrate_add_session_content_columns()
+
+    def _migrate_add_session_content_columns(self) -> None:
+        existing = {row[1] for row in self._conn.execute("PRAGMA table_info(sessions)")}
+        new_cols = [
+            ("transcript",    "TEXT"),
+            ("what_was_done", "TEXT"),
+            ("decisions",     "TEXT"),
+            ("lessons_learnt","TEXT"),
+            ("good_patterns", "TEXT"),
+            ("user_profile",  "TEXT"),
+            ("discoveries",   "TEXT"),
+        ]
+        added = []
+        for col, col_type in new_cols:
+            if col not in existing:
+                self._conn.execute(f"ALTER TABLE sessions ADD COLUMN {col} {col_type}")
+                added.append(col)
+        if added:
+            self._conn.commit()
+            log.info("session_content_columns_added", cols=added)
 
     def _migrate_dedup_links(self) -> None:
         idx = self._conn.execute(
@@ -274,6 +325,124 @@ class LinkStore:
     def delete_link(self, link_id: str) -> None:
         self._conn.execute("DELETE FROM memory_links WHERE id = ?", (link_id,))
         self._conn.commit()
+
+    # ── Reflections ───────────────────────────────────────────────────────────
+
+    def insert_reflection(
+        self,
+        id: str,
+        created_at: str,
+        session_count: int,
+        lessons_learnt: str,
+        summary: str,
+        good_patterns: str | None = None,
+        user_profile_updates: str | None = None,
+        factual_discoveries: str | None = None,
+        memory_ids: str | None = None,
+    ) -> None:
+        self._conn.execute(
+            """
+            INSERT INTO reflections
+              (id, created_at, session_count, lessons_learnt, good_patterns,
+               user_profile_updates, factual_discoveries, summary, memory_ids)
+            VALUES (?,?,?,?,?,?,?,?,?)
+            """,
+            (id, created_at, session_count, lessons_learnt, good_patterns,
+             user_profile_updates, factual_discoveries, summary, memory_ids),
+        )
+        self._conn.commit()
+
+    def get_reflection(self, reflection_id: str) -> sqlite3.Row | None:
+        return self._conn.execute(
+            "SELECT * FROM reflections WHERE id = ?", (reflection_id,)
+        ).fetchone()
+
+    def all_reflections(self) -> list[sqlite3.Row]:
+        return self._conn.execute(
+            "SELECT * FROM reflections ORDER BY created_at DESC"
+        ).fetchall()
+
+    # ── Sessions ──────────────────────────────────────────────────────────────
+
+    _SESSION_UPSERT_SQL = """
+        INSERT INTO sessions
+          (session_id, session_date, topic, task_type, reviewed_at, reflection_id,
+           transcript, what_was_done, decisions, lessons_learnt, good_patterns, user_profile, discoveries)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(session_id) DO UPDATE SET
+          session_date=COALESCE(excluded.session_date, session_date),
+          topic=COALESCE(excluded.topic, topic),
+          task_type=COALESCE(excluded.task_type, task_type),
+          reviewed_at=excluded.reviewed_at,
+          reflection_id=COALESCE(excluded.reflection_id, reflection_id),
+          transcript=COALESCE(excluded.transcript, transcript),
+          what_was_done=COALESCE(excluded.what_was_done, what_was_done),
+          decisions=COALESCE(excluded.decisions, decisions),
+          lessons_learnt=COALESCE(excluded.lessons_learnt, lessons_learnt),
+          good_patterns=COALESCE(excluded.good_patterns, good_patterns),
+          user_profile=COALESCE(excluded.user_profile, user_profile),
+          discoveries=COALESCE(excluded.discoveries, discoveries)
+    """
+
+    def upsert_session(
+        self,
+        session_id: str,
+        reviewed_at: str,
+        session_date: str | None = None,
+        topic: str | None = None,
+        task_type: str | None = None,
+        reflection_id: str | None = None,
+        transcript: str | None = None,
+        what_was_done: str | None = None,
+        decisions: str | None = None,
+        lessons_learnt: str | None = None,
+        good_patterns: str | None = None,
+        user_profile: str | None = None,
+        discoveries: str | None = None,
+    ) -> None:
+        self._conn.execute(
+            self._SESSION_UPSERT_SQL,
+            (session_id, session_date, topic, task_type, reviewed_at, reflection_id,
+             transcript, what_was_done, decisions, lessons_learnt, good_patterns, user_profile, discoveries),
+        )
+        self._conn.commit()
+
+    def upsert_sessions_bulk(self, rows: list[tuple]) -> None:
+        """Insert/update multiple sessions in a single transaction.
+
+        Each tuple: (session_id, session_date, topic, task_type, reviewed_at, reflection_id,
+                     transcript, what_was_done, decisions, lessons_learnt, good_patterns,
+                     user_profile, discoveries)
+        """
+        self._conn.executemany(self._SESSION_UPSERT_SQL, rows)
+        self._conn.commit()
+
+    def all_processed_session_ids(self) -> set[str]:
+        """Return all session IDs that have been marked as processed. Used by loop skill scripts."""
+        rows = self._conn.execute("SELECT session_id FROM sessions").fetchall()
+        return {r["session_id"] for r in rows}
+
+    def all_sessions(self) -> list[sqlite3.Row]:
+        return self._conn.execute(
+            "SELECT * FROM sessions ORDER BY reviewed_at DESC"
+        ).fetchall()
+
+    def sessions_with_content(self) -> list[sqlite3.Row]:
+        """Sessions that have a topic (i.e. were matched to a session log)."""
+        return self._conn.execute(
+            "SELECT * FROM sessions WHERE topic IS NOT NULL ORDER BY session_date DESC, topic"
+        ).fetchall()
+
+    def get_session(self, session_id: str) -> sqlite3.Row | None:
+        return self._conn.execute(
+            "SELECT * FROM sessions WHERE session_id = ?", (session_id,)
+        ).fetchone()
+
+    def sessions_for_reflection(self, reflection_id: str) -> list[sqlite3.Row]:
+        return self._conn.execute(
+            "SELECT * FROM sessions WHERE reflection_id = ? ORDER BY session_date, session_id",
+            (reflection_id,),
+        ).fetchall()
 
     def close(self) -> None:
         self._conn.close()

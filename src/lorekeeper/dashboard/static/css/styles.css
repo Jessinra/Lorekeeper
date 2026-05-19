@@ -452,5 +452,146 @@ tr > th:last-child,  tr > td:last-child  { padding-right: 40px; }
 
 .hidden { display: none !important; }
 
+/* ── Sessions tab layout ── */
+#tab-sessions { flex-direction: row; }
+
+.sess-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.sess-sidebar-inner {
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+.sess-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sess-sidebar-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.sess-sidebar-actions { display: flex; gap: 2px; }
+
+/* Section wrapper */
+.sess-section { display: flex; flex-direction: column; gap: 8px; }
+.sess-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--subtle);
+}
+.sess-section-sub { font-weight: 400; text-transform: none; letter-spacing: 0; opacity: 0.8; }
+
+/* Task distribution bars */
+.sess-task-dist { display: flex; flex-direction: column; gap: 6px; }
+.sess-dist-row { display: flex; flex-direction: column; gap: 3px; cursor: pointer; }
+.sess-dist-row:hover .sess-dist-bar-fill { filter: brightness(0.92); }
+.sess-dist-meta { display: flex; justify-content: space-between; align-items: center; }
+.sess-dist-name { font-size: 12px; font-weight: 500; }
+.sess-dist-count { font-size: 11px; color: var(--subtle); font-variant-numeric: tabular-nums; }
+.sess-dist-bar { height: 5px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.sess-dist-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+.sess-dist-build  .sess-dist-bar-fill { background: #3b82f6; }
+.sess-dist-debug  .sess-dist-bar-fill { background: #f59e0b; }
+.sess-dist-review .sess-dist-bar-fill { background: #10b981; }
+.sess-dist-design .sess-dist-bar-fill { background: #a855f7; }
+.sess-dist-other  .sess-dist-bar-fill { background: #94a3b8; }
+.sess-dist-build  .sess-dist-name { color: #1e40af; }
+.sess-dist-debug  .sess-dist-name { color: #92400e; }
+.sess-dist-review .sess-dist-name { color: #166534; }
+.sess-dist-design .sess-dist-name { color: #6b21a8; }
+.sess-dist-other  .sess-dist-name { color: var(--muted); }
+
+/* Filter chips */
+.sess-filter-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.sess-chip {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background var(--t), color var(--t), border-color var(--t);
+}
+.sess-chip:hover { background: var(--border); color: var(--text); }
+.sess-chip.active { border-color: transparent; color: var(--text); background: var(--border); }
+.sess-chip-build.active  { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
+.sess-chip-debug.active  { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+.sess-chip-review.active { background: #dcfce7; border-color: #86efac; color: #166534; }
+.sess-chip-design.active { background: #f3e8ff; border-color: #d8b4fe; color: #6b21a8; }
+
+/* Right side main area */
+.sess-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+.sess-table-controls {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  background: var(--surface);
+}
+.sess-filter-active-label {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 500;
+}
+.sess-main .table-wrap { flex: 1; overflow-y: auto; }
+
+/* Table cells */
+.col-task    { width: 80px; }
+.col-sess-id  { width: 74px; }
+.sess-topic  { font-size: 13px; color: var(--text); font-family: monospace; }
+.sess-summary-col { font-size: 13px; color: var(--muted); }
+.sess-stub-label  { color: var(--subtle); font-style: italic; font-size: 12px; }
+.sess-row-stub    { opacity: 0.55; }
+.sess-detail-body { padding: 12px 20px 16px; flex-direction: column; flex-wrap: nowrap; gap: 10px; }
+.sess-stub-detail { color: var(--subtle); font-size: 13px; font-style: italic; padding: 4px 0; }
+.sess-id-chip { font-family: monospace; font-size: 11px; color: var(--subtle); background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; letter-spacing: 0.03em; white-space: nowrap; }
+.btn-ghost.active { color: var(--primary); background: var(--primary-bg); }
+.task-badge  { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 500; }
+.task-build  { background: #dbeafe; color: #1e40af; }
+.task-debug  { background: #fef3c7; color: #92400e; }
+.task-review { background: #dcfce7; color: #166534; }
+.task-design { background: #f3e8ff; color: #6b21a8; }
+
+/* ── Reflections tab (legacy CSS kept for reflections.js compat) ── */
+.ref-detail-body { padding: 12px 32px 16px; }
+.ref-section { margin-bottom: 12px; }
+.ref-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--subtle); margin-bottom: 4px; }
+.ref-section-body { font-size: 13px; color: var(--text); white-space: pre-wrap; line-height: 1.6; }
+.ref-mem-link { display: inline-block; font-size: 12px; font-family: monospace; color: var(--primary); cursor: pointer; padding: 1px 6px; background: #eef2ff; border-radius: 4px; margin: 2px 4px 2px 0; }
+.ref-mem-link:hover { background: #dde8ff; }
+.ref-loading { color: var(--subtle); font-size: 13px; padding: 8px 32px; }
+
+.legacy-runs-section { margin-top: 32px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.legacy-runs-title { font-size: 12px; font-weight: 600; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.06em; padding: 10px 16px; cursor: pointer; user-select: none; background: var(--bg); }
+.legacy-runs-title:hover { background: #f4f8ff; }
+.legacy-runs-section[open] .legacy-runs-title { border-bottom: 1px solid var(--border); }
+.legacy-runs-section .panel-controls,
+.legacy-runs-section .metrics-strip,
+.legacy-runs-section .table-wrap { padding-left: 16px; padding-right: 16px; }
+
 /* ── Import preview list ── */
 .bk-row:last-child { border-bottom: none !important; }

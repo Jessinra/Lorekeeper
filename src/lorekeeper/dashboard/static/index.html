@@ -20,7 +20,7 @@
   <button class="tab"        onclick="switchTab('detail')">Detail</button>
   <button class="tab"        onclick="switchTab('links')">Links</button>
   <button class="tab"        onclick="switchTab('query')">Query</button>
-  <button class="tab"        onclick="switchTab('runs')">Runs</button>
+  <button class="tab"        onclick="switchTab('sessions')">Sessions</button>
   <button class="tab"        onclick="switchTab('config')">Config</button>
   <button class="tab"        onclick="switchTab('backup')">Backup</button>
 </nav>
@@ -129,39 +129,79 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════
-     Tab: Runs
+     Tab: Sessions
 ═════════════════════════════════════════════════════ -->
-<div id="tab-runs" class="tab-pane">
-  <div class="panel-controls">
-    <span class="item-count" id="runs-status"></span>
-    <span class="panel-divider"></span>
-    <button class="btn-ghost btn-sm" onclick="loadRuns(true)" title="Refresh">↺</button>
+<div id="tab-sessions" class="tab-pane">
+
+  <!-- Left sidebar -->
+  <div class="sess-sidebar">
+    <div class="sess-sidebar-inner">
+
+      <!-- Header -->
+      <div class="sess-sidebar-header">
+        <span class="sess-sidebar-title">Sessions</span>
+        <div class="sess-sidebar-actions">
+          <button id="sess-hide-stubs-btn" class="btn-ghost btn-sm active" onclick="toggleHideStubs()" title="Hide stub sessions">Hide stubs</button>
+          <button class="btn-ghost btn-sm" onclick="loadSessions(true)" title="Refresh">↺</button>
+        </div>
+      </div>
+
+      <!-- Task type distribution -->
+      <div class="sess-section">
+        <div class="sess-section-title">By task type</div>
+        <div id="sess-task-dist" class="sess-task-dist"></div>
+      </div>
+
+      <!-- Session ID search -->
+      <div class="sess-section">
+        <div class="sess-section-title">Search by session ID</div>
+        <div class="filter-wrap">
+          <input type="text" class="filter-input" id="sess-id-search"
+                 placeholder="session UUID…"
+                 oninput="filterBySessionId(this.value)">
+          <button class="filter-clear" id="sess-id-clear"
+                  onclick="document.getElementById('sess-id-search').value='';filterBySessionId('')">×</button>
+        </div>
+      </div>
+
+      <!-- Quick filters -->
+      <div class="sess-section">
+        <div class="sess-section-title">Filter by task</div>
+        <div class="sess-filter-chips">
+          <button class="sess-chip active" data-filter="" onclick="filterByTask(this, '')">All</button>
+          <button class="sess-chip sess-chip-build" data-filter="build" onclick="filterByTask(this, 'build')">build</button>
+          <button class="sess-chip sess-chip-debug" data-filter="debug" onclick="filterByTask(this, 'debug')">debug</button>
+          <button class="sess-chip sess-chip-review" data-filter="review" onclick="filterByTask(this, 'review')">review</button>
+          <button class="sess-chip sess-chip-design" data-filter="design" onclick="filterByTask(this, 'design')">design</button>
+        </div>
+      </div>
+
+    </div>
   </div>
-  <div class="metrics-strip">
-    <div class="metric-item"><span class="metric-value" id="run-met-total">—</span><span class="metric-label">runs</span></div>
-    <div class="metric-sep"></div>
-    <div class="metric-item"><span class="metric-value" id="run-met-inserted">—</span><span class="metric-label">memories added</span></div>
-    <div class="metric-sep"></div>
-    <div class="metric-item"><span class="metric-value" id="run-met-updated">—</span><span class="metric-label">updated</span></div>
-    <div class="metric-sep"></div>
-    <div class="metric-item"><span class="metric-value" id="run-met-last">—</span><span class="metric-label">last run</span></div>
+
+  <!-- Right: table -->
+  <div class="sess-main">
+    <div class="sess-table-controls">
+      <span class="item-count" id="sess-status"></span>
+      <span class="panel-divider"></span>
+      <span id="sess-filter-label" class="sess-filter-active-label"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-date sortable" id="th-sess-date" onclick="toggleDateSort()" title="Sort by date">Date <span class="tz-label">GMT+8</span> <span class="sort-arrow">↓</span></th>
+            <th class="col-sess-id">ID</th>
+            <th>Topic</th>
+            <th class="col-task">Task</th>
+            <th>What was done</th>
+          </tr>
+        </thead>
+        <tbody id="session-rows"></tbody>
+      </table>
+    </div>
   </div>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>When / trigger</th>
-          <th class="col-num">New logs</th>
-          <th class="col-num">Skipped</th>
-          <th class="col-num">Inserted</th>
-          <th class="col-num">Updated</th>
-          <th class="col-num">Deleted</th>
-          <th>Topics</th>
-        </tr>
-      </thead>
-      <tbody id="run-rows"></tbody>
-    </table>
-  </div>
+
 </div>
 
 <!-- ══════════════════════════════════════════════════

@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import datetime, timezone
 
@@ -362,6 +363,67 @@ class MemoryService:
             "soft_deleted_memories": soft_deleted,
             "errors": errors,
         }
+
+
+    # ── Reflect ───────────────────────────────────────────────────────────────
+
+    def submit_reflection(
+        self,
+        session_id: str,
+        session_date: str | None,
+        topic: str | None,
+        task_type: str | None,
+        what_was_done: str | None,
+        decisions: str | None,
+        lessons_learnt: list[str],
+        good_patterns: list[str],
+        user_profile_updates: list[str],
+        factual_discoveries: list[str],
+        summary: str,
+        memory_ids: list[str],
+    ) -> dict:
+        reflection_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc).isoformat()
+
+        def _bullets(items: list[str]) -> str | None:
+            return "\n".join(f"- {item}" for item in items) if items else None
+
+        self._store.insert_reflection(
+            id=reflection_id,
+            created_at=now,
+            session_count=1,
+            lessons_learnt=_bullets(lessons_learnt) or "",
+            good_patterns=_bullets(good_patterns),
+            user_profile_updates=_bullets(user_profile_updates),
+            factual_discoveries=_bullets(factual_discoveries),
+            summary=summary,
+            memory_ids=json.dumps(memory_ids) if memory_ids else None,
+        )
+
+        self._store.upsert_session(
+            session_id=session_id,
+            reviewed_at=now,
+            session_date=session_date,
+            topic=topic,
+            task_type=task_type,
+            reflection_id=reflection_id,
+            what_was_done=what_was_done,
+            decisions=decisions,
+            lessons_learnt=_bullets(lessons_learnt),
+            good_patterns=_bullets(good_patterns),
+            user_profile=_bullets(user_profile_updates),
+            discoveries=_bullets(factual_discoveries),
+        )
+
+        log.info("reflection_submitted", reflection_id=reflection_id, session_id=session_id)
+        return {
+            "reflection_id": reflection_id,
+            "session_id": session_id,
+            "created_at": now,
+        }
+
+    def get_processed_session_ids(self) -> list[str]:
+        return list(self._store.all_processed_session_ids())
 
 
 def _row_to_memory(row: object) -> Memory:
