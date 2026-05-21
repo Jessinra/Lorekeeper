@@ -23,6 +23,7 @@
   <button class="tab"        onclick="switchTab('sessions')">Sessions</button>
   <button class="tab"        onclick="switchTab('config')">Config</button>
   <button class="tab"        onclick="switchTab('backup')">Backup</button>
+  <button class="tab"        onclick="switchTab('metrics')">Metrics</button>
 </nav>
 
 <!-- ══════════════════════════════════════════════════
@@ -292,6 +293,23 @@
   </div>
 </div>
 
-<script type="module" src="js/app.js"></script>
-</body>
+<!-- ══════════════════════════════════════════════════
+     Tab: Metrics
+═════════════════════════════════════════════════════ -->
+<div id="tab-metrics" class="tab-pane metrics-pane">
+  <div class="metrics-page">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px">
+      <div style="flex:1">
+        <h2>API Metrics</h2>
+        <p style="font-size:13px;color:var(--subtle);margin-top:3px">Last 7 days of API call activity. <span id="metrics-total-inline"></span></p>
+      </div>
+      <button class="btn-secondary btn-sm" onclick="loadMetricsFromGlobal()" title="Refresh">↺</button>
+    </div>
+    <div id="metrics-chart-wrap">
+      <p class="metrics-empty">Click the Metrics tab to load data.</p>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script></body>
 </html>

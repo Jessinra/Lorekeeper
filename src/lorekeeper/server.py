@@ -31,6 +31,17 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     engine.probe_score_scale()
 
     store = LinkStore(s.sqlite_path)
+
+    # Apply persisted config overrides (dashboard changes that survived restart)
+    overrides = store.get_config_overrides()
+    for key, value in overrides.items():
+        try:
+            setattr(s, key, value)
+        except Exception:
+            log.warning("config_override_skipped", key=key, value=value)
+    if overrides:
+        log.info("config_overrides_loaded", keys=list(overrides))
+
     kw = KeywordIndex()
 
     svc = MemoryService(engine, store, kw, s)
@@ -46,12 +57,16 @@ def init_service(settings: Settings | None = None) -> MemoryService:
 @mcp.tool(name="lore_search")
 async def lore_search(
     query: str,
-    limit: int = 10,
+    limit: int | None = None,
     min_score: float = 0.1,
     include_links: bool = True,
     include_deleted: bool = False,
 ) -> dict:
-    return handle_search(get_service(), query, limit, min_score, include_links, include_deleted)
+    try:
+        return handle_search(get_service(), query, limit, min_score, include_links, include_deleted)
+    except Exception:
+        log.exception("lore_search_failed", query=query)
+        raise
 
 
 @mcp.tool(name="lore_insert")
@@ -60,7 +75,11 @@ async def lore_insert(
     links: list[dict] | None = None,
     force: bool = False,
 ) -> dict:
-    return get_service().insert(memories or [], links or [], force)
+    try:
+        return get_service().insert(memories or [], links or [], force)
+    except Exception:
+        log.exception("lore_insert_failed", memory_count=len(memories or []))
+        raise
 
 
 @mcp.tool(name="lore_update")
@@ -68,13 +87,21 @@ async def lore_update(
     memory_feedback: list[dict] | None = None,
     link_feedback: list[dict] | None = None,
 ) -> dict:
-    return get_service().update(memory_feedback or [], link_feedback or [])
+    try:
+        return get_service().update(memory_feedback or [], link_feedback or [])
+    except Exception:
+        log.exception("lore_update_failed")
+        raise
 
 
 @mcp.tool(name="lore_processed_sessions")
 async def lore_processed_sessions() -> dict:
     """Return all session IDs that have been marked as processed via lore_reflect."""
-    return {"session_ids": get_service().get_processed_session_ids()}
+    try:
+        return {"session_ids": get_service().get_processed_session_ids()}
+    except Exception:
+        log.exception("lore_processed_sessions_failed")
+        raise
 
 
 @mcp.tool(name="lore_reflect")
@@ -93,17 +120,21 @@ async def lore_reflect(
     memory_ids: list[str] | None = None,
 ) -> dict:
     """Call once per session — reflect on one session, submit, then move to the next."""
-    return get_service().submit_reflection(
-        session_id=session_id,
-        session_date=session_date,
-        topic=topic,
-        task_type=task_type,
-        what_was_done=what_was_done,
-        decisions=decisions,
-        lessons_learnt=lessons_learnt or [],
-        good_patterns=good_patterns or [],
-        user_profile_updates=user_profile_updates or [],
-        factual_discoveries=factual_discoveries or [],
-        summary=summary,
-        memory_ids=memory_ids or [],
-    )
+    try:
+        return get_service().submit_reflection(
+            session_id=session_id,
+            session_date=session_date,
+            topic=topic,
+            task_type=task_type,
+            what_was_done=what_was_done,
+            decisions=decisions,
+            lessons_learnt=lessons_learnt or [],
+            good_patterns=good_patterns or [],
+            user_profile_updates=user_profile_updates or [],
+            factual_discoveries=factual_discoveries or [],
+            summary=summary,
+            memory_ids=memory_ids or [],
+        )
+    except Exception:
+        log.exception("lore_reflect_failed", session_id=session_id)
+        raise

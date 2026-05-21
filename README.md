@@ -55,7 +55,6 @@ Confidence is stored as a running EMA over the last 20 ratings.
 ```json
 {
   "query": "checkout payment flow",
-  "limit": 10,
   "min_score": 0.1,
   "include_links": true,
   "include_deleted": false
@@ -175,6 +174,11 @@ All settings use the `LORE_` prefix and can be set via environment variables:
 | `LORE_SCORE_BUMP_DOWN` | `0.05` | Score decrease on negative feedback |
 | `LORE_SOFT_DELETE_CONFIDENCE_THRESHOLD` | `2` | Confidence ≤ this + `useful=false` triggers soft-delete |
 | `LORE_CONFIDENCE_WINDOW_SIZE` | `20` | Rolling window size for confidence EMA |
+| `LORE_SEARCH_LIMIT` | `5` | Default number of memories returned by `lore_search` |
+| `LORE_MAX_LINKS_PER_MEMORY` | `5` | Limit links returned per memory in search results |
+| `LORE_SCORE_MIN` | `0.0` | Minimum allowed memory score |
+| `LORE_SCORE_MAX` | `10.0` | Maximum allowed memory score |
+| `LORE_USAGE_NORMALISATION_CAP` | `100` | Cap for log-normalising `usage_count` in hybrid scoring |
 | `LORE_DASH_PORT` | `7777` | Dashboard HTTP port |
 | `LORE_DASH_RELOAD` | `1` | Dashboard hot-reload (`0` to disable) |
 
@@ -303,7 +307,7 @@ The UI has seven tabs:
 | **Links** | Flat sortable table of all links with source → relation → target. Click titles to navigate to that memory. |
 | **Query** | Large text box for ad-hoc search. Shows combined/semantic/keyword scores and a relevance bar per result. |
 | **Sessions** | All processed Claude sessions. Sidebar has session ID search (substring) and task-type filter chips. Date column is sortable (click header). Each row shows the review timestamp in UTC+8 with a relative time label below (e.g. "2h ago"), truncated session ID (hover for full UUID), topic, task type, and a summary of what was done. Stub sessions (no content) are hidden by default — toggle with the **Hide stubs** button. Click a row to expand full content: what was done, decisions, lessons learnt, good patterns, user profile observations, and discoveries. |
-| **Config** | Live settings editor for search weights, quality signals, and limits. Changes apply immediately but reset on restart; use `LORE_*` env vars to persist. |
+| **Config** | Live settings editor for search weights, quality signals, and limits (search result count, links per memory). Changes apply immediately but reset on restart; use `LORE_*` env vars to persist. |
 | **Backup** | Export all memories + links as a JSON file. Import a backup with dedup preview (shows counts and a scrollable list of each new memory/link to be inserted) before confirming. |
 
 ### API endpoints
@@ -352,6 +356,10 @@ uv run lorekeeper-dashboard
 ## Project layout
 
 ```
+docs/
+└── plans/                   # Implementation plans (YYYY-MM-DD_HHMMSS-<slug>.md)
+loop/
+└── sessions/                # Agentic loop session logs (one per session)
 src/lorekeeper/
 ├── __main__.py              # Entrypoint — init_service() + mcp.run(stdio)
 ├── server.py                # FastMCP tool definitions (lore_search/insert/update/reflect/processed_sessions)
@@ -363,7 +371,7 @@ src/lorekeeper/
 └── services/
     ├── orchestrator.py      # MemoryService — coordinates all sub-services
     ├── memory_engine.py     # Mem0 + ChromaDB wrapper, semantic scale probe
-    ├── link_store.py        # SQLite — memory rows, links, reflections, sessions, BM25 source
+    ├── link_store.py        # SQLite — memory rows, links, reflections, sessions, BM25 source (+ api_metrics)
     ├── keyword_index.py     # BM25 index (rank-bm25)
     ├── search.py            # Hybrid ranking, SearchResult type
     ├── dedup.py             # Duplicate detection

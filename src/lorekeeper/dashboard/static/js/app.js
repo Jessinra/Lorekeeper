@@ -21,6 +21,7 @@ import { runQuery, registerQuerySelectMemory } from './query.js';
 import { loadConfig, saveConfig, onCfgChange } from './config.js';
 import { loadSessions } from './sessions.js';
 import { initBackup } from './backup.js';
+import { loadMetrics } from './metrics.js';
 
 // ── Wire cross-module callbacks to break circular deps ──
 
@@ -28,6 +29,7 @@ registerTabCallbacks({
   onTabLinks:    loadLinks,
   onTabConfig:   loadConfig,
   onTabSessions: loadSessions,
+  onTabMetrics:  loadMetrics,
 });
 
 // detail.js needs loadMemories, renderList, loadLinks
@@ -80,6 +82,7 @@ function scheduleAutoRefresh() {
 }
 
 window.triggerRefresh = triggerRefresh;
+window.loadMetricsFromGlobal = () => loadMetrics();
 
 // ── Init ──
 

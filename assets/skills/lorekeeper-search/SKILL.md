@@ -17,11 +17,12 @@ Lorekeeper is a persistent memory store exposed via MCP tools (`lore_search`, `l
 Call `lore_search` with a specific natural language query.
 
 ```
-lore_search({ query: "voucher stacking rules in checkout", limit: 10, min_score: 0.1 })
+lore_search({ query: "voucher stacking rules in checkout", min_score: 0.1 })
 ```
 
 - Use natural language questions, not single keywords
-- Raise `min_score` (e.g. 0.3) if results are noisy; lower `limit` if you need fewer results
+- Raise `min_score` (e.g. 0.3) if results are noisy
+- Omit `limit` to use the server's default (set via `LORE_SEARCH_LIMIT` env var or dashboard Config tab)
 - Soft-deleted memories (flagged as unreliable) are excluded by default.
 
 ### Step 2: Use the results and verify

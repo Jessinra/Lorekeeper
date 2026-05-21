@@ -34,7 +34,7 @@ Write a standalone fact (must make sense without conversation context):
 Search for related memories. This is **mandatory** — even if you think nothing related exists.
 
 ```
-lore_search({ query: "<topic of the new memory>", limit: 5, min_score: 0.2 })
+lore_search({ query: "<topic of the new memory>", min_score: 0.2 })
 ```
 
 Note which results are genuinely related (their `memory.id` values are needed for linking).

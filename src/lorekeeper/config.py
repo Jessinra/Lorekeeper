@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="LORE_", case_sensitive=False)
 
     data_dir: Path = Field(default=Path.home() / ".lorekeeper")
+    log_dir: Path = Field(default=Path.home() / ".lorekeeper" / "logs")
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     duplicate_threshold: float = 0.85
 
@@ -27,6 +28,7 @@ class Settings(BaseSettings):
     # EMA
     confidence_window_size: int = 20
 
+    search_limit: int = 5
     max_links_per_memory: int = 5
     usage_normalisation_cap: int = 100
 

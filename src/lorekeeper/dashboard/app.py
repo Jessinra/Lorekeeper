@@ -156,7 +156,7 @@ def delete_link(link_id: str) -> dict[str, bool]:
 
 class SearchRequest(BaseModel):
     query: str
-    limit: int = 10
+    limit: int = 5
     min_score: float = 0.1
 
 
@@ -168,6 +168,7 @@ _READONLY_KEYS = {"data_dir", "embedding_model"}
 @app.get("/api/config")
 def get_config() -> dict[str, Any]:
     s = get_service()._settings
+    overridden_keys = set(get_service()._store.get_config_overrides().keys())
     return {
         "data_dir":                        str(s.data_dir),
         "embedding_model":                 s.embedding_model,
@@ -182,8 +183,10 @@ def get_config() -> dict[str, Any]:
         "score_max":                       s.score_max,
         "soft_delete_confidence_threshold":s.soft_delete_confidence_threshold,
         "confidence_window_size":          s.confidence_window_size,
+        "search_limit":                    s.search_limit,
         "max_links_per_memory":            s.max_links_per_memory,
         "usage_normalisation_cap":         s.usage_normalisation_cap,
+        "_overridden_keys":                sorted(overridden_keys),
     }
 
 
@@ -199,6 +202,7 @@ class ConfigUpdate(BaseModel):
     score_max: float | None = None
     soft_delete_confidence_threshold: int | None = None
     confidence_window_size: int | None = None
+    search_limit: int | None = None
     max_links_per_memory: int | None = None
     usage_normalisation_cap: int | None = None
 
@@ -206,9 +210,11 @@ class ConfigUpdate(BaseModel):
 @app.patch("/api/config")
 def update_config(body: ConfigUpdate) -> dict[str, bool]:
     s = get_service()._settings
+    store = get_service()._store
     for key, value in body.model_dump(exclude_none=True).items():
         if key not in _READONLY_KEYS:
             setattr(s, key, value)
+            store.set_config_override(key, value)
     return {"ok": True}
 
 
@@ -322,3 +328,31 @@ async def import_preview(file: UploadFile = File(...)) -> dict[str, Any]:
 async def import_confirm(file: UploadFile = File(...)) -> dict[str, Any]:
     memories, links = _parse_dump(await file.read())
     return get_service().import_dump(memories, links, dry_run=False)
+
+
+# ── Metrics ───────────────────────────────────────────────────────────────────
+
+@app.get("/api/metrics")
+def get_metrics(hours: int = 24) -> dict[str, Any]:
+    """Return per-minute API call counts bucketed by tool, for the last `hours` hours."""
+    store = get_service()._store
+    rows = store.get_metrics(hours=hours)
+    # Build sorted list of unique buckets and tools
+    buckets: list[str] = []
+    tools: set[str] = set()
+    data: dict[str, dict[str, int]] = {}
+    for row in rows:
+        bucket = row["minute_bucket"]
+        tool   = row["tool_name"]
+        count  = row["count"]
+        tools.add(tool)
+        if bucket not in data:
+            data[bucket] = {}
+            buckets.append(bucket)
+        data[bucket][tool] = count
+    return {
+        "hours": hours,
+        "buckets": buckets,
+        "tools": sorted(tools),
+        "data": data,
+    }

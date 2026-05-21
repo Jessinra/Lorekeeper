@@ -1,10 +1,12 @@
+from lorekeeper.config import Settings
 from lorekeeper.logging_setup import configure_logging
 from lorekeeper.server import init_service, mcp
 
 
 def main() -> None:
-    configure_logging()
-    init_service()
+    settings = Settings()
+    configure_logging(log_dir=settings.log_dir)
+    init_service(settings)
     mcp.run(transport="stdio")
 
 

@@ -41,24 +41,38 @@ class MemoryService:
         mems = list(self._all_memories(include_deleted=True).values())
         self._kw.rebuild(mems)
 
+    # ── Internal helpers ─────────────────────────────────────────────────────
+
+    def _increment_metric(self, tool_name: str) -> None:
+        try:
+            self._store.increment_metric(tool_name)
+        except Exception:
+            pass  # Metrics must never break a real call
+
     # ── Search ────────────────────────────────────────────────────────────────
 
     def search(
         self,
         query: str,
-        limit: int = 10,
+        limit: int | None = None,
         min_score: float = 0.1,
         include_links: bool = True,
         include_deleted: bool = False,
     ) -> list[SearchResult]:
+        self._increment_metric("lore_search")
         sem_hits = self._engine.search(query, limit=200)
         kw_hits = self._kw.search_normalized(query)
         memories = self._all_memories(include_deleted=include_deleted)
 
+        if limit is None:
+            limit = self._settings.search_limit
+
         links_by_id: dict[str, list[MemoryLink]] = {}
         if include_links:
+            max_links = self._settings.max_links_per_memory
             for mid in memories:
-                links_by_id[mid] = self._store.links_for_memory(mid)
+                all_links = self._store.links_for_memory(mid)
+                links_by_id[mid] = all_links[:max_links]
 
         results = rank_results(
             sem_hits, kw_hits, memories, links_by_id,
@@ -79,6 +93,7 @@ class MemoryService:
         links: list[dict],
         force: bool = False,
     ) -> dict:
+        self._increment_metric("lore_insert")
         inserted_memories: list[dict] = []
         inserted_links: list[dict] = []
         duplicates: list[dict] = []
@@ -292,6 +307,7 @@ class MemoryService:
         memory_feedback: list[dict],
         link_feedback: list[dict],
     ) -> dict:
+        self._increment_metric("lore_update")
         updated_memories = 0
         updated_links = 0
         soft_deleted = 0
@@ -382,6 +398,7 @@ class MemoryService:
         summary: str,
         memory_ids: list[str],
     ) -> dict:
+        self._increment_metric("lore_reflect")
         reflection_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
 
@@ -423,6 +440,7 @@ class MemoryService:
         }
 
     def get_processed_session_ids(self) -> list[str]:
+        self._increment_metric("lore_processed_sessions")
         return list(self._store.all_processed_session_ids())
 
 

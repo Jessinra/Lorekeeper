@@ -35,7 +35,7 @@ Choose whichever method(s) suit the memory being verified. Combine multiple meth
 Extract key terms from the reference materials or topic request — domain terms, entity names, process names — and run multiple `lore_search` queries to build a verification queue of unique memories.
 
 ```
-lore_search({ query: "<natural language query>", limit: 15, min_score: 0.1 })
+lore_search({ query: "<natural language query>", min_score: 0.1 })
 ```
 
 Use `include_deleted: true` when auditing previously soft-deleted memories.

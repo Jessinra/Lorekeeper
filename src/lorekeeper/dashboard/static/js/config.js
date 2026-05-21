@@ -18,8 +18,9 @@ export const CFG_FIELDS = {
     { key: 'confidence_window_size',           env: 'LORE_CONFIDENCE_WINDOW_SIZE',           label: 'Confidence window',      desc: 'EMA sliding window size for confidence',                  step: 1,    type: 'int'   },
   ],
   limits: [
+    { key: 'search_limit',              env: 'LORE_SEARCH_LIMIT',              label: 'Search result limit',  desc: 'Default number of memories returned by lore_search',        step: 1,    type: 'int'   },
+    { key: 'max_links_per_memory',    env: 'LORE_MAX_LINKS_PER_MEMORY',    label: 'Max links per memory',    desc: 'Max links returned per memory in search results (does not limit stored links)', step: 1, type: 'int' },
     { key: 'duplicate_threshold',     env: 'LORE_DUPLICATE_THRESHOLD',     label: 'Duplicate threshold',     desc: 'Combined score above which an insert is blocked as duplicate', step: 0.01, type: 'float' },
-    { key: 'max_links_per_memory',    env: 'LORE_MAX_LINKS_PER_MEMORY',    label: 'Max links per memory',    desc: 'Maximum number of links a memory can have',                    step: 1,    type: 'int'   },
     { key: 'usage_normalisation_cap', env: 'LORE_USAGE_NORMALISATION_CAP', label: 'Usage normalisation cap', desc: 'Cap for log-normalising usage_count in scoring',               step: 1,    type: 'int'   },
   ],
   readonly: [

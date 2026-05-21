@@ -147,7 +147,13 @@ Lorekeeper is a **program layer above the memory provider**, designed to be exte
 - **Provider-agnostic**: Mem0/Chroma today, swappable (Qdrant, Pinecone, LangMem)
 - **Context injection**: eventually stuffs relevant memories into system prompt automatically
 
-For v2, the scope is: **MCP server + hybrid search + quality signals + migration**. The lifecycle hooks and cron jobs are Phase 2+. See `research/agentic-loop.md` for the full roadmap.
+For v2, the scope is: **MCP server + hybrid search + quality signals + migration**. The lifecycle hooks and cron jobs are Phase 2+. See `docs/plans/agentic-loop.md` for the full roadmap.
+
+---
+
+## Plans Location
+
+Implementation plans live in `docs/plans/YYYY-MM-DD_HHMMSS-<slug>.md` (not `.hermes/plans/`). This is the project-specific override of the global `plan` skill default. Keep plans organized and named by date + topic slug.
 
 ---
 

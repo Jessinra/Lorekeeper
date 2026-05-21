@@ -48,7 +48,7 @@ def _result_to_dict(result: SearchResult) -> dict:
 def handle_search(
     svc: MemoryService,
     query: str,
-    limit: int = 10,
+    limit: int | None = None,
     min_score: float = 0.1,
     include_links: bool = True,
     include_deleted: bool = False,

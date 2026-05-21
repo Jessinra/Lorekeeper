@@ -595,3 +595,191 @@ tr > th:last-child,  tr > td:last-child  { padding-right: 40px; }
 
 /* ── Import preview list ── */
 .bk-row:last-child { border-bottom: none !important; }
+
+/* ── Metrics tab ── */
+.metrics-pane {
+  flex-direction: column !important;
+  overflow-y: auto;
+}
+.metrics-page {
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 20px 56px;
+}
+.metrics-page h2 { font-size: 16px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 4px; }
+#metrics-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Card */
+.metrics-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px 20px;
+}
+.metrics-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 16px;
+}
+
+/* Per-tool label inside card */
+.activity-tool-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 16px 0 6px;
+}
+.activity-tool-label:first-of-type { margin-top: 0; }
+.activity-tool-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Grid wrapper */
+.activity-grid-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+/* Rows */
+.activity-row {
+  display: flex;
+  gap: 3px;
+}
+.activity-header-row {
+  margin-bottom: 1px;
+}
+
+/* Column hour labels */
+.activity-col-label {
+  width: 13px;
+  min-width: 13px;
+  height: 11px;
+  font-size: 9px;
+  color: var(--subtle);
+  text-align: center;
+  line-height: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cells */
+.activity-box {
+  width: 13px;
+  min-width: 13px;
+  height: 13px;
+  border-radius: 2px;
+  cursor: crosshair;
+  transition: outline 0.05s;
+  outline: 2px solid transparent;
+}
+.activity-box:hover {
+  outline: 2px solid rgba(0,0,0,0.25);
+  outline-offset: 0;
+}
+
+/* Date info is shown in hover tooltip only — no date axis column */
+
+/* Row wrapper: date label + box row side-by-side */
+.activity-row-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.activity-date-label {
+  width: 36px;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--subtle);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  line-height: 13px;
+  opacity: 0.7;
+}
+
+/* Legend */
+.activity-legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+.activity-legend-label {
+  font-size: 11px;
+  color: var(--subtle);
+  margin: 0 4px;
+}
+.activity-legend-box {
+  cursor: default;
+  outline: none !important;
+}
+
+/* Tooltip */
+.activity-tooltip {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: var(--text);
+  color: #f8fafc;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  min-width: 160px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+}
+.tt-header {
+  font-weight: 600;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.tt-total { margin-bottom: 4px; }
+.tt-total strong { color: #fff; }
+.tt-breakdown {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1px 8px;
+  font-size: 11px;
+}
+.tt-tool { color: #cbd5e1; }
+.tt-count { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.tt-empty { color: #94a3b8; font-size: 11px; }
+
+.metrics-empty {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 32px 0;
+  text-align: center;
+}
+.metrics-total-badge {
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+.panel-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
