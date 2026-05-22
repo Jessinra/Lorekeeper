@@ -44,4 +44,6 @@ _None_ (but don't build until the trigger condition is met)
 _None_
 
 ## Notes
-**DO NOT BUILD YET** — no second agent is live. Building prematurely adds schema complexity for a problem that doesn't exist. Revisit when work laptop Hermes is set up.
+**DO NOT BUILD YET** — premature until there's a concrete second agent. Revisit when setting up multiple Hermes profiles (e.g. personal assistant vs. Lorekeeper PM bot).
+
+**Updated trigger (2026-05-22):** Use case confirmed — running 2 Hermes profiles on the same machine (personal assistant + Lorekeeper PM Telegram bot). Both would share the same Lorekeeper MCP instance and memory store. Namespace isolation is the clean fix; workaround for now is to only enable Lorekeeper MCP on one profile.
