@@ -22,6 +22,7 @@ export const CFG_FIELDS = {
     { key: 'max_links_per_memory',    env: 'LORE_MAX_LINKS_PER_MEMORY',    label: 'Max links per memory',    desc: 'Max links returned per memory in search results (does not limit stored links)', step: 1, type: 'int' },
     { key: 'duplicate_threshold',     env: 'LORE_DUPLICATE_THRESHOLD',     label: 'Duplicate threshold',     desc: 'Combined score above which an insert is blocked as duplicate', step: 0.01, type: 'float' },
     { key: 'usage_normalisation_cap', env: 'LORE_USAGE_NORMALISATION_CAP', label: 'Usage normalisation cap', desc: 'Cap for log-normalising usage_count in scoring',               step: 1,    type: 'int'   },
+    { key: 'decay_lambda',            env: 'LORE_DECAY_LAMBDA',            label: 'Decay lambda (λ)',         desc: 'Time-decay rate — higher = faster decay. Default 0.0077 ≈ 90-day half-life', step: 0.0001, type: 'float' },
   ],
   readonly: [
     { key: 'data_dir',        env: 'LORE_DATA_DIR',        label: 'Data directory',  desc: 'Root path for Chroma + SQLite storage' },
