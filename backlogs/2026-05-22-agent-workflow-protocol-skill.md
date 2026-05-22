@@ -17,11 +17,11 @@ Any agent can install lorekeeper but won't know when to call what. Without guida
 
 ## Solution
 Ship an opinionated **lorekeeper-protocol skill file** encoding the full usage protocol:
-- Session start → `lore_search`
-- Every 10 inserts → `lore_health` check
-- If fragmentation > 30% → `lore_find_nearest_pairs` → agent merges
-- After 5 sessions on same topic → `lore_get_topic_reflections` → agent synthesizes summary
-- Session end → `lore_reflect` + `lore_wrap_session`
+- Session start → `lore_search` (load context + feedback on results)
+- Mid-session topic shift → `lore_search` again
+- Every ~10 inserts → manual spot-check for near-duplicates via `lore_search` + `lore_update`
+- After 5+ sessions on same topic → `lore_processed_sessions` + `lore_search` → agent synthesizes consolidated summary via `lore_insert`
+- Session end → `lore_insert` (new learnings) + `lore_reflect`
 
 The skill IS the intelligence layer. Agent loads it once, follows it forever. Zero platform LLM cost.
 
