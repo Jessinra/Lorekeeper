@@ -53,8 +53,9 @@ def handle_search(
     min_score: float = 0.1,
     include_links: bool = True,
     include_deleted: bool = False,
+    refine_from: list[str] | None = None,
 ) -> dict:
-    results = svc.search(query, limit, min_score, include_links, include_deleted)
+    results = svc.search(query, limit, min_score, include_links, include_deleted, refine_from=refine_from)
     return {
         "results": [_result_to_dict(r) for r in results],
         "total_matched": len(results),

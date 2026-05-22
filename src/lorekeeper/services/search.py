@@ -53,6 +53,9 @@ def time_decay(memory: Memory, lam: float) -> float:
     return math.exp(-lam * days)
 
 
+REFINE_FROM_CAP = 200
+
+
 def rank_results(
     semantic_hits: list[dict],   # [{lore_id, score}]
     keyword_hits: dict[str, float],  # {lore_id: score}
@@ -62,10 +65,17 @@ def rank_results(
     limit: int,
     min_score: float,
     include_deleted: bool,
+    refine_from: list[str] | None = None,
 ) -> list[SearchResult]:
-    # Union of candidate ids
-    candidate_ids = {h["lore_id"] for h in semantic_hits} | set(keyword_hits)
-    sem_map = {h["lore_id"]: h["score"] for h in semantic_hits}
+    if refine_from is not None:
+        # Iterative narrowing: restrict candidates to the provided ID set
+        allowed = set(refine_from)
+        candidate_ids = allowed
+        sem_map = {h["lore_id"]: h["score"] for h in semantic_hits if h["lore_id"] in allowed}
+    else:
+        # Union of candidate ids
+        candidate_ids = {h["lore_id"] for h in semantic_hits} | set(keyword_hits)
+        sem_map = {h["lore_id"]: h["score"] for h in semantic_hits}
 
     lam = settings.decay_lambda
 

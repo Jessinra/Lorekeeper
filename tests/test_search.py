@@ -56,3 +56,40 @@ def test_include_deleted_returns_soft_deleted():
     sem = [{"lore_id": "a", "score": 0.9}]
     results = rank_results(sem, {}, mems, {}, S, limit=10, min_score=0.0, include_deleted=True)
     assert len(results) == 1
+
+
+# ── refine_from tests ────────────────────────────────────────────────────────
+
+def test_refine_from_restricts_candidates(mems):
+    """refine_from limits results to the provided ID set."""
+    sem = [{"lore_id": "a", "score": 0.9}, {"lore_id": "b", "score": 0.8}, {"lore_id": "c", "score": 0.7}]
+    results = rank_results(sem, {}, mems, {}, S, limit=10, min_score=0.0, include_deleted=False, refine_from=["b", "c"])
+    ids = [r.memory.id for r in results]
+    assert "a" not in ids
+    assert "b" in ids
+    assert "c" in ids
+
+
+def test_refine_from_none_is_passthrough(mems):
+    """refine_from=None gives identical behavior to omitting it."""
+    sem = [{"lore_id": "a", "score": 0.9}, {"lore_id": "b", "score": 0.5}]
+    kw = {"a": 0.8}
+    r1 = rank_results(sem, kw, mems, {}, S, limit=10, min_score=0.1, include_deleted=False)
+    r2 = rank_results(sem, kw, mems, {}, S, limit=10, min_score=0.1, include_deleted=False, refine_from=None)
+    assert [r.memory.id for r in r1] == [r.memory.id for r in r2]
+
+
+def test_refine_from_unknown_ids_silently_ignored(mems):
+    """Unknown IDs in refine_from produce no error and no results for those IDs."""
+    sem = [{"lore_id": "a", "score": 0.9}]
+    results = rank_results(sem, {}, mems, {}, S, limit=10, min_score=0.0, include_deleted=False, refine_from=["a", "nonexistent-id"])
+    ids = [r.memory.id for r in results]
+    assert "a" in ids
+    assert "nonexistent-id" not in ids
+
+
+def test_refine_from_empty_list_returns_nothing(mems):
+    """An empty refine_from list means no candidates — returns empty results."""
+    sem = [{"lore_id": "a", "score": 0.9}]
+    results = rank_results(sem, {}, mems, {}, S, limit=10, min_score=0.0, include_deleted=False, refine_from=[])
+    assert results == []

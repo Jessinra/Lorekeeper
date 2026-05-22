@@ -58,6 +58,7 @@ class MemoryService:
         min_score: float = 0.1,
         include_links: bool = True,
         include_deleted: bool = False,
+        refine_from: list[str] | None = None,
     ) -> list[SearchResult]:
         self._increment_metric("lore_search")
         sem_hits = self._engine.search(query, limit=200)
@@ -77,6 +78,7 @@ class MemoryService:
         results = rank_results(
             sem_hits, kw_hits, memories, links_by_id,
             self._settings, limit, min_score, include_deleted,
+            refine_from=refine_from,
         )
 
         # Increment usage on returned memories
