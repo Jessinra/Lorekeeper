@@ -1,4 +1,5 @@
 import structlog
+
 from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.services.search import SearchResult
 
@@ -55,7 +56,10 @@ def handle_search(
     include_deleted: bool = False,
     refine_from: list[str] | None = None,
 ) -> dict:
-    results = svc.search(query, limit, min_score, include_links, include_deleted, refine_from=refine_from)
+    results = svc.search(
+        query, limit, min_score, include_links, include_deleted,
+        refine_from=refine_from,
+    )
     return {
         "results": [_result_to_dict(r) for r in results],
         "total_matched": len(results),

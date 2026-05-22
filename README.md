@@ -65,11 +65,14 @@ Confidence is stored as a running EMA over the last 20 ratings.
   "query": "checkout payment flow",
   "min_score": 0.1,
   "include_links": true,
-  "include_deleted": false
+  "include_deleted": false,
+  "refine_from": null
 }
 ```
 
 Returns ranked memories with relevance scores and linked memories.
+
+`refine_from` enables iterative narrowing: pass a list of `lore_id` strings from a previous search result to re-rank only within that candidate set using a new query. Unknown IDs are silently ignored. Maximum 200 IDs. Omit (or pass `null`) for a standard full-store search.
 
 ### `lore_insert`
 
