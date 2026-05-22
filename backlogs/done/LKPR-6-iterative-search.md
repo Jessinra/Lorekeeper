@@ -2,7 +2,7 @@
 id: LKPR-6
 title: Extend lore_search with refine_from for iterative narrowing
 type: feature
-status: in-progress
+status: done
 priority: high
 sprint: 1
 rice_score: 42.5  # R:7 I:8 C:85% E:0.5w
