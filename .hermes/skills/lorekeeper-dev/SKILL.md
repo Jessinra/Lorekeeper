@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-dev
 description: Engineering practices for developing the Lorekeeper codebase. Load this skill when working on Lorekeeper source code, fixing bugs, adding features, writing tests, or reviewing PRs. Covers architecture conventions, SQLite/Mem0/Chroma quirks, testing patterns, backlog workflow, and the verification standard for shipped changes.
-version: 1.0.0
+version: 1.2.0
 ---
 
 # Lorekeeper Dev
@@ -75,23 +75,26 @@ Rules:
 
 ## Commit Messages
 
-Follow **Conventional Commits** format:
+Format:
 ```
-<type>[scope]: <short description>
+[LKPR-N] type: short title
 
-[optional body]
-
-Closes LKPR-N
+Body explaining what changed and why.
+- file.py: what changed
+- test.py: what covers it
+- backlog: marked done
 ```
+
+For chore work without a ticket: use `[LKPR-dev]` as prefix.
 
 Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`
 
 Examples:
 ```
-feat(search): add iterative search with relevance cutoff (LKPR-6)
-fix(link_store): enable FK constraints via PRAGMA foreign_keys=ON
-test(memory_engine): add regression tests for LKPR-16 scoring fix
-chore(backlog): rename tickets with LKPR-N prefix
+[LKPR-6] feat: add iterative search with relevance cutoff
+[LKPR-19] fix: enable FK constraints via PRAGMA foreign_keys=ON
+[LKPR-16] test: add regression tests for scoring fix
+[LKPR-dev] chore: rename backlog tickets with LKPR-N prefix
 ```
 
 Rules:
@@ -114,7 +117,14 @@ Completed tickets move to `backlogs/done/`.
 1. Update the ticket: add root cause, before/after evidence, tests added
 2. Set `status: done` and `resolved_date: YYYY-MM-DD`
 3. Move file to `backlogs/done/`
-4. Commit with `[LKPR-N]` prefix in the message (e.g. `[LKPR-19] fix: enable FK constraints in link_store`)
+4. Commit with `[LKPR-N]` prefix in the message
+
+## Verification Standard
+
+Every fix or feature must have:
+- **Root cause** documented in the backlog ticket (not just "fixed X")
+- **Before/after evidence** — concrete scores, outputs, or test results
+- **Regression test** — assert the fix can't silently regress
 
 ## Self-Testing Discipline
 
@@ -165,7 +175,7 @@ Before opening a PR, run through this:
 - [ ] Complex logic has inline comments explaining *why*, not what?
 
 **Git**
-- [ ] Commits follow Conventional Commits format?
+- [ ] Commits follow `[LKPR-N] type: title` format?
 - [ ] Branch named `<type>/LKPR-N-slug`?
 - [ ] Ticket updated: `status: done`, `resolved_date`, root cause written?
 - [ ] Ticket moved to `backlogs/done/`?
@@ -186,20 +196,17 @@ The bar isn't perfection — it's transparency and traceability. If something wa
 
 ---
 
-
-
-Every fix or feature must have:
-- **Root cause** documented in the backlog ticket (not just "fixed X")
-- **Before/after evidence** — concrete scores, outputs, or test results
-- **Regression test** — assert the fix can't silently regress
-
 ## Post-Change Rule
 
 After every set of changes:
 1. Code review — check reuse, quality, efficiency
 2. README consistency — verify config defaults, tool signatures, env var names still match
-3. Commit with descriptive message
+3. Commit with `[LKPR-N] type: title` format
 4. Push to both `origin` (GitHub) and `gitlab`
+
+## Plans Location
+
+Implementation plans live in `docs/plans/YYYY-MM-DD_HHMMSS-<slug>.md` — **not** `.hermes/plans/`. This is the project-specific override of the global `plan` skill default.
 
 ## Skills Distribution
 
