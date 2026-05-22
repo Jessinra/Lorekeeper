@@ -23,7 +23,12 @@ What we plan to build. Concrete but not over-specified.
 - [ ] Criterion 2
 
 ## Affected Files
+
+**Backend:**
 - `path/to/file.py` — what changes
+
+**Dashboard (if applicable):**
+- `dashboard/` — describe UI change, or write `_none_` if backend-only
 
 ## Dependencies
 _None_ — or list ticket IDs + reason:

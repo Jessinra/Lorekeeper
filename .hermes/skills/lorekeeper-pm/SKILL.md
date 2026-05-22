@@ -27,6 +27,12 @@ Example: `LKPR-19-fk-constraint-not-enforced.md`
 
 **Template:** see `backlogs/TEMPLATE.md`
 
+**When filing a ticket, always separate:**
+- **Backend** — services, handlers, config, tests
+- **Dashboard** — UI changes in `dashboard/`. If backend-only, write `_none_` explicitly.
+
+Dev should not have to guess whether a backend change needs a dashboard update.
+
 ### Required frontmatter fields
 
 ```yaml
