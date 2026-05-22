@@ -17,6 +17,7 @@ class Memory(BaseModel):
     soft_deleted: bool = False
     confidence: float | None = None
     confidence_count: int = 0
+    last_used: str | None = None  # ISO datetime; null → fall back to created_at for decay
 
 
 class MemoryLink(BaseModel):

@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     search_limit: int = 5
     max_links_per_memory: int = 5
     usage_normalisation_cap: int = 100
+    decay_lambda: float = 0.0077  # time-decay λ; 0 disables decay (LORE_DECAY_LAMBDA)
 
     @property
     def chroma_path(self) -> Path:

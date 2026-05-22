@@ -111,6 +111,14 @@ class LinkStore:
         self._migrate_dedup_links()
         self._migrate_dedup_memories()
         self._migrate_add_session_content_columns()
+        self._migrate_add_last_used_column()
+
+    def _migrate_add_last_used_column(self) -> None:
+        existing = {row[1] for row in self._conn.execute("PRAGMA table_info(memories)")}
+        if "last_used" not in existing:
+            self._conn.execute("ALTER TABLE memories ADD COLUMN last_used TEXT")
+            self._conn.commit()
+            log.info("memories_last_used_column_added")
 
     def _migrate_add_session_content_columns(self) -> None:
         existing = {row[1] for row in self._conn.execute("PRAGMA table_info(sessions)")}
@@ -189,22 +197,24 @@ class LinkStore:
         soft_deleted: bool = False,
         confidence: float | None = None,
         confidence_count: int = 0,
+        last_used: str | None = None,
     ) -> None:
         self._conn.execute(
             """
             INSERT INTO memories
               (id, title, description, content, created_at, updated_at,
-               usage_count, score, soft_deleted, confidence, confidence_count)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+               usage_count, score, soft_deleted, confidence, confidence_count, last_used)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(id) DO UPDATE SET
               title=excluded.title, description=excluded.description,
               content=excluded.content, updated_at=excluded.updated_at,
               usage_count=excluded.usage_count, score=excluded.score,
               soft_deleted=excluded.soft_deleted, confidence=excluded.confidence,
-              confidence_count=excluded.confidence_count
+              confidence_count=excluded.confidence_count,
+              last_used=COALESCE(excluded.last_used, last_used)
             """,
             (id, title, description, content, created_at, updated_at,
-             usage_count, score, int(soft_deleted), confidence, confidence_count),
+             usage_count, score, int(soft_deleted), confidence, confidence_count, last_used),
         )
         self._conn.commit()
 
@@ -230,7 +240,7 @@ class LinkStore:
         allowed = {
             "score", "usage_count", "soft_deleted",
             "confidence", "confidence_count", "updated_at",
-            "title", "description", "content",
+            "title", "description", "content", "last_used",
         }
         cols = {k: v for k, v in fields.items() if k in allowed}
         if not cols:

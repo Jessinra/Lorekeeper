@@ -457,4 +457,5 @@ def _row_to_memory(row: object) -> Memory:
         soft_deleted=bool(row["soft_deleted"]),
         confidence=row["confidence"],
         confidence_count=row["confidence_count"],
+        last_used=row["last_used"] if "last_used" in row.keys() else None,  # type: ignore[union-attr]
     )

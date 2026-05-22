@@ -32,7 +32,15 @@ Results are ranked by a weighted combination:
 
 ```
 combined = 0.45·semantic + 0.30·keyword + 0.15·(score/10) + 0.10·log_usage_norm
+final    = combined × decay
 ```
+
+Where `decay = e^(-λ · days_since_last_used)` applies time-decay so stale memories rank lower.  
+`λ` defaults to `0.0077` (~90-day half-life) and is configurable via `LORE_DECAY_LAMBDA`. Set to `0` to disable decay entirely.  
+`last_used` is updated each time a memory is retrieved; if not set, `created_at` is used as the reference date.  
+The `decay_factor` is exposed on every search result for debugging.
+
+`min_score` filtering is applied to `combined` (before decay) so that relevance, not age, gates inclusion.
 
 Semantic candidates come from Mem0 (top 200). Keyword candidates come from BM25. Both pools are unioned and re-ranked.
 
@@ -179,6 +187,7 @@ All settings use the `LORE_` prefix and can be set via environment variables:
 | `LORE_SCORE_MIN` | `0.0` | Minimum allowed memory score |
 | `LORE_SCORE_MAX` | `10.0` | Maximum allowed memory score |
 | `LORE_USAGE_NORMALISATION_CAP` | `100` | Cap for log-normalising `usage_count` in hybrid scoring |
+| `LORE_DECAY_LAMBDA` | `0.0077` | Time-decay λ for scoring (~90-day half-life; set to 0 to disable) |
 | `LORE_DASH_PORT` | `7777` | Dashboard HTTP port |
 | `LORE_DASH_RELOAD` | `1` | Dashboard hot-reload (`0` to disable) |
 
