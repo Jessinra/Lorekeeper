@@ -53,11 +53,18 @@ uv run lorekeeper                      # start server
 
 ## Backlog Workflow
 
-Tickets live in `backlogs/` as dated slugs (e.g. `2026-05-22-lore-insert-false-dedup.md`), not `LKPR-N.md` filenames.
+Tickets live in `backlogs/` as `LKPR-N-slug.md` (e.g. `LKPR-19-fk-constraint-not-enforced.md`).  
+Completed tickets move to `backlogs/done/`.
 
-After shipping a fix:
+**When picking up a ticket:**
+1. Pull `main` — specs may have been updated by PM
+2. Read the ticket file — that's the source of truth
+
+**After shipping a fix:**
 1. Update the ticket: add root cause, before/after evidence, tests added
 2. Set `status: done` and `resolved_date: YYYY-MM-DD`
+3. Move file to `backlogs/done/`
+4. Commit with `[LKPR-N]` prefix in the message (e.g. `[LKPR-19] fix: enable FK constraints in link_store`)
 
 ## Verification Standard
 
