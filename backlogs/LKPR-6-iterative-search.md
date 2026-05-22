@@ -16,21 +16,22 @@ filed_date: 2026-05-22
 Current search is one-shot. When results are broad, there's no way to narrow without starting a new query from scratch. Agents lose context between search passes.
 
 ## Solution
-New MCP tool: `lore_search_refine(query, refine_from, limit)` where `refine_from` is a list of memory IDs from a prior search. The system re-ranks only within that candidate set using the new query.
+Extend existing `lore_search` with an optional `refine_from: list[str] | None = None` parameter. When provided, skip the full store fetch and re-rank only within that candidate ID set using the new query.
+
+No new MCP tool — same surface, backward compatible. Agents that don't pass `refine_from` get existing behavior unchanged.
 
 Enables multi-step recall: broad search → narrow to what's relevant. Mirrors how humans actually search memory.
 
 ## Acceptance Criteria
-- [ ] `lore_search_refine` accepts `query` + `refine_from: list[uuid]` + `limit`
-- [ ] Returns re-ranked subset of the provided candidate IDs — does not pull new memories from the full store
-- [ ] `refine_from` is optional; if omitted, falls back to full search (same as `lore_search`)
-- [ ] Registered as an MCP tool in `server.py`
+- [ ] `lore_search` accepts optional `refine_from: list[str] | None = None`
+- [ ] When `refine_from` is provided, only those memory IDs are candidates — no new memories pulled from store
+- [ ] When `refine_from` is omitted/None, behavior is identical to current
 - [ ] No schema changes required
 
 ## Affected Files
-- `src/lorekeeper/services/search.py` — add filter-by-ID pass
-- `src/lorekeeper/handlers.py` — new tool handler
-- `src/lorekeeper/server.py` — register tool
+- `src/lorekeeper/services/search.py` — add filter-by-ID path before re-ranking
+- `src/lorekeeper/handlers.py` — pass `refine_from` through to search service
+- `src/lorekeeper/server.py` — add `refine_from` param to `lore_search` tool
 
 ## Dependencies
 _None_
