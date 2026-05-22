@@ -2,7 +2,7 @@
 id: LKPR-3
 title: Ship lorekeeper-protocol skill file for plug & play agent onboarding
 type: feature
-status: backlog
+status: done
 priority: critical
 sprint: 1
 rice_score: 45.0  # R:9 I:9 C:80% E:1w
