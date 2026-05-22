@@ -102,6 +102,7 @@ class LinkStore:
         self._conn = sqlite3.connect(str(db_path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._conn.executescript(SCHEMA)
+        self._conn.execute("PRAGMA foreign_keys = ON")
         self._conn.commit()
         self._migrate()
 
@@ -289,7 +290,10 @@ class LinkStore:
                  link.usage_count, link.confidence, link.confidence_count),
             )
             self._conn.commit()
-        except sqlite3.IntegrityError:
+        except sqlite3.IntegrityError as exc:
+            # Re-raise FK violations — only swallow unique-constraint duplicates
+            if "FOREIGN KEY" in str(exc).upper():
+                raise
             # Duplicate (source, target, relation_type) — return the existing link
             row = self._conn.execute(
                 """
