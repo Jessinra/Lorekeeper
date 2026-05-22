@@ -25,6 +25,7 @@ def _result_to_dict(result: SearchResult) -> dict:
             "combined_score": result.combined_score,
             "semantic_score": result.semantic_score,
             "keyword_score": result.keyword_score,
+            "decay_factor": result.decay_factor,
         },
         "links": [
             {
