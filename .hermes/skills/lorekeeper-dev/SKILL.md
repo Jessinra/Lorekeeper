@@ -51,6 +51,56 @@ uv run lorekeeper                      # start server
 - Always use real (not mocked) Mem0+Chroma for memory_engine tests — mocks hide the distance/similarity inversion bug
 - Seed distinct memories before asserting search behavior
 
+## Branch Naming
+
+Format: `<type>/LKPR-N-short-description`
+
+Types: `feature/`, `fix/`, `hotfix/`, `refactor/`, `chore/`, `docs/`
+
+Examples:
+```
+feature/LKPR-7-lore-init-onboarding
+fix/LKPR-19-fk-constraints-link-store
+chore/LKPR-13-sleep-cycle-consolidation
+refactor/LKPR-4-context-budgeting
+```
+
+Rules:
+- kebab-case only, no underscores
+- always include the LKPR-N ID
+- branch off `main`
+- delete after merging
+
+---
+
+## Commit Messages
+
+Follow **Conventional Commits** format:
+```
+<type>[scope]: <short description>
+
+[optional body]
+
+Closes LKPR-N
+```
+
+Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`
+
+Examples:
+```
+feat(search): add iterative search with relevance cutoff (LKPR-6)
+fix(link_store): enable FK constraints via PRAGMA foreign_keys=ON
+test(memory_engine): add regression tests for LKPR-16 scoring fix
+chore(backlog): rename tickets with LKPR-N prefix
+```
+
+Rules:
+- one logical change per commit — if you need "and", split it
+- never bundle unrelated changes
+- no WIP commits in main — squash before merging
+
+---
+
 ## Backlog Workflow
 
 Tickets live in `backlogs/` as `LKPR-N-slug.md` (e.g. `LKPR-19-fk-constraint-not-enforced.md`).  
@@ -66,7 +116,77 @@ Completed tickets move to `backlogs/done/`.
 3. Move file to `backlogs/done/`
 4. Commit with `[LKPR-N]` prefix in the message (e.g. `[LKPR-19] fix: enable FK constraints in link_store`)
 
-## Verification Standard
+## Self-Testing Discipline
+
+**The rule:** every fix needs a test that would have caught the bug. Every feature needs tests covering the happy path + at least one edge case.
+
+**What to test:**
+- Unit tests — pure functions, business logic, edge cases
+- Regression tests — any bug fix must have one
+- Integration tests — DB queries, service boundaries, MCP tool handlers
+
+**Test naming pattern:**
+```python
+def test_<unit>_<scenario>_<expected_outcome>():
+# e.g.
+def test_search_unrelated_query_scores_below_threshold():
+def test_lore_insert_duplicate_blocked_at_high_similarity():
+def test_memory_engine_empty_store_returns_empty_list():
+```
+
+**Discipline:**
+- Run `uv run pytest` locally before every push — no exceptions
+- Never skip a test without a comment explaining why
+- Don't mock Mem0/Chroma in memory_engine tests — real behavior only
+
+---
+
+## Pre-Push Self-Review Checklist
+
+Before opening a PR, run through this:
+
+**Correctness**
+- [ ] All acceptance criteria in the ticket met?
+- [ ] Edge cases handled? (null inputs, empty results, missing metadata)
+- [ ] Tested manually end-to-end at least once?
+
+**Tests**
+- [ ] New logic has tests?
+- [ ] Bug fix has a regression test?
+- [ ] Full suite passes: `uv run pytest`?
+
+**Code Quality**
+- [ ] No debug prints / `breakpoint()` left in
+- [ ] No dead code or commented-out blocks
+- [ ] Linter clean: `uv run ruff check src tests`
+
+**Documentation**
+- [ ] README updated if behavior/config changed?
+- [ ] Complex logic has inline comments explaining *why*, not what?
+
+**Git**
+- [ ] Commits follow Conventional Commits format?
+- [ ] Branch named `<type>/LKPR-N-slug`?
+- [ ] Ticket updated: `status: done`, `resolved_date`, root cause written?
+- [ ] Ticket moved to `backlogs/done/`?
+
+---
+
+## PM Expectations
+
+Things Akane (PM) will check on every review:
+
+1. **The ticket file is updated** — root cause documented, not just `status: done`. If you found something interesting during the fix, write it down.
+2. **Regression test exists** — especially for bugs. "It works now" isn't enough.
+3. **No unrelated changes in the PR** — if you spot other issues, file a new ticket.
+4. **Ask early if requirements are unclear** — don't build on assumptions and deliver the wrong thing.
+5. **Flag scope creep immediately** — if the ticket turns out to be 3x the work, say so before diving in. PM decides: expand, split, or descope.
+
+The bar isn't perfection — it's transparency and traceability. If something was hard, document it. If you made a judgment call, note it in the ticket or commit body.
+
+---
+
+
 
 Every fix or feature must have:
 - **Root cause** documented in the backlog ticket (not just "fixed X")
