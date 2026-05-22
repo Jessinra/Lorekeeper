@@ -55,43 +55,7 @@ Mark `useful: true` if relevant to this session. `useful: false` for noise. Skip
 
 ---
 
-## Phase 3 — Health Maintenance (Every ~10 Inserts)
-
-**Trigger**: After approximately every 10 `lore_insert` calls.
-
-1. Search the topics you've been inserting about and scan for near-duplicates.
-2. For any pair covering the same fact:
-   - Keep the richer memory (higher quality, more links).
-   - Update it with any unique detail from the other.
-   - Soft-delete the weaker one: `lore_update` with `useful: false, confidence: 1`.
-
----
-
-## Phase 4 — Topic Consolidation (After 5+ Sessions on Same Topic)
-
-**Trigger**: 5 or more sessions on the same topic.
-
-1. Get reflected sessions:
-
-```
-lore_processed_sessions({})
-```
-
-2. Search for accumulated memories on the topic:
-
-```
-lore_search({ query: "<topic>", min_score: 0.1, limit: 20 })
-```
-
-3. Identify recurring patterns, decisions, and corrections.
-4. Insert a single consolidated summary memory:
-   - **title**: `"[Topic] — Consolidated learnings as of YYYY-MM-DD"`
-   - **content**: Key decisions, patterns, gotchas (150–250 words)
-5. Link it to the key individual memories it summarizes.
-
----
-
-## Phase 5 — Session End
+## Phase 3 — Session End
 
 **Trigger**: End of every session.
 
@@ -123,13 +87,11 @@ lore_reflect({
 
 ## Quick Reference
 
-| Phase | When | Tools |
-|-------|------|-------|
-| **1 — Start** | Every session start | `lore_search`, `lore_update` |
-| **2 — Mid-session** | On topic shift | `lore_search`, `lore_update` |
-| **3 — Health** | Every ~10 inserts | `lore_search`, `lore_update` |
-| **4 — Consolidate** | After 5+ sessions on topic | `lore_processed_sessions`, `lore_search`, `lore_insert` |
-| **5 — End** | Every session end | `lore_insert`, `lore_reflect` |
+| Phase               | When                | Tools                         |
+| ------------------- | ------------------- | ----------------------------- |
+| **1 — Start**       | Every session start | `lore_search`, `lore_update`  |
+| **2 — Mid-session** | On topic shift      | `lore_search`, `lore_update`  |
+| **3 — End**         | Every session end   | `lore_insert`, `lore_reflect` |
 
 ---
 
@@ -147,20 +109,36 @@ lore_reflect({
 ## Tool Signatures
 
 ### `lore_search`
+
 ```json
-{ "query": "string", "min_score": 0.1, "include_links": true, "include_deleted": false, "limit": null }
+{
+  "query": "string",
+  "min_score": 0.1,
+  "include_links": true,
+  "include_deleted": false,
+  "limit": null
+}
 ```
 
 ### `lore_insert`
+
 ```json
 {
   "memories": [{ "title": "...", "description": "...", "content": "..." }],
-  "links": [{ "source_memory_id": "...", "target_memory_id": "...", "relation_type": "related_to", "reason": "..." }],
+  "links": [
+    {
+      "source_memory_id": "...",
+      "target_memory_id": "...",
+      "relation_type": "related_to",
+      "reason": "..."
+    }
+  ],
   "force": false
 }
 ```
 
 ### `lore_update`
+
 ```json
 {
   "memory_feedback": [{ "id": "...", "useful": true }],
@@ -169,6 +147,7 @@ lore_reflect({
 ```
 
 ### `lore_reflect`
+
 ```json
 {
   "session_id": "YYYY-MM-DD-topic-slug",
@@ -187,7 +166,9 @@ lore_reflect({
 ```
 
 ### `lore_processed_sessions`
+
 ```json
 {}
 ```
+
 Returns array of session IDs already reflected.
