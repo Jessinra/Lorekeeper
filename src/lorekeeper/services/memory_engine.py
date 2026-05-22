@@ -101,23 +101,41 @@ class MemoryEngine:
         return ""
 
     def search(self, query: str, limit: int = 200) -> list[dict]:
-        """Returns list of {lore_id, mem0_id, score (normalized)}."""
-        results = self._mem0.search(
-            query,
-            top_k=limit,
-            filters={"user_id": LORE_USER_ID},
+        """Returns list of {lore_id, mem0_id, score (normalized)}.
+
+        Uses Chroma directly to avoid mem0 v2's broken scoring pipeline:
+        mem0 passes cosine distances (lower=better) to score_and_rank as if
+        they were similarities (higher=better), causing near-matches to be
+        filtered out and unrelated items to score 1.0. We bypass that by
+        embedding the query ourselves and querying Chroma with n_results.
+        """
+        embeddings = self._mem0.embedding_model.embed(query, "search")
+        where_clause = self._mem0.vector_store._generate_where_clause({"user_id": LORE_USER_ID})
+        try:
+            n = min(limit, self._mem0.vector_store.collection.count())
+        except Exception:
+            n = limit
+        if n == 0:
+            return []
+        raw = self._mem0.vector_store.collection.query(
+            query_embeddings=[embeddings],
+            n_results=n,
+            where=where_clause,
+            include=["distances", "metadatas"],
         )
-        items = results.get("results") if isinstance(results, dict) else results
+        ids = raw.get("ids", [[]])[0]
+        distances = raw.get("distances", [[]])[0]
+        metadatas = raw.get("metadatas", [[]])[0]
         out = []
-        for item in (items or []):
-            meta = item.get("metadata") or {}
-            lore_id = meta.get("lore_id")
-            if lore_id:
-                out.append({
-                    "lore_id": lore_id,
-                    "mem0_id": item["id"],
-                    "score": self.normalize_score(item.get("score", 0.0)),
-                })
+        for mem0_id, dist, meta in zip(ids, distances, metadatas):
+            lore_id = (meta or {}).get("lore_id")
+            if not lore_id:
+                continue
+            # Chroma cosine distance: 0=identical, 2=opposite. Clamp to [0, 1].
+            similarity = max(0.0, min(1.0, 1.0 - dist))
+            out.append({"lore_id": lore_id, "mem0_id": mem0_id, "score": similarity})
+        # Sort by score descending (Chroma already returns sorted by distance ascending)
+        out.sort(key=lambda x: x["score"], reverse=True)
         return out
 
     def get_all(self) -> list[dict]:
