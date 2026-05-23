@@ -41,10 +41,24 @@ Mem0 v2 `score_and_rank` receives Chroma cosine *distances* (0=identical) but tr
 ```bash
 uv run pytest                          # run tests
 uv run pytest tests/ -x -q            # fail-fast
-uv run ruff check src tests            # lint
-uv run mypy src                        # type check
+uv run ruff check src tests            # lint (Python)
+uv run ruff check src tests --fix      # auto-fix lint
+uv run mypy src                        # type check (run before push; not in pre-commit hook — too slow)
+npx @biomejs/biome check src/lorekeeper/dashboard/static/js/    # lint (JS)
+npx @biomejs/biome check ... --write   # auto-fix JS lint
 uv run lorekeeper                      # start server
 ```
+
+## Pre-commit Hook
+
+Install once per clone via `bash scripts/setup.sh`. It runs:
+1. `ruff check src tests` — Python lint
+2. `biome check` — JS lint
+3. `uv run pytest tests/ -q` — test suite
+
+Bypass: `git commit --no-verify` (emergency only)
+
+See `docs/linter-decisions.md` for the full rationale on rule selection.
 
 ## Testing Patterns
 

@@ -78,9 +78,13 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 
 - Python 3.11, managed by `uv`
 - Run tests: `uv run pytest`
-- Lint: `uv run ruff check src tests`
-- Type check: `uv run mypy src`
+- Lint (Python): `uv run ruff check src tests`
+- Lint (JS): `npx @biomejs/biome check src/lorekeeper/dashboard/static/js/`
+- Type check: `uv run mypy src` (run before push; not in pre-commit — too slow)
 - Entrypoint: `uv run lorekeeper` (or `python -m lorekeeper`)
+
+Pre-commit hook blocks commit on lint/test failures. Install: `bash scripts/setup.sh`.
+See `docs/linter-decisions.md` for rule selection rationale.
 
 All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 
