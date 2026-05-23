@@ -1,6 +1,6 @@
 import sqlite3
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import structlog
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS config_overrides (
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class LinkStore:
@@ -224,10 +224,11 @@ class LinkStore:
         ).fetchone()
 
     def get_memory_row_by_title(self, title: str) -> sqlite3.Row | None:
-        return self._conn.execute(
-            "SELECT * FROM memories WHERE title = ? AND soft_deleted = 0 ORDER BY score DESC LIMIT 1",
-            (title,),
-        ).fetchone()
+        sql = (
+            "SELECT * FROM memories WHERE title = ? "
+            "AND soft_deleted = 0 ORDER BY score DESC LIMIT 1"
+        )
+        return self._conn.execute(sql, (title,)).fetchone()
 
     def all_memory_rows(self, include_deleted: bool = False) -> list[sqlite3.Row]:
         if include_deleted:
@@ -396,7 +397,8 @@ class LinkStore:
     _SESSION_UPSERT_SQL = """
         INSERT INTO sessions
           (session_id, session_date, topic, task_type, reviewed_at, reflection_id,
-           transcript, what_was_done, decisions, lessons_learnt, good_patterns, user_profile, discoveries)
+           transcript, what_was_done, decisions, lessons_learnt,
+           good_patterns, user_profile, discoveries)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON CONFLICT(session_id) DO UPDATE SET
           session_date=COALESCE(excluded.session_date, session_date),
@@ -432,7 +434,8 @@ class LinkStore:
         self._conn.execute(
             self._SESSION_UPSERT_SQL,
             (session_id, session_date, topic, task_type, reviewed_at, reflection_id,
-             transcript, what_was_done, decisions, lessons_learnt, good_patterns, user_profile, discoveries),
+             transcript, what_was_done, decisions, lessons_learnt,
+             good_patterns, user_profile, discoveries),
         )
         self._conn.commit()
 
@@ -480,7 +483,7 @@ class LinkStore:
 
     def increment_metric(self, tool_name: str) -> None:
         """Increment the call counter for tool_name, bucketed to the current UTC hour."""
-        bucket = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:00")
+        bucket = datetime.now(UTC).strftime("%Y-%m-%d %H:00")
         self._conn.execute(
             """
             INSERT INTO api_metrics (minute_bucket, tool_name, count)
@@ -504,7 +507,7 @@ class LinkStore:
     def get_metrics(self, hours: int = 24) -> list[dict]:
         """Return all metric rows within the last `hours` hours, oldest first."""
         from datetime import timedelta
-        cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).strftime("%Y-%m-%d %H:00")
+        cutoff = (datetime.now(UTC) - timedelta(hours=hours)).strftime("%Y-%m-%d %H:00")
         rows = self._conn.execute(
             """
             SELECT minute_bucket, tool_name, SUM(count) as count
@@ -517,7 +520,11 @@ class LinkStore:
         ).fetchall()
         # Normalize buckets — old rows may have ISO format (e.g. "2026-05-21T08:08:00")
         return [
-            {"minute_bucket": self._normalize_bucket(row["minute_bucket"]), "tool_name": row["tool_name"], "count": row["count"]}
+            {
+                "minute_bucket": self._normalize_bucket(row["minute_bucket"]),
+                "tool_name": row["tool_name"],
+                "count": row["count"],
+            }
             for row in rows
         ]
 

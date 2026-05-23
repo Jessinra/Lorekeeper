@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 
@@ -162,7 +162,7 @@ class MemoryService:
                         }}
 
         lore_id = str(uuid.uuid4())
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         self._engine.add(text, lore_id)
         self._store.upsert_memory_row(
             id=lore_id, title=title, description=description, content=content,
@@ -338,7 +338,8 @@ class MemoryService:
                     fields["confidence"] = new_conf
                     fields["confidence_count"] = row["confidence_count"] + 1
 
-                if should_soft_delete(useful, confidence, self._settings.soft_delete_confidence_threshold):
+                threshold = self._settings.soft_delete_confidence_threshold
+                if should_soft_delete(useful, confidence, threshold):
                     fields["soft_deleted"] = 1
                     soft_deleted += 1
 
@@ -402,7 +403,7 @@ class MemoryService:
     ) -> dict:
         self._increment_metric("lore_reflect")
         reflection_id = str(uuid.uuid4())
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         def _bullets(items: list[str]) -> str | None:
             return "\n".join(f"- {item}" for item in items) if items else None

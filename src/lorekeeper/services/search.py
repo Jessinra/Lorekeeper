@@ -1,6 +1,6 @@
 import math
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from lorekeeper.config import Settings
 from lorekeeper.models import Memory, MemoryLink
@@ -45,8 +45,8 @@ def time_decay(memory: Memory, lam: float) -> float:
     try:
         ref_dt = datetime.fromisoformat(ref_str)
         if ref_dt.tzinfo is None:
-            ref_dt = ref_dt.replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
+            ref_dt = ref_dt.replace(tzinfo=UTC)
+        now = datetime.now(UTC)
         days = max((now - ref_dt).total_seconds() / 86400.0, 0.0)
     except (ValueError, TypeError):
         return 1.0

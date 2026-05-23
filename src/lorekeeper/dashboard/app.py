@@ -1,6 +1,6 @@
 import json
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -256,7 +256,11 @@ def get_session_detail(session_id: str) -> dict[str, Any]:
     if row["reflection_id"]:
         ref_row = store.get_reflection(row["reflection_id"])
         if ref_row:
-            reflection = {"id": ref_row["id"], "created_at": ref_row["created_at"], "summary": ref_row["summary"]}
+            reflection = {
+                "id": ref_row["id"],
+                "created_at": ref_row["created_at"],
+                "summary": ref_row["summary"],
+            }
     return {"session": dict(row), "reflection": reflection}
 
 
@@ -291,7 +295,7 @@ def search(body: SearchRequest) -> list[dict[str, Any]]:
 @app.get("/api/export")
 def export_dump(include_deleted: bool = False) -> Response:
     store = get_service()._store
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     memories = [dict(r) for r in store.all_memory_rows(include_deleted=include_deleted)]
     for m in memories:
         m["soft_deleted"] = bool(m["soft_deleted"])

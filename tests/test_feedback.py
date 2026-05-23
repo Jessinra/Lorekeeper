@@ -1,4 +1,5 @@
 import pytest
+
 from lorekeeper.config import Settings
 from lorekeeper.services.feedback import (
     apply_score_delta,
