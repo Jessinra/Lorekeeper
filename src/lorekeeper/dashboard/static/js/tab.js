@@ -31,12 +31,12 @@ export function registerTabCallbacks({
 }
 
 export function switchTab(name) {
-	document
-		.querySelectorAll(".tab-pane")
-		.forEach((p) => p.classList.remove("active"));
-	document
-		.querySelectorAll(".tab")
-		.forEach((t, i) => t.classList.toggle("active", TAB_ORDER[i] === name));
+	document.querySelectorAll(".tab-pane").forEach((p) => {
+		p.classList.remove("active");
+	});
+	document.querySelectorAll(".tab").forEach((t, i) => {
+		t.classList.toggle("active", TAB_ORDER[i] === name);
+	});
 	document.getElementById(`tab-${name}`).classList.add("active");
 	if (name === "links" && !state.linksLoaded) _onTabLinks();
 	if (name === "config") _onTabConfig();

@@ -187,9 +187,9 @@ window.toggleHideStubs = () => {
 
 window.filterByTask = (btn, task) => {
 	_filterTask = task;
-	document
-		.querySelectorAll(".sess-chip")
-		.forEach((c) => c.classList.remove("active"));
+	document.querySelectorAll(".sess-chip").forEach((c) => {
+		c.classList.remove("active");
+	});
 	if (btn) btn.classList.add("active");
 	renderSessions();
 };

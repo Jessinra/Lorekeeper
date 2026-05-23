@@ -15,10 +15,7 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
-			"suspicious": {
-				"useIterableCallbackReturn": "off"
-			}
+			"recommended": true
 		}
 	},
 	"javascript": {

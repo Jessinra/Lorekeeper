@@ -89,9 +89,9 @@ export function clearFilter() {
 export function setTimeFilter(btn, days) {
 	// days: '' = all, 0 = today, 3 = 3d, 7 = 1w
 	state.setTimeFilterDays(days === "" ? null : Number(days));
-	document
-		.querySelectorAll(".time-filter-btn")
-		.forEach((b) => b.classList.remove("active"));
+	document.querySelectorAll(".time-filter-btn").forEach((b) => {
+		b.classList.remove("active");
+	});
 	btn.classList.add("active");
 	renderList();
 }
