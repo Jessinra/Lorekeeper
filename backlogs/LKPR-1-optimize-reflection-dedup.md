@@ -2,7 +2,7 @@
 id: LKPR-1
 title: Prevent duplicate reflection on already-processed sessions
 type: bug
-status: backlog
+status: in-progress
 priority: low
 sprint: unplanned
 rice_score: ~
