@@ -39,7 +39,7 @@ One script. Any agent is fully configured.
 - `README.md` — quick-start section
 
 ## Dependencies
-- LKPR-3 (protocol skill) — setup script copies it; should ship first or together
+- LKPR-3 (protocol skill) — ✅ done, shipped in sprint 1. Setup script copies it to agent skills dir.
 
 ## Open Questions
 _None_
