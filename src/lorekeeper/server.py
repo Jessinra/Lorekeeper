@@ -2,7 +2,7 @@ import structlog
 from fastmcp import FastMCP
 
 from lorekeeper.config import Settings
-from lorekeeper.handlers import handle_insert, handle_search
+from lorekeeper.handlers import handle_search
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_engine import MemoryEngine, build_mem0
@@ -92,7 +92,12 @@ async def lore_insert(
     Each link dict must include source_memory_id, target_memory_id, relation_type, and reason.
     """
     try:
-        return handle_insert(get_service(), memories or [], links or [], force)
+        for i, m in enumerate(memories or []):
+            if "title" not in m:
+                raise ValueError(
+                    f"memory at index {i} is missing required field: 'title'"
+                )
+        return get_service().insert(memories or [], links or [], force)
     except Exception:
         log.exception("lore_insert_failed", memory_count=len(memories or []))
         raise

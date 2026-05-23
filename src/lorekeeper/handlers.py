@@ -67,17 +67,3 @@ def handle_search(
     }
 
 
-def handle_insert(
-    svc: MemoryService,
-    memories: list[dict],
-    links: list[dict],
-    force: bool = False,
-) -> dict:
-    for i, m in enumerate(memories):
-        if "title" not in m:
-            raise ValueError(
-                f"memory at index {i} is missing required field: 'title'"
-            )
-    return svc.insert(memories, links, force)
-
-
