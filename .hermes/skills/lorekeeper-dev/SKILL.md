@@ -133,8 +133,10 @@ Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`.
 3. Change `status` to `in-progress`
 
 **Submitting work:**
-1. Full test suite + lint + type check
+1. Self-review: full test suite (`uv run pytest`) + lint (`uv run ruff check src tests`) + mypy (`uv run mypy src`)
 2. Move ticket to `status: review`
+3. Push branch + open PR via `gh pr create --base main`
+4. Ping Jason on Telegram to review and merge
 
 ## Verification Standard
 
@@ -194,8 +196,9 @@ Before opening a PR, run through this:
 **Git**
 - [ ] Commits follow `[LKPR-N] type: title` format (housekeeping = `[LKPR-0]`)?
 - [ ] Branch named `<type>/LKPR-N-slug`?
-- [ ] Ticket updated: `status: done`, `resolved_date`, root cause written?
-- [ ] Ticket moved to `backlogs/done/`?
+- [ ] Ticket updated: `status: review`, `resolved_date`, root cause written?
+- [ ] Pushed to `origin` and PR opened via `gh pr create`?
+- [ ] Jason pinged on Telegram to review and merge?
 
 ---
 
@@ -219,7 +222,9 @@ After every set of changes:
 1. Code review — check reuse, quality, efficiency
 2. README consistency — verify config defaults, tool signatures, env var names still match
 3. Commit with `[LKPR-N] type: title` format
-4. Push to `origin` (GitHub)
+4. Push to `origin` (GitHub): `git push origin <branch>`
+5. Open a PR: `gh pr create --title "[LKPR-N] type: title" --body "..." --base main`
+6. Ping Jason on Telegram to review and merge
 
 ## Plans Location
 
