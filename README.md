@@ -277,7 +277,7 @@ Then update `~/.claude/settings.json` to use the tool directly instead of `uv ru
 | 2 | Runs `uv sync --extra dashboard` |
 | 3 | Creates `$LORE_DATA_DIR` (default `~/.lorekeeper`) |
 | 4 | Adds `lorekeeper` entry to `~/.claude/settings.json` |
-| 5 | Copies `assets/skills/lorekeeper-*/` to `~/.claude/skills/` |
+| 5 | Copies `assets/skills/lorekeeper-*/` to `~/.hermes/skills/` |
 | 6 | Migrates from v1 `memories.json` if `V1_JSON` env var is set |
 
 The script is idempotent — safe to re-run after updates.
@@ -294,7 +294,7 @@ Three Claude Code skills ship in `assets/skills/` and are installed by `setup.sh
 | `lorekeeper-memorize` | Proactively capture facts, search for related memories, insert, and link |
 | `lorekeeper-reconcile` | Verify memories against source materials, update scores, soft-delete incorrect facts |
 
-Skills are installed to `~/.claude/skills/` and work with any project that has the MCP server configured.
+Skills are installed to `~/.hermes/skills/` and work with any project that has the MCP server configured.
 
 ---
 
@@ -368,6 +368,12 @@ uv run lorekeeper-dashboard
 ## Project layout
 
 ```
+backlogs/
+├── LKPR-N-<slug>.md       # Active tickets (proposal, backlog, in-progress, review)
+├── done/                   # Completed tickets
+└── TEMPLATE.md             # Ticket template
+.hermes/
+└── skills/                 # Agent skills (dev, pm, after-changes, ui-ux-pro-max, backlog-management)
 docs/
 └── plans/                   # Implementation plans (YYYY-MM-DD_HHMMSS-<slug>.md)
 loop/
@@ -388,6 +394,10 @@ src/lorekeeper/
     ├── search.py            # Hybrid ranking, SearchResult type
     ├── dedup.py             # Duplicate detection
     └── feedback.py          # Score delta, confidence EMA, soft-delete logic
+scripts/
+├── lorekeeper-setup.sh      # Symlink repo skills → ~/.hermes/skills/
+├── lorekeeper-backlog.sh    # Backlog viewer: group tickets by status, detect duplicates
+└── setup.sh                 # User-facing setup script (install deps, register MCP, copy skills)
 ```
 
 ---

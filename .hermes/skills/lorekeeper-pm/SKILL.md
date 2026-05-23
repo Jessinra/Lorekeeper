@@ -1,7 +1,9 @@
 ---
 name: lorekeeper-pm
-description: PM workflow for Lorekeeper. Load this when managing the backlog, filing tickets, reviewing dev work, or planning features. Covers ticket format, backlog conventions, review checklist, and how PM and dev collaborate.
-version: 1.0.0
+description: PM workflow for Lorekeeper. Load this when managing the backlog, filing tickets, reviewing dev work, or planning features. For ticket lifecycle, numbering, and script details, see the backlog-management skill.
+version: 2.0.0
+tags: []
+related_skills: [backlog-management, lorekeeper-dev]
 ---
 
 # Lorekeeper PM
@@ -18,14 +20,9 @@ Product management workflow for the Lorekeeper project.
 
 ## Backlog Conventions
 
-**Location:** `backlogs/` in the repo root.
+> Full ticket lifecycle, numbering, scripts, and template → load the `backlog-management` skill.
 
-**Filename format:** `LKPR-N-short-slug.md`  
-Example: `LKPR-19-fk-constraint-not-enforced.md`
-
-**Completed tickets:** move to `backlogs/done/` — never delete.
-
-**Template:** see `backlogs/TEMPLATE.md`
+Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`. Numbering: sequential (highest+1), never fill gaps.
 
 **When filing a ticket, always separate:**
 - **Backend** — services, handlers, config, tests
@@ -33,27 +30,12 @@ Example: `LKPR-19-fk-constraint-not-enforced.md`
 
 Dev should not have to guess whether a backend change needs a dashboard update.
 
-### Required frontmatter fields
-
-```yaml
----
-id: LKPR-N
-title: Short descriptive title
-type: bug | feature | chore | research
-status: backlog | in-progress | done
-priority: critical | high | medium | low
-filed_by: Akane | Dev | Jason
-filed_date: YYYY-MM-DD
----
-```
-
-### Filing a new ticket (PM)
-
-1. Get the next LKPR-N by checking the highest ID in `backlogs/` and `backlogs/done/`
-2. Write the file: `backlogs/LKPR-N-slug.md`
-3. Include: problem statement, proposed solution, acceptance criteria, effort estimate
+**Filing a new ticket:**
+1. `./scripts/lorekeeper-backlog.sh | grep "Next ticket number"` — get next LKPR-N
+2. `cp backlogs/TEMPLATE.md backlogs/LKPR-NEXT-<slug>.md`
+3. Include: problem statement, proposed solution, acceptance criteria
 4. **File symptoms first** — if root cause is unconfirmed, label it clearly as a hypothesis
-5. Commit: `chore(backlog): add LKPR-N <short title>`
+5. Commit: `[LKPR-dev] chore: add LKPR-N <short title>`
 
 ---
 
@@ -64,7 +46,7 @@ When dev says a ticket is done, verify:
 - [ ] New commits are on `main` and pushed
 - [ ] Commit message starts with `[LKPR-N]`
 - [ ] Tests pass: `uv run pytest`
-- [ ] Ticket file updated: `status: done`, `resolved_date`, root cause documented
+- [ ] Ticket file updated: `status: done`, root cause documented, `resolved_date: YYYY-MM-DD`
 - [ ] Ticket moved to `backlogs/done/`
 - [ ] No pre-existing test failures introduced (check full suite)
 
@@ -96,4 +78,4 @@ When in doubt: ship correctness before features.
 
 - **Dev** should update `lorekeeper-dev` when they discover new quirks, pitfalls, or patterns
 - **PM** maintains this skill (`lorekeeper-pm`) and the overall backlog structure
-- Skills are in `.hermes/skills/` — treat them like living docs, patch as you go
+- Skills are in `.hermes/skills/` inside the repo — treat them like living docs, patch as you go

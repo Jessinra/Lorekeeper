@@ -2,7 +2,7 @@
 id: LKPR-N
 title: Short descriptive title
 type: feature         # feature | bug | enhancement | research | chore
-status: backlog       # backlog | in-progress | review | done | deferred | cancelled
+status: backlog       # proposal | backlog | in-progress | review | done | deferred | cancelled
 priority: medium      # critical | high | medium | low
 sprint: ~             # 1 | 2 | 3 | unplanned | deferred
 rice_score: ~         # XX.X  (R:X I:X C:XX% E:Xw)  — omit if not scored

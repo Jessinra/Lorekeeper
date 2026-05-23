@@ -1,7 +1,9 @@
 ---
 name: lorekeeper-dev
-description: Engineering practices for developing the Lorekeeper codebase. Load this skill when working on Lorekeeper source code, fixing bugs, adding features, writing tests, or reviewing PRs. Covers architecture conventions, SQLite/Mem0/Chroma quirks, testing patterns, backlog workflow, and the verification standard for shipped changes.
-version: 1.2.0
+description: Engineering practices for developing the Lorekeeper codebase. Load this skill when working on Lorekeeper source code, fixing bugs, adding features, writing tests, or reviewing PRs. Covers architecture conventions, SQLite/Mem0/Chroma quirks, testing patterns, and the verification standard for shipped changes. For backlog/ticket workflow, see backlog-management skill.
+version: 2.0.0
+tags: []
+related_skills: [backlog-management, after-changes]
 ---
 
 # Lorekeeper Dev
@@ -106,18 +108,18 @@ Rules:
 
 ## Backlog Workflow
 
-Tickets live in `backlogs/` as `LKPR-N-slug.md` (e.g. `LKPR-19-fk-constraint-not-enforced.md`).  
-Completed tickets move to `backlogs/done/`.
+> Full details → load the `backlog-management` skill. Brief summary below:
 
-**When picking up a ticket:**
-1. Pull `main` — specs may have been updated by PM
-2. Read the ticket file — that's the source of truth
+Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`. Numbering: sequential (highest+1), never fill gaps.
 
-**After shipping a fix:**
-1. Update the ticket: add root cause, before/after evidence, tests added
-2. Set `status: done` and `resolved_date: YYYY-MM-DD`
-3. Move file to `backlogs/done/`
-4. Commit with `[LKPR-N]` prefix in the message
+**Picking up a ticket:**
+1. Check `./scripts/lorekeeper-backlog.sh backlog` for what's ready
+2. Read the ticket file — specs live there, not in chat
+3. Change `status` to `in-progress`
+
+**Submitting work:**
+1. Full test suite + lint + type check
+2. Move ticket to `status: review`
 
 ## Verification Standard
 
@@ -202,7 +204,7 @@ After every set of changes:
 1. Code review — check reuse, quality, efficiency
 2. README consistency — verify config defaults, tool signatures, env var names still match
 3. Commit with `[LKPR-N] type: title` format
-4. Push to both `origin` (GitHub) and `gitlab`
+4. Push to `origin` (GitHub)
 
 ## Plans Location
 
@@ -212,4 +214,4 @@ Implementation plans live in `docs/plans/YYYY-MM-DD_HHMMSS-<slug>.md` — **not*
 
 Skills for **Lorekeeper users/clients** live in `assets/skills/` in this repo — one folder per skill, matching the standard `skill-name/SKILL.md` structure. These are distributed to users alongside the server.
 
-Skills for the **dev agent** (engineering practices, internal tooling) live in your `$AGENTIC_HOME/skills/` and are NOT copied to `assets/skills/`.
+Skills for the **dev agent** (engineering practices, internal tooling) live in `.hermes/skills/` in this repo. Run `scripts/lorekeeper-setup.sh` to symlink them into `~/.hermes/skills/` so they're loadable via `skill_view`. Do NOT copy them to `assets/skills/`.

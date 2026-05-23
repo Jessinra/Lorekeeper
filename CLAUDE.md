@@ -84,6 +84,16 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 
 All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 
+### First-Time Setup
+
+Run this once (or after adding/updating skills in `.hermes/skills/`):
+
+```bash
+./scripts/lorekeeper-setup.sh
+```
+
+This symlinks repo-local skills (`lorekeeper-dev`, `lorekeeper-pm`, `after-changes`, `backlog-management`, `ui-ux-pro-max`) into the global Hermes skills directory so they're loadable via `skill_view`. Re-run after editing any skill in `.hermes/skills/` to sync changes.
+
 ---
 
 ## Memory Usage Convention
@@ -159,12 +169,18 @@ Implementation plans live in `docs/plans/YYYY-MM-DD_HHMMSS-<slug>.md` (not `.her
 
 ## Post-Change Rule
 
-After **every set of code changes**, run `/after-changes`. It covers three steps in order:
-1. Code review (`/simplify`) — fix reuse, quality, and efficiency issues
+After **every set of code changes**, load the `after-changes` skill and follow it. It covers three steps in order:
+1. Code review — fix reuse, quality, and efficiency issues
 2. README consistency check — update `README.md` for anything that drifted
 3. Git commit — stage and commit with a descriptive message
 
 Do not skip this. It is the discipline that keeps the repo clean and auditable.
+
+---
+
+## Backlog Management
+
+All ticket workflow — lifecycle, numbering, scripts, filing conventions, and pitfalls — is documented in the `backlog-management` skill. Load it with `skill_view('backlog-management')` when working with tickets.
 
 ---
 
