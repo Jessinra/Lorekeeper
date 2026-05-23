@@ -45,7 +45,18 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+# E/W  — pycodestyle (style + warnings)
+# F    — pyflakes (undefined names, unused imports)
+# I    — isort (import ordering)
+# B    — flake8-bugbear (likely bugs, complexity)
+# UP   — pyupgrade (modernize syntax for Python 3.11+)
+# C4   — flake8-comprehensions (simplify comprehensions)
+# RUF  — Ruff-specific rules
+select = ["E", "W", "F", "I", "B", "UP", "C4", "RUF"]
+ignore = [
+  "B008",   # FastAPI File()/Depends() in argument defaults — idiomatic pattern
+  "RUF003", # Ambiguous unicode in comments (en-dash, multiplication sign) — intentional
+]
 
 [tool.mypy]
 python_version = "3.11"
