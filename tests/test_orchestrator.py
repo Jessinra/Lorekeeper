@@ -133,3 +133,20 @@ def test_search_excludes_soft_deleted(svc):
 
     results = service.search("deleted", include_deleted=True)
     assert len(results) == 1
+
+
+def test_insert_one_memory_missing_title_raises_clear_error(svc):
+    service, _ = svc
+    result = service.insert(
+        memories=[{"content": "no title here", "score": 8}],
+        links=[],
+    )
+    assert result["inserted_memories"] == []
+    assert len(result["errors"]) == 1
+    error_msg = result["errors"][0]["error"]
+    # Should be a descriptive message, not the bare KeyError repr ("'title'")
+    assert error_msg != "'title'"
+    assert "missing required field" in error_msg
+    assert "title" in error_msg
+
+
