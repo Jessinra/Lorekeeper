@@ -223,7 +223,16 @@ After every set of changes:
 2. README consistency — verify config defaults, tool signatures, env var names still match
 3. Commit with `[LKPR-N] type: title` format
 4. Push to `origin` (GitHub): `git push origin <branch>`
-5. Open a PR: run `bash ~/.hermes/scripts/gh-app-token.sh` first (logs gh in as `jessinra-megumi-dev[bot]`), then `gh pr create --title "[LKPR-N] type: title" --body "..." --base main`
+5. Open a PR via REST (app token doesn't support GraphQL / `gh pr create`):
+   ```bash
+   bash ~/.hermes/scripts/gh-app-token.sh   # refresh token
+   TOKEN=$(gh auth token)
+   curl -s -X POST \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Accept: application/vnd.github.v3+json" \
+     https://api.github.com/repos/Jessinra/Lorekeeper/pulls \
+     -d "{\"title\":\"[LKPR-N] type: title\",\"head\":\"<branch>\",\"base\":\"main\",\"body\":\"...\"}"
+   ```
 6. Ping Jason on Telegram to review and merge
 
 ## Plans Location
