@@ -30,7 +30,7 @@ info "Python 3.11: $(uv python find 3.11)"
 
 # ── 2. Install Python dependencies ───────────────────────────────────────────
 title "Installing dependencies..."
-uv sync --extra dashboard --directory "$REPO_DIR" --quiet
+uv sync --group dev --extra dashboard --directory "$REPO_DIR" --quiet
 info "Dependencies installed (including dashboard extras)"
 
 # ── 3. Create data directory ──────────────────────────────────────────────────

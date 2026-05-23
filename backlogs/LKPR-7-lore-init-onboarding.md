@@ -5,7 +5,7 @@ type: feature
 status: backlog
 priority: medium
 sprint: 2
-rice_score: 35.0  # R:9 I:7 C:75% E:1w
+rice_score: 216.0  # Revised: R:9 I:8 C:90% E:0.3w — extended setup.sh only, no new MCP tool
 filed_by: Hermes
 filed_date: 2026-05-22
 ---
