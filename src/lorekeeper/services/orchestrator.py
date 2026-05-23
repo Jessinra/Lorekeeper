@@ -402,6 +402,24 @@ class MemoryService:
         memory_ids: list[str],
     ) -> dict:
         self._increment_metric("lore_reflect")
+
+        # Guard: if this session has already been processed, return idempotent no-op.
+        # Root cause confirmed (LKPR-1): without this check, every duplicate call inserts a
+        # fresh orphaned reflection row and overwrites the session's reflection_id pointer.
+        existing_session = self._store.get_session(session_id)
+        if existing_session is not None:
+            log.info(
+                "reflection_already_processed",
+                session_id=session_id,
+                existing_reflection_id=existing_session["reflection_id"],
+            )
+            return {
+                "reflection_id": existing_session["reflection_id"],
+                "session_id": session_id,
+                "created_at": existing_session["reviewed_at"],
+                "already_processed": True,
+            }
+
         reflection_id = str(uuid.uuid4())
         now = datetime.now(UTC).isoformat()
 

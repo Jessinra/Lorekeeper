@@ -118,6 +118,92 @@ def test_insert_link_between_memories(svc):
     assert len(r2["inserted_links"]) == 1
 
 
+def test_submit_reflection_first_call_succeeds(svc):
+    """First lore_reflect call for a session should store a reflection and return reflection_id."""
+    service, _ = svc
+    result = service.submit_reflection(
+        session_id="session-abc",
+        session_date="2026-05-23",
+        topic="test topic",
+        task_type="build",
+        what_was_done="built stuff",
+        decisions="went with approach A",
+        lessons_learnt=["lesson 1"],
+        good_patterns=["pattern 1"],
+        user_profile_updates=[],
+        factual_discoveries=[],
+        summary="Test session summary",
+        memory_ids=[],
+    )
+    assert result["session_id"] == "session-abc"
+    assert "reflection_id" in result
+    assert result.get("already_processed") is None
+
+
+def test_submit_reflection_duplicate_returns_noop(svc):
+    """Calling lore_reflect on an already-processed session must return idempotent no-op."""
+    service, _ = svc
+    first = service.submit_reflection(
+        session_id="session-dup",
+        session_date="2026-05-23",
+        topic="topic",
+        task_type="build",
+        what_was_done="did things",
+        decisions="decided",
+        lessons_learnt=[],
+        good_patterns=[],
+        user_profile_updates=[],
+        factual_discoveries=[],
+        summary="Summary",
+        memory_ids=[],
+    )
+    # Second call with same session_id
+    second = service.submit_reflection(
+        session_id="session-dup",
+        session_date="2026-05-24",
+        topic="different topic",
+        task_type="review",
+        what_was_done="other work",
+        decisions="new decision",
+        lessons_learnt=["new lesson"],
+        good_patterns=[],
+        user_profile_updates=[],
+        factual_discoveries=[],
+        summary="Different summary",
+        memory_ids=[],
+    )
+    assert second["already_processed"] is True
+    assert second["reflection_id"] == first["reflection_id"]
+    assert second["session_id"] == "session-dup"
+
+
+def test_submit_reflection_duplicate_does_not_create_extra_reflection_row(svc):
+    """Duplicate lore_reflect must not insert additional reflection rows."""
+    service, _ = svc
+    session_id = "session-no-dup-row"
+    for _ in range(3):
+        service.submit_reflection(
+            session_id=session_id,
+            session_date="2026-05-23",
+            topic="topic",
+            task_type="build",
+            what_was_done="work",
+            decisions="decision",
+            lessons_learnt=[],
+            good_patterns=[],
+            user_profile_updates=[],
+            factual_discoveries=[],
+            summary="Summary",
+            memory_ids=[],
+        )
+    # Only one reflection row should exist for this session
+    reflections = service._store.all_reflections()
+    session_row = service._store.get_session(session_id)
+    matching = [r for r in reflections if r["id"] == session_row["reflection_id"]]
+    assert len(matching) == 1
+    assert len(reflections) == 1  # only one reflection total in this test DB
+
+
 def test_search_excludes_soft_deleted(svc):
     service, engine = svc
     r = service.insert(
