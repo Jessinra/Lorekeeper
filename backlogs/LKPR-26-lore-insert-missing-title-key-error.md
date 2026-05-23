@@ -1,16 +1,16 @@
 ---
 id: LKPR-26
-title: lore_insert silently errors with "'title'" when memory dict lacks required title field
-type: bug
+title: lore_insert returns unhelpful "'title'" error when memory dict is missing required title field
+type: chore
 status: backlog
-priority: high
+priority: low
 sprint: ~
 rice_score: ~
 filed_by: Akane (PM)
 filed_date: 2026-05-23
 ---
 
-# [LKPR-26] lore_insert silently errors with "'title'" when memory dict lacks required title field
+# [LKPR-26] lore_insert returns unhelpful "'title'" error when memory dict is missing required title field
 
 ## Symptom
 
@@ -27,9 +27,9 @@ The error `"'title'"` is a bare `KeyError` string, giving no indication that `ti
 
 ## Root Cause (confirmed)
 
-`orchestrator.py` line 133 does `title = m["title"]` unconditionally — no `.get()`, no default, no validation. If the caller omits `title`, Python raises `KeyError: 'title'` which is caught by the outer `except Exception` and stringified as `"'title'"`.
+`orchestrator.py` line 133 does `title = m["title"]` unconditionally. If the caller omits `title`, Python raises `KeyError: 'title'` caught by the outer `except Exception` and stringified as `"'title'"`.
 
-The MCP tool signature (`server.py`) accepts `memories: list[dict]` with no documented schema for the dict — so the agent has no way to know `title` is required.
+**Note:** This is primarily a caller error — `title` is documented as required in the `lorekeeper-memorize` skill. The code behaviour is correct; the error message is just unhelpful.
 
 ## Acceptance Criteria
 
