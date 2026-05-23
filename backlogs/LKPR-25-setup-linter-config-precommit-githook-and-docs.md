@@ -2,7 +2,8 @@
 id: LKPR-25
 title: Setup linter config, pre-commit hook, and update dev docs
 type: chore
-status: in-progress
+status: review
+resolved_date: 2026-05-23
 priority: high
 sprint: ~
 rice_score: ~
