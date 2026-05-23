@@ -63,6 +63,13 @@ _none_
 
 _None_ — standalone. Uses existing `memory_engine.insert()` and `link_store.link()`.
 
+## Required Updates
+
+- **CLAUDE.md**: [ ] Update agentic loop section to mention `lore_remember` as the preferred quick-capture path
+- **README.md**: [ ] Document `lore_remember` in the MCP tools list
+- **Skills**: [ ] Update `memory-splitter` and `memory-reorganizer` skills to use `lore_remember` for creating atomic memories
+- **Backlog**: [ ] N/A — no dependency changes
+
 ## Open Questions
 
 - Should `lore_remember` accept markdown? Yes — content is stored verbatim, markdown is fine.

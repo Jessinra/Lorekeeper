@@ -73,6 +73,13 @@ _none_ — reflection view already shows discoveries/lessons; memories link back
 
 LKPR-29 (`lore_remember`) — this reuses the same auto-extract logic. Can ship independently by calling `memory_engine.insert()` directly with auto-extracted fields, but cleaner if LKPR-29's handler is reusable.
 
+## Required Updates
+
+- **CLAUDE.md**: [ ] Update agentic loop section — the reflection→memory bridge is now automated
+- **README.md**: [ ] Document the `auto_insert` behavior on `lore_reflect`
+- **Skills**: [ ] Update `reflect` skill — reflection output format changed (includes `memories_created` in response)
+- **Backlog**: [ ] N/A
+
 ## Open Questions
 
 - Should discoveries from DIFFERENT reflections on the same session be deduped? Yes — use existing dedup threshold.

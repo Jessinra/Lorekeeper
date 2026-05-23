@@ -37,6 +37,13 @@ One call. Agent gets everything it needs to decide whether to do more work or cl
 ## Dependencies
 - LKPR-2 (`lore_health`) — needed for the health step; wrap can ship without it but degrades
 
+## Required Updates
+
+- **CLAUDE.md**: [ ] Update session-end workflow — replace 3-step reflect/insert/health with single `lore_wrap_session` call
+- **README.md**: [ ] Document `lore_wrap_session` in MCP tools list
+- **Skills**: [ ] Update `reflect` skill and `lorekeeper-pm` skill to call `lore_wrap_session` instead of individual reflect/insert/health
+- **Backlog**: [ ] N/A — LKPR-2 dependency already noted
+
 ## Open Questions
 _None_
 

@@ -63,6 +63,13 @@ _none_ — existing link display shows auto_linked results naturally
 
 _None_ — Chroma's HNSW index is already built and maintained by every insert. The query path is already implemented. No new storage or services.
 
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — passive feature, no workflow change
+- **README.md**: [ ] Document `LORE_AUTO_LINK_ENABLED`, `LORE_AUTO_LINK_K`, `LORE_AUTO_LINK_THRESHOLD` env vars
+- **Skills**: [ ] Update `memory-linker` skill — linking now has automatic and manual modes
+- **Backlog**: [ ] N/A — complementary with LKPR-28
+
 ## Open Questions
 
 - **Symmetry**: should auto-linked memories also get a reciprocal link back? (A→B and B→A). Creates bidirectional edges but doubles link count. Proposed: skip for now, revisit if graph traversal needs it.

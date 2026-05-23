@@ -65,6 +65,13 @@ _none_ — existing memory detail view already shows links
 
 _None_ — `link_store.link_memories()` already exists. No schema changes needed.
 
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — no behavior change, only fewer calls
+- **README.md**: [ ] Document the `links` parameter in `lore_insert` API docs
+- **Skills**: [ ] Update `memory-linker` and `memory-reorganizer` skills to use inline links instead of two-step insert+link
+- **Backlog**: [ ] N/A — LKPR-27 already noted as complementary
+
 ## Open Questions
 
 - Should links be per-memory-item or at the top level for batch inserts? Per-item is more flexible — a single `lore_insert` can create multiple memories each linked to different targets.

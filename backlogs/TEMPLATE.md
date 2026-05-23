@@ -34,6 +34,14 @@ What we plan to build. Concrete but not over-specified.
 _None_ — or list ticket IDs + reason:
 - LKPR-X: must be done first because...
 
+## Required Updates
+What else needs to change when this ticket ships:
+
+- **CLAUDE.md**: [ ] N/A — describe what to update if needed
+- **README.md**: [ ] N/A — describe what to update if needed
+- **Skills**: [ ] N/A — list skills that need updating (agent-facing, distributed skills)
+- **Backlog**: [ ] N/A — specify if dependency statuses change, or if new follow-up tickets are needed
+
 ## Open Questions
 - Question?
 
