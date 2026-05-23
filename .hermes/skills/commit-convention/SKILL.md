@@ -85,7 +85,7 @@ Use sparingly and only in genuine emergencies (e.g. CI fix on a broken main). Al
 The hook lives at `scripts/hooks/commit-msg` and is installed by setup:
 
 ```bash
-./scripts/lorekeeper-setup.sh
+./scripts/setup.sh
 ```
 
 Re-run this after cloning the repo on a new machine.

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Lorekeeper setup — install deps, register MCP server, install skills.
+# Lorekeeper setup — install deps, register MCP server, install skills, install git hooks.
+# Run once per clone. Re-run after adding/updating skills in .hermes/skills/.
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SKILLS_SRC="$REPO_DIR/assets/skills"
-SKILLS_DST="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
-SETTINGS="${CLAUDE_SETTINGS:-$HOME/.claude/settings.json}"
+SKILLS_SRC="$REPO_DIR/.hermes/skills"
+SKILLS_DST="${HERMES_SKILLS_DIR:-$HOME/.hermes/skills}"
 DATA_DIR="${LORE_DATA_DIR:-$HOME/.lorekeeper}"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; BOLD='\033[1m'; NC='\033[0m'
@@ -38,67 +38,81 @@ title "Setting up data directory..."
 mkdir -p "$DATA_DIR"
 info "Data directory ready: $DATA_DIR"
 
-# ── 4. Register MCP server in ~/.claude/settings.json ─────────────────────────
+# ── 4. Register MCP server in ~/.hermes/config.yaml ──────────────────────────
 title "Registering MCP server..."
-uv run --directory "$REPO_DIR" python - "$SETTINGS" "$REPO_DIR" "$DATA_DIR" <<'PYEOF'
-import json, pathlib, sys
-
-settings_path = pathlib.Path(sys.argv[1])
-repo_dir      = sys.argv[2]
-data_dir      = sys.argv[3]
-
-settings = {}
-if settings_path.exists():
-    with open(settings_path) as f:
-        settings = json.load(f)
-
-settings.setdefault("mcpServers", {})
-
-entry = {
-    "command": "uv",
-    "args": ["run", "--directory", repo_dir, "lorekeeper"],
-    "env": {"LORE_DATA_DIR": data_dir},
-}
-
-if "lorekeeper" in settings["mcpServers"]:
-    existing = settings["mcpServers"]["lorekeeper"]
-    if existing == entry:
-        print("  already registered — no change")
-    else:
-        settings["mcpServers"]["lorekeeper"] = entry
-        settings_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(settings_path, "w") as f:
-            json.dump(settings, f, indent=2)
-        print("  updated existing entry in " + str(settings_path))
-else:
-    settings["mcpServers"]["lorekeeper"] = entry
-    settings_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(settings_path, "w") as f:
-        json.dump(settings, f, indent=2)
-    print("  registered in " + str(settings_path))
-PYEOF
-info "MCP server registered"
-
-# ── 5. Install Claude Code skills ─────────────────────────────────────────────
-title "Installing skills..."
-if [ ! -d "$SKILLS_SRC" ]; then
-    warn "No assets/skills/ directory found — skipping skill installation"
+CONFIG="$HOME/.hermes/config.yaml"
+if [ -f "$CONFIG" ] && grep -q "lorekeeper" "$CONFIG"; then
+    info "MCP server already registered in $CONFIG"
 else
-    mkdir -p "$SKILLS_DST"
-    installed=0
-    for skill_dir in "$SKILLS_SRC"/*/; do
-        [ -f "$skill_dir/SKILL.md" ] || continue
-        skill_name=$(basename "$skill_dir")
-        dst="$SKILLS_DST/$skill_name"
-        mkdir -p "$dst"
-        cp "$skill_dir/SKILL.md" "$dst/SKILL.md"
-        info "  $skill_name"
-        (( installed++ )) || true
-    done
-    info "$installed skills installed to $SKILLS_DST"
+    warn "MCP server not found in $CONFIG — add it manually:"
+    echo ""
+    echo "  mcp_servers:"
+    echo "    lorekeeper:"
+    echo "      command: uv"
+    echo "      args: [run, --directory, $REPO_DIR, lorekeeper]"
+    echo "      env:"
+    echo "        LORE_DATA_DIR: $DATA_DIR"
+    echo ""
 fi
 
-# ── 6. Optional: migrate from v1 ─────────────────────────────────────────────
+# ── 5. Install Hermes skills ──────────────────────────────────────────────────
+title "Installing Hermes skills..."
+
+# Maps repo skill names to global Hermes skill categories
+skill_category() {
+    case "$1" in
+        lorekeeper-dev|after-changes|backlog-management|commit-convention) echo "software-development" ;;
+        lorekeeper-pm)                                                      echo "product" ;;
+        ui-ux-pro-max)                                                      echo "creative" ;;
+        *)                                                                  echo "misc" ;;
+    esac
+}
+
+if [ ! -d "$SKILLS_SRC" ]; then
+    warn "No .hermes/skills/ directory found — skipping skill installation"
+else
+    for skill_dir in "$SKILLS_SRC"/*/; do
+        [ -d "$skill_dir" ] || continue
+        skill_name="$(basename "$skill_dir")"
+        category="$(skill_category "$skill_name")"
+
+        mkdir -p "$SKILLS_DST/$category"
+        target_path="$SKILLS_DST/$category/$skill_name"
+
+        if [ -L "$target_path" ] && [ "$(readlink "$target_path")" = "$skill_dir" ]; then
+            info "$category/$skill_name — already linked"
+        elif [ -d "$target_path" ]; then
+            rm -rf "$target_path"
+            ln -sf "$skill_dir" "$target_path"
+            info "$category/$skill_name — replaced with symlink"
+        else
+            ln -sf "$skill_dir" "$target_path"
+            info "$category/$skill_name → linked"
+        fi
+    done
+fi
+
+# ── 6. Install git hooks ──────────────────────────────────────────────────────
+title "Installing git hooks..."
+HOOKS_SRC="$REPO_DIR/scripts/hooks"
+HOOKS_DST="$REPO_DIR/.git/hooks"
+
+if [ -d "$HOOKS_SRC" ]; then
+    for hook_file in "$HOOKS_SRC"/*; do
+        [ -f "$hook_file" ] || continue
+        hook_name="$(basename "$hook_file")"
+        target="$HOOKS_DST/$hook_name"
+        cp "$hook_file" "$target"
+        chmod +x "$target"
+        info "git hook: $hook_name installed"
+    done
+else
+    warn "No hooks dir found at scripts/hooks/ — skipping"
+fi
+
+info "Git hooks active — author name/email and [LKPR-N] are now enforced"
+
+# ── 7. Optional: migrate from v1 ─────────────────────────────────────────────
 if [ -n "${V1_JSON:-}" ] && [ -f "$V1_JSON" ]; then
     title "Migrating from v1..."
     uv run --directory "$REPO_DIR" python scripts/migrate_from_json.py \
@@ -108,7 +122,7 @@ fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
-echo -e "${BOLD}Setup complete.${NC} Restart Claude Code to activate the MCP server."
+echo -e "${BOLD}Setup complete.${NC} Restart Hermes/Claude to activate the MCP server."
 echo ""
 echo "Start the dashboard:"
 echo "  uv run --directory $REPO_DIR lorekeeper-dashboard"

@@ -89,7 +89,7 @@ All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 Run this once (or after adding/updating skills in `.hermes/skills/`):
 
 ```bash
-./scripts/lorekeeper-setup.sh
+./scripts/setup.sh
 ```
 
 This symlinks repo-local skills (`lorekeeper-dev`, `lorekeeper-pm`, `after-changes`, `backlog-management`, `ui-ux-pro-max`) into the global Hermes skills directory so they're loadable via `skill_view`. Re-run after editing any skill in `.hermes/skills/` to sync changes.
@@ -169,7 +169,7 @@ Implementation plans live in `docs/plans/YYYY-MM-DD_HHMMSS-<slug>.md` (not `.her
 
 ## Commit Convention
 
-All commits are enforced by `.git/hooks/commit-msg` (installed via `./scripts/lorekeeper-setup.sh`).
+All commits are enforced by `.git/hooks/commit-msg` (installed via `./scripts/setup.sh`).
 
 **Author identity** (set once per clone):
 ```bash
