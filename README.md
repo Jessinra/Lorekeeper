@@ -365,6 +365,34 @@ uv run lorekeeper-dashboard
 
 ---
 
+## Commit Convention
+
+All commits are enforced by a `commit-msg` git hook. Install it via:
+
+```bash
+./scripts/lorekeeper-setup.sh
+```
+
+**Author identity** (set once per clone):
+
+```bash
+git config --local user.name "Akane (PM)"   # or "Dev"
+git config --local user.email "jessinra.kai@gmail.com"
+```
+
+**Commit title format**: `[LKPR-N] type: short title`
+
+| Tag | Use for |
+|-----|---------|
+| `[LKPR-N]` | Work tied to a specific ticket |
+| `[LKPR-0]` | Housekeeping — chore, backlog edits, status changes, skill/doc updates |
+
+Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`
+
+Merge commits to main are exempt. Emergency bypass: `git commit --no-verify`.
+
+---
+
 ## Project layout
 
 ```

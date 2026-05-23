@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Lorekeeper commit-msg hook
+# Enforces: author name, author email, and [LKPR-N] ticket in commit title.
+#
+# Install: scripts/lorekeeper-setup.sh  (run once per clone)
+# Bypass (emergency only): git commit --no-verify
+
+set -euo pipefail
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(head -1 "$COMMIT_MSG_FILE")
+GIT_DIR=$(git rev-parse --git-dir)
+
+# ── Skip merge commits ───────────────────────────────────────────────────────
+if [ -f "$GIT_DIR/MERGE_HEAD" ]; then
+    exit 0
+fi
+if echo "$COMMIT_MSG" | grep -qE "^Merge (branch|pull request|remote-tracking)"; then
+    exit 0
+fi
+
+ERRORS=()
+
+# ── Author name ──────────────────────────────────────────────────────────────
+AUTHOR_NAME=$(git config user.name 2>/dev/null || echo "")
+if [ "$AUTHOR_NAME" != "Akane (PM)" ] && [ "$AUTHOR_NAME" != "Dev" ]; then
+    ERRORS+=("Author name must be 'Akane (PM)' or 'Dev'. Got: '${AUTHOR_NAME:-<not set>}'")
+    ERRORS+=("  Fix: git config user.name 'Dev'")
+fi
+
+# ── Author email ─────────────────────────────────────────────────────────────
+AUTHOR_EMAIL=$(git config user.email 2>/dev/null || echo "")
+if [ "$AUTHOR_EMAIL" != "jessinra.kai@gmail.com" ]; then
+    ERRORS+=("Author email must be 'jessinra.kai@gmail.com'. Got: '${AUTHOR_EMAIL:-<not set>}'")
+    ERRORS+=("  Fix: git config user.email 'jessinra.kai@gmail.com'")
+fi
+
+# ── [LKPR-N] ticket tag ──────────────────────────────────────────────────────
+if ! echo "$COMMIT_MSG" | grep -qE "^\[LKPR-[0-9]+\]"; then
+    ERRORS+=("Commit title must start with [LKPR-N]. Got: '${COMMIT_MSG}'")
+    ERRORS+=("  [LKPR-0] = housekeeping (chore, backlog edits, status changes, skill updates)")
+    ERRORS+=("  [LKPR-N] = work against a specific ticket")
+fi
+
+# ── Report & exit ────────────────────────────────────────────────────────────
+if [ ${#ERRORS[@]} -gt 0 ]; then
+    echo ""
+    echo "❌  Commit rejected — convention violations:"
+    echo ""
+    for err in "${ERRORS[@]}"; do
+        echo "  $err"
+    done
+    echo ""
+    echo "  Emergency bypass: git commit --no-verify"
+    echo ""
+    exit 1
+fi
+
+exit 0

@@ -27,6 +27,7 @@ for skill_dir in "$SKILLS_SRC"/*/; do
     case "$skill_name" in
         lorekeeper-dev|after-changes) category="software-development" ;;
         backlog-management)           category="software-development" ;;
+        commit-convention)            category="software-development" ;;
         lorekeeper-pm)                category="product" ;;
         ui-ux-pro-max)                category="creative" ;;
         *)                            category="misc" ;;
@@ -49,3 +50,25 @@ done
 
 echo ""
 echo "Done. Run 'skills_list | grep lorekeeper' to verify."
+
+# ── Install git hooks ────────────────────────────────────────────────────────
+echo ""
+echo "Installing git hooks..."
+HOOKS_SRC="$REPO_DIR/scripts/hooks"
+HOOKS_DST="$REPO_DIR/.git/hooks"
+
+if [ -d "$HOOKS_SRC" ]; then
+    for hook_file in "$HOOKS_SRC"/*; do
+        [ -f "$hook_file" ] || continue
+        hook_name="$(basename "$hook_file")"
+        target="$HOOKS_DST/$hook_name"
+        cp "$hook_file" "$target"
+        chmod +x "$target"
+        echo "  + git hook: $hook_name installed"
+    done
+else
+    echo "  (no hooks dir found at scripts/hooks/)"
+fi
+
+echo ""
+echo "All done. Git hooks active — author name/email and [LKPR-N] are now enforced."

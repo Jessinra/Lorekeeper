@@ -18,6 +18,19 @@ Product management workflow for the Lorekeeper project.
 
 ---
 
+## Commit Identity (PM)
+
+When committing as PM (Akane), set local git identity in the repo:
+
+```bash
+git config --local user.name "Akane (PM)"
+git config --local user.email "jessinra.kai@gmail.com"
+```
+
+This is enforced by the `commit-msg` hook. Load `commit-convention` skill for full details on message format, ticket tags, and examples.
+
+---
+
 ## Backlog Conventions
 
 > Full ticket lifecycle, numbering, scripts, and template → load the `backlog-management` skill.

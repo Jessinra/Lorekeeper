@@ -167,6 +167,31 @@ Implementation plans live in `docs/plans/YYYY-MM-DD_HHMMSS-<slug>.md` (not `.her
 
 ---
 
+## Commit Convention
+
+All commits are enforced by `.git/hooks/commit-msg` (installed via `./scripts/lorekeeper-setup.sh`).
+
+**Author identity** (set once per clone):
+```bash
+# PM
+git config --local user.name "Akane (PM)"
+git config --local user.email "jessinra.kai@gmail.com"
+
+# Dev
+git config --local user.name "Dev"
+git config --local user.email "jessinra.kai@gmail.com"
+```
+
+**Commit title format**: `[LKPR-N] type: short imperative title`
+
+- `[LKPR-N]` — work tied to a specific ticket
+- `[LKPR-0]` — housekeeping with no ticket (chore, backlog edits, skill updates, status changes)
+- Merge commits to main are exempt
+
+Full details → `commit-convention` skill.
+
+---
+
 ## Post-Change Rule
 
 After **every set of code changes**, load the `after-changes` skill and follow it. It covers three steps in order:

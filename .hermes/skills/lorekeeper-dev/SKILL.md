@@ -77,17 +77,14 @@ Rules:
 
 ## Commit Messages
 
-Format:
-```
-[LKPR-N] type: short title
+> Full convention → load the `commit-convention` skill.
 
-Body explaining what changed and why.
-- file.py: what changed
-- test.py: what covers it
-- backlog: marked done
-```
+Format: `[LKPR-N] type: short imperative title`
 
-For chore work without a ticket: use `[LKPR-dev]` as prefix.
+| Tag | When |
+|-----|------|
+| `[LKPR-N]` | Work tied to a specific ticket |
+| `[LKPR-0]` | Housekeeping — chore, backlog edits, status changes, skill updates |
 
 Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`
 
@@ -95,14 +92,18 @@ Examples:
 ```
 [LKPR-6] feat: add iterative search with relevance cutoff
 [LKPR-19] fix: enable FK constraints via PRAGMA foreign_keys=ON
-[LKPR-16] test: add regression tests for scoring fix
-[LKPR-dev] chore: rename backlog tickets with LKPR-N prefix
+[LKPR-0] chore: add LKPR-21 entity-resolution backlog ticket
 ```
 
 Rules:
 - one logical change per commit — if you need "and", split it
 - never bundle unrelated changes
 - no WIP commits in main — squash before merging
+- **author name must be `Dev`, email `jessinra.kai@gmail.com`** — enforced by hook
+  ```bash
+  git config --local user.name "Dev"
+  git config --local user.email "jessinra.kai@gmail.com"
+  ```
 
 ---
 
@@ -177,7 +178,7 @@ Before opening a PR, run through this:
 - [ ] Complex logic has inline comments explaining *why*, not what?
 
 **Git**
-- [ ] Commits follow `[LKPR-N] type: title` format?
+- [ ] Commits follow `[LKPR-N] type: title` format (housekeeping = `[LKPR-0]`)?
 - [ ] Branch named `<type>/LKPR-N-slug`?
 - [ ] Ticket updated: `status: done`, `resolved_date`, root cause written?
 - [ ] Ticket moved to `backlogs/done/`?
