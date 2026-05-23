@@ -135,7 +135,7 @@ Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`.
 **Submitting work:**
 3. Self-review: full test suite (`uv run pytest`) + lint (`uv run ruff check src tests`) + mypy (`uv run mypy src`)
 4. Move ticket to `status: review`
-5. Push branch + open PR via `curl` REST API (never `gh pr create`) + tag Copilot as reviewer
+5. Push branch + open PR via `gh pr create --reviewer @copilot` (load `github-pr` skill for details)
 6. Ping Jason on Telegram to review and merge
 
 ## Verification Standard
@@ -197,8 +197,7 @@ Before opening a PR, run through this:
 - [ ] Commits follow `[LKPR-N] type: title` format (housekeeping = `[LKPR-0]`)?
 - [ ] Branch named `<type>/LKPR-N-slug`?
 - [ ] Ticket updated: `status: review`, `resolved_date`, root cause written?
-- [ ] Pushed to `origin` and PR opened via `curl` (REST API — never `gh pr create`)?
-- [ ] Copilot tagged as reviewer on the PR?
+- [ ] Pushed to `origin` and PR opened via `gh pr create --reviewer @copilot`?
 - [ ] Jason pinged on Telegram to review and merge?
 
 ---
@@ -224,24 +223,10 @@ After every set of changes:
 2. README consistency — verify config defaults, tool signatures, env var names still match
 3. Commit with `[LKPR-N] type: title` format
 4. Push to `origin` (GitHub): `git push origin <branch>`
-5. Open a PR via GitHub REST API — **always use curl, never `gh pr create`** (app token doesn't support GraphQL):
+5. Open a PR and tag Copilot as reviewer — load the `github-pr` skill. In short:
    ```bash
-   TOKEN=$(gh auth token)
-   # Create PR
-   PR=$(curl -s -X POST \
-     -H "Authorization: Bearer $TOKEN" \
-     -H "Accept: application/vnd.github.v3+json" \
-     https://api.github.com/repos/Jessinra/Lorekeeper/pulls \
-     -d "{\"title\":\"[LKPR-N] type: title\",\"head\":\"<branch>\",\"base\":\"main\",\"body\":\"...\"}")
-   PR_NUMBER=$(echo "$PR" | python3 -c "import json,sys; print(json.load(sys.stdin)['number'])")
-   # Tag Copilot as reviewer (mandatory on every PR)
-   curl -s -X POST \
-     -H "Authorization: Bearer $TOKEN" \
-     -H "Accept: application/vnd.github.v3+json" \
-     "https://api.github.com/repos/Jessinra/Lorekeeper/pulls/${PR_NUMBER}/requested_reviewers" \
-     -d '{"reviewers":["copilot-pull-request-reviewer[bot]"]}'
+   gh pr create --base main --title "[LKPR-N] type: title" --body "..." --reviewer @copilot
    ```
-   See: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/use-code-review
 6. Ping Jason on Telegram to review and merge
 
 ## Plans Location
