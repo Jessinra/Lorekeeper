@@ -2,7 +2,7 @@
 id: LKPR-21
 title: lore_update memory_feedback expects "id" not "memory_id" — API inconsistency
 type: bug
-status: closed
+status: done
 reason: not reproducible
 priority: high
 rice_score: ~

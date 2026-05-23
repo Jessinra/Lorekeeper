@@ -28,7 +28,7 @@ for status in "${STATUSES[@]}"; do
     files=()
     while IFS= read -r -d '' file; do
         files+=("$file")
-    done < <(find "$BACKLOG_DIR" -maxdepth 1 -name "*.md" ! -name "TEMPLATE.md" -exec grep -l "^status: $status" {} \; 2>/dev/null | sort | tr '\n' '\0')
+done < <(find "$BACKLOG_DIR" -maxdepth 2 -name "*.md" ! -name "TEMPLATE.md" -exec grep -l "^status: $status" {} \; 2>/dev/null | sort | tr '\n' '\0')
 
     count=${#files[@]}
     if [ "$count" -gt 0 ]; then
