@@ -1,4 +1,5 @@
 import pytest
+
 from lorekeeper.services.link_store import LinkStore
 
 

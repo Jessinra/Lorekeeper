@@ -1,35 +1,54 @@
 // ── Links tab ──
-import { api, showToast }      from './api.js';
-import * as state              from './state.js';
-import { esc, scoreClass, fmt2, clientSort } from './utils.js';
-import { updateSortHeaders }   from './memories.js';
-import { updateHeaderMeta }    from './memories.js';
+import { api, showToast } from "./api.js";
+import { updateHeaderMeta, updateSortHeaders } from "./memories.js";
+import * as state from "./state.js";
+import { clientSort, esc, fmt2, scoreClass } from "./utils.js";
 
 // Cross-module callback — wired by app.js.
 let _selectMemory = () => {};
-export function registerLinksSelectMemory(fn) { _selectMemory = fn; }
+export function registerLinksSelectMemory(fn) {
+	_selectMemory = fn;
+}
 
 export async function loadLinks() {
-  const inc = document.getElementById('links-show-deleted').checked;
-  state.setAllLinks(await api('GET', `/api/links?include_deleted=${inc}`));
-  state.setLinksLoaded(true);
-  renderLinks();
-  updateHeaderMeta();
+	const inc = document.getElementById("links-show-deleted").checked;
+	state.setAllLinks(await api("GET", `/api/links?include_deleted=${inc}`));
+	state.setLinksLoaded(true);
+	renderLinks();
+	updateHeaderMeta();
 }
 
 export function setLinkSort(field) {
-  state.linkSort.dir = state.linkSort.field === field
-    ? (state.linkSort.dir === 'desc' ? 'asc' : 'desc')
-    : (['source_title', 'target_title', 'relation_type'].includes(field) ? 'asc' : 'desc');
-  state.linkSort.field = field;
-  updateSortHeaders('lth-', state.linkSort, ['source_title', 'relation_type', 'target_title', 'score', 'usage_count']);
-  renderLinks();
+	state.linkSort.dir =
+		state.linkSort.field === field
+			? state.linkSort.dir === "desc"
+				? "asc"
+				: "desc"
+			: ["source_title", "target_title", "relation_type"].includes(field)
+				? "asc"
+				: "desc";
+	state.linkSort.field = field;
+	updateSortHeaders("lth-", state.linkSort, [
+		"source_title",
+		"relation_type",
+		"target_title",
+		"score",
+		"usage_count",
+	]);
+	renderLinks();
 }
 
 export function renderLinks() {
-  const sorted = clientSort(state.allLinks, state.linkSort.field, state.linkSort.dir);
-  document.getElementById('links-count').textContent = `${state.allLinks.length}`;
-  document.getElementById('link-rows').innerHTML = sorted.map(l => `
+	const sorted = clientSort(
+		state.allLinks,
+		state.linkSort.field,
+		state.linkSort.dir,
+	);
+	document.getElementById("links-count").textContent =
+		`${state.allLinks.length}`;
+	document.getElementById("link-rows").innerHTML = sorted
+		.map(
+			(l) => `
     <tr>
       <td class="col-link-title" onclick="selectMemory('${l.source_memory_id}')" title="${esc(l.source_title)}">${esc(l.source_title)}</td>
       <td><span class="relation-badge">${esc(l.relation_type)}</span></td>
@@ -39,19 +58,23 @@ export function renderLinks() {
       <td class="col-usage-r">${l.usage_count}</td>
       <td class="col-actions"><button class="btn-sm btn-danger" onclick="deleteLinkFromTab('${l.id}')">×</button></td>
     </tr>
-  `).join('');
+  `,
+		)
+		.join("");
 }
 
 export async function deleteLinkFromTab(linkId) {
-  if (!confirm('Delete this link?')) return;
-  try {
-    await api('DELETE', `/api/links/${linkId}`);
-    showToast('Link deleted');
-    loadLinks();
-  } catch (e) { showToast(e.message, 'error'); }
+	if (!confirm("Delete this link?")) return;
+	try {
+		await api("DELETE", `/api/links/${linkId}`);
+		showToast("Link deleted");
+		loadLinks();
+	} catch (e) {
+		showToast(e.message, "error");
+	}
 }
 
 // Expose onclick targets on window
-window.loadLinks        = loadLinks;
-window.setLinkSort      = setLinkSort;
+window.loadLinks = loadLinks;
+window.setLinkSort = setLinkSort;
 window.deleteLinkFromTab = deleteLinkFromTab;

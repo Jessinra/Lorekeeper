@@ -94,7 +94,7 @@ fi
 
 # ── 6. Install git hooks ──────────────────────────────────────────────────────
 title "Installing git hooks..."
-HOOKS_SRC="$REPO_DIR/scripts/hooks"
+HOOKS_SRC="$REPO_DIR/.githooks"
 HOOKS_DST="$REPO_DIR/.git/hooks"
 
 if [ -d "$HOOKS_SRC" ]; then
@@ -107,10 +107,10 @@ if [ -d "$HOOKS_SRC" ]; then
         info "git hook: $hook_name installed"
     done
 else
-    warn "No hooks dir found at scripts/hooks/ — skipping"
+    warn "No .githooks/ directory found — skipping"
 fi
 
-info "Git hooks active — author name/email and [LKPR-N] are now enforced"
+info "Git hooks active — author name/email, [LKPR-N], lint, and tests enforced"
 
 # ── 7. Optional: migrate from v1 ─────────────────────────────────────────────
 if [ -n "${V1_JSON:-}" ] && [ -f "$V1_JSON" ]; then

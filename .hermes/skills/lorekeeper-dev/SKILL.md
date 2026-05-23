@@ -41,10 +41,24 @@ Mem0 v2 `score_and_rank` receives Chroma cosine *distances* (0=identical) but tr
 ```bash
 uv run pytest                          # run tests
 uv run pytest tests/ -x -q            # fail-fast
-uv run ruff check src tests            # lint
-uv run mypy src                        # type check
+uv run ruff check src tests            # lint (Python)
+uv run ruff check src tests --fix      # auto-fix lint
+uv run mypy src                        # type check (run before push; not in pre-commit hook — too slow)
+npx @biomejs/biome check src/lorekeeper/dashboard/static/js/    # lint (JS)
+npx @biomejs/biome check ... --write   # auto-fix JS lint
 uv run lorekeeper                      # start server
 ```
+
+## Pre-commit Hook
+
+Install once per clone via `bash scripts/setup.sh`. It runs:
+1. `ruff check src tests` — Python lint
+2. `biome check` — JS lint
+3. `uv run pytest tests/ -q` — test suite
+
+Bypass: `git commit --no-verify` (emergency only)
+
+See `docs/linter-decisions.md` for the full rationale on rule selection.
 
 ## Testing Patterns
 
@@ -119,8 +133,10 @@ Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`.
 3. Change `status` to `in-progress`
 
 **Submitting work:**
-1. Full test suite + lint + type check
-2. Move ticket to `status: review`
+3. Self-review: full test suite (`uv run pytest`) + lint (`uv run ruff check src tests`) + mypy (`uv run mypy src`)
+4. Move ticket to `status: review`
+5. Push branch + open PR via `gh pr create --reviewer @copilot` (load `github-pr` skill for details)
+6. Ping Jason on Telegram to review and merge
 
 ## Verification Standard
 
@@ -180,8 +196,9 @@ Before opening a PR, run through this:
 **Git**
 - [ ] Commits follow `[LKPR-N] type: title` format (housekeeping = `[LKPR-0]`)?
 - [ ] Branch named `<type>/LKPR-N-slug`?
-- [ ] Ticket updated: `status: done`, `resolved_date`, root cause written?
-- [ ] Ticket moved to `backlogs/done/`?
+- [ ] Ticket updated: `status: review`, `resolved_date`, root cause written?
+- [ ] Pushed to `origin` and PR opened via `gh pr create --reviewer @copilot`?
+- [ ] Jason pinged on Telegram to review and merge?
 
 ---
 
@@ -205,7 +222,12 @@ After every set of changes:
 1. Code review — check reuse, quality, efficiency
 2. README consistency — verify config defaults, tool signatures, env var names still match
 3. Commit with `[LKPR-N] type: title` format
-4. Push to `origin` (GitHub)
+4. Push to `origin` (GitHub): `git push origin <branch>`
+5. Open a PR and tag Copilot as reviewer — load the `github-pr` skill. In short:
+   ```bash
+   gh pr create --base main --title "[LKPR-N] type: title" --body "..." --reviewer @copilot
+   ```
+6. Ping Jason on Telegram to review and merge
 
 ## Plans Location
 

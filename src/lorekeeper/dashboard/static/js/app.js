@@ -1,42 +1,39 @@
 // ── Entry point ──
 // Imports all modules, wires cross-module callbacks, then initialises the app.
 
-import './api.js';
-import './utils.js';
-import * as state    from './state.js';
-import { switchTab, registerTabCallbacks } from './tab.js';
+import "./api.js";
+import "./utils.js";
+import { initBackup } from "./backup.js";
+import { loadConfig } from "./config.js";
+import { registerDetailCallbacks, selectMemory } from "./detail.js";
+import { loadLinks, registerLinksSelectMemory } from "./links.js";
 import {
-  loadMemories, renderList, updateSortHeaders,
-  onFilterInput, clearFilter, toggleShowDeleted, setMemSort, updateHeaderMeta,
-  registerSelectMemory,
-} from './memories.js';
-import {
-  selectMemory, registerDetailCallbacks,
-} from './detail.js';
-import {
-  loadLinks, setLinkSort, deleteLinkFromTab,
-  registerLinksSelectMemory,
-} from './links.js';
-import { runQuery, registerQuerySelectMemory } from './query.js';
-import { loadConfig, saveConfig, onCfgChange } from './config.js';
-import { loadSessions } from './sessions.js';
-import { initBackup } from './backup.js';
-import { loadMetrics } from './metrics.js';
+	clearFilter,
+	loadMemories,
+	registerSelectMemory,
+	renderList,
+	updateSortHeaders,
+} from "./memories.js";
+import { loadMetrics } from "./metrics.js";
+import { registerQuerySelectMemory, runQuery } from "./query.js";
+import { loadSessions } from "./sessions.js";
+import * as state from "./state.js";
+import { registerTabCallbacks } from "./tab.js";
 
 // ── Wire cross-module callbacks to break circular deps ──
 
 registerTabCallbacks({
-  onTabLinks:    loadLinks,
-  onTabConfig:   loadConfig,
-  onTabSessions: loadSessions,
-  onTabMetrics:  loadMetrics,
+	onTabLinks: loadLinks,
+	onTabConfig: loadConfig,
+	onTabSessions: loadSessions,
+	onTabMetrics: loadMetrics,
 });
 
 // detail.js needs loadMemories, renderList, loadLinks
 registerDetailCallbacks({
-  loadMemories,
-  renderList,
-  loadLinks,
+	loadMemories,
+	renderList,
+	loadLinks,
 });
 
 // links.js needs selectMemory
@@ -55,30 +52,30 @@ const AUTO_REFRESH_MS = 30_000;
 let _autoRefreshTimer = null;
 
 function activeTabRefresher() {
-  const active = document.querySelector('.tab.active');
-  if (!active) return loadMemories;
-  const tab = active.dataset.tab || active.textContent.trim().toLowerCase();
-  if (tab === 'sessions') return () => loadSessions(false);
-  return loadMemories;
+	const active = document.querySelector(".tab.active");
+	if (!active) return loadMemories;
+	const tab = active.dataset.tab || active.textContent.trim().toLowerCase();
+	if (tab === "sessions") return () => loadSessions(false);
+	return loadMemories;
 }
 
 async function triggerRefresh() {
-  const btn  = document.getElementById('btn-refresh-memories');
-  const icon = btn?.querySelector('.refresh-icon');
-  if (icon) icon.classList.add('spinning');
-  btn?.setAttribute('disabled', '');
-  try {
-    await activeTabRefresher()();
-  } finally {
-    if (icon) icon.classList.remove('spinning');
-    btn?.removeAttribute('disabled');
-    scheduleAutoRefresh();
-  }
+	const btn = document.getElementById("btn-refresh-memories");
+	const icon = btn?.querySelector(".refresh-icon");
+	if (icon) icon.classList.add("spinning");
+	btn?.setAttribute("disabled", "");
+	try {
+		await activeTabRefresher()();
+	} finally {
+		if (icon) icon.classList.remove("spinning");
+		btn?.removeAttribute("disabled");
+		scheduleAutoRefresh();
+	}
 }
 
 function scheduleAutoRefresh() {
-  clearTimeout(_autoRefreshTimer);
-  _autoRefreshTimer = setTimeout(triggerRefresh, AUTO_REFRESH_MS);
+	clearTimeout(_autoRefreshTimer);
+	_autoRefreshTimer = setTimeout(triggerRefresh, AUTO_REFRESH_MS);
 }
 
 window.triggerRefresh = triggerRefresh;
@@ -87,35 +84,46 @@ window.loadMetricsFromGlobal = () => loadMetrics();
 // ── Init ──
 
 function init() {
-  // Keyboard shortcuts
-  document.getElementById('q-text').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) runQuery();
-  });
+	// Keyboard shortcuts
+	document.getElementById("q-text").addEventListener("keydown", (e) => {
+		if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runQuery();
+	});
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') clearFilter();
-    if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-      const tab = document.getElementById('tab-memories');
-      if (tab.classList.contains('active')) {
-        e.preventDefault();
-        document.getElementById('mem-filter').focus();
-      }
-    }
-  });
+	document.addEventListener("keydown", (e) => {
+		if (e.key === "Escape") clearFilter();
+		if (
+			e.key === "/" &&
+			!["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
+		) {
+			const tab = document.getElementById("tab-memories");
+			if (tab.classList.contains("active")) {
+				e.preventDefault();
+				document.getElementById("mem-filter").focus();
+			}
+		}
+	});
 
-  initBackup();
+	initBackup();
 
-  // Bootstrap the memories tab sort headers and load data
-  updateSortHeaders('th-', state.memSort, ['title', 'score', 'confidence', 'usage_count', 'link_count', 'updated_at']);
+	// Bootstrap the memories tab sort headers and load data
+	updateSortHeaders("th-", state.memSort, [
+		"title",
+		"score",
+		"confidence",
+		"usage_count",
+		"link_count",
+		"updated_at",
+	]);
 
-  // Inject local timezone label into DATE column header
-  const tzOffset = -new Date().getTimezoneOffset() / 60;
-  const tzLabel  = `GMT${tzOffset >= 0 ? '+' : ''}${tzOffset}`;
-  const dateHeader = document.getElementById('th-updated_at');
-  if (dateHeader) dateHeader.innerHTML = `Date <span class="tz-label">${tzLabel}</span> <span class="sort-arrow">↓</span>`;
+	// Inject local timezone label into DATE column header
+	const tzOffset = -new Date().getTimezoneOffset() / 60;
+	const tzLabel = `GMT${tzOffset >= 0 ? "+" : ""}${tzOffset}`;
+	const dateHeader = document.getElementById("th-updated_at");
+	if (dateHeader)
+		dateHeader.innerHTML = `Date <span class="tz-label">${tzLabel}</span> <span class="sort-arrow">↓</span>`;
 
-  // Load memories + links eagerly so header-meta shows correct link count immediately
-  Promise.all([loadMemories(), loadLinks()]).then(scheduleAutoRefresh);
+	// Load memories + links eagerly so header-meta shows correct link count immediately
+	Promise.all([loadMemories(), loadLinks()]).then(scheduleAutoRefresh);
 }
 
 init();

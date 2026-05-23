@@ -1,4 +1,5 @@
 import pytest
+
 from lorekeeper.models import Memory
 from lorekeeper.services.keyword_index import KeywordIndex
 

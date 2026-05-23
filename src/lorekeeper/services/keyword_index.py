@@ -1,5 +1,5 @@
-import math
 from rank_bm25 import BM25Okapi
+
 from lorekeeper.models import Memory
 
 

@@ -3,10 +3,10 @@ Orchestrator integration tests.
 Uses real SQLite (via LinkStore) and a fake MemoryEngine.
 """
 import pytest
+
 from lorekeeper.config import Settings
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.memory_engine import MemoryEngine
 from lorekeeper.services.orchestrator import MemoryService
 
 
@@ -49,7 +49,11 @@ def svc(tmp_path):
 def test_insert_and_search(svc):
     service, engine = svc
     result = service.insert(
-        memories=[{"title": "checkout flow", "description": "how checkout works", "content": "steps..."}],
+        memories=[{
+            "title": "checkout flow",
+            "description": "how checkout works",
+            "content": "steps...",
+        }],
         links=[],
     )
     assert len(result["inserted_memories"]) == 1
@@ -63,7 +67,7 @@ def test_insert_and_search(svc):
 
 
 def test_update_bumps_score(svc):
-    service, engine = svc
+    service, _engine = svc
     result = service.insert(
         memories=[{"title": "test memory", "description": "d", "content": "c"}],
         links=[],

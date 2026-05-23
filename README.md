@@ -348,14 +348,28 @@ The dashboard connects to the same SQLite + ChromaDB store as the MCP server. Bo
 
 ## Development
 
+Run once per clone to install deps, git hooks, and skill symlinks:
+
 ```bash
-# Run tests
+bash scripts/setup.sh
+```
+
+**Prerequisites**: `uv`, `node` (for Biome JS linter)
+
+```bash
+# Tests
 uv run pytest
+uv run pytest tests/ -x -q    # fail-fast
 
-# Lint
+# Lint — Python (also runs in pre-commit hook)
 uv run ruff check src tests
+uv run ruff check src tests --fix
 
-# Type check
+# Lint — JS dashboard (also runs in pre-commit hook)
+npx @biomejs/biome check src/lorekeeper/dashboard/static/js/
+npx @biomejs/biome check src/lorekeeper/dashboard/static/js/ --write
+
+# Type check — run before pushing (not in pre-commit hook, too slow)
 uv run mypy src
 
 # Optional: run the dashboard (requires dashboard extras)
@@ -363,15 +377,29 @@ uv sync --extra dashboard
 uv run lorekeeper-dashboard
 ```
 
+The pre-commit hook (installed by `setup.sh`) blocks commits on lint or test failures.  
+Bypass (emergency only): `git commit --no-verify`  
+Rule selection rationale: [`docs/linter-decisions.md`](docs/linter-decisions.md)
+
+---
+
+## PR Workflow
+
+Always open PRs with **Copilot tagged as reviewer**:
+
+```bash
+gh pr create --base main --title "[LKPR-N] type: title" --body "..." --reviewer @copilot
+```
+
+Full details in `.hermes/skills/github-pr/SKILL.md`.
+
+Reference: [Requesting a code review from Copilot](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/use-code-review)
+
 ---
 
 ## Commit Convention
 
-All commits are enforced by a `commit-msg` git hook. Install it via:
-
-```bash
-./scripts/lorekeeper-setup.sh
-```
+All commits are enforced by a `commit-msg` git hook (installed via `bash scripts/setup.sh`).
 
 **Author identity** (set once per clone):
 

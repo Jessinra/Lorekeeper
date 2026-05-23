@@ -1,6 +1,7 @@
 import os
-import structlog
 from pathlib import Path
+
+import structlog
 from mem0 import Memory as Mem0Memory
 
 log = structlog.get_logger()
@@ -127,7 +128,7 @@ class MemoryEngine:
         distances = raw.get("distances", [[]])[0]
         metadatas = raw.get("metadatas", [[]])[0]
         out = []
-        for mem0_id, dist, meta in zip(ids, distances, metadatas):
+        for mem0_id, dist, meta in zip(ids, distances, metadatas, strict=False):
             lore_id = (meta or {}).get("lore_id")
             if not lore_id:
                 continue

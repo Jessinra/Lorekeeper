@@ -13,5 +13,5 @@ def main() -> None:
 
 
 def _import_app() -> Any:
-    from lorekeeper.dashboard.app import app  # noqa: PLC0415
+    from lorekeeper.dashboard.app import app
     return app
