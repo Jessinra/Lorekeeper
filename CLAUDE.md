@@ -203,6 +203,18 @@ After **every set of code changes**, load the `after-changes` skill and follow i
 2. README consistency check — update `README.md` for anything that drifted
 3. Git commit — stage and commit with a descriptive message
 
+**Opening PRs:** always use the GitHub REST API via `curl` — never `gh pr create` (app token doesn't support GraphQL). Always tag Copilot as reviewer:
+```bash
+TOKEN=$(gh auth token)
+PR=$(curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/Jessinra/Lorekeeper/pulls \
+  -d "{\"title\":\"...\",\"head\":\"<branch>\",\"base\":\"main\",\"body\":\"...\"}")
+PR_NUMBER=$(echo "$PR" | python3 -c "import json,sys; print(json.load(sys.stdin)['number'])")
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github.v3+json" \
+  "https://api.github.com/repos/Jessinra/Lorekeeper/pulls/${PR_NUMBER}/requested_reviewers" \
+  -d '{"reviewers":["copilot-pull-request-reviewer[bot]"]}'
+```
+
 Do not skip this. It is the discipline that keeps the repo clean and auditable.
 
 ---

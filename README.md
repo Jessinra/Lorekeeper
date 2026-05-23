@@ -383,6 +383,33 @@ Rule selection rationale: [`docs/linter-decisions.md`](docs/linter-decisions.md)
 
 ---
 
+## PR Workflow
+
+Always open PRs via the **GitHub REST API** (`curl`) — never `gh pr create` (the app token doesn't support GraphQL). Always tag **Copilot** as a reviewer on every PR.
+
+```bash
+TOKEN=$(gh auth token)
+
+# 1. Create the PR
+PR=$(curl -s -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/Jessinra/Lorekeeper/pulls \
+  -d "{\"title\":\"[LKPR-N] type: title\",\"head\":\"<branch>\",\"base\":\"main\",\"body\":\"...\"}")
+PR_NUMBER=$(echo "$PR" | python3 -c "import json,sys; print(json.load(sys.stdin)['number'])")
+
+# 2. Tag Copilot as reviewer (mandatory)
+curl -s -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  "https://api.github.com/repos/Jessinra/Lorekeeper/pulls/${PR_NUMBER}/requested_reviewers" \
+  -d '{"reviewers":["copilot-pull-request-reviewer[bot]"]}'
+```
+
+Reference: [Requesting a code review from Copilot](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/use-code-review)
+
+---
+
 ## Commit Convention
 
 All commits are enforced by a `commit-msg` git hook (installed via `bash scripts/setup.sh`).
