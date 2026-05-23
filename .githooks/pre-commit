@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Lorekeeper pre-commit hook
+# Runs lint and tests before every commit. Blocks on failure.
+#
+# Install: scripts/lorekeeper-setup.sh  (run once per clone)
+# Bypass (emergency only): git commit --no-verify
+
+set -euo pipefail
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
+
+echo "🔍  ruff check..."
+uv run ruff check src tests
+echo "✅  ruff passed"
+
+echo ""
+echo "🔍  biome check (JS)..."
+npx --yes @biomejs/biome check src/lorekeeper/dashboard/static/js/
+echo "✅  biome passed"
+
+echo ""
+echo "🧪  pytest..."
+uv run pytest tests/ -q --tb=short
+echo "✅  tests passed"
+
+echo ""
+echo "✅  All checks passed — proceeding with commit"
