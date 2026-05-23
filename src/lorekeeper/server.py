@@ -2,7 +2,7 @@ import structlog
 from fastmcp import FastMCP
 
 from lorekeeper.config import Settings
-from lorekeeper.handlers import handle_search
+from lorekeeper.handlers import handle_insert, handle_search
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_engine import MemoryEngine, build_mem0
@@ -81,8 +81,18 @@ async def lore_insert(
     links: list[dict] | None = None,
     force: bool = False,
 ) -> dict:
+    """Insert memories and/or links into the store.
+
+    Each memory dict must include:
+      - title (str, required): short unique label for the memory
+      - content (str, optional): the full text to store
+      - description (str, optional): brief summary
+      - score (float, optional, default 5.0): initial quality score 0-10
+
+    Each link dict must include source_memory_id, target_memory_id, relation_type, and reason.
+    """
     try:
-        return get_service().insert(memories or [], links or [], force)
+        return handle_insert(get_service(), memories or [], links or [], force)
     except Exception:
         log.exception("lore_insert_failed", memory_count=len(memories or []))
         raise

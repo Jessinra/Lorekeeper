@@ -130,6 +130,8 @@ class MemoryService:
         }
 
     def _insert_one_memory(self, m: dict, force: bool) -> dict:
+        if "title" not in m:
+            raise ValueError("memory dict missing required field: 'title'")
         title = m["title"]
         description = m.get("description", "")
         content = m.get("content", "")

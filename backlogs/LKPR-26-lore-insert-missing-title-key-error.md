@@ -2,12 +2,13 @@
 id: LKPR-26
 title: lore_insert returns unhelpful "'title'" error when memory dict is missing required title field
 type: chore
-status: in-progress
+status: review
 priority: low
 sprint: ~
 rice_score: ~
 filed_by: Akane (PM)
 filed_date: 2026-05-23
+resolved_date: 2026-05-23
 ---
 
 # [LKPR-26] lore_insert returns unhelpful "'title'" error when memory dict is missing required title field
