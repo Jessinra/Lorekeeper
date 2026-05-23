@@ -2,7 +2,7 @@
 id: LKPR-2
 title: Add lore_health and lore_stats tools for agent self-audit
 type: feature
-status: backlog
+status: proposal
 priority: high
 sprint: 1
 rice_score: 32.4  # R:6 I:7 C:90% E:1w
