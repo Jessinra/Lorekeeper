@@ -1,6 +1,6 @@
 ---
 id: LKPR-7
-title: Add lore_init tool and setup script for zero-friction onboarding
+title: Extend setup.sh for one-shot lorekeeper onboarding
 type: feature
 status: backlog
 priority: medium
@@ -10,36 +10,39 @@ filed_by: Hermes
 filed_date: 2026-05-22
 ---
 
-# [LKPR-7] Add lore_init tool and setup script for zero-friction onboarding
+# [LKPR-7] Extend setup.sh for one-shot lorekeeper onboarding
 
 ## Problem
-First-time setup is manual. A new agent has to figure out what memories to seed, which skills to load, and what the health baseline is. High barrier for new adopters.
+First-time agent setup is manual. A new agent needs MCP config registered, the protocol skill installed, and CLAUDE.md/SOUL.md updated — but `scripts/setup.sh` only handles repo deps and git hooks. No auto-setup for the agent itself.
 
 ## Solution
-New MCP tool: `lore_init(agent_name, purpose)` — returns a quick-start checklist: suggested starter memories, health baseline, which skill file to load, and what to do in the first 3 sessions.
+Extend the existing `scripts/setup.sh` to also:
+- Register Lorekeeper as an MCP server in the agent's config
+- Copy `lorekeeper-protocol` skill to the agent's skills dir
+- Inject lorekeeper usage block into CLAUDE.md / SOUL.md
 
-Bonus: `scripts/setup_agent.sh` that:
-- Copies skill files to agent's skills directory
-- Injects a lorekeeper block into SOUL.md / CLAUDE.md
-- Registers MCP server in agent config
-- Runs `lore_init` automatically
-
-One script. Any agent is fully configured.
+**No new MCP tools.** Zero new API surface. Just a smarter setup script.
 
 ## Acceptance Criteria
-- [ ] `lore_init(agent_name, purpose)` returns structured onboarding guidance with no LLM calls
-- [ ] `scripts/setup_agent.sh` runs end-to-end and configures a fresh agent in <5 minutes
-- [ ] Setup script handles Hermes, Claude Code, and Cursor config paths
-- [ ] `README.md` updated with "Getting Started in 5 minutes" section pointing to the script
+- [ ] `scripts/setup.sh` registers Lorekeeper as MCP server in agent config (Hermes + Claude Code + Cursor paths)
+- [ ] `scripts/setup.sh` copies `lorekeeper-protocol` skill to agent skills dir
+- [ ] `scripts/setup.sh` injects lorekeeper block (load protocol skill on start) into CLAUDE.md / SOUL.md
+- [ ] `scripts/setup.sh` is idempotent — re-running doesn't duplicate entries
+- [ ] `README.md` updated with "Getting Started in 5 minutes" section
+- [ ] Full end-to-end run under 5 minutes
 
 ## Affected Files
-- `src/lorekeeper/handlers.py` — `lore_init` handler
-- New: `scripts/setup_agent.sh`
-- New: `skills/lorekeeper-protocol.md` — injected by setup script (see LKPR-3)
+- `scripts/setup.sh` — extended with agent onboarding steps
+- `skills/lorekeeper-protocol.md` — already exists (from LKPR-3), just needs copying
 - `README.md` — quick-start section
 
 ## Dependencies
-- LKPR-3 (protocol skill) — ✅ done, shipped in sprint 1. Setup script copies it to agent skills dir.
+- LKPR-3 (protocol skill) — ✅ done, shipped in sprint 1
+
+## Design Decisions
+- **No new MCP tool.** Principle: keep MCP surface minimal. A well-configured agent naturally uses existing tools (lore_search on start, lore_reflect on end) — no welcome-packet tool needed.
+- **Extend setup.sh, don't create setup_agent.sh.** One script repo is simpler than two.
+- **Idempotent.** Re-running setup.sh is safe.
 
 ## Open Questions
 _None_
