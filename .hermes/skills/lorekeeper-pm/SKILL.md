@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-pm
 description: PM workflow for Lorekeeper. Load this when managing the backlog, filing tickets, reviewing dev work, or planning features. For ticket lifecycle, numbering, and script details, see the backlog-management skill.
-version: 2.0.0
+version: 2.1.0
 tags: []
 related_skills: [backlog-management, lorekeeper-dev]
 ---
@@ -15,6 +15,30 @@ Product management workflow for the Lorekeeper project.
 - **PM (Akane)** — drives product direction, files and prioritizes tickets, reviews shipped work, says yes/no on scope
 - **Dev** — owns implementation, tests, and commit quality; raises blockers early; contributes to `lorekeeper-dev` skill as they learn
 - **Relay** — currently Jason manually bridges PM ↔ dev (no direct channel yet). Details live in the repo; relay is for intent/clarification only.
+
+---
+
+## Core Principles
+
+These guide every decision — scoping, prioritization, design, review:
+
+1. **High value, simple solutions** — every feature must justify itself. If there's a simpler way that covers 80% of the value, do that.
+2. **Don't overcomplicate** — resist adding abstraction layers, new tools, or configurable options that aren't needed yet.
+3. **Don't act prematurely** — if the problem isn't real (observable bug, measurable friction, explicit user ask), don't solve it. File as proposal, revisit when it hurts.
+4. **Extend before create** — prefer extending existing APIs/tools/scripts over new ones. Every new MCP tool, script, or config option is debt until proven valuable.
+5. **Ship correctness before features** — a working core beats an elaborate wishlist.
+
+---
+
+## Core Principles
+
+These guide every decision — scoping, prioritization, design, review:
+
+1. **High value, simple solutions** — every feature must justify itself. If there's a simpler way that covers 80% of the value, do that.
+2. **Don't overcomplicate** — resist adding abstraction layers, new tools, or configurable options that aren't needed yet.
+3. **Don't act prematurely** — if the problem isn't real (observable bug, measurable friction, explicit user ask), don't solve it. File as proposal, revisit when it hurts.
+4. **Extend before create** — prefer extending existing APIs/tools/scripts over new ones. Every new MCP tool, script, or config option is debt until proven valuable.
+5. **Ship correctness before features** — a working core beats an elaborate wishlist.
 
 ---
 
