@@ -2,7 +2,7 @@
 id: LKPR-11
 title: Add lore_surface for proactive memory push
 type: feature
-status: backlog
+status: proposal
 priority: medium
 sprint: 2
 rice_score: 24.0  # R:8 I:6 C:50% E:2w

@@ -2,7 +2,7 @@
 id: LKPR-20
 title: Add lore_related tool for graph traversal via memory links
 type: feature
-status: backlog
+status: proposal
 priority: high
 sprint: 1
 rice_score: 38.4  # R:8 I:8 C:60% E:1w

@@ -2,7 +2,7 @@
 id: LKPR-18
 title: Memory Provenance Tagging
 type: feature
-status: backlog
+status: proposal
 priority: medium
 sprint: ~
 rice_score: ~

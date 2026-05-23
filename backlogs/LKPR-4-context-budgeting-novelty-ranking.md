@@ -2,7 +2,7 @@
 id: LKPR-4
 title: Context budgeting and novelty ranking in lore_search
 type: feature
-status: backlog
+status: proposal
 priority: medium
 sprint: 2
 rice_score: 31.5  # R:7 I:6 C:75% E:1.5w
