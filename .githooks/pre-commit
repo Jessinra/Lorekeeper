@@ -10,6 +10,11 @@ set -euo pipefail
 REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT"
 
+echo "🎫  Validating ticket format..."
+bash scripts/validate-ticket.sh
+echo "✅  tickets valid"
+
+echo ""
 echo "🔍  ruff check..."
 uv run ruff check src tests
 echo "✅  ruff passed"

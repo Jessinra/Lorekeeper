@@ -60,3 +60,10 @@ The search_at reconstruction is the tricky part: WAL-replay only the modified en
 
 ## Notes
 Proposal from daily brainstorm cron (2026-05-23). Not urgent, effort seems significant (phased approach recommended). Enables agent self-audit: check what the agent actually knew at decision time when debugging bad decisions. Also enables undoing bad updates and A/B testing memory strategies.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

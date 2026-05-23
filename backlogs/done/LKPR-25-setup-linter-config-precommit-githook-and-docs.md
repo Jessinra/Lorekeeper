@@ -68,3 +68,10 @@ _None_
 
 ## Notes
 Consolidated from three separate tickets after review. Single ticket, sequentially scoped phases.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

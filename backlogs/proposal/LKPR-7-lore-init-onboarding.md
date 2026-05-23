@@ -49,3 +49,10 @@ _None_
 
 ## Notes
 The setup script idea came directly from Jason — inject into SOUL.md/CLAUDE.md/skills dir automatically. "Zero to working in 5 minutes" is the target.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

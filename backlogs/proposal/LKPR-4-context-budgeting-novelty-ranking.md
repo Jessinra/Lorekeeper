@@ -42,3 +42,10 @@ _None_
 
 ## Notes
 Two features bundled as they touch the same search pipeline. Both are purely additive — no schema changes.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

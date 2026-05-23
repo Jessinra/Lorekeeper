@@ -51,3 +51,10 @@ Agent: lore_surface("building lorekeeper hybrid search improvements")
 
 ## Notes
 Confidence 50% — the value is clear but "proactive relevance" scoring needs design work. Do not build before LKPR-4 (novelty ranking) is live.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

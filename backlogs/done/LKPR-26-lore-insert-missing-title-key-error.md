@@ -13,9 +13,18 @@ resolved_date: 2026-05-23
 
 # [LKPR-26] lore_insert returns unhelpful "'title'" error when memory dict is missing required title field
 
+## Problem
+
 ## Symptom
 
-Calling `lore_insert(memories=[{"content": "...", "score": 8}])` — without a `title` key — returns:
+Calling `lore_insert(memories=[{"content": "...", "score": 8}])` — without a `title` key
+
+## Solution
+Add explicit validation in `orchestrator.py::_insert_one_memory` before the unconditional `m["title"]` access. If `title` is missing, raise a descriptive `ValueError` with the message `"memory dict missing required field: 'title'"` rather than letting Python raise a bare `KeyError`. Also update the MCP tool docstring in `server.py` to document that each memory dict must have `title` (required) and `content`, `score`, `description` (optional).
+
+No code logic change — the error message is the fix.
+
+Returns:
 
 ```json
 {
@@ -54,3 +63,10 @@ _None_
 ## Notes
 Distinct from LKPR-21 (`lore_update` field name inconsistency). This is a missing-field validation + unhelpful error message issue in `lore_insert`.
 Filed after observing `lore_insert` calls failing silently during reflection (agent passed dicts without `title`).
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

@@ -20,7 +20,7 @@ Current backlog is markdown files in `backlogs/` with YAML frontmatter. It works
 - Reordering requires renaming files
 - No native kanban/timeline views
 
-## Proposed Solution
+## Solution
 Migrate to GitHub Issues on the lorekeeper repo with:
 - Labels mapped from `status` and `priority` (proposal, backlog, in-progress, review, done, critical, high, medium, low)
 - Milestones for sprints
@@ -50,3 +50,10 @@ _None_ — pure setup change, no code impact
 
 ## Notes
 Proposal from Jason (2026-05-23). Not urgent — markdown backlog is working fine. Migrate when the pain of files exceeds the effort to switch.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

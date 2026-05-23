@@ -39,3 +39,10 @@ _None_
 
 ## Notes
 Pairs well with LKPR-13 (sleep cycle consolidation) but solves a different problem — conflict vs. compression. Filed from daily ideas cron output (2026-05-22).
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

@@ -52,3 +52,10 @@ _None_
 
 ## Notes
 Mostly SQL queries over existing SQLite schema — low risk, high value. Prerequisite for LKPR-11 (sleep cycle consolidation) and LKPR-8 (lore_wrap_session).
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

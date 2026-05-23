@@ -47,3 +47,10 @@ _None_
 
 ## Notes
 Effort is S — tagging is cheap; the real value is surfacing it cleanly in retrieval. Filed from daily ideas cron output (2026-05-22).
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

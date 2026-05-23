@@ -56,3 +56,10 @@ _None_
 
 ## Notes
 Not critical — slightly inefficient, not data-corrupting. Root cause is verified and fixed.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

@@ -5,6 +5,7 @@ type: bug
 status: done
 priority: high
 sprint: 1
+rice_score: 42.0  # R:7 I:6 C:100% E:1d
 filed_by: Hermes
 filed_date: 2026-05-22
 resolved_date: 2026-05-22
@@ -18,6 +19,21 @@ resolved_date: 2026-05-22
 Observed symptoms:
 - Insert "Test insert" (diagnostic text) → deduped against "Google Calendar OAuth setup" (similarity 1.0)
 - Insert "Hermes multi-profile setup for dual Telegram bots" → deduped against "Google Workspace setup for Hermes bot" (similarity 1.0)
+- No new memories were being inserted; all hits claimed `similarity: 1.0` regardless of content
+- The existing memories returned as "duplicates" were semantically unrelated to the input
+
+## Solution
+Bypass mem0's flawed scoring pipeline in `MemoryEngine.search()`. Instead of relying on mem0 v2's `score_and_rank()` (which treats Chroma distances as similarities, causing all results to score 1.0), embed the query directly, query Chroma with raw distances, and convert distances to similarities with `similarity = max(0.0, min(1.0, 1.0 - distance))`.
+
+Specifically:
+1. Embed query directly via `mem0.embedding_model.embed()`
+2. Call `chroma_collection.query()` with `include=["distances", "metadatas"]`
+3. Convert distances to proper [0,1] similarity scores
+4. Bypass mem0's `threshold=0.1` filter entirely
+
+This was implemented in `src/lorekeeper/services/memory_engine.py` and validated with 7 unit tests in `tests/test_memory_engine.py`.
+
+## Root Cause
 - No new memories were being inserted; all hits claimed `similarity: 1.0` regardless of content
 - The existing memories returned as "duplicates" were semantically unrelated to the input
 
@@ -100,3 +116,10 @@ _None_
 Filed 2026-05-22 by Hermes during diagnostic testing of `lore_insert`.
 Root cause is unverified — symptoms observed, investigation not yet done.
 Reproduced in Telegram session; separate CLI session could search/read fine.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

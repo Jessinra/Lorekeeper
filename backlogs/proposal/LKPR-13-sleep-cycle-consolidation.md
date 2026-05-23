@@ -51,3 +51,10 @@ Platform never auto-merges. Every merge is reversible.
 
 ## Notes
 High long-term value but low confidence (30%) — this is a genuinely hard problem. Build after Sprint 1 + 2 are solid. CLAUDE.md already references "sleep cycle" as a north star vision item.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

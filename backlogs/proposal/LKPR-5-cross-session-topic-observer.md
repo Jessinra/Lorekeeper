@@ -46,3 +46,10 @@ Agent-driven synthesis (zero platform LLM cost):
 
 ## Notes
 Long-term vision item — institutional memory, not just episodic recall. Low confidence (35%) due to unresolved topic-tagging questions. Don't build before Sprint 2 is solid.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

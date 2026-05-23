@@ -53,3 +53,10 @@ Think: Anki for agent memory. Periodic nudges with summary cards: "You haven't u
 
 ## Notes
 Proposal from daily brainstorm cron (2026-05-23). Not urgent. Closes the gap between "old stuff decays" and "old stuff might be the most important thing you know."
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

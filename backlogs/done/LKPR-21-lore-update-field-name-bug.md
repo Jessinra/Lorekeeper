@@ -5,6 +5,7 @@ type: bug
 status: done
 reason: not reproducible
 priority: high
+sprint: unplanned
 rice_score: ~
 filed_by: Hermes (Akane)
 filed_date: 2026-05-23
@@ -12,8 +13,18 @@ filed_date: 2026-05-23
 
 # [LKPR-21] lore_update memory_feedback expects "id" not "memory_id"
 
+## Problem
+
 ## Symptom
-Calling `lore_update(memory_feedback=[{memory_id: "uuid", useful: true, confidence: 8}])` fails with `'id'` error — the field name must be `id`, not `memory_id`.
+Calling `lore_update(memory_feedback=[{memory_id: "uuid", useful: true, confidence: 8}])` fails with `'id'` error
+
+## Solution
+Fix the MCP tool description in `handlers.py` to document that `memory_feedback` objects expect `id` (not `memory_id`) as the canonical identifier field. Check `link_feedback` for the same issue. No code change needed — the handler already works with `id`; the bug is only in the schema/docs mismatch.
+
+Specifically:
+1. Update `lore_update` tool description in `handlers.py` to show `id` (not `memory_id`) in `memory_feedback` schema
+2. Check and update `link_feedback` schema similarly (should use `id`, not `link_id`)
+3. Add schema introspection test to catch future mismatches — the field name must be `id`, not `memory_id`.
 
 Reproduction:
 ```python
@@ -105,3 +116,10 @@ The MCP handler in `src/lorekeeper/handlers.py` defines the tool schema JSON wit
 2. **Pydantic boundary model** — The handler should deserialize into a Pydantic model at the entry point. The field name in the model **is** the source of truth. If you rename the field in Pydantic, both the schema description and the handler logic update atomically.
 
 3. **Add to code review checklist in CLAUDE.md** — "MCP tool input schema field names must match handler code." One line, catches the human error before PR merge.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

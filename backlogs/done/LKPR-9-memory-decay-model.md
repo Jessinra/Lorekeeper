@@ -54,3 +54,10 @@ Date: 2026-05-22
 Branch: feature/LKPR-9-time-decay-scoring
 Commit: time_decay(), decay_factor in MCP response, decay_lambda in config + dashboard UI
 Reviewed by: Akane — solid work ✓
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

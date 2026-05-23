@@ -52,3 +52,10 @@ _None_
 Low effort — purely query logic, no schema changes needed. High confidence (85%). Good Sprint 1 quick win.
 
 `refine_from` cap set to 200 — matches semantic candidate limit in the existing search pipeline. No reason to support larger sets than that.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

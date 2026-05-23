@@ -43,3 +43,10 @@ _None_
 
 ## Notes
 Highest leverage item for adoption — platform tools are useless without this. This is the "plug & play" north star in one file.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

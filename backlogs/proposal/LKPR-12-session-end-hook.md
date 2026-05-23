@@ -48,3 +48,10 @@ _None_ (but most useful after LKPR-8 `lore_wrap_session` is live)
 
 ## Notes
 Highest friction point in daily use. Confidence 50% — extraction quality is the hard part. CLAUDE.md already references this as Phase 2 intent.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention

@@ -83,4 +83,11 @@ RICE rationale: R:8 (all agents benefit from richer recall), I:8 (high — unloc
 
 Confidence is 60% not because implementation is hard, but because **link density** is uncertain. If agents aren't creating many links in practice, this tool has less utility. Worth monitoring link counts before investing heavily here.
 
-Pairs naturally with LKPR-6 (`lore_search_refine`): query-driven zoom in + graph-driven expand out.
+Pairs naturally with LKPR-6 (lore_search_refine): query-driven zoom in + graph-driven expand out.
+
+## Required Updates
+
+- **CLAUDE.md**: [ ] N/A — legacy ticket, filed before convention
+- **README.md**: [ ] N/A — legacy ticket, filed before convention
+- **Skills**: [ ] N/A — legacy ticket, filed before convention
+- **Backlog**: [ ] N/A — legacy ticket, filed before convention
