@@ -223,7 +223,7 @@ After every set of changes:
 2. README consistency — verify config defaults, tool signatures, env var names still match
 3. Commit with `[LKPR-N] type: title` format
 4. Push to `origin` (GitHub): `git push origin <branch>`
-5. Open a PR: `gh pr create --title "[LKPR-N] type: title" --body "..." --base main`
+5. Open a PR: run `bash ~/.hermes/scripts/gh-app-token.sh` first (logs gh in as `jessinra-megumi-dev[bot]`), then `gh pr create --title "[LKPR-N] type: title" --body "..." --base main`
 6. Ping Jason on Telegram to review and merge
 
 ## Plans Location
