@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from lorekeeper.config import Settings
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.memory_engine import ChromaDBEngine, build_mem0
+from lorekeeper.services.chromadb_engine import ChromaDBEngine, build_mem0
 
 
 def load_source(path: Path) -> tuple[list[dict], list[dict]]:

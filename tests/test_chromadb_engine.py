@@ -18,7 +18,7 @@ os.environ.setdefault("MEM0_TELEMETRY", "false")
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "false")
 
 from lorekeeper.config import Settings
-from lorekeeper.services.memory_engine import LORE_USER_ID, ChromaDBEngine, build_mem0
+from lorekeeper.services.chromadb_engine import LORE_USER_ID, ChromaDBEngine, build_mem0
 
 
 @pytest.fixture(scope="module")

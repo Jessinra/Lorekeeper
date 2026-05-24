@@ -2,8 +2,9 @@
 
 from pathlib import Path
 
+from lorekeeper.services.chromadb_engine import ChromaDBEngine, build_mem0
 from lorekeeper.services.lancedb_engine import LanceDBEngine
-from lorekeeper.services.memory_engine import ChromaDBEngine, MemoryEngine, build_mem0
+from lorekeeper.services.memory_engine import MemoryEngine
 
 
 def build_engine(
