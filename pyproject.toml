@@ -12,6 +12,8 @@ dependencies = [
   "pydantic-settings>=2.3",
   "rank-bm25>=0.2.2",
   "structlog>=24.1",
+  "lancedb>=0.30.2",
+  "pyarrow>=24.0.0",
 ]
 
 [project.optional-dependencies]

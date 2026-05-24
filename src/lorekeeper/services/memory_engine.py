@@ -1,6 +1,8 @@
 import os
+import uuid
 from pathlib import Path
 
+import numpy as np
 import structlog
 from mem0 import Memory as Mem0Memory
 
@@ -11,6 +13,9 @@ LORE_USER_ID = "lorekeeper"
 # Suppress Mem0/Chroma stdout noise before import
 os.environ.setdefault("MEM0_TELEMETRY", "false")
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "false")
+
+
+# ── Chroma (Mem0-based) ─────────────────────────────────────────────────────
 
 
 def build_mem0(chroma_path: Path, embedding_model: str) -> Mem0Memory:
@@ -153,3 +158,128 @@ class MemoryEngine:
 
     def delete_by_mem0_id(self, mem0_id: str) -> None:
         self._mem0.delete(mem0_id)
+
+
+# ── LanceDB (direct, no Mem0) ────────────────────────────────────────────────
+
+
+class LanceDBEngine:
+    """MemoryEngine-compatible backend using LanceDB directly.
+
+    Uses sentence-transformers for embeddings and LanceDB for vector storage.
+    No Mem0, no Chroma — clean concurrent multi-process access.
+    """
+
+    def __init__(self, db_path: str, embedding_model: str) -> None:
+        import lancedb
+
+        self._db = lancedb.connect(db_path)
+        self._model = None  # lazy-loaded sentence-transformers model
+        self._model_name = embedding_model
+        self._dimension = 384  # all-MiniLM-L6-v2
+
+        # Create or open the table
+        try:
+            self._table = self._db.open_table("lorekeeper")
+        except Exception:
+            self._table = self._db.create_table(
+                "lorekeeper",
+                data=[
+                    {
+                        "vector": np.zeros(self._dimension, dtype=np.float32),
+                        "lore_id": "",
+                        "mem0_id": "",
+                        "text": "",
+                    }
+                ],
+                mode="overwrite",
+            )
+
+    def _get_model(self):
+        if self._model is None:
+            from sentence_transformers import SentenceTransformer
+            self._model = SentenceTransformer(self._model_name)
+        return self._model
+
+    def probe_score_scale(self) -> None:
+        """No-op for LanceDB — scores are always cosine distance (lower=better)."""
+        log.info("lancedb_probe_skipped", engine="lancedb")
+
+    def normalize_score(self, raw: float) -> float:
+        """Convert LanceDB cosine distance to similarity (higher=better)."""
+        return max(0.0, min(1.0, 1.0 - raw))
+
+    def add(self, text: str, lore_id: str, extra_metadata: dict | None = None) -> str:
+        """Embed text, store in LanceDB. Returns internal mem0_id."""
+        mem0_id = str(uuid.uuid4())
+        vector = self._get_model().encode(text).astype(np.float32)
+        self._table.add(
+            [
+                {
+                    "vector": vector,
+                    "lore_id": lore_id,
+                    "mem0_id": mem0_id,
+                    "text": text,
+                }
+            ]
+        )
+        return mem0_id
+
+    def search(self, query: str, limit: int = 200) -> list[dict]:
+        """Returns list of {lore_id, mem0_id, score (normalized)}.
+
+        Embeds the query and searches LanceDB with cosine distance.
+        Converts distance to similarity (higher=better).
+        """
+        vector = self._get_model().encode(query).astype(np.float32)
+        try:
+            results = self._table.search(vector).limit(limit).to_list()
+        except Exception:
+            return []
+
+        out = []
+        for row in results:
+            lore_id = row.get("lore_id", "")
+            mem0_id = row.get("mem0_id", "")
+            if not lore_id:
+                continue
+            # LanceDB returns distance (lower=better). Convert to similarity.
+            distance = row.get("_distance", 0.0)
+            similarity = max(0.0, min(1.0, 1.0 - distance))
+            out.append({"lore_id": lore_id, "mem0_id": mem0_id, "score": similarity})
+        return out
+
+    def get_all(self) -> list[dict]:
+        """Returns all entries as {lore_id, mem0_id}. Used for BM25 rebuild."""
+        try:
+            tbl = self._table.to_arrow()
+        except Exception:
+            return []
+        out = []
+        lore_ids = tbl.column("lore_id")
+        mem0_ids = tbl.column("mem0_id")
+        for i in range(tbl.num_rows):
+            lore_id = lore_ids[i].as_py()
+            mem0_id = mem0_ids[i].as_py()
+            if lore_id:
+                out.append({"lore_id": lore_id, "mem0_id": mem0_id})
+        return out
+
+    def delete_by_mem0_id(self, mem0_id: str) -> None:
+        """Delete a row by mem0_id."""
+        escaped = mem0_id.replace("'", "''")
+        self._table.delete(f"mem0_id = '{escaped}'")
+
+
+# ── Factory ──────────────────────────────────────────────────────────────────
+
+
+def build_engine(
+    vector_store: str, chroma_path: Path, lancedb_path: str, embedding_model: str
+) -> MemoryEngine | LanceDBEngine:
+    """Factory: returns the appropriate engine based on vector_store config."""
+    if vector_store == "lancedb":
+        return LanceDBEngine(lancedb_path, embedding_model)
+    # Default: Chroma
+    mem0 = build_mem0(chroma_path, embedding_model)
+    return MemoryEngine(mem0)
