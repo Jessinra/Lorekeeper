@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-pm
 description: PM workflow for Lorekeeper. Load this when managing the backlog, filing tickets, reviewing dev work, or planning features. For ticket lifecycle, numbering, and script details, see the backlog-management skill.
-version: 2.2.0
+version: 2.3.0
 tags: []
 related_skills: [backlog-management, lorekeeper-dev]
 ---
@@ -68,20 +68,33 @@ Dev should not have to guess whether a backend change needs a dashboard update.
 2. `cp backlogs/TEMPLATE.md backlogs/LKPR-NEXT-<slug>.md`
 3. Include: problem statement, proposed solution, acceptance criteria
 4. **File symptoms first** — if root cause is unconfirmed, label it clearly as a hypothesis
-5. Commit: `[LKPR-dev] chore: add LKPR-N <short title>`
+5. Commit: `[LKPR-0] chore: add LKPR-N <short title>` (housekeeping = `[LKPR-0]`, not `[LKPR-dev]`)
 
 ---
 
+## Review Workflow (Dev → PM)
+
+Dev must submit work via a **pull request** (PR) — never direct commits to `main`.
+
+1. Dev creates a feature branch, commits with `[LKPR-N]` prefix, pushes branch
+2. Dev opens a PR against `main`. PM reviews the PR on GitHub
+3. PM comments inline, requests changes, or approves
+4. On approval, PM **squash-merges** to main (linear history, one commit per ticket)
+5. PM moves the ticket to `done`
+
+If dev commits directly to main: revert the commits, reset main, and have dev resubmit via PR. No exceptions.
+
 ## Review Checklist (PM)
 
-When dev says a ticket is done, verify:
+When reviewing a PR:
 
-- [ ] New commits are on `main` and pushed
-- [ ] Commit message starts with `[LKPR-N]`
-- [ ] Tests pass: `uv run pytest`
-- [ ] Ticket file updated: `status: done`, root cause documented, `resolved_date: YYYY-MM-DD`
-- [ ] Ticket moved to `backlogs/done/`
+- [ ] CI passes (lint + tests): `uv run pytest`, `uv run ruff check src tests`
 - [ ] No pre-existing test failures introduced (check full suite)
+- [ ] Ticket file updated: `status: review` or `status: done`, `resolved_date` if done
+- [ ] **Cross-reference check:** new tool defaults match existing tool conventions (score, params, naming — e.g. `lore_remember` score must match `lore_insert`'s default of 5)
+- [ ] **Dashboard check:** does the new tool need metrics tracking? Every tool should call `_increment_metric()` in the orchestrator and have a `TOOL_COLORS` entry in `dashboard/static/js/metrics.js`
+- [ ] Affected Files in ticket match actual changes (no unlisted files, no phantom files)
+- [ ] Required Updates in ticket are done (CLAUDE.md, README.md, skills)
 
 If anything is missing — send back with specific ask, don't approve partial work.
 
@@ -104,6 +117,16 @@ If anything is missing — send back with specific ask, don't approve partial wo
 - `low` — nice to have, polish, cleanup
 
 When in doubt: ship correctness before features.
+
+---
+
+## Common Pitfalls & Lessons
+
+### Direct commits to main
+Dev committed LKPR-29 directly to main without review. Jason reset main, dev was asked to reflect. **Enforcement:** always use PR workflow. If any commit lands without a PR, revert and re-route.
+
+### Missed cross-reference checks in reviews
+LKPR-29's PR (#5) was missing two things: default score should be 5 (match `lore_insert`), and `lore_remember` wasn't recording metrics in the dashboard. Both were caught only during PM review on GitHub, not in the initial implementation. **Lesson:** add explicit cross-reference and dashboard checks to review (see checklist above).
 
 ---
 
