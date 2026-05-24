@@ -7,7 +7,7 @@ import pytest
 from lorekeeper.config import Settings
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.orchestrator import MemoryService
+from lorekeeper.services.orchestrator import MemoryService, _extract_title
 
 
 class FakeEngine:
@@ -234,5 +234,107 @@ def test_insert_one_memory_missing_title_raises_clear_error(svc):
     assert error_msg != "'title'"
     assert "missing required field" in error_msg
     assert "title" in error_msg
+
+
+# ── lore_remember tests ────────────────────────────────────────────────────────
+
+
+def test_extract_title_short_thought():
+    thought = "Checkout flow: three-step process"
+    assert _extract_title(thought) == thought
+
+
+def test_extract_title_sentence_boundary():
+    thought = (
+        "Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score "
+        "+ 0.10 usage. This is the core ranking algorithm used across all lore_search calls."
+    )
+    title = _extract_title(thought)
+    assert title.endswith("usage.")
+    assert len(title) <= 80
+
+
+def test_extract_title_no_boundary_breaks_at_word():
+    # Long single sentence with no punctuation in first 80 chars
+    thought = (
+        "This is a very long sentence that goes on and on without any punctuation "
+        "at all and just keeps running past the eighty character limit"
+    )
+    title = _extract_title(thought)
+    assert len(title) <= 80
+    # Should end at a word boundary (not mid-word like "charact")
+    assert title[-1] != "e"  # "sentence" ends with 'e' — verify it didn't slice mid-word
+
+
+def test_remember_default_score_is_seven(svc):
+    service, _engine = svc
+    result = service.remember("test thought")
+    row = service._store.get_memory_row(result["id"])
+    assert row["score"] == 7.0
+
+
+def test_remember_stores_full_content(svc):
+    service, _ = svc
+    thought = "Project checkout uses GAS framework and SPEX protocol."
+    result = service.remember(thought)
+    row = service._store.get_memory_row(result["id"])
+    assert row["content"] == thought
+
+
+def test_remember_returns_none_linked_to_when_no_neighbor(svc):
+    service, engine = svc
+    engine._search_results = []  # no results from Chroma
+    result = service.remember("lone thought")
+    assert result["linked_to"] is None
+
+
+def test_remember_auto_link_when_neighbor_above_threshold(svc):
+    service, engine = svc
+    # First, insert a seed memory
+    seed = service.insert(
+        memories=[{"title": "seed", "description": "s", "content": "seed content about checkout"}],
+        links=[],
+    )
+    seed_id = seed["inserted_memories"][0]["id"]
+
+    # Point fake engine to return the seed with high similarity
+    engine._search_results = [
+        {"lore_id": seed_id, "score": 0.85},
+        {"lore_id": "some-other", "score": 0.5},
+    ]
+
+    result = service.remember("related thought about checkout")
+    assert result["linked_to"] is not None
+    assert result["linked_to"]["id"] == seed_id
+    assert result["linked_to"]["score"] == 0.85
+
+
+def test_remember_no_auto_link_below_threshold(svc):
+    service, engine = svc
+    seed = service.insert(
+        memories=[{"title": "seed", "description": "s", "content": "seed"}],
+        links=[],
+    )
+    seed_id = seed["inserted_memories"][0]["id"]
+
+    engine._search_results = [{"lore_id": seed_id, "score": 0.74}]
+    result = service.remember("unrelated thought")
+    assert result["linked_to"] is None
+
+
+def test_remember_detects_duplicate_title(svc):
+    service, _ = svc
+    thought = "Checkout flow: three steps"
+    first = service.remember(thought)
+    second = service.remember(thought)
+    assert second["id"] == first["id"]
+    assert second["linked_to"] is None
+
+
+def test_remember_auto_link_skips_self_match(svc):
+    service, engine = svc
+    engine._search_results = []  # Chroma doesn't return self (or returns self only)
+    result = service.remember("self-contained thought")
+    assert result["linked_to"] is None
 
 

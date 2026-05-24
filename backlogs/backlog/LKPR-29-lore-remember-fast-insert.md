@@ -2,10 +2,10 @@
 id: LKPR-29
 title: Add lore_remember for one-shot fast memory insert (friction-killer)
 type: feature
-status: backlog
+status: in-progress
 priority: critical
 sprint: 1
-rice_score: ~  # TBD: R:10 I:10 C:90% E:0.5w
+rice_score: 180  # R:10 I:10 C:90% E:0.5w
 filed_by: Akane (PM)
 filed_date: 2026-05-24
 ---
@@ -40,15 +40,15 @@ lore_remember("Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score 
 
 ## Acceptance Criteria
 
-- [ ] `lore_remember(thought)` inserts a memory with auto-extracted title/desc/score
-- [ ] Default score = 5 (matches `lore_insert` scoring convention)
-- [ ] Auto-link to nearest neighbor above 0.75 (single link, not batch)
-- [ ] Returns `{id, title, linked_to: {id, score} | null}` — agent sees the link
-- [ ] No duplicate check bypass — still uses existing dedup logic
-- [ ] No field is required beyond `thought` — zero configuration
-- [ ] MCP tool description: "Fast one-shot memory insert. Pass a thought, get a memory with auto-title."
-- [ ] `_increment_metric("lore_remember")` called in orchestrator.remember() — tracks usage in dashboard metrics tab
-- [ ] `metrics.js` in dashboard: add `lore_remember` entry to `TOOL_COLORS` with a distinct hue
+|- [x] `lore_remember(thought)` inserts a memory with auto-extracted title/desc/score
+|- [x] Default score = 5 (matches `lore_insert` scoring convention)
+|- [x] Auto-link to nearest neighbor above 0.75 (single link, not batch)
+|- [x] Returns `{id, title, linked_to: {id, score} | null}` — agent sees the link
+|- [x] No duplicate check bypass — still uses existing dedup logic
+|- [x] No field is required beyond `thought` — zero configuration
+|- [x] MCP tool description: "Fast one-shot memory insert. Pass a thought, get a memory with auto-title."
+|- [x] `_increment_metric("lore_remember")` called in orchestrator.remember() — tracks usage in dashboard metrics tab
+|- [ ] `metrics.js` in dashboard: add `lore_remember` entry to `TOOL_COLORS` with a distinct hue
 
 ## Affected Files
 
@@ -68,9 +68,9 @@ _None_ — standalone. Uses existing `memory_engine.insert()` and `link_store.li
 
 ## Required Updates
 
-- **CLAUDE.md**: [ ] Update agentic loop section to mention `lore_remember` as the preferred quick-capture path
-- **README.md**: [ ] Document `lore_remember` in the MCP tools list
-- **Skills**: [ ] Update `memory-splitter` and `memory-reorganizer` skills to use `lore_remember` for creating atomic memories
+- **CLAUDE.md**: [x] Update agentic loop section to mention `lore_remember` as the preferred quick-capture path
+- **README.md**: [x] Document `lore_remember` in the MCP tools list
+- **Skills**: [x] Update `lorekeeper-protocol` skill to include `lore_remember`
 - **Backlog**: [ ] N/A — no dependency changes
 
 ## Open Questions

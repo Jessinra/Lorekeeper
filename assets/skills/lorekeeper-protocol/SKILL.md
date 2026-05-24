@@ -1,6 +1,6 @@
 ---
 name: lorekeeper-protocol
-description: Full session protocol for using Lorekeeper MCP tools correctly. Load at the start of any session that uses Lorekeeper. Covers when and how to call lore_search, lore_insert, lore_update, lore_reflect, and lore_processed_sessions across all five phases — session start, mid-session topic shift, health maintenance, topic consolidation, and session end.
+description: Full session protocol for using Lorekeeper MCP tools correctly. Load at the start of any session that uses Lorekeeper. Covers when and how to call lore_search, lore_remember, lore_insert, lore_update, lore_reflect, and lore_processed_sessions across all five phases — session start, mid-session topic shift, health maintenance, topic consolidation, and session end.
 version: 1.1.0
 ---
 
@@ -119,6 +119,18 @@ lore_reflect({
   "limit": null
 }
 ```
+
+### `lore_remember`
+
+```json
+{
+  "thought": "Single thought to store verbatim."
+}
+```
+
+Fast one-shot insert — zero friction. Use for quick capture during a session. Auto-extracts title (first ~80 chars), stores content verbatim, default score 7.0. Auto-links to nearest neighbor ≥ 0.75. Returns `{id, title, linked_to}`.
+
+Prefer `lore_remember` for individual insights. Use `lore_insert` when you need explicit titles, descriptions, scores, or manual links.
 
 ### `lore_insert`
 
