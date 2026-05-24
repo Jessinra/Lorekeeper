@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-dev
-description: Engineering practices for developing the Lorekeeper codebase. Load this skill when working on Lorekeeper source code, fixing bugs, adding features, writing tests, or reviewing PRs. Covers architecture conventions, SQLite/Mem0/Chroma quirks, testing patterns, and the verification standard for shipped changes. For backlog/ticket workflow, see backlog-management skill.
-version: 2.2.0
+description: Engineering practices for developing the Lorekeeper codebase. Load this skill when working on Lorekeeper source code, fixing bugs, adding features, writing tests, or reviewing PRs. Covers architecture conventions, SQLite/LanceDB/Chroma quirks, testing patterns, and the verification standard for shipped changes. For backlog/ticket workflow, see backlog-management skill.
+version: 2.3.0
 tags: []
 related_skills: [backlog-management, after-changes]
 ---
@@ -12,11 +12,15 @@ Practices and conventions for developing the Lorekeeper MCP server.
 
 ## Architecture
 
-Two stores working together:
-- **Mem0 + Chroma** — vector embeddings, semantic ANN search (`all-MiniLM-L6-v2`, 384-dim)
-- **SQLite sidecar** — memory metadata (`score`, `confidence`, `soft_deleted`, `usage_count`), all `MemoryLink` rows, BM25 index source
+Two vector store backends (switch via `LORE_VECTOR_STORE`):
 
-Canonical identity: `lore_id` UUID lives in Mem0's metadata field. All app logic uses `lore_id`. Never expose Mem0's internal id.
+- **LanceDB** (default) — concurrent multi-process, no lock files. `LanceDBEngine` in `lancedb_engine.py`. Uses sentence-transformers directly, no Mem0 for vectors.
+- **Chroma** (fallback, `LORE_VECTOR_STORE=chroma`) — Mem0-backed `ChromaDBEngine` in `chromadb_engine.py`. Single-process only.
+- **SQLite sidecar** — memory metadata (`score`, `confidence`, `soft_deleted`, `usage_count`), all `MemoryLink` rows, BM25 index source. Shared by both backends.
+
+Engine factory: `engine_factory.py` → `build_engine()`. Orchestrator: `MemoryService` in `orchestrator.py` (was `Orchestrator` in earlier versions).
+
+Canonical identity: `lore_id` UUID lives in the vector store's metadata. All app logic uses `lore_id`.
 
 ## Hybrid Scoring Formula
 
@@ -29,8 +33,10 @@ Weights are env-configurable (`LORE_W_*`). Dedup threshold: `0.6·semantic + 0.4
 ## Known Quirks
 
 **Chroma distance vs. similarity (critical):**  
-Mem0 v2 `score_and_rank` receives Chroma cosine *distances* (0=identical) but treats them as similarities — items with distance ~0.0 get filtered out; unrelated items (distance ~1.0) score 1.0 and block all inserts.  
-**Fix**: bypass mem0 pipeline in `memory_engine.py#search()` — embed directly with `SentenceTransformer`, query `self._mem0.vector_store.collection.query()`, return `score = 1.0 - distance`.
+Mem0 v2 `score_and_rank` receives Chroma cosine _distances_ but treats them as similarities — items with distance ~0.0 get filtered out; unrelated items (distance ~1.0) score 1.0 and block all inserts.  
+**Fix**: bypass mem0 pipeline — embed directly with `SentenceTransformer`, query the collection directly, return `score = 1.0 - distance`.
+
+**LanceDB:** Always returns cosine distance (lower=better). `normalize_score()` converts to similarity: `1.0 - distance`. Probe is a no-op.
 
 **`infer=False` on every `mem0.add()` call** — text stored verbatim, no LLM extraction.
 
@@ -52,6 +58,7 @@ uv run lorekeeper                      # start server
 ## Pre-commit Hook
 
 Install once per clone via `bash scripts/setup.sh`. It runs:
+
 1. `ruff check src tests` — Python lint
 2. `biome check` — JS lint
 3. `uv run pytest tests/ -q` — test suite
@@ -62,9 +69,9 @@ See `docs/linter-decisions.md` for the full rationale on rule selection.
 
 ## Testing Patterns
 
-- Table-driven tests where multiple cases exist
-- Name cases descriptively: `"scores vary for semantically distinct memories"`
-- Always use real (not mocked) Mem0+Chroma for memory_engine tests — mocks hide the distance/similarity inversion bug
+- Table-driven tests for multiple cases
+- Descriptive naming: `test_search_unrelated_query_scores_below_threshold`
+- Real (not mocked) vector store for memory_engine tests
 - Seed distinct memories before asserting search behavior
 
 ## Branch Naming
@@ -74,6 +81,7 @@ Format: `<type>/LKPR-N-short-description`
 Types: `feature/`, `fix/`, `hotfix/`, `refactor/`, `chore/`, `docs/`
 
 Examples:
+
 ```
 feature/LKPR-7-lore-init-onboarding
 fix/LKPR-19-fk-constraints-link-store
@@ -82,6 +90,7 @@ refactor/LKPR-4-context-budgeting
 ```
 
 Rules:
+
 - kebab-case only, no underscores
 - always include the LKPR-N ID
 - branch off `main`
@@ -98,14 +107,15 @@ Rules:
 
 Format: `[LKPR-N] type: short imperative title`
 
-| Tag | When |
-|-----|------|
-| `[LKPR-N]` | Work tied to a specific ticket |
+| Tag        | When                                                               |
+| ---------- | ------------------------------------------------------------------ |
+| `[LKPR-N]` | Work tied to a specific ticket                                     |
 | `[LKPR-0]` | Housekeeping — chore, backlog edits, status changes, skill updates |
 
 Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`
 
 Examples:
+
 ```
 [LKPR-6] feat: add iterative search with relevance cutoff
 [LKPR-19] fix: enable FK constraints via PRAGMA foreign_keys=ON
@@ -113,6 +123,7 @@ Examples:
 ```
 
 Rules:
+
 - one logical change per commit — if you need "and", split it
 - never bundle unrelated changes
 - no WIP commits in main — squash before merging
@@ -131,19 +142,17 @@ Rules:
 Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`. Numbering: sequential (highest+1), never fill gaps.
 
 **Picking up a ticket:**
+
 1. Check `./scripts/lorekeeper-backlog.sh backlog` for what's ready
 2. Read the ticket file — specs live there, not in chat
 3. Change `status` to `in-progress`
 
-**Submitting work:**
-3. Self-review: full test suite (`uv run pytest`) + lint (`uv run ruff check src tests`) + mypy (`uv run mypy src`)
-4. Move ticket to `status: review`
-5. Push branch + open PR via `gh pr create --reviewer @copilot` (load `github-pr` skill for details)
-6. Ping Jason on Telegram to review and merge
+**Submitting work:** 3. Self-review: full test suite (`uv run pytest`) + lint (`uv run ruff check src tests`) + mypy (`uv run mypy src`) 4. Move ticket to `status: review` 5. Push branch + open PR via `gh pr create --reviewer @copilot` (load `github-pr` skill for details) 6. Ping Jason on Telegram to review and merge
 
 ## Verification Standard
 
 Every fix or feature must have:
+
 - **Root cause** documented in the backlog ticket (not just "fixed X")
 - **Before/after evidence** — concrete scores, outputs, or test results
 - **Regression test** — assert the fix can't silently regress
@@ -153,11 +162,13 @@ Every fix or feature must have:
 **The rule:** every fix needs a test that would have caught the bug. Every feature needs tests covering the happy path + at least one edge case.
 
 **What to test:**
+
 - Unit tests — pure functions, business logic, edge cases
 - Regression tests — any bug fix must have one
 - Integration tests — DB queries, service boundaries, MCP tool handlers
 
 **Test naming pattern:**
+
 ```python
 def test_<unit>_<scenario>_<expected_outcome>():
 # e.g.
@@ -167,6 +178,7 @@ def test_memory_engine_empty_store_returns_empty_list():
 ```
 
 **Discipline:**
+
 - Run `uv run pytest` locally before every push — no exceptions
 - Never skip a test without a comment explaining why
 - Don't mock Mem0/Chroma in memory_engine tests — real behavior only
@@ -178,25 +190,30 @@ def test_memory_engine_empty_store_returns_empty_list():
 Before opening a PR, run through this:
 
 **Correctness**
+
 - [ ] All acceptance criteria in the ticket met?
 - [ ] Edge cases handled? (null inputs, empty results, missing metadata)
 - [ ] Tested manually end-to-end at least once?
 
 **Tests**
+
 - [ ] New logic has tests?
 - [ ] Bug fix has a regression test?
 - [ ] Full suite passes: `uv run pytest`?
 
 **Code Quality**
+
 - [ ] No debug prints / `breakpoint()` left in
 - [ ] No dead code or commented-out blocks
 - [ ] Linter clean: `uv run ruff check src tests`
 
 **Documentation**
+
 - [ ] README updated if behavior/config changed?
-- [ ] Complex logic has inline comments explaining *why*, not what?
+- [ ] Complex logic has inline comments explaining _why_, not what?
 
 **Git**
+
 - [ ] Commits follow `[LKPR-N] type: title` format (housekeeping = `[LKPR-0]`)?
 - [ ] Branch named `<type>/LKPR-N-slug`?
 - [ ] Ticket updated: `status: review`, `resolved_date`, root cause written?
@@ -222,6 +239,7 @@ The bar isn't perfection — it's transparency and traceability. If something wa
 ## Post-Change Rule
 
 After every set of changes:
+
 1. Code review — check reuse, quality, efficiency
 2. README consistency — verify config defaults, tool signatures, env var names still match
 3. Commit with `[LKPR-N] type: title` format
