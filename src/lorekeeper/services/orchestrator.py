@@ -21,6 +21,37 @@ log = structlog.get_logger()
 
 
 class MemoryService:
+    """Memory orchestration — search, insert, remember, update, reflect."""
+
+    @staticmethod
+    def _extract_title(thought: str) -> str:
+        """Smart title: first complete word at or after ~80 chars,
+    ending at sentence boundary if possible.
+    """
+        max_len = 80
+        max_extended = 120
+        trimmed = thought.strip()
+        if len(trimmed) <= max_len:
+            return trimmed
+
+        chunk = trimmed[:max_len]
+        # Try sentence boundary first
+        for end_char in ".!?":
+            idx = chunk.rfind(end_char)
+            if idx > max_len // 2:
+                return chunk[:idx + 1].strip()
+        # Try last space within first max_len chars
+        idx = chunk.rfind(" ")
+        if idx > 0:
+            return chunk[:idx].strip()
+        # No space found in first max_len — look forward for next word boundary
+        rest = trimmed[max_len:max_extended]
+        next_space = rest.find(" ")
+        if next_space > 0:
+            return trimmed[:max_len + next_space].strip()
+        # No word boundary found anywhere — return as much as we can
+        return trimmed[:max_extended].strip()
+
     def __init__(
         self,
         engine: MemoryEngine,
@@ -129,13 +160,64 @@ class MemoryService:
             "errors": errors,
         }
 
+    # ── Remember (fast one-shot insert) ────────────────────────────────────────
+
+    def remember(self, thought: str) -> dict:
+        """Fast one-shot insert with auto-extracted fields and auto-linking."""
+        self._increment_metric("lore_remember")
+        title = self._extract_title(thought)
+        description = title
+        score = self._settings.new_memory_default_score
+
+        result = self._insert_one_memory({
+            "title": title,
+            "description": description,
+            "content": thought,
+            "score": score,
+        }, force=False)
+
+        if "duplicate" in result:
+            dup = result["duplicate"]
+            return {
+                "id": dup["existing_memory"]["id"],
+                "title": title,
+                "linked_to": None,
+            }
+
+        lore_id = result["inserted"]["id"]
+
+        # Rebuild KW index after the insert
+        self._rebuild_kw()
+
+        linked_to = self._auto_link(thought, lore_id)
+        return {"id": lore_id, "title": title, "linked_to": linked_to}
+
+    def _auto_link(self, thought: str, lore_id: str) -> dict | None:
+        """Auto-link a new memory to its nearest neighbor above threshold.
+
+        Reusable by lore_insert in the future. Queries Chroma for top-2 nearest
+        neighbors, links the first that's not self and above 0.75.
+        """
+        sem_hits = self._engine.search(thought, limit=2)
+        for hit in sem_hits:
+            if hit["lore_id"] != lore_id and hit["score"] >= 0.75:
+                raw_score = round(hit["score"], 4)
+                self._store.insert_link(
+                    source_memory_id=lore_id,
+                    target_memory_id=hit["lore_id"],
+                    relation_type="related_to",
+                    reason=f"auto-linked from lore_remember: {raw_score:.2f}",
+                )
+                return {"id": hit["lore_id"], "score": raw_score}
+        return None
+
     def _insert_one_memory(self, m: dict, force: bool) -> dict:
         if "title" not in m:
             raise ValueError("memory dict missing required field: 'title'")
         title = m["title"]
         description = m.get("description", "")
         content = m.get("content", "")
-        score = float(m.get("score", 5.0))
+        score = float(m.get("score", self._settings.new_memory_default_score))
         text = f"{title} {description} {content}"
 
         if not force:

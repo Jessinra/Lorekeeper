@@ -2,7 +2,7 @@ import structlog
 from fastmcp import FastMCP
 
 from lorekeeper.config import Settings
-from lorekeeper.handlers import handle_insert, handle_search
+from lorekeeper.handlers import handle_insert, handle_remember, handle_search
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_engine import MemoryEngine, build_mem0
@@ -95,6 +95,16 @@ async def lore_insert(
         return handle_insert(get_service(), memories or [], links or [], force)
     except Exception:
         log.exception("lore_insert_failed", memory_count=len(memories or []))
+        raise
+
+
+@mcp.tool(name="lore_remember")
+async def lore_remember(thought: str) -> dict:
+    """Fast one-shot memory insert. Pass a thought, get a memory with auto-title."""
+    try:
+        return handle_remember(get_service(), thought)
+    except Exception:
+        log.exception("lore_remember_failed", thought=thought[:80])
         raise
 
 

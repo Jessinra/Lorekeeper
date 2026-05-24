@@ -187,6 +187,7 @@ def get_config() -> dict[str, Any]:
         "max_links_per_memory":            s.max_links_per_memory,
         "usage_normalisation_cap":         s.usage_normalisation_cap,
         "decay_lambda":                    s.decay_lambda,
+        "new_memory_default_score":        s.new_memory_default_score,
         "_overridden_keys":                sorted(overridden_keys),
     }
 
@@ -207,6 +208,7 @@ class ConfigUpdate(BaseModel):
     max_links_per_memory: int | None = None
     usage_normalisation_cap: int | None = None
     decay_lambda: float | None = None
+    new_memory_default_score: float | None = None
 
 
 @app.patch("/api/config")

@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     max_links_per_memory: int = 5
     usage_normalisation_cap: int = 100
     decay_lambda: float = 0.0077  # time-decay λ; 0 disables decay (LORE_DECAY_LAMBDA)
+    new_memory_default_score: float = 5.0  # default score for new memories
 
     @property
     def chroma_path(self) -> Path:

@@ -81,3 +81,7 @@ def handle_insert(
     return svc.insert(memories, links, force)
 
 
+def handle_remember(svc: MemoryService, thought: str) -> dict:
+    return svc.remember(thought)
+
+

@@ -3,7 +3,7 @@
 **What this is**: A personal AI memory MCP server, and simultaneously the **first working sample of the Living Agentic Loop** — a self-improving agent system that autonomously updates its own `CLAUDE.md`, skills, and code over time by capturing session learnings and feeding them back in.
 
 The repo serves two purposes:
-1. **The product**: MCP server providing `lore_search`, `lore_insert`, `lore_update`. Replaces the Node.js v1 with Python + Mem0.
+1. **The product**: MCP server providing `lore_search`, `lore_remember`, `lore_insert`, `lore_update`. Replaces the Node.js v1 with Python + Mem0.
 2. **The demonstration**: The development process itself is looped. Session learnings are captured → consolidated → applied back to agent config. This repo is the proof of concept.
 
 **Data dir**: `~/.lorekeeper` (Chroma + SQLite; controlled by `LORE_DATA_DIR`)
@@ -102,7 +102,7 @@ This symlinks repo-local skills (`lorekeeper-dev`, `lorekeeper-pm`, `after-chang
 
 ## Memory Usage Convention
 
-**Always check Lorekeeper at the start of any task.** Run `lore_search` with the task topic before writing code, reviewing designs, or making decisions. Store any new discoveries, corrections, or decisions with `lore_insert` + `lore_update` after the session.
+**Always check Lorekeeper at the start of any task.** Run `lore_search` with the task topic before writing code, reviewing designs, or making decisions. Store any new discoveries, corrections, or decisions with `lore_remember` (for quick single thoughts) or `lore_insert` (for structured memories) + `lore_update` after the session.
 
 The agent pulls memory explicitly via MCP tools — no auto-injection. The discipline of checking is enforced by this instruction.
 

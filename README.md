@@ -2,7 +2,7 @@
 
 Personal AI memory MCP server. Stores facts, decisions, and domain knowledge so AI agents can recall them across sessions.
 
-Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB. Exposes five MCP tools over stdio: `lore_search`, `lore_insert`, `lore_update`, `lore_reflect`, `lore_processed_sessions`.
+Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB. Exposes six MCP tools over stdio: `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_reflect`, `lore_processed_sessions`.
 
 **Features**
 
@@ -98,6 +98,18 @@ Returns ranked memories with relevance scores and linked memories.
 ```
 
 Duplicate detection runs automatically. Before inserting, the server computes a dedup score (`0.6·semantic + 0.4·keyword`). If it meets or exceeds `LORE_DUPLICATE_THRESHOLD` (default 0.85), the insert is blocked and the existing memory is returned. Use `force: true` to override.
+
+### `lore_remember`
+
+```json
+{
+  "thought": "Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score + 0.10 usage"
+}
+```
+
+Fast one-shot memory insert — zero friction. Pass a thought as a single string; the server auto-extracts the title (first ~80 chars, sentence boundary), stores the full content verbatim with a default score of 7.0, and auto-links to the nearest semantic neighbor if similarity ≥ 0.75. Returns `{id, title, linked_to: {id, score} | null}`. Uses the same dedup pipeline as `lore_insert` — exact title matches are definitive duplicates.
+
+Use this for quick capture. Use `lore_insert` when you need explicit titles, descriptions, scores, or manual links.
 
 ### `lore_update`
 
