@@ -7,7 +7,7 @@ import pytest
 from lorekeeper.config import Settings
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.orchestrator import MemoryService, _extract_title
+from lorekeeper.services.orchestrator import MemoryService
 
 
 class FakeEngine:
@@ -241,7 +241,7 @@ def test_insert_one_memory_missing_title_raises_clear_error(svc):
 
 def test_extract_title_short_thought():
     thought = "Checkout flow: three-step process"
-    assert _extract_title(thought) == thought
+    assert MemoryService._extract_title(thought) == thought
 
 
 def test_extract_title_sentence_boundary():
@@ -249,7 +249,7 @@ def test_extract_title_sentence_boundary():
         "Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score "
         "+ 0.10 usage. This is the core ranking algorithm used across all lore_search calls."
     )
-    title = _extract_title(thought)
+    title = MemoryService._extract_title(thought)
     assert title.endswith("usage.")
     assert len(title) <= 80
 
@@ -260,17 +260,17 @@ def test_extract_title_no_boundary_breaks_at_word():
         "This is a very long sentence that goes on and on without any punctuation "
         "at all and just keeps running past the eighty character limit"
     )
-    title = _extract_title(thought)
+    title = MemoryService._extract_title(thought)
     assert len(title) <= 80
     # Should end at a word boundary (not mid-word like "charact")
     assert title[-1] != "e"  # "sentence" ends with 'e' — verify it didn't slice mid-word
 
 
-def test_remember_default_score_is_seven(svc):
+def test_remember_default_score_is_five(svc):
     service, _engine = svc
     result = service.remember("test thought")
     row = service._store.get_memory_row(result["id"])
-    assert row["score"] == 7.0
+    assert row["score"] == 5.0
 
 
 def test_remember_stores_full_content(svc):

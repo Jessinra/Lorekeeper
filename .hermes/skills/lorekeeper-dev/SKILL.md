@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-dev
 description: Engineering practices for developing the Lorekeeper codebase. Load this skill when working on Lorekeeper source code, fixing bugs, adding features, writing tests, or reviewing PRs. Covers architecture conventions, SQLite/Mem0/Chroma quirks, testing patterns, and the verification standard for shipped changes. For backlog/ticket workflow, see backlog-management skill.
-version: 2.0.0
+version: 2.2.0
 tags: []
 related_skills: [backlog-management, after-changes]
 ---
@@ -86,6 +86,9 @@ Rules:
 - always include the LKPR-N ID
 - branch off `main`
 - delete after merging
+- **never commit feature/fix/chore work directly to main** — all work goes through a feature branch → PR → merge
+- **no direct pushes to main** — only PR merges land on main
+- **Exception:** Akane (PM) may directly commit to main for backlog management only (ticket files, status changes, housekeeping) — never code
 
 ---
 

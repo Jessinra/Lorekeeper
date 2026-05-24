@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     max_links_per_memory: int = 5
     usage_normalisation_cap: int = 100
     decay_lambda: float = 0.0077  # time-decay λ; 0 disables decay (LORE_DECAY_LAMBDA)
+    remember_default_score: float = 5.0  # default for lore_remember (matches lore_insert)
 
     @property
     def chroma_path(self) -> Path:

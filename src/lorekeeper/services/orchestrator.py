@@ -20,24 +20,38 @@ from lorekeeper.services.search import SearchResult, rank_results
 log = structlog.get_logger()
 
 
-def _extract_title(thought: str) -> str:
-    """First ~80 chars, ending at sentence boundary if possible."""
-    max_len = 80
-    trimmed = thought.strip()
-    if len(trimmed) <= max_len:
-        return trimmed
-    chunk = trimmed[:max_len]
-    for end_char in ".!?":
-        idx = chunk.rfind(end_char)
-        if idx > max_len // 2:
-            return chunk[:idx + 1].strip()
-    idx = chunk.rfind(" ")
-    if idx > 0:
-        return chunk[:idx].strip()
-    return chunk
-
-
 class MemoryService:
+    """Memory orchestration — search, insert, remember, update, reflect."""
+
+    @staticmethod
+    def _extract_title(thought: str) -> str:
+        """Smart title: first complete word at or after ~80 chars,
+    ending at sentence boundary if possible.
+    """
+        max_len = 80
+        max_extended = 120
+        trimmed = thought.strip()
+        if len(trimmed) <= max_len:
+            return trimmed
+
+        chunk = trimmed[:max_len]
+        # Try sentence boundary first
+        for end_char in ".!?":
+            idx = chunk.rfind(end_char)
+            if idx > max_len // 2:
+                return chunk[:idx + 1].strip()
+        # Try last space within first max_len chars
+        idx = chunk.rfind(" ")
+        if idx > 0:
+            return chunk[:idx].strip()
+        # No space found in first max_len — look forward for next word boundary
+        rest = trimmed[max_len:max_extended]
+        next_space = rest.find(" ")
+        if next_space > 0:
+            return trimmed[:max_len + next_space].strip()
+        # No word boundary found anywhere — return as much as we can
+        return trimmed[:max_extended].strip()
+
     def __init__(
         self,
         engine: MemoryEngine,
@@ -151,9 +165,9 @@ class MemoryService:
     def remember(self, thought: str) -> dict:
         """Fast one-shot insert with auto-extracted fields and auto-linking."""
         self._increment_metric("lore_remember")
-        title = _extract_title(thought)
-        description = title[:60] if len(title) > 60 else ""
-        score = 7.0
+        title = self._extract_title(thought)
+        description = title
+        score = self._settings.remember_default_score
 
         result = self._insert_one_memory({
             "title": title,
@@ -175,8 +189,15 @@ class MemoryService:
         # Rebuild KW index after the insert
         self._rebuild_kw()
 
-        # Auto-link: query Chroma for nearest neighbor above 0.75
-        linked_to = None
+        linked_to = self._auto_link(thought, lore_id)
+        return {"id": lore_id, "title": title, "linked_to": linked_to}
+
+    def _auto_link(self, thought: str, lore_id: str) -> dict | None:
+        """Auto-link a new memory to its nearest neighbor above threshold.
+
+        Reusable by lore_insert in the future. Queries Chroma for top-2 nearest
+        neighbors, links the first that's not self and above 0.75.
+        """
         sem_hits = self._engine.search(thought, limit=2)
         for hit in sem_hits:
             if hit["lore_id"] != lore_id and hit["score"] >= 0.75:
@@ -187,10 +208,8 @@ class MemoryService:
                     relation_type="related_to",
                     reason=f"auto-linked from lore_remember: {raw_score:.2f}",
                 )
-                linked_to = {"id": hit["lore_id"], "score": raw_score}
-                break
-
-        return {"id": lore_id, "title": title, "linked_to": linked_to}
+                return {"id": hit["lore_id"], "score": raw_score}
+        return None
 
     def _insert_one_memory(self, m: dict, force: bool) -> dict:
         if "title" not in m:
