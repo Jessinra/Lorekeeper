@@ -34,18 +34,21 @@ lore_remember("Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score 
 - Title = first 80 chars (whitespace-trimmed, ends at sentence boundary if possible)
 - Description = first 60 chars of title (or empty if title is short enough)
 - Content = the full `thought` string verbatim
-- Score = 7 (default for auto-scored). No manual scoring.
+- Score = 5 (matches lore_insert default). No manual scoring.
 
 **Auto-link:** After insert, query Chroma for top-1 nearest neighbor above 0.75 threshold. If found, auto-link as `related_to` with reason `"auto-linked from lore_remember: {score:.2f}"`. This gives every quick memory at least one connection — reduces orphan count.
 
 ## Acceptance Criteria
 
 - [ ] `lore_remember(thought)` inserts a memory with auto-extracted title/desc/score
+- [ ] Default score = 5 (matches `lore_insert` scoring convention)
 - [ ] Auto-link to nearest neighbor above 0.75 (single link, not batch)
 - [ ] Returns `{id, title, linked_to: {id, score} | null}` — agent sees the link
 - [ ] No duplicate check bypass — still uses existing dedup logic
 - [ ] No field is required beyond `thought` — zero configuration
 - [ ] MCP tool description: "Fast one-shot memory insert. Pass a thought, get a memory with auto-title."
+- [ ] `_increment_metric("lore_remember")` called in orchestrator.remember() — tracks usage in dashboard metrics tab
+- [ ] `metrics.js` in dashboard: add `lore_remember` entry to `TOOL_COLORS` with a distinct hue
 
 ## Affected Files
 
@@ -57,7 +60,7 @@ lore_remember("Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score 
 - `tests/test_orchestrator.py` — test auto-extract, test auto-link
 
 **Dashboard:**
-_none_
+- `src/lorekeeper/dashboard/static/js/metrics.js` — add `lore_remember: { h: 305, s: "70%" }` to `TOOL_COLORS`
 
 ## Dependencies
 
@@ -78,5 +81,9 @@ _None_ — standalone. Uses existing `memory_engine.insert()` and `link_store.li
 ## Notes
 
 **This is the highest-impact friction fix.** It removes the biggest barrier to eager memory insertion. Pair with a protocol skill update: "At the moment you learn something interesting, call `lore_remember` immediately — not at session end."
+
+**Missed requirement (discovered during PR #5 review):** Score defaulted to 7 instead of matching `lore_insert`'s 5. Also missing: `_increment_metric("lore_remember")` call + dashboard `TOOL_COLORS` entry. These have been added to the ACs above — dev must include them in the next submission.
+
+**Lesson:** Always check for consistency with existing tools (`lore_insert` defaults, conventions) and endpoints (dashboard metrics tab) before calling a ticket complete.
 
 Estimated effort: 0.5 week. Mostly handler + service wiring.
