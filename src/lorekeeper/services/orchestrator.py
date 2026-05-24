@@ -54,11 +54,11 @@ class MemoryService:
 
     def __init__(
         self,
-        engine: MemoryEngine,
-        store: LinkStore,
-        keyword_index: KeywordIndex,
-        settings: Settings,
-    ) -> None:
+engine: MemoryEngine,
+         store: LinkStore,
+         keyword_index: KeywordIndex,
+         settings: Settings,
+     ) -> None:
         self._engine = engine
         self._store = store
         self._kw = keyword_index

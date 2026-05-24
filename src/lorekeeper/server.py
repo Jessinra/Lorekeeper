@@ -3,9 +3,9 @@ from fastmcp import FastMCP
 
 from lorekeeper.config import Settings
 from lorekeeper.handlers import handle_insert, handle_remember, handle_search
+from lorekeeper.services.engine_factory import build_engine
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.memory_engine import MemoryEngine, build_mem0
 from lorekeeper.services.orchestrator import MemoryService
 
 log = structlog.get_logger()
@@ -25,9 +25,8 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     s = settings or Settings()
     s.data_dir.mkdir(parents=True, exist_ok=True)
 
-    log.info("init_lorekeeper", data_dir=str(s.data_dir))
-    mem0 = build_mem0(s.chroma_path, s.embedding_model)
-    engine = MemoryEngine(mem0)
+    log.info("init_lorekeeper", data_dir=str(s.data_dir), vector_store=s.vector_store)
+    engine = build_engine(s.vector_store, s.chroma_path, s.lancedb_path, s.embedding_model)
     engine.probe_score_scale()
 
     store = LinkStore(s.sqlite_path)

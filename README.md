@@ -2,11 +2,11 @@
 
 Personal AI memory MCP server. Stores facts, decisions, and domain knowledge so AI agents can recall them across sessions.
 
-Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB. Exposes six MCP tools over stdio: `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_reflect`, `lore_processed_sessions`.
+Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB (or LanceDB). Exposes six MCP tools over stdio: `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_reflect`, `lore_processed_sessions`.
 
 **Features**
 
-- **Hybrid search** — combines semantic vector similarity (Mem0 + ChromaDB) with BM25 keyword search, re-ranked by a weighted formula
+- **Hybrid search** — combines semantic vector similarity (LanceDB or ChromaDB) with BM25 keyword search, re-ranked by a weighted formula
 - **Relevance feedback** — agents report which memories were useful; scores drift up or down over time, unreliable memories are soft-deleted
 - **Duplicate detection** — new inserts are checked against existing memories; blocked when similarity exceeds threshold (overridable with `force`)
 - **Memory linking** — memories connect via typed, scored relationships forming a lightweight knowledge graph
@@ -21,7 +21,7 @@ Two stores work together:
 
 | Store | What it holds |
 |-------|--------------|
-| **Mem0 + ChromaDB** | Vector embeddings (384-dim `all-MiniLM-L6-v2`) for semantic search |
+| **LanceDB (default) or ChromaDB** | Vector embeddings (384-dim `all-MiniLM-L6-v2`) for semantic search. Set `LORE_VECTOR_STORE=chroma` to switch back to Chroma. |
 | **SQLite sidecar** | Memory metadata (score, confidence, usage count, soft-deleted flag) + link rows + reflection records + session records + BM25 index source |
 
 Every memory has a canonical `lore_id` UUID that lives in Mem0's metadata. The SQLite DB is the source of truth for everything else — scores, links, deletion state.
@@ -176,9 +176,12 @@ Data is stored at `~/.lorekeeper/` by default:
 
 ```
 ~/.lorekeeper/
-├── chroma/          # ChromaDB vector store
+├── lancedb/         # LanceDB vector store (default)
+├── chroma/          # ChromaDB vector store (when LORE_VECTOR_STORE=chroma)
 └── lorekeeper.db    # SQLite metadata + links
 ```
+
+> **Note**: LanceDB and Chroma stores are independent. Switching between them won't share embeddings — re-seed with `uv run python scripts/seed_lancedb.py` after switching. Existing data in the inactive store is never modified.
 
 ### Configuration
 
@@ -186,6 +189,7 @@ All settings use the `LORE_` prefix and can be set via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `LORE_VECTOR_STORE` | `lancedb` | Vector store backend: `lancedb` (default) or `chroma` |
 | `LORE_DATA_DIR` | `~/.lorekeeper` | Storage directory |
 | `LORE_EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model |
 | `LORE_DUPLICATE_THRESHOLD` | `0.85` | Similarity above which inserts are blocked |
@@ -355,7 +359,7 @@ The UI has seven tabs:
 | `POST` | `/api/import/preview` | Dry-run import: returns counts + full list of memories/links that would be inserted, without writing |
 | `POST` | `/api/import/confirm` | Actual import: inserts new memories + links, skips IDs already present |
 
-The dashboard connects to the same SQLite + ChromaDB store as the MCP server. Both can technically run at the same time (SQLite WAL mode supports concurrent readers/writers), but the in-memory BM25 index in each process won't see the other's inserts until restart.
+The dashboard connects to the same SQLite + vector store (LanceDB or ChromaDB) as the MCP server. Both can technically run at the same time (SQLite WAL mode supports concurrent readers/writers), but the in-memory BM25 index in each process won't see the other's inserts until restart.
 
 ---
 
@@ -457,7 +461,9 @@ src/lorekeeper/
 ├── logging_setup.py         # structlog config (stderr only — stdout is MCP protocol)
 └── services/
     ├── orchestrator.py      # MemoryService — coordinates all sub-services
-    ├── memory_engine.py     # Mem0 + ChromaDB wrapper, semantic scale probe
+    ├── engine_factory.py     # engine builder (build_engine) — returns MemoryEngine
+    ├── lancedb_engine.py     # LanceDB backend (LanceDBEngine)
+    ├── memory_engine.py      # Abstract MemoryEngine base + ChromaDB backend
     ├── link_store.py        # SQLite — memory rows, links, reflections, sessions, BM25 source (+ api_metrics)
     ├── keyword_index.py     # BM25 index (rank-bm25)
     ├── search.py            # Hybrid ranking, SearchResult type
