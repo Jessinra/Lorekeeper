@@ -2,7 +2,14 @@
 id: LKPR-31
 title: Switch vector store from Chroma to LanceDB for concurrent multi-process access
 type: enhancement
-status: proposal
+status: done
+resolution: merged_via_pr7
+merged_at: 2026-05-24
+merged_by: Jason
+pr_url: https://github.com/Jessinra/Lorekeeper/pull/7
+resolved_date: 2026-05-24
+closed_reason: verified_live_via_mcp
+closed_by: Akane
 priority: high
 sprint: ~
 rice_score: 72
