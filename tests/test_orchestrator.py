@@ -266,7 +266,7 @@ def test_extract_title_no_boundary_breaks_at_word():
     assert title[-1] != "e"  # "sentence" ends with 'e' — verify it didn't slice mid-word
 
 
-def test_remember_default_score_is_five(svc):
+def test_new_memory_default_score_is_five(svc):
     service, _engine = svc
     result = service.remember("test thought")
     row = service._store.get_memory_row(result["id"])

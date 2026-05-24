@@ -167,7 +167,7 @@ class MemoryService:
         self._increment_metric("lore_remember")
         title = self._extract_title(thought)
         description = title
-        score = self._settings.remember_default_score
+        score = self._settings.new_memory_default_score
 
         result = self._insert_one_memory({
             "title": title,
@@ -217,7 +217,7 @@ class MemoryService:
         title = m["title"]
         description = m.get("description", "")
         content = m.get("content", "")
-        score = float(m.get("score", 5.0))
+        score = float(m.get("score", self._settings.new_memory_default_score))
         text = f"{title} {description} {content}"
 
         if not force:

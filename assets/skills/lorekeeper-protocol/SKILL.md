@@ -137,6 +137,16 @@ lore_reflect({
 }
 ```
 
+### `lore_remember`
+
+```json
+{
+  "thought": "Single thought to store verbatim."
+}
+```
+
+Fast one-shot insert — zero friction. Auto-extracts title (first ~80 chars at word boundary), stores content verbatim, default score from `new_memory_default_score` (5.0), auto-links to nearest semantic neighbor (similarity ≥ 0.75). Use for quick session capture. Both `lore_remember` and `lore_insert` are equally first-class tools.
+
 ### `lore_update`
 
 ```json
