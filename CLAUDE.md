@@ -6,7 +6,7 @@ The repo serves two purposes:
 1. **The product**: MCP server providing `lore_search`, `lore_remember`, `lore_insert`, `lore_update`. Replaces the Node.js v1 with Python + Mem0.
 2. **The demonstration**: The development process itself is looped. Session learnings are captured → consolidated → applied back to agent config. This repo is the proof of concept.
 
-**Data dir**: `~/.lorekeeper` (Chroma + SQLite; controlled by `LORE_DATA_DIR`)
+**Data dir**: `~/.lorekeeper` (Chroma or LanceDB + SQLite; controlled by `LORE_DATA_DIR`; set `LORE_VECTOR_STORE=lancedb` to switch)
 
 ---
 
@@ -14,7 +14,7 @@ The repo serves two purposes:
 
 Two stores working together:
 
-- **Mem0 + Chroma** — vector embeddings, semantic ANN search (384-dim `all-MiniLM-L6-v2`)
+- **Chroma (default) or LanceDB** — vector embeddings, semantic ANN search (384-dim `all-MiniLM-L6-v2`). Set `LORE_VECTOR_STORE=lancedb` to use LanceDB for concurrent multi-process access. See `backlogs/LKPR-31-switch-to-lancedb-vector-store.md`.
 - **SQLite sidecar** — memory metadata (score, confidence, soft_deleted, usage_count), all MemoryLink rows, BM25 index rebuild source
 
 The canonical `lore_id` UUID lives in Mem0's metadata field. All app logic uses `lore_id`. Mem0 assigns its own internal id — never expose it.
@@ -26,8 +26,7 @@ The canonical `lore_id` UUID lives in Mem0's metadata field. All app logic uses 
 - **MCP API surface is identical to v1** — same tool names, same input/output schemas. The three existing skills (`lorekeeper-memorize`, `lorekeeper-search`, `lorekeeper-reconcile`) must work with zero changes.
 - **`infer=False` on every `mem0.add()` call** — text is stored verbatim, no LLM extraction.
 - **stdout is reserved for MCP protocol** — all logging goes to stderr via `structlog`.
-- **Single-instance only** — no concurrent server processes sharing `LORE_DATA_DIR`.
-- **Probe semantic score scale at startup** — Chroma can return similarity (higher=better) or distance (lower=better) depending on version. Log which mode is detected. This is the #1 risk.
+- **Probe semantic score scale at startup** — Chroma can return similarity (higher=better) or distance (lower=better) depending on version. Log which mode is detected. This is the #1 risk. LanceDB always returns cosine distance (converted to similarity internally).
 
 ---
 

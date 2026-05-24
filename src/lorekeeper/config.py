@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     data_dir: Path = Field(default=Path.home() / ".lorekeeper")
     log_dir: Path = Field(default=Path.home() / ".lorekeeper" / "logs")
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
-    vector_store: str = "chroma"  # "chroma" or "lancedb"
+    vector_store: str = "lancedb"  # "chroma" or "lancedb"
     duplicate_threshold: float = 0.85
 
     # Hybrid search weights (must sum to 1.0)

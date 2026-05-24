@@ -16,8 +16,8 @@ os.environ.setdefault("ANONYMIZED_TELEMETRY", "false")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from lorekeeper.config import Settings
+from lorekeeper.services.engine_factory import build_engine
 from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.memory_engine import build_engine
 
 
 def main() -> None:

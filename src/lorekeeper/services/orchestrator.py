@@ -14,7 +14,7 @@ from lorekeeper.services.feedback import (
 )
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.memory_engine import LanceDBEngine, MemoryEngine
+from lorekeeper.services.memory_engine import MemoryEngine
 from lorekeeper.services.search import SearchResult, rank_results
 
 log = structlog.get_logger()
@@ -54,11 +54,11 @@ class MemoryService:
 
     def __init__(
         self,
-        engine: MemoryEngine | LanceDBEngine,
-        store: LinkStore,
-        keyword_index: KeywordIndex,
-        settings: Settings,
-    ) -> None:
+engine: MemoryEngine,
+         store: LinkStore,
+         keyword_index: KeywordIndex,
+         settings: Settings,
+     ) -> None:
         self._engine = engine
         self._store = store
         self._kw = keyword_index

@@ -18,7 +18,7 @@ os.environ.setdefault("MEM0_TELEMETRY", "false")
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "false")
 
 from lorekeeper.config import Settings
-from lorekeeper.services.memory_engine import LORE_USER_ID, MemoryEngine, build_mem0
+from lorekeeper.services.memory_engine import LORE_USER_ID, ChromaDBEngine, build_mem0
 
 
 @pytest.fixture(scope="module")
@@ -27,7 +27,7 @@ def engine_with_memories():
     s = Settings()
     tmpdir = pathlib.Path(tempfile.mkdtemp())
     mem0 = build_mem0(tmpdir / "chroma", s.embedding_model)
-    engine = MemoryEngine(mem0)
+    engine = ChromaDBEngine(mem0)
 
     seeds = [
         ("Python is a programming language used for data science and ML", "id-python"),
@@ -90,7 +90,7 @@ class TestSearchScoring:
         s = Settings()
         tmpdir = pathlib.Path(tempfile.mkdtemp())
         mem0 = build_mem0(tmpdir / "chroma", s.embedding_model)
-        engine = MemoryEngine(mem0)
+        engine = ChromaDBEngine(mem0)
         assert engine.search("anything") == []
 
     def test_relevant_beats_irrelevant(self, engine_with_memories):

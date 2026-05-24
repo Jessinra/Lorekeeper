@@ -3,9 +3,9 @@ from fastmcp import FastMCP
 
 from lorekeeper.config import Settings
 from lorekeeper.handlers import handle_insert, handle_remember, handle_search
+from lorekeeper.services.engine_factory import build_engine
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.memory_engine import build_engine
 from lorekeeper.services.orchestrator import MemoryService
 
 log = structlog.get_logger()
