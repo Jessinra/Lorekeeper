@@ -71,6 +71,14 @@ export const CFG_FIELDS = {
 			type: "float",
 		},
 		{
+			key: "new_memory_default_score",
+			env: "LORE_NEW_MEMORY_DEFAULT_SCORE",
+			label: "New memory default score",
+			desc: "Default score for new memories",
+			step: 5,
+			type: "float",
+		},
+		{
 			key: "soft_delete_confidence_threshold",
 			env: "LORE_SOFT_DELETE_CONFIDENCE_THRESHOLD",
 			label: "Soft delete threshold",

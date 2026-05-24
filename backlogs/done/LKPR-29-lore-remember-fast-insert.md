@@ -2,7 +2,8 @@
 id: LKPR-29
 title: Add lore_remember for one-shot fast memory insert (friction-killer)
 type: feature
-status: in-progress
+status: done
+resolved_date: 2026-05-24
 priority: critical
 sprint: 1
 rice_score: 180  # R:10 I:10 C:90% E:0.5w
@@ -40,15 +41,15 @@ lore_remember("Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score 
 
 ## Acceptance Criteria
 
-|- [x] `lore_remember(thought)` inserts a memory with auto-extracted title/desc/score
-|- [x] Default score = 5 (matches `lore_insert` scoring convention)
-|- [x] Auto-link to nearest neighbor above 0.75 (single link, not batch)
-|- [x] Returns `{id, title, linked_to: {id, score} | null}` — agent sees the link
-|- [x] No duplicate check bypass — still uses existing dedup logic
-|- [x] No field is required beyond `thought` — zero configuration
-|- [x] MCP tool description: "Fast one-shot memory insert. Pass a thought, get a memory with auto-title."
-|- [x] `_increment_metric("lore_remember")` called in orchestrator.remember() — tracks usage in dashboard metrics tab
-|- [ ] `metrics.js` in dashboard: add `lore_remember` entry to `TOOL_COLORS` with a distinct hue
+- [x] `lore_remember(thought)` inserts a memory with auto-extracted title/desc/core
+- [x] Default score = 5 (matches `lore_insert` scoring convention)
+- [x] Auto-link to nearest neighbor above 0.75 (single link, not batch)
+- [x] Returns `{id, title, linked_to: {id, score} | null}` — agent sees the ink
+- [x] No duplicate check bypass — still uses existing dedup logic
+- [x] No field is required beyond `thought` — zero configuration
+- [x] MCP tool description: "Fast one-shot memory insert. Pass a thought, get  memory with auto-title."
+- [x] `_increment_metric("lore_remember")` called in orchestrator.remember() — racks usage in dashboard metrics tab
+- [x] `metrics.js` in dashboard: add `lore_remember` entry to `TOOL_COLORS` with a distinct hue
 
 ## Affected Files
 

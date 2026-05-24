@@ -201,6 +201,7 @@ All settings use the `LORE_` prefix and can be set via environment variables:
 | `LORE_MAX_LINKS_PER_MEMORY` | `5` | Limit links returned per memory in search results |
 | `LORE_SCORE_MIN` | `0.0` | Minimum allowed memory score |
 | `LORE_SCORE_MAX` | `10.0` | Maximum allowed memory score |
+| `LORE_NEW_MEMORY_DEFAULT_SCORE` | `5.0` | Default score for new memories |
 | `LORE_USAGE_NORMALISATION_CAP` | `100` | Cap for log-normalising `usage_count` in hybrid scoring |
 | `LORE_DECAY_LAMBDA` | `0.0077` | Time-decay λ for scoring (~90-day half-life; set to 0 to disable) |
 | `LORE_DASH_PORT` | `7777` | Dashboard HTTP port |
