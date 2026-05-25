@@ -87,66 +87,97 @@ _skill_version() {
 
 # Inject lorekeeper MCP entry into a Hermes YAML config.
 # Prints: added | skip | missing
+# Uses regex-based YAML manipulation (no PyYAML dep) to correctly insert inside mcp_servers block.
 _inject_mcp_yaml() {
     local config="$1"
     [ -f "$config" ] || { echo "missing"; return; }
-    grep -q "lorekeeper" "$config" 2>/dev/null && { echo "skip"; return; }
-    python3 - "$config" "$REPO_DIR" "$DATA_DIR" <<'PYEOF'
-import sys
+    local result
+    result=$(python3 - "$config" "$REPO_DIR" "$DATA_DIR" <<'PYEOF'
+import sys, re
+
 config_path, repo_dir, data_dir = sys.argv[1], sys.argv[2], sys.argv[3]
-entry = (
-    f"  lorekeeper:\n"
-    f"    command: uv\n"
-    f"    args: [run, --directory, {repo_dir}, lorekeeper]\n"
-    f"    env:\n"
-    f"      LORE_DATA_DIR: {data_dir}\n"
-)
+
 with open(config_path) as f:
     content = f.read()
-if "mcp_servers:" in content:
-    content = content.rstrip() + "\n" + entry
+
+# Check for lorekeeper key specifically under the mcp_servers block (not a broad file search)
+mcp_match = re.search(r'^(mcp_servers:\s*\n)((?:[ \t]+[^\n]*\n)*)', content, re.MULTILINE)
+if mcp_match and re.search(r'^[ \t]+lorekeeper\s*:', mcp_match.group(0), re.MULTILINE):
+    print("skip")
+    sys.exit(0)
+
+new_entry = (
+    "  lorekeeper:\n"
+    f"    command: uv\n"
+    f"    args: [run, --directory, {repo_dir}, lorekeeper]\n"
+    "    env:\n"
+    f"      LORE_DATA_DIR: {data_dir}\n"
+)
+
+if mcp_match:
+    # Insert at the end of the existing mcp_servers block (inside it, not after)
+    insert_pos = mcp_match.end()
+    content = content[:insert_pos] + new_entry + content[insert_pos:]
 else:
-    content = content.rstrip() + "\nmcp_servers:\n" + entry
+    content = content.rstrip() + "\nmcp_servers:\n" + new_entry
+
 with open(config_path, "w") as f:
     f.write(content)
+print("added")
 PYEOF
-    echo "added"
+)
+    echo "$result"
 }
 
 # Inject lorekeeper MCP entry into a JSON config (Claude Code / Cursor).
-# Prints: added | skip
+# Prints: added | skip | error
 _inject_mcp_json() {
     local config="$1"
     mkdir -p "$(dirname "$config")"
     [ -f "$config" ] || echo '{}' > "$config"
-    local exists
-    exists=$(python3 -c "
-import json, sys
-try:
-    d = json.load(open('$config'))
-    print('yes' if 'lorekeeper' in d.get('mcpServers', {}) else 'no')
-except Exception:
-    print('no')
-")
-    [ "$exists" = "yes" ] && { echo "skip"; return; }
-    python3 - "$config" "$REPO_DIR" "$DATA_DIR" <<'PYEOF'
-import sys, json
+    local result
+    result=$(python3 - "$config" "$REPO_DIR" "$DATA_DIR" <<'PYEOF'
+import sys, json, os, shutil
+
 config_path, repo_dir, data_dir = sys.argv[1], sys.argv[2], sys.argv[3]
+
 try:
     with open(config_path) as f:
         data = json.load(f)
-except Exception:
-    data = {}
-data.setdefault("mcpServers", {})["lorekeeper"] = {
-    "command": "uv",
-    "args": ["run", "--directory", repo_dir, "lorekeeper"],
-    "env": {"LORE_DATA_DIR": data_dir},
-}
-with open(config_path, "w") as f:
-    json.dump(data, f, indent=2)
-    f.write("\n")
+except json.JSONDecodeError as e:
+    print(f"error: {config_path} contains invalid JSON ({e}) — fix it manually before re-running setup", file=sys.stderr)
+    sys.exit(1)
+
+if "lorekeeper" in data.get("mcpServers", {}):
+    print("skip")
+    sys.exit(0)
+
+backup = config_path + ".setup-bak"
+shutil.copy2(config_path, backup)
+try:
+    data.setdefault("mcpServers", {})["lorekeeper"] = {
+        "command": "uv",
+        "args": ["run", "--directory", repo_dir, "lorekeeper"],
+        "env": {"LORE_DATA_DIR": data_dir},
+    }
+    with open(config_path, "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+    os.remove(backup)
+except Exception as e:
+    shutil.move(backup, config_path)
+    print(f"error: failed to write {config_path}: {e}", file=sys.stderr)
+    sys.exit(1)
+print("added")
 PYEOF
-    echo "added"
+)
+    local exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        warn "MCP injection failed for $config — see error above"
+        echo "error"
+        return
+    fi
+    echo "$result"
 }
 
 # Inject/replace ## Lorekeeper section in a target prompt file.
@@ -251,13 +282,14 @@ _install_dev_skills_hermes() {
     done
 }
 
-# Format summary cell: add/skip/missing → display string
+# Format summary cell: add/skip/missing/error → display string
 _cell() {
     case "$1" in
         added*)   printf "${GREEN}✓ added${NC}" ;;
         updated*) printf "${GREEN}✓ updated${NC}" ;;
         skip)     printf "→ skip" ;;
         missing)  printf "${YELLOW}— N/A${NC}" ;;
+        error)    printf "${RED}✗ failed${NC}" ;;
         "")       printf "—" ;;
         *)        printf "%s" "$1" ;;
     esac
@@ -357,6 +389,7 @@ for i in "${!AGENT_NAMES[@]}"; do
         added)   echo -e "${GREEN}✓ added${NC}" ;;
         skip)    echo "→ already configured" ;;
         missing) echo -e "${YELLOW}! config file not found — skipped${NC}" ;;
+        error)   echo -e "${RED}✗ failed — see error above${NC}" ;;
     esac
 
     # ── Prompt injection ───────────────────────────────────────────────────
