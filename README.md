@@ -313,25 +313,46 @@ Then update `~/.claude/settings.json` to use the tool directly instead of `uv ru
 | 1 | Checks Python 3.11+ and `uv` are available |
 | 2 | Runs `uv sync --extra dashboard` |
 | 3 | Creates `$LORE_DATA_DIR` (default `~/.lorekeeper`) |
-| 4 | Adds `lorekeeper` entry to `~/.claude/settings.json` |
-| 5 | Copies `assets/skills/lorekeeper-*/` to `~/.hermes/skills/` |
-| 6 | Migrates from v1 `memories.json` if `V1_JSON` env var is set |
+| 4 | Installs git hooks (lint + tests enforced on commit) |
+| 5 | Scans for Hermes (main + profiles), Claude Code, and Cursor |
+| 6 | Asks confirmation, then for each detected agent: injects MCP config, injects Lorekeeper prompt section, installs skills |
+| 7 | Migrates from v1 `memories.json` if `V1_JSON` env var is set |
 
-The script is idempotent — safe to re-run after updates.
+The script is idempotent — safe to re-run after updates. Version-stamped injections are skipped when already up to date, and overwritten cleanly when the version differs.
+
+#### Agent detection
+
+`setup.sh` auto-detects agents by checking for their config directories:
+
+| Agent | Detected by |
+|-------|-------------|
+| Hermes (main) | `~/.hermes/` directory |
+| Hermes (profiles) | `~/.hermes/profiles/*/` subdirectories |
+| Claude Code | `~/.claude/` directory |
+| Cursor | `~/.cursor/` directory |
+
+For **MCP injection**, the script appends a `lorekeeper` entry to each agent's config (YAML for Hermes, JSON for Claude Code/Cursor). Already-present entries are left unchanged.
+
+For **prompt injection**, the script injects a `## Lorekeeper` section into the agent's prompt file (`soul.md` for Hermes; `CLAUDE.md` / `.cursorrules` / `AGENTS.md` in the current directory for others). Re-running updates the section if the version stamp differs.
+
+For **skills**, `assets/skills/` is copied to each agent's skills directory. Dev skills (`.hermes/skills/`) are symlinked to `~/.hermes/skills/` for Hermes only.
+
+The single source of truth for the prompt content and version is `scripts/prompts/lorekeeper-agent-prompt.md`.
 
 ---
 
 ## Skills
 
-Three Claude Code skills ship in `assets/skills/` and are installed by `setup.sh`:
+Four skills ship in `assets/skills/` and are installed by `setup.sh` to all detected agents (Hermes, Claude Code, Cursor):
 
 | Skill | Purpose |
 |-------|---------|
+| `lorekeeper-protocol` | Full session protocol — when and how to call all Lorekeeper tools |
 | `lorekeeper-search` | Search memories with mandatory relevance feedback after every result set |
 | `lorekeeper-memorize` | Proactively capture facts, search for related memories, insert, and link |
 | `lorekeeper-reconcile` | Verify memories against source materials, update scores, soft-delete incorrect facts |
 
-Skills are installed to `~/.hermes/skills/` and work with any project that has the MCP server configured.
+Skills are installed to `~/.hermes/skills/`, `~/.claude/skills/`, or `~/.cursor/skills/` depending on which agents are detected. Version-stamped — `setup.sh` skips re-install when already up to date.
 
 ---
 

@@ -2,7 +2,7 @@
 id: LKPR-33
 title: Smart setup — auto-detect agents, inject prompt/skills/MCP in one run
 type: feature
-status: proposal
+status: in-progress
 priority: medium
 sprint: ~
 rice_score: 40.0  # R:8 I:9 C:80% E:1w (reduced scope, merged LKPR-7)
