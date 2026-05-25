@@ -19,7 +19,7 @@ Apply these rules to Python runtime code in `src/`.
 ## Project conventions
 
 - Use `uv run ...` for tests and checks when needed.
-- Keep stdout reserved for MCP protocol output.
+- For MCP server runtime code, keep stdout reserved for MCP protocol output.
 - Use `structlog` for logging.
 - Preserve data-model and schema compatibility unless a migration is included.
 
