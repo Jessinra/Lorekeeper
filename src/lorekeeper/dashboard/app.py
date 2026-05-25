@@ -1,4 +1,5 @@
 import json
+import subprocess
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -15,6 +16,18 @@ from lorekeeper.server import get_service, init_service
 
 log = structlog.get_logger()
 STATIC_DIR = Path(__file__).parent / "static"
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+
+
+def _get_version() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "describe", "--always", "--dirty", "--tags"],
+            capture_output=True, text=True, cwd=REPO_ROOT, timeout=5,
+        )
+        return result.stdout.strip() or "unknown"
+    except Exception:
+        return "unknown"
 
 
 @asynccontextmanager
@@ -158,6 +171,14 @@ class SearchRequest(BaseModel):
     query: str
     limit: int = 5
     min_score: float = 0.1
+
+
+# ── Version ───────────────────────────────────────────────────────────────────
+
+
+@app.get("/api/version")
+def get_version() -> dict[str, str]:
+    return {"version": _get_version()}
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
