@@ -1,4 +1,5 @@
 import json
+import subprocess
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -6,7 +7,7 @@ from typing import Any
 
 import structlog
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -15,11 +16,30 @@ from lorekeeper.server import get_service, init_service
 
 log = structlog.get_logger()
 STATIC_DIR = Path(__file__).parent / "static"
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+
+# Computed once at startup — not on every request
+_APP_VERSION: str = "unknown"
+
+
+def _resolve_version() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "describe", "--always", "--dirty", "--tags"],
+            capture_output=True, text=True, cwd=REPO_ROOT, timeout=5,
+        )
+        return result.stdout.strip() or "unknown"
+    except Exception:
+        log.exception("version_resolve_failed")
+        return "unknown"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # type: ignore[type-arg]
+    global _APP_VERSION
     log.info("dashboard_startup")
+    _APP_VERSION = _resolve_version()
+    log.info("version_resolved", version=_APP_VERSION)
     init_service()
     log.info("dashboard_ready")
     yield
@@ -35,8 +55,12 @@ app.mount("/js",  StaticFiles(directory=STATIC_DIR / "js"),  name="js")
 # ── Serve UI ──────────────────────────────────────────────────────────────────
 
 @app.get("/", include_in_schema=False)
-def index() -> FileResponse:
-    return FileResponse(STATIC_DIR / "index.html")
+def index() -> Response:
+    html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    return Response(
+        content=html.replace("{%VERSION%}", _APP_VERSION),
+        media_type="text/html",
+    )
 
 
 # ── Memories ──────────────────────────────────────────────────────────────────
