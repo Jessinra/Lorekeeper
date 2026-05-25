@@ -173,8 +173,8 @@ body = parts[2].strip() if len(parts) >= 3 else raw.strip()
 with open(target_path) as f:
     content = f.read()
 
-if re.search(r'\n## Lorekeeper\b', content):
-    content = re.sub(r'\n## Lorekeeper\b.*?(?=\n## |\Z)', '', content, flags=re.DOTALL)
+if re.search(r'(?:^|\n)## Lorekeeper\b', content):
+    content = re.sub(r'(?:^|\n)## Lorekeeper\b.*?(?=\n## |\Z)', '', content, flags=re.DOTALL)
 
 content = content.rstrip() + '\n\n' + body + '\n'
 
@@ -254,12 +254,12 @@ _install_dev_skills_hermes() {
 # Format summary cell: add/skip/missing → display string
 _cell() {
     case "$1" in
-        added|added*)   printf "${GREEN}✓ added${NC}" ;;
-        updated*)       printf "${GREEN}✓ updated${NC}" ;;
-        skip)           printf "→ skip" ;;
-        missing)        printf "${YELLOW}— N/A${NC}" ;;
-        "")             printf "—" ;;
-        *)              printf "%s" "$1" ;;
+        added*)   printf "${GREEN}✓ added${NC}" ;;
+        updated*) printf "${GREEN}✓ updated${NC}" ;;
+        skip)     printf "→ skip" ;;
+        missing)  printf "${YELLOW}— N/A${NC}" ;;
+        "")       printf "—" ;;
+        *)        printf "%s" "$1" ;;
     esac
 }
 
@@ -367,20 +367,26 @@ for i in "${!AGENT_NAMES[@]}"; do
             prompt_result="$(_inject_prompt "$dir/soul.md")"
             ;;
         claude)
-            # Inject into CLAUDE.md in the current working directory (if present)
+            # Inject into CLAUDE.md in the current working directory (if present).
+            # Run setup.sh from your project root to inject into that project's CLAUDE.md.
             if [ -f "$WORK_DIR/CLAUDE.md" ]; then
                 prompt_result="$(_inject_prompt "$WORK_DIR/CLAUDE.md")"
             fi
             ;;
         cursor)
-            # Inject into .cursorrules and/or AGENTS.md in current directory
+            # Inject into .cursorrules and/or AGENTS.md in the current directory.
+            # Run setup.sh from your project root to target the right files.
             if [ -f "$WORK_DIR/.cursorrules" ]; then
-                prompt_result="$(_inject_prompt "$WORK_DIR/.cursorrules")"
+                cursorrules_result="$(_inject_prompt "$WORK_DIR/.cursorrules")"
+                [ "$cursorrules_result" != "missing" ] && prompt_result="$cursorrules_result" \
+                    && echo -e "${GREEN}✓ .cursorrules: $cursorrules_result${NC}"
             fi
             if [ -f "$WORK_DIR/AGENTS.md" ]; then
                 agents_result="$(_inject_prompt "$WORK_DIR/AGENTS.md")"
-                # Report both; prefer non-missing for summary
-                [ "$agents_result" != "missing" ] && prompt_result="$agents_result"
+                if [ "$agents_result" != "missing" ]; then
+                    prompt_result="$agents_result"
+                    echo -e "${GREEN}✓ AGENTS.md: $agents_result${NC}"
+                fi
             fi
             ;;
     esac
