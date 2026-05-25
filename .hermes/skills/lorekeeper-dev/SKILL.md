@@ -222,6 +222,79 @@ Before opening a PR, run through this:
 
 ---
 
+## Code Review Standards
+
+> Apply these when reviewing PRs or self-reviewing before pushing. Flag issues at 3 levels: 🔴 **Blocker** (security/correctness), 🟡 **Should-fix** (maintainability/performance), 🟢 **Nit** (style).
+
+### General Engineering Principles
+
+- [ ] **Single Responsibility** — each function/class does one thing
+- [ ] **DRY** — no duplicated logic; extract shared utilities
+- [ ] **YAGNI** — no speculative code added "just in case"
+- [ ] **PR size** — under ~400 lines; ask for splits if larger
+- [ ] **No magic numbers** — literals extracted into named constants
+- [ ] **Self-documenting naming** — code readable without comments
+- [ ] **Max nesting depth: 3** — use early returns to flatten logic
+- [ ] **No commented-out dead code** — delete it, version control has history
+
+### Clean Code
+
+- [ ] Functions are verbs (`get_user`, `fetch_order`), classes are nouns (`MemoryService`)
+- [ ] Booleans prefixed: `is_valid`, `has_permission`, `can_retry`
+- [ ] No abbreviations unless universal (`url`, `id`, `db` OK; `usrNm` ❌)
+- [ ] Function length ≤ 30 lines; decompose if longer
+- [ ] Comments explain *why*, not *what*
+- [ ] TODOs include a ticket ref: `# TODO(LKPR-N): description`
+- [ ] Errors never silently swallowed — no bare `except: pass`
+- [ ] Error messages include context (what failed, what was the input)
+
+### Python-Specific
+
+- [ ] Type hints on all public functions (enforced by `mypy`)
+- [ ] f-strings over `.format()` or `%`
+- [ ] `enumerate()` over `range(len(...))`
+- [ ] `zip()` for parallel iteration
+- [ ] Context managers (`with`) for file/DB/network resources — never manual `.close()`
+- [ ] `pathlib.Path` over `os.path` string manipulation
+- [ ] Dataclasses or Pydantic models for structured data — not raw dicts
+- [ ] No mutable default arguments: `def f(x=[])` ❌ → `def f(x=None)` ✅
+- [ ] No bare `except:` — catch specific exceptions
+- [ ] Generators for large data streams — don't load everything into RAM
+- [ ] No `eval()`, `exec()`, or `pickle.loads()` on untrusted input
+- [ ] SQL uses parameterized queries — never f-string into SQL
+- [ ] `subprocess` calls use list args, never `shell=True` with user input
+
+### JavaScript-Specific (dashboard code)
+
+- [ ] `const` by default, `let` only when reassignment needed — never `var`
+- [ ] `===` always — no `==` loose equality
+- [ ] Destructuring for object/array access
+- [ ] Optional chaining `?.` and nullish coalescing `??` used correctly
+- [ ] `async/await` over raw `.then()` chains
+- [ ] `Promise.all()` for parallel async — not sequential `await` in a loop
+- [ ] No floating promises — all awaited or `.catch()`-handled
+- [ ] No `innerHTML` with unsanitized user content (XSS risk 🔴)
+- [ ] No `eval()` or `new Function()` with dynamic strings
+- [ ] Event listeners cleaned up to avoid memory leaks
+- [ ] `Array.at(-1)` over `arr[arr.length - 1]`
+
+### Security (🔴 all blockers)
+
+- [ ] No secrets in code — API keys/passwords from env vars only
+- [ ] All external input validated/sanitized before use
+- [ ] New `pip` or `npm` packages checked via `pip audit` / `npm audit`
+- [ ] Least privilege — DB/file/API access uses minimum required permissions
+
+### Performance
+
+- [ ] No N+1 queries — no fetching related records in a loop
+- [ ] Pagination used — no `SELECT *` or unbounded `findAll()`
+- [ ] Large collections streamed/chunked, not loaded entirely into RAM
+- [ ] Timeouts set on all external HTTP/DB calls — no infinite waits
+- [ ] New code paths have structured logging (not `print()` / `console.log()`)
+
+---
+
 ## PM Expectations
 
 Things Akane (PM) will check on every review:
