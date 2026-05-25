@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-reconcile
 description: Reconcile and fact-check Lorekeeper memories against source materials, existing documentation, and internal consistency. Use when (1) the user provides reference materials to verify against, (2) the user requests a general knowledge audit, or (3) the user wants to verify specific topics. Updates memory scores and soft-deletes incorrect facts.
-version: 1.0.0
+version: v1.0.0
 ---
 
 # Lorekeeper Reconciliation Agent

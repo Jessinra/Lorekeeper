@@ -1,7 +1,7 @@
 ---
 name: commit-convention
 description: Git commit convention for Lorekeeper — enforced by commit-msg hook. Covers author identity, ticket tags, and message format for both PM (Akane) and Dev roles.
-version: 1.0.0
+version: v1.0.0
 tags: [git, commit, convention, lorekeeper]
 related_skills: [lorekeeper-dev, lorekeeper-pm, backlog-management]
 ---

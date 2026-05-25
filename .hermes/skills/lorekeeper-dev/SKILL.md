@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-dev
 description: Engineering practices for developing the Lorekeeper codebase. Load this skill when working on Lorekeeper source code, fixing bugs, adding features, writing tests, or reviewing PRs. Covers architecture conventions, SQLite/LanceDB/Chroma quirks, testing patterns, and the verification standard for shipped changes. For backlog/ticket workflow, see backlog-management skill.
-version: 2.3.0
+version: v2.4.0
 tags: []
 related_skills: [backlog-management, after-changes]
 ---
@@ -66,6 +66,31 @@ Install once per clone via `bash scripts/setup.sh`. It runs:
 Bypass: `git commit --no-verify` (emergency only)
 
 See `docs/linter-decisions.md` for the full rationale on rule selection.
+
+## Setup Script — `scripts/setup.sh`
+
+Smart multi-agent setup. Run from the repo root:
+
+```bash
+./scripts/setup.sh
+```
+
+**What it does:**
+1. Detects installed agents — Hermes (main + all profiles), Claude Code (`~/.claude`), Cursor (`~/.cursor`)
+2. Injects MCP entry into each agent's config with `LORE_DATA_DIR` + `LOREKEEPER_SETUP_VERSION` env vars
+3. Upserts `## Lorekeeper` section into each agent's prompt file — version-stamped, only updates when source version changes
+4. Syncs skills — `assets/skills/` (copied, flat) and `.hermes/skills/` (symlinked, with category subdirs) into each agent's skills dir
+
+**Verification after running setup.sh:**
+- Hermes config contains `lorekeeper:` under `mcp_servers` with both `LORE_DATA_DIR` and `LOREKEEPER_SETUP_VERSION`
+- Hermes `soul.md` (or profile `soul.md`) has a `## Lorekeeper` section with version comment matching `scripts/prompts/lorekeeper-agent-prompt.md`
+- `~/.hermes/skills/software-development/lorekeeper-dev` symlink exists and points into repo
+- `~/.hermes/skills/` contains all user skills from `assets/skills/` (as copies, not symlinks)
+- Version format on all skills: `v{M.m.m}` (with `v` prefix) — script uses string equality for idempotency
+
+**Prompt source of truth:** `scripts/prompts/lorekeeper-agent-prompt.md` — edit this to change the Lorekeeper section injected into all agents.
+
+Re-run after editing any skill, updating the prompt file, or adding a new agent install.
 
 ## Testing Patterns
 
@@ -331,4 +356,4 @@ Implementation plans live in `docs/plans/YYYY-MM-DD_HHMMSS-<slug>.md` — **not*
 
 Skills for **Lorekeeper users/clients** live in `assets/skills/` in this repo — one folder per skill, matching the standard `skill-name/SKILL.md` structure. These are distributed to users alongside the server.
 
-Skills for the **dev agent** (engineering practices, internal tooling) live in `.hermes/skills/` in this repo. Run `scripts/lorekeeper-setup.sh` to symlink them into `~/.hermes/skills/` so they're loadable via `skill_view`. Do NOT copy them to `assets/skills/`.
+Skills for the **dev agent** (engineering practices, internal tooling) live in `.hermes/skills/` in this repo. Run `scripts/setup.sh` to symlink them into `~/.hermes/skills/` so they're loadable via `skill_view`. Do NOT copy them to `assets/skills/`.

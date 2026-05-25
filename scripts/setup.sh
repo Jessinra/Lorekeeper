@@ -91,11 +91,12 @@ _skill_version() {
 _inject_mcp_yaml() {
     local config="$1"
     [ -f "$config" ] || { echo "missing"; return; }
-    local result
-    result=$(python3 - "$config" "$REPO_DIR" "$DATA_DIR" <<'PYEOF'
+    local result setup_ver
+    setup_ver="$(_prompt_version)"
+    result=$(python3 - "$config" "$REPO_DIR" "$DATA_DIR" "$setup_ver" <<'PYEOF'
 import sys, re
 
-config_path, repo_dir, data_dir = sys.argv[1], sys.argv[2], sys.argv[3]
+config_path, repo_dir, data_dir, setup_ver = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 
 with open(config_path) as f:
     content = f.read()
@@ -112,6 +113,7 @@ new_entry = (
     f"    args: [run, --directory, {repo_dir}, lorekeeper]\n"
     "    env:\n"
     f"      LORE_DATA_DIR: {data_dir}\n"
+    f"      LOREKEEPER_SETUP_VERSION: {setup_ver}\n"
 )
 
 if mcp_match:
@@ -135,11 +137,12 @@ _inject_mcp_json() {
     local config="$1"
     mkdir -p "$(dirname "$config")"
     [ -f "$config" ] || echo '{}' > "$config"
-    local result
-    result=$(python3 - "$config" "$REPO_DIR" "$DATA_DIR" <<'PYEOF'
+    local result setup_ver
+    setup_ver="$(_prompt_version)"
+    result=$(python3 - "$config" "$REPO_DIR" "$DATA_DIR" "$setup_ver" <<'PYEOF'
 import sys, json, os, shutil
 
-config_path, repo_dir, data_dir = sys.argv[1], sys.argv[2], sys.argv[3]
+config_path, repo_dir, data_dir, setup_ver = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 
 try:
     with open(config_path) as f:
@@ -158,7 +161,7 @@ try:
     data.setdefault("mcpServers", {})["lorekeeper"] = {
         "command": "uv",
         "args": ["run", "--directory", repo_dir, "lorekeeper"],
-        "env": {"LORE_DATA_DIR": data_dir},
+        "env": {"LORE_DATA_DIR": data_dir, "LOREKEEPER_SETUP_VERSION": setup_ver},
     }
     with open(config_path, "w") as f:
         json.dump(data, f, indent=2)
@@ -205,7 +208,10 @@ with open(target_path) as f:
     content = f.read()
 
 if re.search(r'(?:^|\n)## Lorekeeper\b', content):
+    # Strip the section. If Lorekeeper is at the very start, the pattern matches
+    # with no leading \n — use lstrip() after to avoid a leading blank line.
     content = re.sub(r'(?:^|\n)## Lorekeeper\b.*?(?=\n## |\Z)', '', content, flags=re.DOTALL)
+    content = content.lstrip('\n')
 
 content = content.rstrip() + '\n\n' + body + '\n'
 
@@ -409,26 +415,35 @@ for i in "${!AGENT_NAMES[@]}"; do
         cursor)
             # Inject into .cursorrules and/or AGENTS.md in the current directory.
             # Run setup.sh from your project root to target the right files.
+            local cursor_echoed=0
             if [ -f "$WORK_DIR/.cursorrules" ]; then
                 cursorrules_result="$(_inject_prompt "$WORK_DIR/.cursorrules")"
-                [ "$cursorrules_result" != "missing" ] && prompt_result="$cursorrules_result" \
-                    && echo -e "${GREEN}✓ .cursorrules: $cursorrules_result${NC}"
+                if [ "$cursorrules_result" != "missing" ]; then
+                    prompt_result="$cursorrules_result"
+                    echo -e "${GREEN}✓ .cursorrules: $cursorrules_result${NC}"
+                    cursor_echoed=1
+                fi
             fi
             if [ -f "$WORK_DIR/AGENTS.md" ]; then
                 agents_result="$(_inject_prompt "$WORK_DIR/AGENTS.md")"
                 if [ "$agents_result" != "missing" ]; then
                     prompt_result="$agents_result"
                     echo -e "${GREEN}✓ AGENTS.md: $agents_result${NC}"
+                    cursor_echoed=1
                 fi
             fi
             ;;
     esac
-    case "$prompt_result" in
-        added*)   echo -e "${GREEN}✓ $prompt_result${NC}" ;;
-        updated*) echo -e "${GREEN}✓ $prompt_result${NC}" ;;
-        skip)     echo "→ already up to date" ;;
-        missing)  echo "→ prompt file not found — skipped" ;;
-    esac
+    # Cursor already echoes per-file results inline; skip the summary echo
+    if [ "${cursor_echoed:-0}" -eq 0 ]; then
+        case "$prompt_result" in
+            added*)   echo -e "${GREEN}✓ $prompt_result${NC}" ;;
+            updated*) echo -e "${GREEN}✓ $prompt_result${NC}" ;;
+            skip)     echo "→ already up to date" ;;
+            missing)  echo "→ prompt file not found — skipped" ;;
+        esac
+    fi
+    cursor_echoed=0
 
     # ── Skills installation ────────────────────────────────────────────────
     echo "    Skills:"

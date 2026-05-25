@@ -89,13 +89,25 @@ All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 
 ### First-Time Setup
 
-Run this once (or after adding/updating skills in `.hermes/skills/`):
+Run this once (or after updating skills or agent configs):
 
 ```bash
 ./scripts/setup.sh
 ```
 
-This symlinks repo-local skills (`lorekeeper-dev`, `lorekeeper-pm`, `after-changes`, `backlog-management`, `ui-ux-pro-max`) into the global Hermes skills directory so they're loadable via `skill_view`. Re-run after editing any skill in `.hermes/skills/` to sync changes.
+**What it does (smart multi-agent setup):**
+
+1. **Detects installed agents** — scans for Hermes (main + all profiles), Claude Code (`~/.claude`), and Cursor (`~/.cursor`) automatically.
+2. **Injects MCP entry** — adds `lorekeeper` under `mcpServers`/`mcp_servers` in each agent's config file with `LORE_DATA_DIR` and `LOREKEEPER_SETUP_VERSION` env vars. Idempotent — skips if already present.
+3. **Injects prompt** — upserts a `## Lorekeeper` section into each agent's prompt file (`soul.md`, `CLAUDE.md`, `.cursorrules`, `AGENTS.md`) from `scripts/prompts/lorekeeper-agent-prompt.md`. Version-stamped — only re-injects when the source version changes.
+4. **Installs skills** — syncs `assets/skills/` (user-facing, copied) and `.hermes/skills/` (dev, symlinked with category dirs) into each agent's skills directory.
+
+Re-run after:
+- Editing any skill in `.hermes/skills/` or `assets/skills/`
+- Updating `scripts/prompts/lorekeeper-agent-prompt.md`
+- Adding a new agent install (new Hermes profile, fresh Cursor, etc.)
+
+**Prompt source of truth:** `scripts/prompts/lorekeeper-agent-prompt.md` — edit this file to change the Lorekeeper section injected into all agents.
 
 ---
 

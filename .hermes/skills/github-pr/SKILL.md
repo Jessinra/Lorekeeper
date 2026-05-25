@@ -1,7 +1,7 @@
 ---
 name: github-pr
 description: How to open a PR and request a Copilot review for the Lorekeeper repo.
-version: 1.0.0
+version: v1.0.0
 tags: []
 related_skills: [lorekeeper-dev, commit-convention]
 ---
