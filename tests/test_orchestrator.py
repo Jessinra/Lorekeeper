@@ -338,3 +338,201 @@ def test_remember_auto_link_skips_self_match(svc):
     assert result["linked_to"] is None
 
 
+# ── Inline links on lore_insert ─────────────────────────────────────────────
+
+
+def test_insert_with_inline_links(svc):
+    """Insert a memory with inline links — both memory and links are created."""
+    service, _ = svc
+
+    # First, create a target memory to link to
+    target_result = service.insert(
+        memories=[{"title": "target mem", "description": "t", "content": "target"}],
+        links=[],
+    )
+    target_id = target_result["inserted_memories"][0]["id"]
+
+    # Insert a new memory with inline link to target
+    result = service.insert(
+        memories=[{
+            "title": "source mem",
+            "description": "s",
+            "content": "source",
+            "links": [{
+                "memory_id": target_id,
+                "relation": "related_to",
+                "reason": "they are connected",
+            }],
+        }],
+        links=[],
+    )
+
+    assert len(result["inserted_memories"]) == 1
+    assert result["duplicates"] == []
+    assert len(result["errors"]) == 0
+    source_id = result["inserted_memories"][0]["id"]
+
+    # Verify link was created
+    links = service._store.links_for_memory(source_id)
+    assert len(links) == 1
+    assert links[0].target_memory_id == target_id
+    assert links[0].relation_type == "related_to"
+    assert links[0].reason == "they are connected"
+
+
+def test_insert_inline_link_invalid_target(svc):
+    """Invalid target in inline link returns error but memory is still inserted."""
+    service, _ = svc
+
+    result = service.insert(
+        memories=[{
+            "title": "orphan mem",
+            "description": "o",
+            "content": "orphan",
+            "links": [{
+                "memory_id": "nonexistent-id",
+                "relation": "related_to",
+            }],
+        }],
+        links=[],
+    )
+
+    # Memory should be inserted
+    assert len(result["inserted_memories"]) == 1
+    assert result["duplicates"] == []
+
+    # Link error should be reported
+    assert len(result["errors"]) == 1
+    assert "nonexistent-id" in result["errors"][0]["error"]
+    assert "not found" in result["errors"][0]["error"]
+
+
+def test_insert_inline_link_invalid_relation(svc):
+    """Invalid relation type in inline link returns error but memory is still inserted."""
+    service, _ = svc
+
+    # Create a target first
+    target_result = service.insert(
+        memories=[{"title": "target for bad relation", "description": "t", "content": "t"}],
+        links=[],
+    )
+    target_id = target_result["inserted_memories"][0]["id"]
+
+    result = service.insert(
+        memories=[{
+            "title": "mem with bad relation link",
+            "description": "b",
+            "content": "bad",
+            "links": [{
+                "memory_id": target_id,
+                "relation": "invalid_relation",
+            }],
+        }],
+        links=[],
+    )
+
+    # Memory should be inserted
+    assert len(result["inserted_memories"]) == 1
+    assert result["duplicates"] == []
+
+    # Link error should be reported
+    assert len(result["errors"]) == 1
+    assert "invalid_relation" in result["errors"][0]["error"]
+    assert "invalid relation_type" in result["errors"][0]["error"]
+
+
+def test_insert_inline_links_invalid_format_string_not_list(svc):
+    """Inline links that is a string (not list) raises an error."""
+    service, _ = svc
+
+    result = service.insert(
+        memories=[{
+            "title": "bad links format",
+            "description": "b",
+            "content": "bad format",
+            "links": "this should be a list",
+        }],
+        links=[],
+    )
+
+    assert len(result["inserted_memories"]) == 0
+    assert len(result["errors"]) == 1
+    assert "expected a list" in result["errors"][0]["error"]
+
+
+def test_insert_inline_link_missing_memory_id(svc):
+    """Inline link without memory_id raises an error but memory is still inserted."""
+    service, _ = svc
+
+    result = service.insert(
+        memories=[{
+            "title": "mem with incomplete link",
+            "description": "m",
+            "content": "missing memory_id",
+            "links": [{
+                "relation": "related_to",
+            }],
+        }],
+        links=[],
+    )
+
+    # Memory should still be inserted
+    assert len(result["inserted_memories"]) == 1
+    assert len(result["errors"]) == 1
+    assert "memory_id" in result["errors"][0]["error"]
+
+
+def test_insert_with_inline_links_and_top_level_links(svc):
+    """Both inline links (per memory) and top-level links work together."""
+    service, _ = svc
+
+    # Create target memories
+    r1 = service.insert(
+        memories=[
+            {"title": "target A", "description": "a", "content": "a"},
+            {"title": "target B", "description": "b", "content": "b"},
+            {"title": "target C", "description": "c", "content": "c"},
+        ],
+        links=[],
+    )
+    id_a = r1["inserted_memories"][0]["id"]
+    id_b = r1["inserted_memories"][1]["id"]
+    id_c = r1["inserted_memories"][2]["id"]
+
+    # Insert with both inline links and top-level links
+    result = service.insert(
+        memories=[{
+            "title": "source with inline link",
+            "description": "s",
+            "content": "source",
+            "links": [{
+                "memory_id": id_a,
+                "relation": "used_in",
+                "reason": "inline link",
+            }],
+        }],
+        links=[{
+            "source_memory_id": id_b,
+            "target_memory_id": id_c,
+            "relation_type": "related_to",
+            "reason": "top-level link between targets",
+        }],
+    )
+
+    assert len(result["inserted_memories"]) == 1
+    assert len(result["inserted_links"]) >= 1  # at least the inline link
+    assert len(result["errors"]) == 0
+    source_id = result["inserted_memories"][0]["id"]
+
+    # Verify inline link
+    source_links = service._store.links_for_memory(source_id)
+    assert len(source_links) >= 1
+    assert source_links[0].source_memory_id == source_id
+    assert source_links[0].target_memory_id == id_a
+
+    # Verify top-level link
+    b_links = service._store.links_for_memory(id_b)
+    has_c_link = any(lnk.target_memory_id == id_c for lnk in b_links)
+    assert has_c_link
+
+

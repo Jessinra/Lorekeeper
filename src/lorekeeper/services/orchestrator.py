@@ -17,6 +17,8 @@ from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_engine import MemoryEngine
 from lorekeeper.services.search import SearchResult, rank_results
 
+VALID_RELATION_TYPES = {"related_to", "used_in", "used_for", "used_by", "used_as"}
+
 log = structlog.get_logger()
 
 
@@ -134,11 +136,36 @@ engine: MemoryEngine,
 
         for m in memories:
             try:
+                # Extract inline links before insert to avoid passing them down
+                inline_links = m.pop("links", None)
+                if inline_links is not None and not isinstance(inline_links, list):
+                    raise ValueError(
+                        f"memory '{m.get('title', '')}' has invalid 'links': "
+                        f"expected a list, got {type(inline_links).__name__}"
+                    )
+
                 result = self._insert_one_memory(m, force)
                 if result.get("duplicate"):
                     duplicates.append(result["duplicate"])
                 else:
+                    lore_id = result["inserted"]["id"]
                     inserted_memories.append(result["inserted"])
+
+                    # Process inline links (source = the newly inserted memory)
+                    if inline_links:
+                        for link_def in inline_links:
+                            try:
+                                self._insert_one_inline_link(lore_id, link_def)
+                                inserted_links.append({
+                                    "source_memory_id": lore_id,
+                                    "target_memory_id": link_def["memory_id"],
+                                    "relation": link_def.get("relation", "related_to"),
+                                })
+                            except Exception as e:
+                                errors.append({
+                                    "input": f"memory '{m.get('title', '')}' → link {link_def}",
+                                    "error": str(e),
+                                })
             except Exception as e:
                 errors.append({"input": m.get("title", ""), "error": str(e)})
 
@@ -269,6 +296,43 @@ engine: MemoryEngine,
             "target_memory_id": link.target_memory_id,
             "relation_type": link.relation_type,
         }
+
+    def _insert_one_inline_link(self, source_memory_id: str, link_def: dict) -> None:
+        """Create a link from source_memory_id to a target specified in inline format.
+
+        Inline format: {memory_id: str, relation: str, reason?: str}
+        - memory_id is the target memory to link TO
+        - relation is the relation type (must be a valid RelationType)
+        - reason is optional, defaults to empty string
+
+        Validates the target exists and relation type is valid.
+        Raises ValueError on validation failure.
+        """
+        target_id = link_def.get("memory_id")
+        if not target_id:
+            raise ValueError("inline link missing required field: 'memory_id'")
+
+        relation = link_def.get("relation", "related_to")
+        if relation not in VALID_RELATION_TYPES:
+            raise ValueError(
+                f"invalid relation_type '{relation}': must be one of {sorted(VALID_RELATION_TYPES)}"
+            )
+
+        reason = link_def.get("reason", "")
+
+        # Validate target exists
+        target_row = self._store.get_memory_row(target_id)
+        if target_row is None:
+            raise ValueError(
+                f"link target memory_id '{target_id}' not found"
+            )
+
+        self._store.insert_link(
+            source_memory_id=source_memory_id,
+            target_memory_id=target_id,
+            relation_type=relation,
+            reason=reason,
+        )
 
     # ── Import (backup restore) ───────────────────────────────────────────────
 
