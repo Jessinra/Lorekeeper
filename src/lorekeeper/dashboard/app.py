@@ -18,8 +18,11 @@ log = structlog.get_logger()
 STATIC_DIR = Path(__file__).parent / "static"
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
+# Computed once at startup — not on every request
+_APP_VERSION: str = "unknown"
 
-def _get_version() -> str:
+
+def _resolve_version() -> str:
     try:
         result = subprocess.run(
             ["git", "describe", "--always", "--dirty", "--tags"],
@@ -27,12 +30,16 @@ def _get_version() -> str:
         )
         return result.stdout.strip() or "unknown"
     except Exception:
+        log.exception("version_resolve_failed")
         return "unknown"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # type: ignore[type-arg]
+    global _APP_VERSION
     log.info("dashboard_startup")
+    _APP_VERSION = _resolve_version()
+    log.info("version_resolved", version=_APP_VERSION)
     init_service()
     log.info("dashboard_ready")
     yield
@@ -178,7 +185,7 @@ class SearchRequest(BaseModel):
 
 @app.get("/api/version")
 def get_version() -> dict[str, str]:
-    return {"version": _get_version()}
+    return {"version": _APP_VERSION}
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
