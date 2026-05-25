@@ -122,15 +122,6 @@ function init() {
 	if (dateHeader)
 		dateHeader.innerHTML = `Date <span class="tz-label">${tzLabel}</span> <span class="sort-arrow">↓</span>`;
 
-	// Fetch version badge — use api() helper for proper error handling
-	api("GET", "/api/version")
-		.then((d) => {
-			document.getElementById("version-badge").textContent = d.version;
-		})
-		.catch(() => {
-			document.getElementById("version-badge").textContent = "unknown";
-		});
-
 	// Load memories + links eagerly so header-meta shows correct link count immediately
 	Promise.all([loadMemories(), loadLinks()]).then(scheduleAutoRefresh);
 }

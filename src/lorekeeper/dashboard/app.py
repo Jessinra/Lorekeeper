@@ -7,7 +7,7 @@ from typing import Any
 
 import structlog
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -55,8 +55,12 @@ app.mount("/js",  StaticFiles(directory=STATIC_DIR / "js"),  name="js")
 # ── Serve UI ──────────────────────────────────────────────────────────────────
 
 @app.get("/", include_in_schema=False)
-def index() -> FileResponse:
-    return FileResponse(STATIC_DIR / "index.html")
+def index() -> Response:
+    html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
+    return Response(
+        content=html.replace("{%VERSION%}", _APP_VERSION),
+        media_type="text/html",
+    )
 
 
 # ── Memories ──────────────────────────────────────────────────────────────────
@@ -178,14 +182,6 @@ class SearchRequest(BaseModel):
     query: str
     limit: int = 5
     min_score: float = 0.1
-
-
-# ── Version ───────────────────────────────────────────────────────────────────
-
-
-@app.get("/api/version")
-def get_version() -> dict[str, str]:
-    return {"version": _APP_VERSION}
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
