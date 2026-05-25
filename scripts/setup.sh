@@ -449,8 +449,6 @@ for i in "${!AGENT_NAMES[@]}"; do
     echo "    Skills:"
     case "$type" in
         hermes_main|hermes_profile)
-            # Dev skills (symlinks with category prefix)
-            _install_dev_skills_hermes "$dir/skills"
             # User skills (copies, flat)
             _install_user_skills "$dir/skills"
             skills_result="synced"
