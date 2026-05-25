@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import structlog
 
 from lorekeeper.config import Settings
-from lorekeeper.models import Memory, MemoryLink
+from lorekeeper.models import RELATION_TYPES, Memory, MemoryLink
 from lorekeeper.services.dedup import is_duplicate
 from lorekeeper.services.feedback import (
     apply_score_delta,
@@ -16,8 +16,6 @@ from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_engine import MemoryEngine
 from lorekeeper.services.search import SearchResult, rank_results
-
-VALID_RELATION_TYPES = {"related_to", "used_in", "used_for", "used_by", "used_as"}
 
 log = structlog.get_logger()
 
@@ -155,12 +153,8 @@ engine: MemoryEngine,
                     if inline_links:
                         for link_def in inline_links:
                             try:
-                                self._insert_one_inline_link(lore_id, link_def)
-                                inserted_links.append({
-                                    "source_memory_id": lore_id,
-                                    "target_memory_id": link_def["memory_id"],
-                                    "relation": link_def.get("relation", "related_to"),
-                                })
+                                inserted = self._insert_one_inline_link(lore_id, link_def)
+                                inserted_links.append(inserted)
                             except Exception as e:
                                 errors.append({
                                     "input": f"memory '{m.get('title', '')}' → link {link_def}",
@@ -283,6 +277,7 @@ engine: MemoryEngine,
         return {"inserted": {"id": lore_id, "title": title}}
 
     def _insert_one_link(self, lnk: dict) -> dict:
+        self._validate_relation_type(lnk.get("relation_type", ""))
         link = self._store.insert_link(
             source_memory_id=lnk["source_memory_id"],
             target_memory_id=lnk["target_memory_id"],
@@ -297,26 +292,32 @@ engine: MemoryEngine,
             "relation_type": link.relation_type,
         }
 
-    def _insert_one_inline_link(self, source_memory_id: str, link_def: dict) -> None:
+    def _insert_one_inline_link(self, source_memory_id: str, link_def: dict) -> dict:
         """Create a link from source_memory_id to a target specified in inline format.
 
         Inline format: {memory_id: str, relation: str, reason?: str}
-        - memory_id is the target memory to link TO
-        - relation is the relation type (must be a valid RelationType)
+        - memory_id is the target memory to link TO (required)
+        - relation is the relation type (required, must be a valid RelationType)
         - reason is optional, defaults to empty string
 
         Validates the target exists and relation type is valid.
         Raises ValueError on validation failure.
+        Returns a dict matching the _insert_one_link response shape.
         """
+        if not isinstance(link_def, dict):
+            raise ValueError(
+                f"inline link must be a dict, got {type(link_def).__name__}"
+            )
+
         target_id = link_def.get("memory_id")
         if not target_id:
             raise ValueError("inline link missing required field: 'memory_id'")
 
-        relation = link_def.get("relation", "related_to")
-        if relation not in VALID_RELATION_TYPES:
-            raise ValueError(
-                f"invalid relation_type '{relation}': must be one of {sorted(VALID_RELATION_TYPES)}"
-            )
+        relation = link_def.get("relation")
+        if not relation:
+            raise ValueError("inline link missing required field: 'relation'")
+
+        self._validate_relation_type(relation)
 
         reason = link_def.get("reason", "")
 
@@ -327,12 +328,31 @@ engine: MemoryEngine,
                 f"link target memory_id '{target_id}' not found"
             )
 
-        self._store.insert_link(
+        link = self._store.insert_link(
             source_memory_id=source_memory_id,
             target_memory_id=target_id,
             relation_type=relation,
             reason=reason,
         )
+        return {
+            "id": link.id,
+            "source_memory_id": link.source_memory_id,
+            "target_memory_id": link.target_memory_id,
+            "relation_type": link.relation_type,
+        }
+
+    @staticmethod
+    def _validate_relation_type(relation: str) -> None:
+        """Validate that relation is one of the known relation types.
+
+        Raises ValueError with a clear message if invalid.
+        Used by both _insert_one_link and _insert_one_inline_link.
+        """
+        if relation not in RELATION_TYPES:
+            raise ValueError(
+                f"invalid relation_type '{relation}': "
+                f"must be one of {sorted(RELATION_TYPES)}"
+            )
 
     # ── Import (backup restore) ───────────────────────────────────────────────
 

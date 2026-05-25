@@ -113,7 +113,7 @@ Each memory dict may include:
   - `content` (optional): the full text to store
   - `description` (optional): brief summary
   - `score` (optional, default 5.0): initial quality score 0–10
-  - `links` (optional): inline links to create after insert. Each link: `{memory_id, relation, reason?}`
+  - `links` (optional): inline links to create after insert. Each link: `{memory_id (required), relation (required), reason? (optional)}`
 
 Top-level `links` (linking existing memories to each other) and per-memory inline `links` can be used together in a single call.
 
