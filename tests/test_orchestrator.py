@@ -481,6 +481,28 @@ def test_insert_inline_link_missing_target_memory_id(svc):
     assert "target_memory_id" in result["errors"][0]["error"]
 
 
+def test_insert_inline_link_missing_relation_type(svc):
+    """Inline link without relation_type fails fast — memory is not inserted."""
+    service, _ = svc
+
+    result = service.insert(
+        memories=[{
+            "title": "mem with incomplete link",
+            "description": "m",
+            "content": "missing relation_type",
+            "links": [{
+                "target_memory_id": "some-id",
+            }],
+        }],
+        links=[],
+    )
+
+    # Pre-insert validation catches this before the memory is created
+    assert len(result["inserted_memories"]) == 0
+    assert len(result["errors"]) == 1
+    assert "relation_type" in result["errors"][0]["error"]
+
+
 def test_insert_with_inline_links_and_top_level_links(svc):
     """Both inline links (per memory) and top-level links work together."""
     service, _ = svc

@@ -183,7 +183,7 @@ engine: MemoryEngine,
                                     "source_memory_id": lore_id,
                                     "target_memory_id": link_def["target_memory_id"],
                                     "relation_type": link_def["relation_type"],
-                                    "reason": link_def.get("reason", ""),
+                                    "reason": link_def.get("reason") or "",
                                 }
                                 inserted = self._insert_one_link(normalized)
                                 inserted_links.append(inserted)
