@@ -83,6 +83,17 @@ Returns ranked memories with relevance scores and linked memories.
       "title": "Mutable default args in Python",
       "description": "def f(x=[]) shares the list across all calls — use None instead.",
       "content": "..."
+    },
+    {
+      "title": "Token refresh interval",
+      "content": "Access tokens expire after 1h.",
+      "links": [
+        {
+          "target_memory_id": "<target-uuid>",
+          "relation_type": "related_to",
+          "reason": "part of OAuth flow"
+        }
+      ]
     }
   ],
   "links": [
@@ -96,6 +107,15 @@ Returns ranked memories with relevance scores and linked memories.
   "force": false
 }
 ```
+
+Each memory dict may include:
+  - `title` (required): short unique label
+  - `content` (optional): the full text to store
+  - `description` (optional): brief summary
+  - `score` (optional, default 5.0): initial quality score 0–10
+  - `links` (optional): inline links to create after insert. Each link: `{target_memory_id (required), relation_type (required), reason? (optional)}`
+
+Top-level `links` (linking existing memories to each other) and per-memory inline `links` can be used together in a single call.
 
 Duplicate detection runs automatically. Before inserting, the server computes a dedup score (`0.6·semantic + 0.4·keyword`). If it meets or exceeds `LORE_DUPLICATE_THRESHOLD` (default 0.85), the insert is blocked and the existing memory is returned. Use `force: true` to override.
 

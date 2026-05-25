@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import structlog
 
 from lorekeeper.config import Settings
-from lorekeeper.models import Memory, MemoryLink
+from lorekeeper.models import RELATION_TYPES, Memory, MemoryLink
 from lorekeeper.services.dedup import is_duplicate
 from lorekeeper.services.feedback import (
     apply_score_delta,
@@ -134,11 +134,66 @@ engine: MemoryEngine,
 
         for m in memories:
             try:
+                # Shallow copy to avoid mutating caller-provided dicts
+                m = dict(m)
+                # Extract and validate inline links format before insert
+                inline_links = m.pop("links", None)
+                if inline_links is not None:
+                    if not isinstance(inline_links, list):
+                        raise ValueError(
+                            f"memory '{m.get('title', '')}' has invalid 'links': "
+                            f"expected a list, got {type(inline_links).__name__}"
+                        )
+                    for i, ld in enumerate(inline_links):
+                        if not isinstance(ld, dict):
+                            raise ValueError(
+                                f"memory '{m.get('title', '')}' inline link at index {i}: "
+                                f"expected a dict, got {type(ld).__name__}"
+                            )
+                        if not ld.get("target_memory_id"):
+                            raise ValueError(
+                                f"memory '{m.get('title', '')}' inline link at index {i}: "
+                                f"missing required field 'target_memory_id'"
+                            )
+                        if not ld.get("relation_type"):
+                            raise ValueError(
+                                f"memory '{m.get('title', '')}' inline link at index {i}: "
+                                f"missing required field 'relation_type'"
+                            )
+
                 result = self._insert_one_memory(m, force)
                 if result.get("duplicate"):
                     duplicates.append(result["duplicate"])
                 else:
+                    lore_id = result["inserted"]["id"]
                     inserted_memories.append(result["inserted"])
+
+                    # Normalize inline links to standard format and delegate to _insert_one_link
+                    if inline_links:
+                        for link_def in inline_links:
+                            try:
+                                # Validate target exists before inserting
+                                target_row = self._store.get_memory_row(
+                                    link_def["target_memory_id"]
+                                )
+                                if target_row is None:
+                                    raise ValueError(
+                                        f"link target memory_id"
+                                        f" '{link_def['target_memory_id']}' not found"
+                                    )
+                                normalized = {
+                                    "source_memory_id": lore_id,
+                                    "target_memory_id": link_def["target_memory_id"],
+                                    "relation_type": link_def["relation_type"],
+                                    "reason": link_def.get("reason") or "",
+                                }
+                                inserted = self._insert_one_link(normalized)
+                                inserted_links.append(inserted)
+                            except Exception as e:
+                                errors.append({
+                                    "input": f"memory '{m.get('title', '')}' → link {link_def}",
+                                    "error": str(e),
+                                })
             except Exception as e:
                 errors.append({"input": m.get("title", ""), "error": str(e)})
 
@@ -256,6 +311,7 @@ engine: MemoryEngine,
         return {"inserted": {"id": lore_id, "title": title}}
 
     def _insert_one_link(self, lnk: dict) -> dict:
+        self._validate_relation_type(lnk.get("relation_type", ""))
         link = self._store.insert_link(
             source_memory_id=lnk["source_memory_id"],
             target_memory_id=lnk["target_memory_id"],
@@ -269,6 +325,19 @@ engine: MemoryEngine,
             "target_memory_id": link.target_memory_id,
             "relation_type": link.relation_type,
         }
+
+    @staticmethod
+    def _validate_relation_type(relation: str) -> None:
+        """Validate that relation is one of the known relation types.
+
+        Raises ValueError with a clear message if invalid.
+        Used by _insert_one_link for both inline and top-level links.
+        """
+        if relation not in RELATION_TYPES:
+            raise ValueError(
+                f"invalid relation_type '{relation}': "
+                f"must be one of {sorted(RELATION_TYPES)}"
+            )
 
     # ── Import (backup restore) ───────────────────────────────────────────────
 
