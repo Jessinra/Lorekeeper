@@ -134,6 +134,8 @@ engine: MemoryEngine,
 
         for m in memories:
             try:
+                # Shallow copy to avoid mutating caller-provided dicts
+                m = dict(m)
                 # Extract and validate inline links format before insert
                 inline_links = m.pop("links", None)
                 if inline_links is not None:
