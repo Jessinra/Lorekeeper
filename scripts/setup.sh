@@ -254,6 +254,7 @@ _install_user_skills() {
         fi
     done
     [ "$any" -eq 0 ] && echo "  → (no skills found)"
+    return 0
 }
 
 # Install dev skills (.hermes/skills/) to Hermes with category subdirs (symlinks).
