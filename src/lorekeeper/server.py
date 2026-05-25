@@ -88,7 +88,8 @@ async def lore_insert(
       - description (str, optional): brief summary
       - score (float, optional, default 5.0): initial quality score 0-10
       - links (list[dict], optional): inline links to create after insert.
-        Each link dict: {memory_id (str, required), relation (str, required), reason? (str)}
+        Each link dict: {target_memory_id (str, required), relation_type (str, required),
+        reason? (str)}
 
     Each top-level link dict must include source_memory_id, target_memory_id,
     relation_type, and reason.

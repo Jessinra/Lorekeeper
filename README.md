@@ -89,8 +89,8 @@ Returns ranked memories with relevance scores and linked memories.
       "content": "Access tokens expire after 1h.",
       "links": [
         {
-          "memory_id": "<target-uuid>",
-          "relation": "related_to",
+          "target_memory_id": "<target-uuid>",
+          "relation_type": "related_to",
           "reason": "part of OAuth flow"
         }
       ]
@@ -113,7 +113,7 @@ Each memory dict may include:
   - `content` (optional): the full text to store
   - `description` (optional): brief summary
   - `score` (optional, default 5.0): initial quality score 0–10
-  - `links` (optional): inline links to create after insert. Each link: `{memory_id (required), relation (required), reason? (optional)}`
+  - `links` (optional): inline links to create after insert. Each link: `{target_memory_id (required), relation_type (required), reason? (optional)}`
 
 Top-level `links` (linking existing memories to each other) and per-memory inline `links` can be used together in a single call.
 

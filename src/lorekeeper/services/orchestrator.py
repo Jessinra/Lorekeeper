@@ -134,13 +134,30 @@ engine: MemoryEngine,
 
         for m in memories:
             try:
-                # Extract inline links before insert to avoid passing them down
+                # Extract and validate inline links format before insert
                 inline_links = m.pop("links", None)
-                if inline_links is not None and not isinstance(inline_links, list):
-                    raise ValueError(
-                        f"memory '{m.get('title', '')}' has invalid 'links': "
-                        f"expected a list, got {type(inline_links).__name__}"
-                    )
+                if inline_links is not None:
+                    if not isinstance(inline_links, list):
+                        raise ValueError(
+                            f"memory '{m.get('title', '')}' has invalid 'links': "
+                            f"expected a list, got {type(inline_links).__name__}"
+                        )
+                    for i, ld in enumerate(inline_links):
+                        if not isinstance(ld, dict):
+                            raise ValueError(
+                                f"memory '{m.get('title', '')}' inline link at index {i}: "
+                                f"expected a dict, got {type(ld).__name__}"
+                            )
+                        if not ld.get("target_memory_id"):
+                            raise ValueError(
+                                f"memory '{m.get('title', '')}' inline link at index {i}: "
+                                f"missing required field 'target_memory_id'"
+                            )
+                        if not ld.get("relation_type"):
+                            raise ValueError(
+                                f"memory '{m.get('title', '')}' inline link at index {i}: "
+                                f"missing required field 'relation_type'"
+                            )
 
                 result = self._insert_one_memory(m, force)
                 if result.get("duplicate"):
@@ -149,11 +166,26 @@ engine: MemoryEngine,
                     lore_id = result["inserted"]["id"]
                     inserted_memories.append(result["inserted"])
 
-                    # Process inline links (source = the newly inserted memory)
+                    # Normalize inline links to standard format and delegate to _insert_one_link
                     if inline_links:
                         for link_def in inline_links:
                             try:
-                                inserted = self._insert_one_inline_link(lore_id, link_def)
+                                # Validate target exists before inserting
+                                target_row = self._store.get_memory_row(
+                                    link_def["target_memory_id"]
+                                )
+                                if target_row is None:
+                                    raise ValueError(
+                                        f"link target memory_id"
+                                        f" '{link_def['target_memory_id']}' not found"
+                                    )
+                                normalized = {
+                                    "source_memory_id": lore_id,
+                                    "target_memory_id": link_def["target_memory_id"],
+                                    "relation_type": link_def["relation_type"],
+                                    "reason": link_def.get("reason", ""),
+                                }
+                                inserted = self._insert_one_link(normalized)
                                 inserted_links.append(inserted)
                             except Exception as e:
                                 errors.append({
@@ -292,61 +324,12 @@ engine: MemoryEngine,
             "relation_type": link.relation_type,
         }
 
-    def _insert_one_inline_link(self, source_memory_id: str, link_def: dict) -> dict:
-        """Create a link from source_memory_id to a target specified in inline format.
-
-        Inline format: {memory_id: str, relation: str, reason?: str}
-        - memory_id is the target memory to link TO (required)
-        - relation is the relation type (required, must be a valid RelationType)
-        - reason is optional, defaults to empty string
-
-        Validates the target exists and relation type is valid.
-        Raises ValueError on validation failure.
-        Returns a dict matching the _insert_one_link response shape.
-        """
-        if not isinstance(link_def, dict):
-            raise ValueError(
-                f"inline link must be a dict, got {type(link_def).__name__}"
-            )
-
-        target_id = link_def.get("memory_id")
-        if not target_id:
-            raise ValueError("inline link missing required field: 'memory_id'")
-
-        relation = link_def.get("relation")
-        if not relation:
-            raise ValueError("inline link missing required field: 'relation'")
-
-        self._validate_relation_type(relation)
-
-        reason = link_def.get("reason", "")
-
-        # Validate target exists
-        target_row = self._store.get_memory_row(target_id)
-        if target_row is None:
-            raise ValueError(
-                f"link target memory_id '{target_id}' not found"
-            )
-
-        link = self._store.insert_link(
-            source_memory_id=source_memory_id,
-            target_memory_id=target_id,
-            relation_type=relation,
-            reason=reason,
-        )
-        return {
-            "id": link.id,
-            "source_memory_id": link.source_memory_id,
-            "target_memory_id": link.target_memory_id,
-            "relation_type": link.relation_type,
-        }
-
     @staticmethod
     def _validate_relation_type(relation: str) -> None:
         """Validate that relation is one of the known relation types.
 
         Raises ValueError with a clear message if invalid.
-        Used by both _insert_one_link and _insert_one_inline_link.
+        Used by _insert_one_link for both inline and top-level links.
         """
         if relation not in RELATION_TYPES:
             raise ValueError(
