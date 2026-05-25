@@ -415,7 +415,7 @@ for i in "${!AGENT_NAMES[@]}"; do
         cursor)
             # Inject into .cursorrules and/or AGENTS.md in the current directory.
             # Run setup.sh from your project root to target the right files.
-            local cursor_echoed=0
+            cursor_echoed=0
             if [ -f "$WORK_DIR/.cursorrules" ]; then
                 cursorrules_result="$(_inject_prompt "$WORK_DIR/.cursorrules")"
                 if [ "$cursorrules_result" != "missing" ]; then
