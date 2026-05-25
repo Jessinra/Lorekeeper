@@ -1,12 +1,12 @@
 ---
-applyTo: "**/*.py"
+applyTo: "src/**/*.py"
 ---
 
 # Python / Lorekeeper Guidelines
 
 ## Scope
 
-Apply these rules to Python code in `src/`, `tests/`, and `scripts/`.
+Apply these rules to Python runtime code in `src/`.
 
 ## Review focus
 

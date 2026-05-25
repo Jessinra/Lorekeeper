@@ -21,7 +21,7 @@ These instructions guide Copilot code review for this repository.
 - `CLAUDE.md` is the source of truth for repo-specific workflow and setup.
 - Changes under `src/lorekeeper/`, `pyproject.toml`, or `loop/` may require a README consistency check.
 - Prefer the smallest change that solves the problem; avoid speculative refactors.
-- Treat branch / PR / commit convention violations as review issues when they affect the repo workflow.
+- Treat PR / commit convention violations as review issues when they affect the repo workflow.
 - If the change adds behavior, settings, or a new workflow, flag whether docs or tickets should be updated too.
 
 ## What to look for
