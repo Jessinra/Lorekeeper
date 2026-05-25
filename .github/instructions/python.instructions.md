@@ -1,5 +1,5 @@
 ---
-applyTo: "**/*.{py}"
+applyTo: "**/*.py"
 ---
 
 # Python / Lorekeeper Guidelines
@@ -22,6 +22,13 @@ Apply these rules to Python code in `src/`, `tests/`, and `scripts/`.
 - Keep stdout reserved for MCP protocol output.
 - Use `structlog` for logging.
 - Preserve data-model and schema compatibility unless a migration is included.
+
+## Repo-specific red flags
+
+- Any direct `print()` in runtime code is a bug unless it is intentionally part of a CLI tool.
+- Swallowed exceptions or vague `except:` blocks should be treated as review issues.
+- Changes to memory ranking, duplicate detection, scoring, or persistence should be reviewed as high-risk.
+- If a Python change alters public behavior, confirm the README and tests still match.
 
 ## Testing expectations
 
