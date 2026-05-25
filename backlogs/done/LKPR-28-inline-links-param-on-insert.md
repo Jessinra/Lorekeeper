@@ -2,7 +2,7 @@
 id: LKPR-28
 title: Add inline links param to lore_insert for one-call insert + link
 type: feature
-status: review
+status: done
 priority: high
 sprint: ~
 rice_score: ~
