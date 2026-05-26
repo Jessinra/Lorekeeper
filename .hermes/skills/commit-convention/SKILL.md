@@ -77,11 +77,7 @@ Merge commits (branch → main) are **exempt** from the hook — detected by the
 
 ## Bypassing (emergency only)
 
-```bash
-git commit --no-verify -m "..."
-```
-
-Use sparingly and only in genuine emergencies (e.g. CI fix on a broken main). Always follow up with a clean commit explaining why the bypass was needed.
+Do not bypass. No excuse.
 
 ---
 

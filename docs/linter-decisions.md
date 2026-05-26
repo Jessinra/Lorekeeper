@@ -96,8 +96,6 @@ The hook runs:
 
 **mypy is not in the hook** (see note above). Run it manually before pushing: `uv run mypy src`.
 
-**Bypass** (emergency only): `git commit --no-verify`
-
 ---
 
 ## Open Questions Resolved

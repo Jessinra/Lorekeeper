@@ -63,8 +63,6 @@ Install once per clone via `bash scripts/setup.sh`. It runs:
 2. `biome check` — JS lint
 3. `uv run pytest tests/ -q` — test suite
 
-Bypass: `git commit --no-verify` (emergency only)
-
 See `docs/linter-decisions.md` for the full rationale on rule selection.
 
 ## Setup Script — `scripts/setup.sh`

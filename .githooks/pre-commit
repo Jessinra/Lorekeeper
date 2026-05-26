@@ -4,7 +4,6 @@
 # 2. Runs lint and tests before every commit. Blocks on failure.
 #
 # Install: scripts/lorekeeper-setup.sh  (run once per clone)
-# Bypass (emergency only): git commit --no-verify
 
 set -euo pipefail
 

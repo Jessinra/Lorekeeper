@@ -436,7 +436,6 @@ uv run lorekeeper-dashboard
 ```
 
 The pre-commit hook (installed by `setup.sh`) blocks commits on lint or test failures.  
-Bypass (emergency only): `git commit --no-verify`  
 Rule selection rationale: [`docs/linter-decisions.md`](docs/linter-decisions.md)
 
 ---
@@ -474,8 +473,6 @@ git config --local user.email "jessinra.kai@gmail.com"
 | `[LKPR-0]` | Housekeeping — chore, backlog edits, status changes, skill/doc updates |
 
 Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`
-
-Merge commits to main are exempt. Emergency bypass: `git commit --no-verify`.
 
 ---
 

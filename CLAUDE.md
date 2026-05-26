@@ -227,7 +227,6 @@ Do not skip this. It is the discipline that keeps the repo clean and auditable.
 - **The pre-commit hook blocks commits on `main`** — a deliberate hard stop. Use `git checkout -b <branch>` first.
 - **`git push origin main` is ALWAYS wrong** unless you are the CI/CD pipeline
 - **`git checkout main && git merge <branch>` runs on a local feature branch** — push the feature branch, open a PR, merge via the web UI
-- **Emergency bypass**: `git commit --no-verify` skips both the branch check AND lint/tests (use only when the repo is broken and needs urgent fix)
 - This rule applies to ALL agents — Hermes, Claude Code, Cursor. No exceptions without human approval.
 
 **The workflow is always:**
