@@ -9,6 +9,8 @@ const TOOL_COLORS = {
 	lore_reflect: { h: 4, s: "75%" },
 	lore_processed_sessions: { h: 262, s: "65%" },
 	lore_remember: { h: 305, s: "70%" },
+	auto_linked: { h: 165, s: "75%" },
+	auto_link_candidates: { h: 12, s: "60%" },
 };
 const COMBINED_COLOR = { h: 217, s: "85%" };
 const DEFAULT_COLOR = { h: 220, s: "20%" };

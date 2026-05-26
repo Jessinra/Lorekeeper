@@ -10,6 +10,13 @@ export function registerLinksSelectMemory(fn) {
 	_selectMemory = fn;
 }
 
+let _relationFilter = "";
+
+export function setLinkRelationFilter(value) {
+	_relationFilter = value;
+	renderLinks();
+}
+
 export async function loadLinks() {
 	const inc = document.getElementById("links-show-deleted").checked;
 	state.setAllLinks(await api("GET", `/api/links?include_deleted=${inc}`));
@@ -39,13 +46,13 @@ export function setLinkSort(field) {
 }
 
 export function renderLinks() {
-	const sorted = clientSort(
-		state.allLinks,
-		state.linkSort.field,
-		state.linkSort.dir,
-	);
+	let filtered = state.allLinks;
+	if (_relationFilter) {
+		filtered = filtered.filter((l) => l.relation_type === _relationFilter);
+	}
+	const sorted = clientSort(filtered, state.linkSort.field, state.linkSort.dir);
 	document.getElementById("links-count").textContent =
-		`${state.allLinks.length}`;
+		`${filtered.length} / ${state.allLinks.length}`;
 	document.getElementById("link-rows").innerHTML = sorted
 		.map(
 			(l) => `
@@ -78,3 +85,7 @@ export async function deleteLinkFromTab(linkId) {
 window.loadLinks = loadLinks;
 window.setLinkSort = setLinkSort;
 window.deleteLinkFromTab = deleteLinkFromTab;
+window.setLinkRelationFilterFromUI = () => {
+	const sel = document.getElementById("links-relation-filter");
+	setLinkRelationFilter(sel ? sel.value : "");
+};

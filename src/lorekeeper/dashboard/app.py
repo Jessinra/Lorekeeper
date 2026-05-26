@@ -212,6 +212,9 @@ def get_config() -> dict[str, Any]:
         "usage_normalisation_cap":         s.usage_normalisation_cap,
         "decay_lambda":                    s.decay_lambda,
         "new_memory_default_score":        s.new_memory_default_score,
+        "auto_link_enabled":               s.auto_link_enabled,
+        "auto_link_k":                     s.auto_link_k,
+        "auto_link_threshold":             s.auto_link_threshold,
         "_overridden_keys":                sorted(overridden_keys),
     }
 
@@ -233,6 +236,9 @@ class ConfigUpdate(BaseModel):
     usage_normalisation_cap: int | None = None
     decay_lambda: float | None = None
     new_memory_default_score: float | None = None
+    auto_link_enabled: bool | None = None
+    auto_link_k: int | None = None
+    auto_link_threshold: float | None = None
 
 
 @app.patch("/api/config")

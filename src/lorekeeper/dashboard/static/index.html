@@ -94,6 +94,19 @@
 <div id="tab-links" class="tab-pane">
   <div class="panel-controls">
     <label><input type="checkbox" id="links-show-deleted" onchange="loadLinks()"> Include deleted memories</label>
+    <span class="panel-divider"></span>
+    <label style="font-size:13px">Relation:
+      <select id="links-relation-filter" onchange="setLinkRelationFilterFromUI()" style="margin-left:4px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);font-size:12px">
+        <option value="">All</option>
+        <option value="related_to">related_to</option>
+        <option value="used_in">used_in</option>
+        <option value="supersedes">supersedes</option>
+        <option value="superseded_by">superseded_by</option>
+        <option value="clarifies">clarifies</option>
+        <option value="example_of">example_of</option>
+        <option value="references">references</option>
+      </select>
+    </label>
     <span class="item-count" id="links-count"></span>
   </div>
   <div class="table-wrap">
@@ -230,6 +243,10 @@
     <div class="config-section">
       <div class="config-section-title">Limits</div>
       <div id="cfg-limits"></div>
+    </div>
+    <div class="config-section">
+      <div class="config-section-title">AUTO-LINK</div>
+      <div id="cfg-auto-link"></div>
     </div>
     <div class="config-section">
       <div class="config-section-title">Read-only <span style="font-weight:400;text-transform:none;letter-spacing:0">(requires restart to change)</span></div>
