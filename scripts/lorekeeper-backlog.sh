@@ -8,7 +8,8 @@
 # Gaps are filled by done tickets moved to backlogs/done/.
 # NEVER fill gaps — always use highest+1.
 
-BACKLOG_DIR="${BACKLOG_DIR:-/Users/jessinra/Code/lorekeeper/backlogs}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BACKLOG_DIR="${BACKLOG_DIR:-$SCRIPT_DIR/../backlogs}"
 
 # All valid statuses, in display order
 STATUSES=(proposal backlog in-progress review done deferred cancelled)
