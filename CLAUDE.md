@@ -135,17 +135,6 @@ Session End → capture learnings → lore_insert/update
 Periodic Reconcile → consolidate → update CLAUDE.md / skills / code
 ```
 
-### Loop Infrastructure (in `loop/`)
-
-```
-loop/
-├── hooks/
-│   └── post_session.sh     # queues session summary for capture
-├── sessions/               # episodic memory: one file per session
-│   └── YYYY-MM-DD-{topic}.md
-└── reconcile.md            # skill prompt for the consolidation agent
-```
-
 ### Session Log Format
 
 Each `loop/sessions/` file captures:
