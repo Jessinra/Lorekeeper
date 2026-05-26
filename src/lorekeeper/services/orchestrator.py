@@ -322,6 +322,12 @@ engine: MemoryEngine,
                 if target_row is None or target_row["soft_deleted"]:
                     continue
             except Exception:
+                log.warning(
+                    "auto_link: get_memory_row failed for %s (target %s)",
+                    lore_id,
+                    hit["lore_id"],
+                    exc_info=True,
+                )
                 continue
 
             raw_score = round(hit["score"], 4)
