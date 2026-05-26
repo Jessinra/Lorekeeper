@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-pm
 description: PM workflow for Lorekeeper. Load this when managing the backlog, filing tickets, reviewing dev work, or planning features. For ticket lifecycle, numbering, and script details, see the backlog-management skill.
-version: 2.3.0
+version: v2.3.0
 tags: []
 related_skills: [backlog-management, lorekeeper-dev]
 ---
@@ -83,6 +83,8 @@ Dev must submit work via a **pull request** (PR) — never direct commits to `ma
 5. PM moves the ticket to `done`
 
 If dev commits directly to main: revert the commits, reset main, and have dev resubmit via PR. No exceptions.
+
+**Copilot review note:** if the repo has Copilot review instructions, use them. But do not assume `@copilot` is a valid GitHub reviewer login — request review only after verifying the repo/org supports that login, and separate reviewer assignment from PR creation so a lookup failure doesn't block the PR.
 
 ## Review Checklist (PM)
 

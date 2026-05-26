@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-protocol
 description: Full session protocol for using Lorekeeper MCP tools correctly. Load at the start of any session that uses Lorekeeper. Covers when and how to call lore_search, lore_insert, lore_update, lore_reflect, and lore_processed_sessions across all five phases — session start, mid-session topic shift, health maintenance, topic consolidation, and session end.
-version: 1.1.0
+version: v1.1.0
 ---
 
 # Lorekeeper Protocol

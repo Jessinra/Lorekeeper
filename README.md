@@ -19,10 +19,10 @@ Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB (or LanceD
 
 Two stores work together:
 
-| Store | What it holds |
-|-------|--------------|
-| **LanceDB (default) or ChromaDB** | Vector embeddings (384-dim `all-MiniLM-L6-v2`) for semantic search. Set `LORE_VECTOR_STORE=chroma` to switch back to Chroma. |
-| **SQLite sidecar** | Memory metadata (score, confidence, usage count, soft-deleted flag) + link rows + reflection records + session records + BM25 index source |
+| Store                             | What it holds                                                                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **LanceDB (default) or ChromaDB** | Vector embeddings (384-dim `all-MiniLM-L6-v2`) for semantic search. Set `LORE_VECTOR_STORE=chroma` to switch back to Chroma.               |
+| **SQLite sidecar**                | Memory metadata (score, confidence, usage count, soft-deleted flag) + link rows + reflection records + session records + BM25 index source |
 
 Every memory has a canonical `lore_id` UUID that lives in Mem0's metadata. The SQLite DB is the source of truth for everything else — scores, links, deletion state.
 
@@ -109,11 +109,12 @@ Returns ranked memories with relevance scores and linked memories.
 ```
 
 Each memory dict may include:
-  - `title` (required): short unique label
-  - `content` (optional): the full text to store
-  - `description` (optional): brief summary
-  - `score` (optional, default 5.0): initial quality score 0–10
-  - `links` (optional): inline links to create after insert. Each link: `{target_memory_id (required), relation_type (required), reason? (optional)}`
+
+- `title` (required): short unique label
+- `content` (optional): the full text to store
+- `description` (optional): brief summary
+- `score` (optional, default 5.0): initial quality score 0–10
+- `links` (optional): inline links to create after insert. Each link: `{target_memory_id (required), relation_type (required), reason? (optional)}`
 
 Top-level `links` (linking existing memories to each other) and per-memory inline `links` can be used together in a single call.
 
@@ -135,12 +136,8 @@ Use this for quick capture. Use `lore_insert` when you need explicit titles, des
 
 ```json
 {
-  "memory_feedback": [
-    { "id": "<uuid>", "useful": true, "confidence": 8 }
-  ],
-  "link_feedback": [
-    { "id": "<uuid>", "useful": false }
-  ]
+  "memory_feedback": [{ "id": "<uuid>", "useful": true, "confidence": 8 }],
+  "link_feedback": [{ "id": "<uuid>", "useful": false }]
 }
 ```
 
@@ -207,29 +204,29 @@ Data is stored at `~/.lorekeeper/` by default:
 
 All settings use the `LORE_` prefix and can be set via environment variables:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LORE_VECTOR_STORE` | `lancedb` | Vector store backend: `lancedb` (default) or `chroma` |
-| `LORE_DATA_DIR` | `~/.lorekeeper` | Storage directory |
-| `LORE_EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model |
-| `LORE_DUPLICATE_THRESHOLD` | `0.85` | Similarity above which inserts are blocked |
-| `LORE_W_SEMANTIC` | `0.45` | Semantic score weight |
-| `LORE_W_KEYWORD` | `0.30` | BM25 keyword score weight |
-| `LORE_W_MEMORY` | `0.15` | Memory score weight |
-| `LORE_W_USAGE` | `0.10` | Usage frequency weight |
-| `LORE_SCORE_BUMP_UP` | `0.1` | Score increase on positive feedback |
-| `LORE_SCORE_BUMP_DOWN` | `0.05` | Score decrease on negative feedback |
-| `LORE_SOFT_DELETE_CONFIDENCE_THRESHOLD` | `2` | Confidence ≤ this + `useful=false` triggers soft-delete |
-| `LORE_CONFIDENCE_WINDOW_SIZE` | `20` | Rolling window size for confidence EMA |
-| `LORE_SEARCH_LIMIT` | `5` | Default number of memories returned by `lore_search` |
-| `LORE_MAX_LINKS_PER_MEMORY` | `5` | Limit links returned per memory in search results |
-| `LORE_SCORE_MIN` | `0.0` | Minimum allowed memory score |
-| `LORE_SCORE_MAX` | `10.0` | Maximum allowed memory score |
-| `LORE_NEW_MEMORY_DEFAULT_SCORE` | `5.0` | Default score for new memories |
-| `LORE_USAGE_NORMALISATION_CAP` | `100` | Cap for log-normalising `usage_count` in hybrid scoring |
-| `LORE_DECAY_LAMBDA` | `0.0077` | Time-decay λ for scoring (~90-day half-life; set to 0 to disable) |
-| `LORE_DASH_PORT` | `7777` | Dashboard HTTP port |
-| `LORE_DASH_RELOAD` | `1` | Dashboard hot-reload (`0` to disable) |
+| Variable                                | Default                                  | Description                                                       |
+| --------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------- |
+| `LORE_VECTOR_STORE`                     | `lancedb`                                | Vector store backend: `lancedb` (default) or `chroma`             |
+| `LORE_DATA_DIR`                         | `~/.lorekeeper`                          | Storage directory                                                 |
+| `LORE_EMBEDDING_MODEL`                  | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model                                                   |
+| `LORE_DUPLICATE_THRESHOLD`              | `0.85`                                   | Similarity above which inserts are blocked                        |
+| `LORE_W_SEMANTIC`                       | `0.45`                                   | Semantic score weight                                             |
+| `LORE_W_KEYWORD`                        | `0.30`                                   | BM25 keyword score weight                                         |
+| `LORE_W_MEMORY`                         | `0.15`                                   | Memory score weight                                               |
+| `LORE_W_USAGE`                          | `0.10`                                   | Usage frequency weight                                            |
+| `LORE_SCORE_BUMP_UP`                    | `0.1`                                    | Score increase on positive feedback                               |
+| `LORE_SCORE_BUMP_DOWN`                  | `0.05`                                   | Score decrease on negative feedback                               |
+| `LORE_SOFT_DELETE_CONFIDENCE_THRESHOLD` | `2`                                      | Confidence ≤ this + `useful=false` triggers soft-delete           |
+| `LORE_CONFIDENCE_WINDOW_SIZE`           | `20`                                     | Rolling window size for confidence EMA                            |
+| `LORE_SEARCH_LIMIT`                     | `5`                                      | Default number of memories returned by `lore_search`              |
+| `LORE_MAX_LINKS_PER_MEMORY`             | `5`                                      | Limit links returned per memory in search results                 |
+| `LORE_SCORE_MIN`                        | `0.0`                                    | Minimum allowed memory score                                      |
+| `LORE_SCORE_MAX`                        | `10.0`                                   | Maximum allowed memory score                                      |
+| `LORE_NEW_MEMORY_DEFAULT_SCORE`         | `5.0`                                    | Default score for new memories                                    |
+| `LORE_USAGE_NORMALISATION_CAP`          | `100`                                    | Cap for log-normalising `usage_count` in hybrid scoring           |
+| `LORE_DECAY_LAMBDA`                     | `0.0077`                                 | Time-decay λ for scoring (~90-day half-life; set to 0 to disable) |
+| `LORE_DASH_PORT`                        | `7777`                                   | Dashboard HTTP port                                               |
+| `LORE_DASH_RELOAD`                      | `1`                                      | Dashboard hot-reload (`0` to disable)                             |
 
 ---
 
@@ -308,30 +305,51 @@ Then update `~/.claude/settings.json` to use the tool directly instead of `uv ru
 
 ### What `setup.sh` does
 
-| Step | Action |
-|------|--------|
-| 1 | Checks Python 3.11+ and `uv` are available |
-| 2 | Runs `uv sync --extra dashboard` |
-| 3 | Creates `$LORE_DATA_DIR` (default `~/.lorekeeper`) |
-| 4 | Adds `lorekeeper` entry to `~/.claude/settings.json` |
-| 5 | Copies `assets/skills/lorekeeper-*/` to `~/.hermes/skills/` |
-| 6 | Migrates from v1 `memories.json` if `V1_JSON` env var is set |
+| Step | Action                                                                                                                  |
+| ---- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1    | Checks Python 3.11+ and `uv` are available                                                                              |
+| 2    | Runs `uv sync --extra dashboard`                                                                                        |
+| 3    | Creates `$LORE_DATA_DIR` (default `~/.lorekeeper`)                                                                      |
+| 4    | Installs git hooks (lint + tests enforced on commit)                                                                    |
+| 5    | Scans for Hermes (main + profiles), Claude Code, and Cursor                                                             |
+| 6    | Asks confirmation, then for each detected agent: injects MCP config, injects Lorekeeper prompt section, installs skills |
+| 7    | Migrates from v1 `memories.json` if `V1_JSON` env var is set                                                            |
 
-The script is idempotent — safe to re-run after updates.
+The script is idempotent — safe to re-run after updates. Version-stamped injections are skipped when already up to date, and overwritten cleanly when the version differs.
+
+#### Agent detection
+
+`setup.sh` auto-detects agents by checking for their config directories:
+
+| Agent             | Detected by                            |
+| ----------------- | -------------------------------------- |
+| Hermes (main)     | `~/.hermes/` directory                 |
+| Hermes (profiles) | `~/.hermes/profiles/*/` subdirectories |
+| Claude Code       | `~/.claude/` directory                 |
+| Cursor            | `~/.cursor/` directory                 |
+
+For **MCP injection**, the script appends a `lorekeeper` entry to each agent's config (YAML for Hermes, JSON for Claude Code/Cursor). Already-present entries are left unchanged.
+
+For **prompt injection**, the script injects a `## Lorekeeper` section into the agent's prompt file (`soul.md` for Hermes; `CLAUDE.md` / `.cursorrules` / `AGENTS.md` in the current directory for others). Re-running updates the section if the version stamp differs.
+
+For **skills**, `assets/skills/` is copied to each agent's skills directory. Dev skills (`.hermes/skills/`) are symlinked to `~/.hermes/skills/` for Hermes only.
+
+The single source of truth for the prompt content and version is `assets/prompts/lorekeeper-agent-prompt.md`.
 
 ---
 
 ## Skills
 
-Three Claude Code skills ship in `assets/skills/` and are installed by `setup.sh`:
+Four skills ship in `assets/skills/` and are installed by `setup.sh` to all detected agents (Hermes, Claude Code, Cursor):
 
-| Skill | Purpose |
-|-------|---------|
-| `lorekeeper-search` | Search memories with mandatory relevance feedback after every result set |
-| `lorekeeper-memorize` | Proactively capture facts, search for related memories, insert, and link |
+| Skill                  | Purpose                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `lorekeeper-protocol`  | Full session protocol — when and how to call all Lorekeeper tools                    |
+| `lorekeeper-search`    | Search memories with mandatory relevance feedback after every result set             |
+| `lorekeeper-memorize`  | Proactively capture facts, search for related memories, insert, and link             |
 | `lorekeeper-reconcile` | Verify memories against source materials, update scores, soft-delete incorrect facts |
 
-Skills are installed to `~/.hermes/skills/` and work with any project that has the MCP server configured.
+Skills are installed to `~/.hermes/skills/`, `~/.claude/skills/`, or `~/.cursor/skills/` depending on which agents are detected. Version-stamped — `setup.sh` skips re-install when already up to date.
 
 ---
 
@@ -349,35 +367,35 @@ Hot-reload is **on by default** — Python file changes restart the server autom
 
 The UI has seven tabs:
 
-| Tab | Purpose |
-|-----|---------|
-| **Memories** | Sortable table with live filter (type `/` to focus, `Esc` to clear). Shows title + description subtitle, score badge, confidence, usage count, dates. Score stats (high/mid/low) in the toolbar. Click a row to open it in Detail. |
-| **Detail** | Edit a memory's title/description/content/score, soft-delete/restore, hard-delete, manage links. |
-| **Links** | Flat sortable table of all links with source → relation → target. Click titles to navigate to that memory. |
-| **Query** | Large text box for ad-hoc search. Shows combined/semantic/keyword scores and a relevance bar per result. |
+| Tab          | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Memories** | Sortable table with live filter (type `/` to focus, `Esc` to clear). Shows title + description subtitle, score badge, confidence, usage count, dates. Score stats (high/mid/low) in the toolbar. Click a row to open it in Detail.                                                                                                                                                                                                                                                                                                                                           |
+| **Detail**   | Edit a memory's title/description/content/score, soft-delete/restore, hard-delete, manage links.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **Links**    | Flat sortable table of all links with source → relation → target. Click titles to navigate to that memory.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Query**    | Large text box for ad-hoc search. Shows combined/semantic/keyword scores and a relevance bar per result.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | **Sessions** | All processed Claude sessions. Sidebar has session ID search (substring) and task-type filter chips. Date column is sortable (click header). Each row shows the review timestamp in UTC+8 with a relative time label below (e.g. "2h ago"), truncated session ID (hover for full UUID), topic, task type, and a summary of what was done. Stub sessions (no content) are hidden by default — toggle with the **Hide stubs** button. Click a row to expand full content: what was done, decisions, lessons learnt, good patterns, user profile observations, and discoveries. |
-| **Config** | Live settings editor for search weights, quality signals, and limits (search result count, links per memory). Changes apply immediately but reset on restart; use `LORE_*` env vars to persist. |
-| **Backup** | Export all memories + links as a JSON file. Import a backup with dedup preview (shows counts and a scrollable list of each new memory/link to be inserted) before confirming. |
+| **Config**   | Live settings editor for search weights, quality signals, and limits (search result count, links per memory). Changes apply immediately but reset on restart; use `LORE_*` env vars to persist.                                                                                                                                                                                                                                                                                                                                                                              |
+| **Backup**   | Export all memories + links as a JSON file. Import a backup with dedup preview (shows counts and a scrollable list of each new memory/link to be inserted) before confirming.                                                                                                                                                                                                                                                                                                                                                                                                |
 
 ### API endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/memories` | List all memories (`?include_deleted=true` to include soft-deleted) |
-| `GET` | `/api/memories/{id}` | Get a single memory with its links |
-| `PATCH` | `/api/memories/{id}` | Update fields: `title`, `description`, `content`, `score`, `soft_deleted` |
-| `DELETE` | `/api/memories/{id}` | Hard-delete a memory (cascades to links) |
-| `GET` | `/api/links` | List all links with source/target titles (`?include_deleted=true`) |
-| `POST` | `/api/links` | Create a link between two memories |
-| `DELETE` | `/api/links/{id}` | Delete a link |
-| `POST` | `/api/search` | Search with `{ query, limit, min_score }` |
-| `GET` | `/api/sessions` | Sessions with content (`?with_content=false` to include all) |
-| `GET` | `/api/sessions/{id}` | Single session with its reflection metadata |
-| `GET` | `/api/reflections` | List all reflection run records, newest first |
-| `GET` | `/api/reflections/{id}` | Single reflection with sessions covered |
-| `GET` | `/api/export` | Download all memories + links as JSON (`?include_deleted=true` to include soft-deleted) |
-| `POST` | `/api/import/preview` | Dry-run import: returns counts + full list of memories/links that would be inserted, without writing |
-| `POST` | `/api/import/confirm` | Actual import: inserts new memories + links, skips IDs already present |
+| Method   | Path                    | Description                                                                                          |
+| -------- | ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/memories`         | List all memories (`?include_deleted=true` to include soft-deleted)                                  |
+| `GET`    | `/api/memories/{id}`    | Get a single memory with its links                                                                   |
+| `PATCH`  | `/api/memories/{id}`    | Update fields: `title`, `description`, `content`, `score`, `soft_deleted`                            |
+| `DELETE` | `/api/memories/{id}`    | Hard-delete a memory (cascades to links)                                                             |
+| `GET`    | `/api/links`            | List all links with source/target titles (`?include_deleted=true`)                                   |
+| `POST`   | `/api/links`            | Create a link between two memories                                                                   |
+| `DELETE` | `/api/links/{id}`       | Delete a link                                                                                        |
+| `POST`   | `/api/search`           | Search with `{ query, limit, min_score }`                                                            |
+| `GET`    | `/api/sessions`         | Sessions with content (`?with_content=false` to include all)                                         |
+| `GET`    | `/api/sessions/{id}`    | Single session with its reflection metadata                                                          |
+| `GET`    | `/api/reflections`      | List all reflection run records, newest first                                                        |
+| `GET`    | `/api/reflections/{id}` | Single reflection with sessions covered                                                              |
+| `GET`    | `/api/export`           | Download all memories + links as JSON (`?include_deleted=true` to include soft-deleted)              |
+| `POST`   | `/api/import/preview`   | Dry-run import: returns counts + full list of memories/links that would be inserted, without writing |
+| `POST`   | `/api/import/confirm`   | Actual import: inserts new memories + links, skips IDs already present                               |
 
 The dashboard connects to the same SQLite + vector store (LanceDB or ChromaDB) as the MCP server. Both can technically run at the same time (SQLite WAL mode supports concurrent readers/writers), but the in-memory BM25 index in each process won't see the other's inserts until restart.
 
@@ -447,9 +465,9 @@ git config --local user.email "jessinra.kai@gmail.com"
 
 **Commit title format**: `[LKPR-N] type: short title`
 
-| Tag | Use for |
-|-----|---------|
-| `[LKPR-N]` | Work tied to a specific ticket |
+| Tag        | Use for                                                                |
+| ---------- | ---------------------------------------------------------------------- |
+| `[LKPR-N]` | Work tied to a specific ticket                                         |
 | `[LKPR-0]` | Housekeeping — chore, backlog edits, status changes, skill/doc updates |
 
 Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`

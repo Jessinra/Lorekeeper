@@ -1,6 +1,7 @@
 ---
 name: lorekeeper-search
 description: Search the Lorekeeper knowledge base and provide relevance feedback with confidence ratings. Use when the agent needs to recall domain knowledge, look up facts about OPC/Checkout, or query the memory store. Ensures every search ends with a lore_update feedback call (including confidence) to improve knowledge quality over time.
+version: v2.0.0
 ---
 
 # Lorekeeper Search with Feedback

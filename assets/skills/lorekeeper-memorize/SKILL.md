@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-memorize
 description: Memorize important facts, user instructions, unique discoveries, and interesting knowledge into the Lorekeeper knowledge base. Use proactively whenever the agent encounters noteworthy information — domain knowledge, user preferences, architectural decisions, debugging insights, workflow instructions, or any fact worth recalling in future sessions. Always searches for related memories and creates links between them.
-version: 1.0.0
+version: v1.0.0
 ---
 
 # Lorekeeper Memorize

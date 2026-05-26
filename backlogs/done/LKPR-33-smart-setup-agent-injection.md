@@ -2,12 +2,13 @@
 id: LKPR-33
 title: Smart setup — auto-detect agents, inject prompt/skills/MCP in one run
 type: feature
-status: proposal
+status: done
 priority: medium
 sprint: ~
-rice_score: 40.0  # R:8 I:9 C:80% E:1w (reduced scope, merged LKPR-7)
+rice_score: 40.0 # R:8 I:9 C:80% E:1w (reduced scope, merged LKPR-7)
 filed_by: Jason → Akane
 filed_date: 2026-05-25
+resolved_date: 2026-05-25
 absorbed: LKPR-7
 ---
 
@@ -16,6 +17,7 @@ absorbed: LKPR-7
 ## Problem
 
 Current `setup.sh` only installs deps and registers MCP for Hermes. A new Lorekeeper user (or existing user on a new machine) must manually:
+
 - Figure out where each agent's config lives
 - Manually add Lorekeeper to each agent's MCP server list
 - Manually inject Lorekeeper instructions into each agent's prompt/soul file
@@ -37,12 +39,12 @@ Extend `scripts/setup.sh` to auto-detect every configured agent and configure ea
 
 Scan these directories:
 
-| Agent | Config dir | Prompt file | MCP config | Skills dir |
-|-------|-----------|-------------|------------|------------|
-| **Hermes (main)** | `~/.hermes/` | `soul.md` | `config.yaml` (mcp_servers) | `skills/` |
-| **Hermes (profiles)** | `~/.hermes/profiles/<name>/` | `soul.md` | `config.yaml` | `skills/` |
-| **Claude Code** | project roots with `CLAUDE.md` | `CLAUDE.md` | `~/.claude/settings.json` | `~/.claude/skills/` |
-| **Cursor** | `~/.cursor/` + project roots | `.cursorrules` + `AGENTS.md` | `mcp.json` | `~/.cursor/skills/` |
+| Agent                 | Config dir                     | Prompt file                  | MCP config                  | Skills dir          |
+| --------------------- | ------------------------------ | ---------------------------- | --------------------------- | ------------------- |
+| **Hermes (main)**     | `~/.hermes/`                   | `soul.md`                    | `config.yaml` (mcp_servers) | `skills/`           |
+| **Hermes (profiles)** | `~/.hermes/profiles/<name>/`   | `soul.md`                    | `config.yaml`               | `skills/`           |
+| **Claude Code**       | project roots with `CLAUDE.md` | `CLAUDE.md`                  | `~/.claude/settings.json`   | `~/.claude/skills/` |
+| **Cursor**            | `~/.cursor/` + project roots   | `.cursorrules` + `AGENTS.md` | `mcp.json`                  | `~/.cursor/skills/` |
 
 Also scan for loose markdown files matching these patterns: `*CLAUDE*`, `*CURSOR*`, `*AGENTS*` in common project roots.
 
@@ -66,7 +68,7 @@ No `--dry-run`, `--undo`, `--non-interactive` flags — keep it simple.
 
 The version stamp is the critical mechanism for idempotency and clean overwrites.
 
-**Source:** `scripts/prompts/lorekeeper-agent-prompt.md` frontmatter:
+**Source:** `assets/prompts/lorekeeper-agent-prompt.md` frontmatter:
 
 ```yaml
 ---
@@ -80,11 +82,11 @@ Bumped manually in the prompt file when content changes meaningfully. Falls back
 
 **Where the stamp lives in each target:**
 
-| Target | Location |
-|--------|----------|
+| Target                                                         | Location                                                              |
+| -------------------------------------------------------------- | --------------------------------------------------------------------- |
 | **Prompt files** (CLAUDE.md, .cursorrules, AGENTS.md, soul.md) | HTML comment in `## Lorekeeper` header: `<!-- lorekeeper: v2.0.0 -->` |
-| **MCP config** (YAML for Hermes, JSON for Claude Code/Cursor) | Env var `LOREKEEPER_SETUP_VERSION` in the lorekeeper MCP entry |
-| **Skills** (all dirs) | `version:` field in skill frontmatter |
+| **MCP config** (YAML for Hermes, JSON for Claude Code/Cursor)  | Env var `LOREKEEPER_SETUP_VERSION` in the lorekeeper MCP entry        |
+| **Skills** (all dirs)                                          | `version:` field in skill frontmatter                                 |
 
 ### 4. MCP injection
 
@@ -107,6 +109,7 @@ No version stamp needed on MCP — MCP configs are backward-compatible and don't
 ### 5. Prompt injection
 
 For each selected agent:
+
 1. Check if the prompt file already contains a `## Lorekeeper` section with a matching version stamp
 2. If version matches → skip, log "Already up to date"
 3. If version differs or section missing → **replace the entire `## Lorekeeper` section** cleanly
@@ -115,14 +118,16 @@ The injected section:
 
 ```markdown
 ## Lorekeeper
+
 <!-- lorekeeper: v2.0.0 | managed by: setup.sh -->
 
 ...
 ```
 
-The prompt content comes from `scripts/prompts/lorekeeper-agent-prompt.md` (single source of truth).
+The prompt content comes from `assets/prompts/lorekeeper-agent-prompt.md` (single source of truth).
 
 **Replacement logic:**
+
 - Find `## Lorekeeper` header + everything until the next `## ` header or EOF
 - If exists → strip it completely, then append fresh
 - If doesn't exist → append at end of file
@@ -141,12 +146,12 @@ For **all** agent types (Hermes, Claude Code, Cursor):
 
 Skills dirs:
 
-| Agent | Skills dir |
-|-------|-----------|
-| Hermes (main) | `~/.hermes/skills/` |
+| Agent             | Skills dir                          |
+| ----------------- | ----------------------------------- |
+| Hermes (main)     | `~/.hermes/skills/`                 |
 | Hermes (profiles) | `~/.hermes/profiles/<name>/skills/` |
-| Claude Code | `~/.claude/skills/` |
-| Cursor | `~/.cursor/skills/` |
+| Claude Code       | `~/.claude/skills/`                 |
+| Cursor            | `~/.cursor/skills/`                 |
 
 **New requirement:** All Lorekeeper-managed skills must have a `version:` stamp in their YAML frontmatter that matches the source version. The setup script reads the version from the source file and compares to the installed file.
 
@@ -176,12 +181,15 @@ Last line: "Restart each agent to load Lorekeeper."
 Everywhere the stamp appears, it must be parseable by simple grep/awk in bash:
 
 **In markdown prompts:**
+
 ```markdown
 ## Lorekeeper
+
 <!-- lorekeeper: v2.0.0 | managed by: setup.sh -->
 ```
 
 **In skill frontmatter:**
+
 ```yaml
 ---
 id: lorekeeper-protocol
@@ -190,6 +198,7 @@ version: v2.0.0
 ```
 
 **For bash extraction (example):**
+
 ```bash
 # Extract from prompt file
 grep -oP 'lorekeeper: \K\S+' "$file"
@@ -285,13 +294,13 @@ lore_search query="hello world"
 - [ ] `scripts/setup.sh` scans for Hermes (main + profiles), Claude Code, Cursor
 - [ ] Cursor gets AGENTS.md injected alongside .cursorrules
 - [ ] Prompt injection finds existing `## Lorekeeper` section, compares version stamp — skips if same, replaces entirely if different
-- [ ] Version stamp format: `v{M.m.m}` — single source from `scripts/prompts/lorekeeper-agent-prompt.md` frontmatter
+- [ ] Version stamp format: `v{M.m.m}` — single source from `assets/prompts/lorekeeper-agent-prompt.md` frontmatter
 - [ ] MCP injection works for JSON (Claude Code, Cursor) and YAML (Hermes) configs
 - [ ] MCP injection is append-if-missing, no version stamp needed (backward-compatible)
 - [ ] Skills symlinked into ALL agent types (Hermes, Claude Code, Cursor) — no skip
 - [ ] All Lorekeeper-managed skills get `version:` frontmatter
 - [ ] Skills overwritten if installed version differs from source version
-- [ ] Prompt text lives in a single source file: `scripts/prompts/lorekeeper-agent-prompt.md` (with version frontmatter)
+- [ ] Prompt text lives in a single source file: `assets/prompts/lorekeeper-agent-prompt.md` (with version frontmatter)
 - [ ] Existing Hermes-only setup flow still works unchanged (backward compat)
 - [ ] Post-setup summary table printed with per-agent status
 - [ ] Final instruction: "Restart each agent to activate"
@@ -301,7 +310,7 @@ lore_search query="hello world"
 ## Affected Files
 
 - `scripts/setup.sh` — extended with agent detection + injection logic
-- `scripts/prompts/lorekeeper-agent-prompt.md` (new) — single source prompt text + version in frontmatter
+- `assets/prompts/lorekeeper-agent-prompt.md` (new) — single source prompt text + version in frontmatter
 - `README.md` — update setup instructions
 - `.hermes/skills/*` — add `version:` frontmatter to all Lorekeeper-managed skills
 
@@ -322,6 +331,7 @@ _None_ — self-contained.
 Merged from LKPR-7 (extend setup.sh) + LKPR-33 (full smart setup). Reduced scope from the original LKPR-33 which targeted 7 agents — now just Hermes, Claude Code, Cursor. No CLI flags kept for minimal surface area.
 
 Design rationale:
+
 - Pure bash — runs before `uv sync`, no Python dependency
 - No LLM — filename matching only, zero runtime cost
 - **Version stamping is the key to idempotency AND clean upgrades** — used on prompts + skills only (MCP is backward-compatible)

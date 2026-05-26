@@ -1,6 +1,7 @@
 ---
 name: after-changes
 description: Post-change checklist to run after any set of code edits. Runs three steps in sequence: (1) code review via /simplify, (2) README consistency check and update, (3) git commit. Trigger on phrases like "review and commit", "after-changes", "wrap up changes", "commit my changes", or when the user says to remember to do this after every change.
+version: v1.0.0
 ---
 
 # After-Changes Checklist

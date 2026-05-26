@@ -1,7 +1,7 @@
 ---
 name: backlog-management
 description: Lorekeeper backlog management — ticket lifecycle, numbering, scripts, and conventions. Load this when filing tickets, moving ticket states, checking what's ready to work on, or onboarding to the project workflow.
-version: 1.0.0
+version: v1.0.0
 tags: []
 related_skills: [lorekeeper-dev, lorekeeper-pm]
 ---
