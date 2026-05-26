@@ -23,9 +23,9 @@ ERRORS=()
 
 # ── Author name ──────────────────────────────────────────────────────────────
 AUTHOR_NAME=$(git config user.name 2>/dev/null || echo "")
-if [ "$AUTHOR_NAME" != "Akane (PM)" ] && [ "$AUTHOR_NAME" != "Dev" ]; then
-    ERRORS+=("Author name must be 'Akane (PM)' or 'Dev'. Got: '${AUTHOR_NAME:-<not set>}'")
-    ERRORS+=("  Fix: git config user.name 'Dev'")
+if [ "$AUTHOR_NAME" != "Akane (PM)" ] && [ "$AUTHOR_NAME" != "Dev" ] && [ "$AUTHOR_NAME" != "Diana" ]; then
+    ERRORS+=("Author name must be 'Akane (PM)', 'Dev', or 'Diana'. Got: '${AUTHOR_NAME:-<not set>}'")
+    ERRORS+=("  Fix: git config user.name 'Diana'")
 fi
 
 # ── Author email ─────────────────────────────────────────────────────────────

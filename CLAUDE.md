@@ -199,6 +199,10 @@ git config --local user.email "jessinra.kai@gmail.com"
 # Dev
 git config --local user.name "Dev"
 git config --local user.email "jessinra.kai@gmail.com"
+
+# Diana
+git config --local user.name "Diana"
+git config --local user.email "jessinra.kai@gmail.com"
 ```
 
 **Commit title format**: `[LKPR-N] type: short imperative title`

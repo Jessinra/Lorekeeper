@@ -154,9 +154,14 @@ Rules:
 - one logical change per commit — if you need "and", split it
 - never bundle unrelated changes
 - no WIP commits in main — squash before merging
-- **author name must be `Dev`, email `jessinra.kai@gmail.com`** — enforced by hook
+- **author name must be `Dev` or `Diana`, email `jessinra.kai@gmail.com`** — enforced by hook
   ```bash
+  # Dev
   git config --local user.name "Dev"
+  git config --local user.email "jessinra.kai@gmail.com"
+
+  # Diana
+  git config --local user.name "Diana"
   git config --local user.email "jessinra.kai@gmail.com"
   ```
 
