@@ -31,6 +31,7 @@ Run the `/simplify` skill. Wait for it to complete and apply all fixes before mo
 1. Run `git status` and `git diff HEAD` to review everything that will be committed.
 2. Stage all relevant changed files (be explicit — avoid `git add -A`).
 3. Write a commit message following this format:
+
    ```
    <type>(<scope>): <short summary under 72 chars>
 
@@ -39,7 +40,9 @@ Run the `/simplify` skill. Wait for it to complete and apply all fixes before mo
 
    Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
    ```
+
    Types: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`
+
 4. Confirm the commit hash and summary.
 
 ## Notes

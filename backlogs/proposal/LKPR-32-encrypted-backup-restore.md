@@ -2,10 +2,10 @@
 id: LKPR-32
 title: Encrypted export/import for distribution-safe backups
 type: feature
-status: proposal
-priority: medium
+status: S:proposal
+priority: P2:medium
 sprint: ~
-rice_score: 10.0  # R:5 I:8 C:50% E:2w
+rice_score: 10.0 # R:5 I:8 C:50% E:2w
 filed_by: Jason
 filed_date: 2026-05-25
 ---
@@ -23,6 +23,7 @@ No mechanism exists to verify that imported data belongs to this instance.
 Add optional symmetric encryption (AES-256 via Fernet) to export/import. Opt-out by default — local dev users see no change. When encryption is enabled:
 
 **Export flow:**
+
 - Dashboard checkbox "Encrypt export" (default unchecked)
 - On first use, backend generates a Fernet key and returns it once via the API
 - Dashboard shows the key in a one-time modal with copy + download-as-.key-file buttons
@@ -31,6 +32,7 @@ Add optional symmetric encryption (AES-256 via Fernet) to export/import. Opt-out
 - File extension: `.lorekeeper.enc` instead of `.json`
 
 **Import flow:**
+
 - File picker accepts both `.json` and `.lorekeeper.enc`
 - If the file starts with a Fernet header (detected server-side), backend returns `encrypted: true`
 - Dashboard shows an inline password field: "This file is encrypted — enter the encryption key"
@@ -38,6 +40,7 @@ Add optional symmetric encryption (AES-256 via Fernet) to export/import. Opt-out
 - Wrong key → clear error "Decryption failed — invalid key"
 
 **Key properties:**
+
 - Symmetric (same key encrypts and decrypts) — no key management server needed
 - Fernet (AES-128-CBC + HMAC-SHA256) via `cryptography` library — standard, audited, widely used
 - Key shown exactly once in dashboard UI; user must save it (copy/download)
@@ -59,11 +62,13 @@ Add optional symmetric encryption (AES-256 via Fernet) to export/import. Opt-out
 ## Affected Files
 
 **Backend:**
+
 - `src/lorekeeper/dashboard/app.py` — `/api/export` accepts `encryption_key` param; `_parse_dump` decrypts Fernet payload; new `POST /api/backup/key` endpoint
 - `src/lorekeeper/dashboard/crypto.py` (new) — `encrypt_payload()`, `decrypt_payload()`, `is_encrypted()`, `generate_key()`
 - `pyproject.toml` — add `cryptography` to `dashboard` extra deps
 
 **Dashboard (frontend):**
+
 - `src/lorekeeper/dashboard/static/js/backup.js` — triggerExport sends key param; import flow handles encrypted detection + key prompt
 - `src/lorekeeper/dashboard/static/index.html` — encrypt checkbox, key modal, key input field for import
 - `src/lorekeeper/dashboard/static/css/styles.css` — modal styles

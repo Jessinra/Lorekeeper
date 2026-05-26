@@ -85,13 +85,13 @@ Create one link per related memory. **Do not skip this step** — links are what
 
 ### Relation types
 
-| Type | Use when |
-|------|----------|
-| `related_to` | General topical relationship (default) |
-| `used_in` | New fact is used within the existing memory's context |
-| `used_for` | New fact serves a purpose described by the existing memory |
-| `used_by` | New fact is consumed by the existing memory's concept |
-| `used_as` | New fact acts as the existing memory's concept |
+| Type         | Use when                                                   |
+| ------------ | ---------------------------------------------------------- |
+| `related_to` | General topical relationship (default)                     |
+| `used_in`    | New fact is used within the existing memory's context      |
+| `used_for`   | New fact serves a purpose described by the existing memory |
+| `used_by`    | New fact is consumed by the existing memory's concept      |
+| `used_as`    | New fact acts as the existing memory's concept             |
 
 ### Handling duplicates
 

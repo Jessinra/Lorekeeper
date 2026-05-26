@@ -2,9 +2,9 @@
 id: LKPR-21
 title: lore_update memory_feedback expects "id" not "memory_id" — API inconsistency
 type: bug
-status: done
+status: S:done
 reason: not reproducible
-priority: high
+priority: P1:high
 sprint: unplanned
 rice_score: ~
 filed_by: Hermes (Akane)
@@ -16,17 +16,21 @@ filed_date: 2026-05-23
 ## Problem
 
 ## Symptom
+
 Calling `lore_update(memory_feedback=[{memory_id: "uuid", useful: true, confidence: 8}])` fails with `'id'` error
 
 ## Solution
+
 Fix the MCP tool description in `handlers.py` to document that `memory_feedback` objects expect `id` (not `memory_id`) as the canonical identifier field. Check `link_feedback` for the same issue. No code change needed — the handler already works with `id`; the bug is only in the schema/docs mismatch.
 
 Specifically:
+
 1. Update `lore_update` tool description in `handlers.py` to show `id` (not `memory_id`) in `memory_feedback` schema
 2. Check and update `link_feedback` schema similarly (should use `id`, not `link_id`)
 3. Add schema introspection test to catch future mismatches — the field name must be `id`, not `memory_id`.
 
 Reproduction:
+
 ```python
 # Fails:
 lore_update(memory_feedback=[{memory_id: "52ec8d3b-...", useful: true, confidence: 8}])
@@ -38,22 +42,26 @@ lore_update(memory_feedback=[{id: "52ec8d3b-...", useful: true, confidence: 8}])
 ```
 
 ## Notes
-- Every other Lorekeeper tool uses `memory_id` or `session_id` as the identifier field name (e.g. `lore_insert` uses `memory_id` in output, `lore_reflect` uses `session_id`, `lore_update` output uses `id` for the updated memory count but the *input* feedback object expects bare `id`)
+
+- Every other Lorekeeper tool uses `memory_id` or `session_id` as the identifier field name (e.g. `lore_insert` uses `memory_id` in output, `lore_reflect` uses `session_id`, `lore_update` output uses `id` for the updated memory count but the _input_ feedback object expects bare `id`)
 - `link_feedback` in the same `lore_update` tool may have the same issue — `source_id`/`target_id` vs just `id`
 - This broke the feedback loop during reflection — agent can't train trust scores
 
 ## Acceptance Criteria
+
 - [ ] `lore_update` `memory_feedback` objects accept `id` (not `memory_id`) — this is the canonical field, fix doc if it says otherwise
 - [ ] `link_feedback` objects checked for same issue — should use `id` not `link_id`
 - [ ] MCP tool description updated in `handlers.py` to show `id` as the field name in the schema JSON
 - [ ] No backward compat scope — callers fix their field name, period
 
 ## Effort
+
 XS — fix the schema description in handlers.py
 
 ## How to Test
 
 ### Unit test (handler level)
+
 ```python
 # 1. Happy path — "id" is the canonical field
 result = await lore_update_handler({
@@ -91,6 +99,7 @@ assert len(result["errors"]) == 0
 ```
 
 ### Integration test (smoke test)
+
 ```bash
 # 1. Search for an existing memory → get its id
 # 2. Call lore_update with {id: ...} — must succeed
@@ -98,15 +107,19 @@ assert len(result["errors"]) == 0
 ```
 
 ### How to spot callers using the wrong field
+
 Once the fix is in, grep all agent configs / cron prompts / skills for `memory_id` or `link_id` near `lore_update`:
+
 ```bash
 grep -rn "memory_id\|link_id" ~/.hermes/backlogs/ ~/Code/lorekeeper/backlogs/
 ```
+
 Update any hits to use `id`.
 
 ## How to Prevent Similar Cases
 
 ### Root cause
+
 The MCP handler in `src/lorekeeper/handlers.py` defines the tool schema JSON with a field name that may not match what the handler code actually reads. There is no enforcement that the advertised schema field names match the handler's actual expectations.
 
 ### Prevention measures

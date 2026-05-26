@@ -13,8 +13,8 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
 cd "$REPO_ROOT"
 
 VALID_TYPES="feature|bug|enhancement|research|chore"
-VALID_STATUSES="proposal|backlog|in-progress|review|done|deferred|cancelled"
-VALID_PRIORITIES="critical|high|medium|low"
+VALID_STATUSES="S:proposal|S:ready|S:in-progress|S:review|S:done|S:deferred|S:cancelled"
+VALID_PRIORITIES="P0:critical|P1:high|P2:medium|P3:low"
 
 # Required frontmatter fields
 REQUIRED_FIELDS="id|title|type|status|priority|sprint|rice_score|filed_by|filed_date"
@@ -23,6 +23,25 @@ REQUIRED_FIELDS="id|title|type|status|priority|sprint|rice_score|filed_by|filed_
 REQUIRED_SECTIONS=("Problem" "Solution" "Acceptance Criteria" "Required Updates")
 
 errors=0
+
+# Helper: extract body content between a section heading and the next heading (or EOF)
+# Usage: section_body "body_text" "Section Name"
+# Strips the opening ## line; stops at next ## without including it.
+section_body() {
+  local body="$1" section="$2"
+  echo "$body" | awk -v section="^## $section\$" '
+    $0 ~ section { found=1; next }
+    found && /^## / { exit }
+    found { print }
+  '
+}
+
+# Helper: extract a frontmatter field value, stripping inline comments
+# sed 's/[[:space:]]*#.*//' removes comments like "feature # comment" → "feature"
+get_field() {
+  local frontmatter="$1" field="$2"
+  echo "$frontmatter" | grep "^$field:" | sed 's/^[^:]*:[[:space:]]*//; s/[[:space:]]*#.*//'
+}
 
 # Collect files to validate
 files=("$@")
@@ -38,10 +57,12 @@ if [ ${#files[@]} -eq 0 ]; then
 fi
 
 for file in "${files[@]}"; do
+  # Skip TEMPLATE.md — not a real ticket
+  basename "$file" | grep -q '^TEMPLATE\.md$' && continue
+
   [ ! -f "$file" ] && continue
 
   errors_file=0
-  lineno=0
 
   # Read frontmatter between --- markers
   frontmatter=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d' 2>/dev/null)
@@ -54,22 +75,22 @@ for file in "${files[@]}"; do
     fi
   done
 
-  # Validate type value
-  type_val=$(echo "$frontmatter" | grep "^type:" | sed 's/^type: *//')
+  # Validate type value (strip inline comments)
+  type_val=$(get_field "$frontmatter" "type")
   if [ -n "$type_val" ] && ! echo "$VALID_TYPES" | tr '|' '\n' | grep -qx "$type_val"; then
     echo "  ✗ $file: invalid type '$type_val' (valid: $VALID_TYPES)"
     errors_file=$((errors_file + 1))
   fi
 
   # Validate status value
-  status_val=$(echo "$frontmatter" | grep "^status:" | sed 's/^status: *//')
+  status_val=$(get_field "$frontmatter" "status")
   if [ -n "$status_val" ] && ! echo "$VALID_STATUSES" | tr '|' '\n' | grep -qx "$status_val"; then
     echo "  ✗ $file: invalid status '$status_val' (valid: $VALID_STATUSES)"
     errors_file=$((errors_file + 1))
   fi
 
   # Validate priority value
-  prio_val=$(echo "$frontmatter" | grep "^priority:" | sed 's/^priority: *//')
+  prio_val=$(get_field "$frontmatter" "priority")
   if [ -n "$prio_val" ] && ! echo "$VALID_PRIORITIES" | tr '|' '\n' | grep -qx "$prio_val"; then
     echo "  ✗ $file: invalid priority '$prio_val' (valid: $VALID_PRIORITIES)"
     errors_file=$((errors_file + 1))
@@ -85,10 +106,9 @@ for file in "${files[@]}"; do
   done
 
   # Validate Acceptance Criteria format (each AC must start with - [ ] or - [x])
-  ac_block=$(echo "$body" | sed -n '/^## Acceptance Criteria/,/^## /p' | sed '1d;$d')
+  ac_block=$(section_body "$body" "Acceptance Criteria")
   if [ -n "$ac_block" ]; then
     while IFS= read -r line; do
-      # Skip blank lines and checkboxes
       stripped=$(echo "$line" | sed 's/^[[:space:]]*//')
       [ -z "$stripped" ] && continue
       if ! echo "$stripped" | grep -qE '^- \[[ x]\] '; then
@@ -99,7 +119,7 @@ for file in "${files[@]}"; do
   fi
 
   # Validate Required Updates checkboxes
-  ru_block=$(echo "$body" | sed -n '/^## Required Updates/,/^## /p' | sed '1d;$d')
+  ru_block=$(section_body "$body" "Required Updates")
   if [ -n "$ru_block" ]; then
     while IFS= read -r line; do
       stripped=$(echo "$line" | sed 's/^[[:space:]]*//')
@@ -122,7 +142,6 @@ done
 if [ "$errors" -gt 0 ]; then
   echo ""
   echo "❌  Ticket format validation failed — $errors error(s). Fix and retry."
-  echo "    Bypass (not recommended): git commit --no-verify"
   exit 1
 fi
 

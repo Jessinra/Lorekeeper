@@ -4,19 +4,19 @@ Format: `type(scope): description`
 
 ## Types
 
-| Type | When to use | Example |
-|------|------------|---------|
-| `feat` | New feature or capability | `feat(auth): add OAuth2 login flow` |
-| `fix` | Bug fix | `fix(api): handle null response from /users endpoint` |
+| Type       | When to use                            | Example                                                    |
+| ---------- | -------------------------------------- | ---------------------------------------------------------- |
+| `feat`     | New feature or capability              | `feat(auth): add OAuth2 login flow`                        |
+| `fix`      | Bug fix                                | `fix(api): handle null response from /users endpoint`      |
 | `refactor` | Code restructuring, no behavior change | `refactor(db): extract query builder into separate module` |
-| `docs` | Documentation only | `docs: update API usage examples in README` |
-| `test` | Adding or updating tests | `test(auth): add integration tests for token refresh` |
-| `ci` | CI/CD configuration | `ci: add Python 3.12 to test matrix` |
-| `chore` | Maintenance, dependencies, tooling | `chore: upgrade pytest to 8.x` |
-| `perf` | Performance improvement | `perf(search): add index on users.email column` |
-| `style` | Formatting, whitespace, semicolons | `style: run black formatter on src/` |
-| `build` | Build system or external deps | `build: switch from setuptools to hatch` |
-| `revert` | Reverts a previous commit | `revert: revert "feat(auth): add OAuth2 login flow"` |
+| `docs`     | Documentation only                     | `docs: update API usage examples in README`                |
+| `test`     | Adding or updating tests               | `test(auth): add integration tests for token refresh`      |
+| `ci`       | CI/CD configuration                    | `ci: add Python 3.12 to test matrix`                       |
+| `chore`    | Maintenance, dependencies, tooling     | `chore: upgrade pytest to 8.x`                             |
+| `perf`     | Performance improvement                | `perf(search): add index on users.email column`            |
+| `style`    | Formatting, whitespace, semicolons     | `style: run black formatter on src/`                       |
+| `build`    | Build system or external deps          | `build: switch from setuptools to hatch`                   |
+| `revert`   | Reverts a previous commit              | `revert: revert "feat(auth): add OAuth2 login flow"`       |
 
 ## Scope (optional)
 

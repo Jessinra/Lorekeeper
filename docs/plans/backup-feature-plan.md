@@ -3,6 +3,7 @@
 ## Context
 
 Lorekeeper has no way to back up memories or share them across instances. The user wants a **Backup tab** in the dashboard where they can:
+
 1. **Export** — download all memories + links as a portable JSON file
 2. **Import** — upload a JSON file, see a preview of what will be inserted vs skipped (by ID), then confirm
 
@@ -18,18 +19,32 @@ No MCP tools needed. This is a pure dashboard REST API + UI feature.
   "exported_at": "2026-05-19T...",
   "memories": [
     {
-      "id": "uuid", "title": "...", "description": "...", "content": "...",
-      "created_at": "...", "updated_at": "...",
-      "usage_count": 5, "score": 7.2, "soft_deleted": false,
-      "confidence": 8.0, "confidence_count": 12
+      "id": "uuid",
+      "title": "...",
+      "description": "...",
+      "content": "...",
+      "created_at": "...",
+      "updated_at": "...",
+      "usage_count": 5,
+      "score": 7.2,
+      "soft_deleted": false,
+      "confidence": 8.0,
+      "confidence_count": 12
     }
   ],
   "links": [
     {
-      "id": "uuid", "source_memory_id": "...", "target_memory_id": "...",
-      "relation_type": "related_to", "reason": "...",
-      "score": 1.0, "created_at": "...", "updated_at": "...",
-      "usage_count": 2, "confidence": null, "confidence_count": 0
+      "id": "uuid",
+      "source_memory_id": "...",
+      "target_memory_id": "...",
+      "relation_type": "related_to",
+      "reason": "...",
+      "score": 1.0,
+      "created_at": "...",
+      "updated_at": "...",
+      "usage_count": 2,
+      "confidence": null,
+      "confidence_count": 0
     }
   ]
 }
@@ -43,14 +58,14 @@ Export includes soft-deleted memories only when the user checks "Include soft-de
 
 ## Files to Change
 
-| File | Change |
-|------|--------|
-| `src/lorekeeper/services/link_store.py` | Extend `insert_link()` with optional `id` + metadata params |
-| `src/lorekeeper/services/orchestrator.py` | Add `import_dump(dry_run=)` method |
-| `src/lorekeeper/dashboard/app.py` | Add 3 routes: GET `/api/export`, POST `/api/import/preview`, POST `/api/import/confirm` |
-| `src/lorekeeper/dashboard/static/index.html` | Add Backup tab button + pane |
-| `src/lorekeeper/dashboard/static/js/backup.js` | New file — backup tab logic |
-| `src/lorekeeper/dashboard/static/js/app.js` | Import + wire backup.js |
+| File                                           | Change                                                                                  |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `src/lorekeeper/services/link_store.py`        | Extend `insert_link()` with optional `id` + metadata params                             |
+| `src/lorekeeper/services/orchestrator.py`      | Add `import_dump(dry_run=)` method                                                      |
+| `src/lorekeeper/dashboard/app.py`              | Add 3 routes: GET `/api/export`, POST `/api/import/preview`, POST `/api/import/confirm` |
+| `src/lorekeeper/dashboard/static/index.html`   | Add Backup tab button + pane                                                            |
+| `src/lorekeeper/dashboard/static/js/backup.js` | New file — backup tab logic                                                             |
+| `src/lorekeeper/dashboard/static/js/app.js`    | Import + wire backup.js                                                                 |
 
 ---
 
@@ -104,11 +119,13 @@ def import_dump(
 ```
 
 **Memory logic** (per entry):
+
 - Check `store.get_memory_row(id)` — if row exists → `memories_skipped += 1`, continue
 - If `dry_run=False`: call `engine.add(f"{title} {description} {content}", lore_id)` then `store.upsert_memory_row(...)` with ALL fields from the JSON (preserving original timestamps, score, soft_deleted, confidence, etc.)
 - After all memories: `_rebuild_kw()` (skip if dry_run)
 
 **Link logic** (per entry):
+
 - Check `store.get_link(id)` — if exists → `links_skipped += 1`, continue
 - Check both FK memories exist in SQLite (using the set of existing + newly imported IDs) — if broken → `links_error += 1`, continue
 - If `dry_run=False`: `store.insert_link(id=id, ...)` preserving original fields (using extended signature)
@@ -120,6 +137,7 @@ def import_dump(
 Add `from fastapi import File, UploadFile` and `from fastapi.responses import Response`.
 
 **`GET /api/export`** — file download
+
 ```python
 @app.get("/api/export")
 def export_dump(include_deleted: bool = False) -> Response:
@@ -144,6 +162,7 @@ def export_dump(include_deleted: bool = False) -> Response:
 ```
 
 **`POST /api/import/preview`** — dry run
+
 ```python
 @app.post("/api/import/preview")
 async def import_preview(file: UploadFile = File(...)) -> dict:
@@ -152,6 +171,7 @@ async def import_preview(file: UploadFile = File(...)) -> dict:
 ```
 
 **`POST /api/import/confirm`** — actual import
+
 ```python
 @app.post("/api/import/confirm")
 async def import_confirm(file: UploadFile = File(...)) -> dict:
@@ -164,6 +184,7 @@ async def import_confirm(file: UploadFile = File(...)) -> dict:
 ### 4. `index.html` — Backup tab
 
 Add tab button after Config:
+
 ```html
 <button class="tab" onclick="switchTab('backup')">Backup</button>
 ```
@@ -171,11 +192,13 @@ Add tab button after Config:
 Add tab pane `#tab-backup` with two sections:
 
 **Export section:**
+
 ```
 [Export All Memories ↓]   ☐ Include soft-deleted  (default: unchecked)
 ```
 
 **Import section:**
+
 ```
 Browse file…  [Choose file button]
 → (after file chosen, preview auto-loads)
@@ -194,7 +217,9 @@ Preview and confirm button are in the same pane — no page navigation.
 ### 5. `backup.js` — new module
 
 ```javascript
-export function initBackup() { /* set up file input change listener */ }
+export function initBackup() {
+  /* set up file input change listener */
+}
 export function triggerExport() {
   // GET /api/export?include_deleted=X
   // Use <a download> approach to trigger browser download
@@ -218,7 +243,7 @@ File upload uses `FormData` (not the `api()` JSON helper — needs special handl
 ### 6. `app.js` — wire backup tab
 
 ```javascript
-import { initBackup } from './backup.js';
+import { initBackup } from "./backup.js";
 // in registerTabCallbacks: onTabBackup: () => {} (init is called once at startup)
 // in init(): initBackup();
 ```
@@ -227,13 +252,13 @@ import { initBackup } from './backup.js';
 
 ## Dedup / Skip Logic Summary
 
-| Case | Behaviour |
-|------|-----------|
-| Memory ID already in SQLite | Skip (count as `memories_skipped`) |
-| Memory ID new | Insert into SQLite + Mem0 |
-| Link ID already in `memory_links` | Skip (count as `links_skipped`) |
-| Link FK references missing memory | Skip (count as `links_error`) |
-| Link ID new, FKs valid | Insert |
+| Case                              | Behaviour                          |
+| --------------------------------- | ---------------------------------- |
+| Memory ID already in SQLite       | Skip (count as `memories_skipped`) |
+| Memory ID new                     | Insert into SQLite + Mem0          |
+| Link ID already in `memory_links` | Skip (count as `links_skipped`)    |
+| Link FK references missing memory | Skip (count as `links_error`)      |
+| Link ID new, FKs valid            | Insert                             |
 
 Soft-deleted flag is preserved as-is from the JSON on import. No forced restore.
 

@@ -2,8 +2,8 @@
 id: LKPR-28
 title: Add inline links param to lore_insert for one-call insert + link
 type: feature
-status: done
-priority: high
+status: S:done
+priority: P1:high
 sprint: ~
 rice_score: ~
 filed_by: Akane (PM)
@@ -21,6 +21,7 @@ Creating a linked memory currently requires two calls: `lore_insert` first (retu
 Add an optional `links` parameter to `lore_insert` that accepts a list of link descriptors. Each descriptor specifies a target `memory_id`, `relation_type`, and optional `reason`.
 
 **Agent flow becomes:**
+
 ```
 # Before: two calls, no link tool
 id = lore_insert(title="Token refresh", content="...")
@@ -53,6 +54,7 @@ The agent already has the target `memory_id` from the preceding `lore_search` qu
 ## Affected Files
 
 **Backend:**
+
 - `src/lorekeeper/schemas.py` — update `LoreInsertInput` model
 - `src/lorekeeper/services/orchestrator.py` — handle links during insert
 - `src/lorekeeper/server.py` — update docstring/tool description
@@ -80,5 +82,6 @@ _None_ — `link_store.link_memories()` already exists. No schema changes needed
 ## Notes
 
 This is the **intentional link** counterpart to LKPR-27 (auto-link via vector similarity). They solve different problems:
+
 - **LKPR-27** = machine-detected clusters (passive, automatic)
 - **LKPR-28** = agent-intended relations (active, explicit) — **higher value per link**

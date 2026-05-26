@@ -2,7 +2,7 @@
 id: LKPR-31
 title: Switch vector store from Chroma to LanceDB for concurrent multi-process access
 type: enhancement
-status: done
+status: S:done
 resolution: merged_via_pr7
 merged_at: 2026-05-24
 merged_by: Jason
@@ -10,7 +10,7 @@ pr_url: https://github.com/Jessinra/Lorekeeper/pull/7
 resolved_date: 2026-05-24
 closed_reason: verified_live_via_mcp
 closed_by: Akane
-priority: high
+priority: P1:high
 sprint: ~
 rice_score: 72
 filed_by: Jason
@@ -45,6 +45,7 @@ Replace Chroma with LanceDB as the vector store backend in `memory_engine.py`. L
 ## Affected Files
 
 **Backend:**
+
 - `src/lorekeeper/services/memory_engine.py` — swap Chroma config for LanceDB
 - `src/lorekeeper/config.py` — replace `LORE_CHROMA_*` env vars
 - `pyproject.toml` — add `lancedb`, `pyarrow`
@@ -52,6 +53,7 @@ Replace Chroma with LanceDB as the vector store backend in `memory_engine.py`. L
 - `tests/` — update any Chroma-specific fixtures
 
 **Dashboard (if applicable):**
+
 - _none_
 
 ## Dependencies
@@ -73,6 +75,7 @@ _None_
 ## Notes
 
 Workarounds considered and rejected:
+
 - **SSE singleton**: Lorekeeper runs once as HTTP server. Requires persistent process, launchd plist, URL config on every client. Breaks stdio.
 - **Chroma HTTP server**: Pushes singleton to `chroma run`. Same operational burden.
 

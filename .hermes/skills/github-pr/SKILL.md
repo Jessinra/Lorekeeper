@@ -49,6 +49,7 @@ fi
 ```
 
 Rules:
+
 - Only do this on a real feature branch, not `main`.
 - Do not create duplicate PRs if one already exists for the branch.
 - If reviewer assignment is desired, do it after PR creation so a reviewer lookup failure doesn't block the PR.
@@ -66,6 +67,7 @@ curl -s -H "Authorization: Bearer $GH_TOKEN" \
 ```
 
 Review flow:
+
 - `gh pr view <PR_NUMBER>` for title, body, reviewers, and status
 - `gh pr diff <PR_NUMBER>` for the patch
 - GitHub API `/pulls/<PR_NUMBER>/comments` for inline review comments

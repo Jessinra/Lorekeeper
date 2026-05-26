@@ -30,7 +30,7 @@ These guide every decision — scoping, prioritization, design, review:
 
 **Practical application — backlog hygiene:**
 
-- Keep the active backlog small (max 5 tickets at a time). Push the rest to `proposal`.
+- Keep the active backlog small (max 5 tickets at a time). Push the rest to `S:proposal`.
 - When scoping down a ticket, update RICE scores and note the rationale. A simpler scope that increases confidence or reduces effort means a higher RICE — reflect that.
 - If a scope change eliminates an entire deliverable (e.g. dropping a new MCP tool), delete the corresponding ACs and affected files from the ticket.
 
@@ -60,7 +60,7 @@ Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`.
 Once per week, pull up to **10 proposal tickets** into the active backlog:
 
 1. Review proposals in `backlogs/proposal/` — pick high-value, unblocked items
-2. Update their status to `backlog` and set priority
+2. Update their status to `S:ready` and set priority
 3. Commit + push on the **`chore/backlog`** branch
 4. Open a PR against `main` — auto-approved, no review needed
 5. Jason will squash-merge it
@@ -90,22 +90,22 @@ Since LKPR-24, status and priority are tracked via **GitHub Issue labels** — s
 
 ```bash
 # View active backlog on GitHub
-gh issue list --label backlog --repo Jessinra/Lorekeeper
+gh issue list --label "S:Ready" --repo Jessinra/Lorekeeper
 
 # Start work
-gh issue edit LKPR-30 --add-label "in-progress" --remove-label "backlog"
+gh issue edit LKPR-30 --add-label "S:In-progress" --remove-label "S:Ready"
 
 # PR ready for review
-gh issue edit LKPR-30 --add-label "review" --remove-label "in-progress"
+gh issue edit LKPR-30 --add-label "S:Review" --remove-label "S:In-progress"
 
 # Solved
-gh issue edit LKPR-30 --add-label "done" --remove-label "review"
+gh issue edit LKPR-30 --add-label "S:Done" --remove-label "S:Review"
 
 # View all done tickets this sprint
-gh issue list --label done --repo Jessinra/Lorekeeper
+gh issue list --label "S:Done" --repo Jessinra/Lorekeeper
 
 # Proposals
-gh issue list --label proposal --repo Jessinra/Lorekeeper
+gh issue list --label "S:Proposal" --repo Jessinra/Lorekeeper
 ```
 
 **Weekly sync (PM):** Pull all issue labels → update markdown `status:` fields → commit on `chore/backlog` → PR → auto-merge.
@@ -151,10 +151,12 @@ If anything is missing — send back with specific ask, don't approve partial wo
 
 ## Prioritization
 
-- `critical` — blocking other work or causing data loss
-- `high` — significant UX or correctness issue, next sprint
-- `medium` — meaningful improvement, schedule when capacity allows
-- `low` — nice to have, polish, cleanup
+Priorities use `P:` prefix so GitHub labels sort correctly:
+
+- `P0:critical` — **Only for bug & critical fixes.** Blocking other work or causing data loss.
+- `P1:high` — **High impact, urgent, must do.** Significant UX or correctness issue, next sprint.
+- `P2:medium` — **Medium impact, improvement, in-pipeline feature, nice to have.** Schedule when capacity allows.
+- `P3:low` — **Small impact, not urgent, small improvement.** Polish, cleanup, nice-to-have.
 
 When in doubt: ship correctness before features.
 
@@ -163,9 +165,11 @@ When in doubt: ship correctness before features.
 ## Common Pitfalls & Lessons
 
 ### Direct commits to main
+
 Dev committed LKPR-29 directly to main without review. Jason reset main, dev was asked to reflect. **Enforcement:** always use PR workflow. If any commit lands without a PR, revert and re-route.
 
 ### Missed cross-reference checks in reviews
+
 LKPR-29's PR (#5) was missing two things: default score should be 5 (match `lore_insert`), and `lore_remember` wasn't recording metrics in the dashboard. Both were caught only during PM review on GitHub, not in the initial implementation. **Lesson:** add explicit cross-reference and dashboard checks to review (see checklist above).
 
 ---

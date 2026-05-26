@@ -2,10 +2,10 @@
 id: LKPR-20
 title: Add lore_related tool for graph traversal via memory links
 type: feature
-status: proposal
-priority: high
+status: S:proposal
+priority: P1:high
 sprint: 1
-rice_score: 38.4  # R:8 I:8 C:60% E:1w
+rice_score: 38.4 # R:8 I:8 C:60% E:1w
 filed_by: Hermes
 filed_date: 2026-05-22
 ---
@@ -28,6 +28,7 @@ New MCP tool: `lore_related(memory_id, depth, relation_type, limit)` — start a
 - **`limit`** (optional, default 20) — max memories to return
 
 **Traversal logic:**
+
 - BFS from seed node
 - Follow links bidirectionally (source→target and target→source), matching existing `links_for_memory()` behavior
 - At each hop, collect neighbor memory IDs + link metadata (relation_type, reason, score)
@@ -35,6 +36,7 @@ New MCP tool: `lore_related(memory_id, depth, relation_type, limit)` — start a
 - Return as list with `hop_distance` and `link_reason` annotated per result
 
 **Example agent workflow:**
+
 ```
 lore_search("OAuth flow") → returns memory_id: "abc-123"
 lore_related("abc-123", depth=2) → returns token refresh, session management, auth error patterns
@@ -56,6 +58,7 @@ Enables: broad search → land on a node → explore neighborhood. Complements L
 ## Affected Files
 
 **Backend:**
+
 - `src/lorekeeper/services/link_store.py` — add `get_neighbors(memory_id, depth, relation_type)` traversal method
 - `src/lorekeeper/services/orchestrator.py` — add `lore_related()` handler that calls link_store + fetches memory objects
 - `src/lorekeeper/handlers.py` — new tool handler

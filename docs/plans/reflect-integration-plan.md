@@ -103,15 +103,17 @@ Memories | Detail | Links | Query | Reflections | Config | Backup
 ### Reflections Tab Layout
 
 **Header metrics:**
+
 - Total reflections · Total sessions reviewed · Last reflected date
 
 **Reflections table** (primary, top):
 
-| Date | Sessions | Summary | Memories Created |
-|------|----------|---------|-----------------|
-| 2026-05-19 | 5 | ... | 3 |
+| Date       | Sessions | Summary | Memories Created |
+| ---------- | -------- | ------- | ---------------- |
+| 2026-05-19 | 5        | ...     | 3                |
 
 **Click row → detail panel expands below table:**
+
 - **Summary** — full text
 - **Lessons Learnt** — bullet list
 - **Good Patterns** — bullet list
@@ -121,33 +123,34 @@ Memories | Detail | Links | Query | Reflections | Config | Backup
 - **Memories Created** — clickable UUIDs (navigate to Detail tab)
 
 **Cron Activity** (secondary, collapsible):
+
 - Mirrors the old Runs tab content (run_log.jsonl)
 - Label: "Legacy cron run history"
 - Collapsed by default
 
 ### New REST Endpoints
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| `GET` | `/api/reflections` | List all reflections, newest first |
-| `GET` | `/api/reflections/{id}` | Single reflection + sessions covered |
+| Method | Endpoint                | Purpose                              |
+| ------ | ----------------------- | ------------------------------------ |
+| `GET`  | `/api/reflections`      | List all reflections, newest first   |
+| `GET`  | `/api/reflections/{id}` | Single reflection + sessions covered |
 
 ---
 
 ## File Inventory
 
-| File | Change |
-|------|--------|
-| `src/lorekeeper/models.py` | Add `Reflection`, `SessionRecord` Pydantic models |
-| `src/lorekeeper/services/link_store.py` | Add 2 tables, CRUD methods, startup migration |
-| `src/lorekeeper/services/orchestrator.py` | Add `submit_reflection()` |
-| `src/lorekeeper/handlers.py` | Add `handle_reflect()` |
-| `src/lorekeeper/server.py` | Register `lore_reflect` tool |
-| `src/lorekeeper/dashboard/app.py` | Add 2 REST endpoints |
-| `src/lorekeeper/dashboard/static/index.html` | Replace Runs tab with Reflections tab |
-| `src/lorekeeper/dashboard/static/js/reflections.js` | New module (reflections + collapsed runs) |
-| `src/lorekeeper/dashboard/static/js/app.js` | Register reflections module, deregister runs |
-| `prompt/skills/reflect/SKILL.md` | Add `lore_reflect` call as final step |
+| File                                                | Change                                            |
+| --------------------------------------------------- | ------------------------------------------------- |
+| `src/lorekeeper/models.py`                          | Add `Reflection`, `SessionRecord` Pydantic models |
+| `src/lorekeeper/services/link_store.py`             | Add 2 tables, CRUD methods, startup migration     |
+| `src/lorekeeper/services/orchestrator.py`           | Add `submit_reflection()`                         |
+| `src/lorekeeper/handlers.py`                        | Add `handle_reflect()`                            |
+| `src/lorekeeper/server.py`                          | Register `lore_reflect` tool                      |
+| `src/lorekeeper/dashboard/app.py`                   | Add 2 REST endpoints                              |
+| `src/lorekeeper/dashboard/static/index.html`        | Replace Runs tab with Reflections tab             |
+| `src/lorekeeper/dashboard/static/js/reflections.js` | New module (reflections + collapsed runs)         |
+| `src/lorekeeper/dashboard/static/js/app.js`         | Register reflections module, deregister runs      |
+| `prompt/skills/reflect/SKILL.md`                    | Add `lore_reflect` call as final step             |
 
 ---
 

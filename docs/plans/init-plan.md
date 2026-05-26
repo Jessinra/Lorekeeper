@@ -35,29 +35,29 @@ The MCP API surface is **identical** to the old server — same three tools, sam
 
 ## What's Preserved from Lorekeeper v1
 
-| Feature | Old Implementation | New Implementation |
-|---------|-------------------|-------------------|
-| Semantic search | Custom ONNX + cosine | Mem0 + Chroma (same model) |
-| Keyword search | Lunr BM25 | rank-bm25 (normalized to top-1=1.0) |
-| Hybrid scoring | 0.45·sem + 0.30·kw + 0.15·quality + 0.10·usage | Same weights, layered on Mem0 |
-| Confidence EMA (window=20) | TypeScript | Python, identical algorithm |
-| Soft deletion (confidence ≤ 2) | TypeScript flag | SQLite column + Mem0 metadata |
-| Score delta (useful/not) | TypeScript | Python, identical formula |
-| Typed graph links | In-memory array | SQLite table with FK enforcement |
-| Duplicate detection (threshold 0.85) | 0.6·sem + 0.4·kw | Same formula |
-| Dedup surfaced to caller | Returns `duplicates[]` | Same |
-| `include_deleted` filter | Search option | Same |
-| MCP tool names + schemas | lore_search/insert/update | Identical |
+| Feature                              | Old Implementation                             | New Implementation                  |
+| ------------------------------------ | ---------------------------------------------- | ----------------------------------- |
+| Semantic search                      | Custom ONNX + cosine                           | Mem0 + Chroma (same model)          |
+| Keyword search                       | Lunr BM25                                      | rank-bm25 (normalized to top-1=1.0) |
+| Hybrid scoring                       | 0.45·sem + 0.30·kw + 0.15·quality + 0.10·usage | Same weights, layered on Mem0       |
+| Confidence EMA (window=20)           | TypeScript                                     | Python, identical algorithm         |
+| Soft deletion (confidence ≤ 2)       | TypeScript flag                                | SQLite column + Mem0 metadata       |
+| Score delta (useful/not)             | TypeScript                                     | Python, identical formula           |
+| Typed graph links                    | In-memory array                                | SQLite table with FK enforcement    |
+| Duplicate detection (threshold 0.85) | 0.6·sem + 0.4·kw                               | Same formula                        |
+| Dedup surfaced to caller             | Returns `duplicates[]`                         | Same                                |
+| `include_deleted` filter             | Search option                                  | Same                                |
+| MCP tool names + schemas             | lore_search/insert/update                      | Identical                           |
 
 ## What's New in v2
 
-| Feature | Description |
-|---------|-------------|
-| Auto-extraction (future) | Mem0 can extract from raw transcript with `infer=True` |
-| Contradiction resolution (future) | Mem0 detects conflicting facts automatically |
-| Swappable backends | Chroma → Qdrant → Pinecone via config change |
-| Python ecosystem | Easier to extend, integrate with LangMem later |
-| Maintained engine | Mem0 team maintains the core retrieval logic |
+| Feature                           | Description                                            |
+| --------------------------------- | ------------------------------------------------------ |
+| Auto-extraction (future)          | Mem0 can extract from raw transcript with `infer=True` |
+| Contradiction resolution (future) | Mem0 detects conflicting facts automatically           |
+| Swappable backends                | Chroma → Qdrant → Pinecone via config change           |
+| Python ecosystem                  | Easier to extend, integrate with LangMem later         |
+| Maintained engine                 | Mem0 team maintains the core retrieval logic           |
 
 ---
 
@@ -152,21 +152,22 @@ line-length = 100
 target-version = "py311"
 ```
 
-| Package | Purpose | Replaces |
-|---------|---------|---------|
-| `mem0ai` | Memory storage + semantic search abstraction | Custom embedding + JSON file store |
-| `chromadb` | File-based persistent vector store, no server | In-memory `Map<id, Float32Array>` |
-| `sentence-transformers` | Local HF embeddings (same model as v1, same 384 dims) | `@huggingface/transformers` ONNX |
-| `fastmcp` | Declarative `@mcp.tool` decorators + stdio transport | `@modelcontextprotocol/sdk` |
-| `pydantic` + `pydantic-settings` | Validation + env config | zod + manual env parse |
-| `rank-bm25` | BM25Okapi with field boosts via token repetition | lunr |
-| `structlog` | Structured stderr logs | Custom Logger |
+| Package                          | Purpose                                               | Replaces                           |
+| -------------------------------- | ----------------------------------------------------- | ---------------------------------- |
+| `mem0ai`                         | Memory storage + semantic search abstraction          | Custom embedding + JSON file store |
+| `chromadb`                       | File-based persistent vector store, no server         | In-memory `Map<id, Float32Array>`  |
+| `sentence-transformers`          | Local HF embeddings (same model as v1, same 384 dims) | `@huggingface/transformers` ONNX   |
+| `fastmcp`                        | Declarative `@mcp.tool` decorators + stdio transport  | `@modelcontextprotocol/sdk`        |
+| `pydantic` + `pydantic-settings` | Validation + env config                               | zod + manual env parse             |
+| `rank-bm25`                      | BM25Okapi with field boosts via token repetition      | lunr                               |
+| `structlog`                      | Structured stderr logs                                | Custom Logger                      |
 
 ---
 
 ## Data Models (unchanged from v1)
 
 ### Memory
+
 ```python
 class Memory(BaseModel):
     id: str                        # UUID v4
@@ -183,6 +184,7 @@ class Memory(BaseModel):
 ```
 
 ### MemoryLink
+
 ```python
 class MemoryLink(BaseModel):
     id: str
@@ -274,11 +276,11 @@ def build_mem0(chroma_path: Path) -> Memory:
 
 **Key Mem0 calls:**
 
-| Method | Use |
-|--------|-----|
-| `m.add(text, user_id=LORE_USER_ID, metadata={"lore_id": id, ...}, infer=False)` | Insert verbatim (no LLM extraction) |
-| `m.search(query, user_id=LORE_USER_ID, limit=200)` | Semantic candidates for hybrid re-rank |
-| `m.get_all(user_id=LORE_USER_ID)` | BM25 index rebuild fallback |
+| Method                                                                          | Use                                    |
+| ------------------------------------------------------------------------------- | -------------------------------------- |
+| `m.add(text, user_id=LORE_USER_ID, metadata={"lore_id": id, ...}, infer=False)` | Insert verbatim (no LLM extraction)    |
+| `m.search(query, user_id=LORE_USER_ID, limit=200)`                              | Semantic candidates for hybrid re-rank |
+| `m.get_all(user_id=LORE_USER_ID)`                                               | BM25 index rebuild fallback            |
 
 > **CRITICAL**: `lore_id` (our UUID) is stored in Mem0's metadata. Mem0 assigns its own internal id. All app logic uses `lore_id` as the canonical identifier.
 
@@ -288,19 +290,19 @@ def build_mem0(chroma_path: Path) -> Memory:
 
 All env vars use `LORE_` prefix:
 
-| Env Var | Default | Purpose |
-|---------|---------|---------|
-| `LORE_DATA_DIR` | `~/.lorekeeper` | Base directory for Chroma + SQLite |
-| `LORE_EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | HF embedding model |
-| `LORE_DUPLICATE_THRESHOLD` | `0.85` | Dedup trigger score |
-| `LORE_W_SEMANTIC` | `0.45` | Hybrid search weight |
-| `LORE_W_KEYWORD` | `0.30` | Hybrid search weight |
-| `LORE_W_MEMORY` | `0.15` | Hybrid search weight |
-| `LORE_W_USAGE` | `0.10` | Hybrid search weight |
-| `LORE_SCORE_BUMP_UP` | `0.1` | Score delta on useful=True |
-| `LORE_SCORE_BUMP_DOWN` | `0.05` | Score delta on useful=False |
-| `LORE_CONFIDENCE_WINDOW_SIZE` | `20` | EMA sliding window |
-| `LORE_MAX_LINKS_PER_MEMORY` | `5` | Links attached per search result |
+| Env Var                       | Default                                  | Purpose                            |
+| ----------------------------- | ---------------------------------------- | ---------------------------------- |
+| `LORE_DATA_DIR`               | `~/.lorekeeper`                          | Base directory for Chroma + SQLite |
+| `LORE_EMBEDDING_MODEL`        | `sentence-transformers/all-MiniLM-L6-v2` | HF embedding model                 |
+| `LORE_DUPLICATE_THRESHOLD`    | `0.85`                                   | Dedup trigger score                |
+| `LORE_W_SEMANTIC`             | `0.45`                                   | Hybrid search weight               |
+| `LORE_W_KEYWORD`              | `0.30`                                   | Hybrid search weight               |
+| `LORE_W_MEMORY`               | `0.15`                                   | Hybrid search weight               |
+| `LORE_W_USAGE`                | `0.10`                                   | Hybrid search weight               |
+| `LORE_SCORE_BUMP_UP`          | `0.1`                                    | Score delta on useful=True         |
+| `LORE_SCORE_BUMP_DOWN`        | `0.05`                                   | Score delta on useful=False        |
+| `LORE_CONFIDENCE_WINDOW_SIZE` | `20`                                     | EMA sliding window                 |
+| `LORE_MAX_LINKS_PER_MEMORY`   | `5`                                      | Links attached per search result   |
 
 ---
 
@@ -412,6 +414,7 @@ All three tool names and schemas are **byte-identical** to v1. The three skills 
 ## MCP Tool Output Schemas (must match v1 exactly)
 
 ### lore_search output
+
 ```json
 {
   "results": [{
@@ -426,6 +429,7 @@ All three tool names and schemas are **byte-identical** to v1. The three skills 
 ```
 
 ### lore_insert output
+
 ```json
 {
   "inserted_memories": [{ "id", "title" }],
@@ -436,6 +440,7 @@ All three tool names and schemas are **byte-identical** to v1. The three skills 
 ```
 
 ### lore_update output
+
 ```json
 {
   "updated_memories": 0,
@@ -458,6 +463,7 @@ uv run python scripts/migrate_from_json.py \
 ```
 
 **What it does:**
+
 1. Creates SQLite schema at `~/.lorekeeper/lorekeeper.db`
 2. For each memory: calls `mem0.add(text, ..., infer=False)` + inserts SQLite row
 3. For each link: inserts SQLite row (validates FK existence)
@@ -490,30 +496,30 @@ FastMCP.run(transport="stdio")     # ready for tool calls
 
 ## Risks & Mitigations
 
-| Risk | Mitigation |
-|------|-----------|
-| **Chroma returns distance vs similarity ambiguity** | Probe at startup with known query; log the scale; unit-test `_normalize_semantic()` |
-| **BM25 (rank-bm25) ≠ Lunr numerically** | Top-1 normalization absorbs absolute-scale differences; parity test verifies ranking correlation ≥ 0.85 Spearman |
-| **Mem0 `infer=False` not supported in older version** | Pin `mem0ai>=0.1.100`; fallback: stub LLM that no-ops |
-| **Mem0 internal dedup silently drops inserts** | Verify with post-insert count check; `infer=False` should bypass |
-| **First-run model download (~90 MB)** | Document in README; pre-download in setup script |
-| **Migration not transactional across Mem0 + SQLite** | Run twice with idempotency guard; verify counts before flipping settings.json |
-| **stdout pollution from Mem0/Chroma logs** | Set `MEM0_LOG_LEVEL=ERROR`; redirect all internal loggers to stderr at startup |
-| **Two servers using same LORE_DATA_DIR simultaneously** | Document single-instance requirement; add PID file guard |
+| Risk                                                    | Mitigation                                                                                                       |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Chroma returns distance vs similarity ambiguity**     | Probe at startup with known query; log the scale; unit-test `_normalize_semantic()`                              |
+| **BM25 (rank-bm25) ≠ Lunr numerically**                 | Top-1 normalization absorbs absolute-scale differences; parity test verifies ranking correlation ≥ 0.85 Spearman |
+| **Mem0 `infer=False` not supported in older version**   | Pin `mem0ai>=0.1.100`; fallback: stub LLM that no-ops                                                            |
+| **Mem0 internal dedup silently drops inserts**          | Verify with post-insert count check; `infer=False` should bypass                                                 |
+| **First-run model download (~90 MB)**                   | Document in README; pre-download in setup script                                                                 |
+| **Migration not transactional across Mem0 + SQLite**    | Run twice with idempotency guard; verify counts before flipping settings.json                                    |
+| **stdout pollution from Mem0/Chroma logs**              | Set `MEM0_LOG_LEVEL=ERROR`; redirect all internal loggers to stderr at startup                                   |
+| **Two servers using same LORE_DATA_DIR simultaneously** | Document single-instance requirement; add PID file guard                                                         |
 
 ---
 
 ## Testing Strategy
 
-| Test File | What It Covers |
-|-----------|---------------|
-| `test_feedback.py` | EMA values match TypeScript reference; score clamps at 0/10; soft-delete triggers correctly |
-| `test_keyword_index.py` | Top hit = 1.0; empty query returns `{}`; title boost outranks content match |
-| `test_search.py` | Combined formula; `include_deleted=False` excludes soft-deleted; `min_score` filters; `limit` truncates |
-| `test_dedup.py` | Hits threshold on near-identical text; misses on unrelated; `force=True` skips |
-| `test_link_store.py` | FK enforcement; bidirectional retrieval; transactional update |
-| `test_orchestrator.py` | insert → search → update → score bumped → re-ranked; soft-delete excludes from search |
-| `test_handlers.py` | Validation errors → MCP error envelope; success → correct JSON shape |
+| Test File               | What It Covers                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| `test_feedback.py`      | EMA values match TypeScript reference; score clamps at 0/10; soft-delete triggers correctly             |
+| `test_keyword_index.py` | Top hit = 1.0; empty query returns `{}`; title boost outranks content match                             |
+| `test_search.py`        | Combined formula; `include_deleted=False` excludes soft-deleted; `min_score` filters; `limit` truncates |
+| `test_dedup.py`         | Hits threshold on near-identical text; misses on unrelated; `force=True` skips                          |
+| `test_link_store.py`    | FK enforcement; bidirectional retrieval; transactional update                                           |
+| `test_orchestrator.py`  | insert → search → update → score bumped → re-ranked; soft-delete excludes from search                   |
+| `test_handlers.py`      | Validation errors → MCP error envelope; success → correct JSON shape                                    |
 
 Golden set parity test: curated `(query, expected_ranked_ids)` pairs from live store. Spearman correlation ≥ 0.85 between old and new server rankings.
 

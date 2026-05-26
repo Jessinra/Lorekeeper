@@ -135,17 +135,6 @@ Session End → capture learnings → lore_insert/update
 Periodic Reconcile → consolidate → update CLAUDE.md / skills / code
 ```
 
-### Loop Infrastructure (in `loop/`)
-
-```
-loop/
-├── hooks/
-│   └── post_session.sh     # queues session summary for capture
-├── sessions/               # episodic memory: one file per session
-│   └── YYYY-MM-DD-{topic}.md
-└── reconcile.md            # skill prompt for the consolidation agent
-```
-
 ### Session Log Format
 
 Each `loop/sessions/` file captures:
@@ -238,10 +227,10 @@ Do not skip this. It is the discipline that keeps the repo clean and auditable.
 - **The pre-commit hook blocks commits on `main`** — a deliberate hard stop. Use `git checkout -b <branch>` first.
 - **`git push origin main` is ALWAYS wrong** unless you are the CI/CD pipeline
 - **`git checkout main && git merge <branch>` runs on a local feature branch** — push the feature branch, open a PR, merge via the web UI
-- **Emergency bypass**: `git commit --no-verify` skips both the branch check AND lint/tests (use only when the repo is broken and needs urgent fix)
 - This rule applies to ALL agents — Hermes, Claude Code, Cursor. No exceptions without human approval.
 
 **The workflow is always:**
+
 ```
 feature branch → push → PR → review → merge via GitHub UI → delete branch
 ```

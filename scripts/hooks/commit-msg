@@ -3,7 +3,6 @@
 # Enforces: author name, author email, and [LKPR-N] ticket in commit title.
 #
 # Install: scripts/lorekeeper-setup.sh  (run once per clone)
-# Bypass (emergency only): git commit --no-verify
 
 set -euo pipefail
 
@@ -50,8 +49,6 @@ if [ ${#ERRORS[@]} -gt 0 ]; then
     for err in "${ERRORS[@]}"; do
         echo "  $err"
     done
-    echo ""
-    echo "  Emergency bypass: git commit --no-verify"
     echo ""
     exit 1
 fi

@@ -29,6 +29,7 @@ lore_search({ query: "voucher stacking rules in checkout", limit: 10, min_score:
 Each result contains `memory.id`, `memory.title`, `memory.content`, `relevance.combined_score`, and `links`. Each link has its own `id`, `relation_type`, `reason`, `source_memory_id`, and `target_memory_id`.
 
 While using the results:
+
 - Track which **memories** were helpful and verify their factual accuracy
 - Assess each **link**: does the stated relationship (`reason`) make sense? Does it correctly connect the two memories?
 
