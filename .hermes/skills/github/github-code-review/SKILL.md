@@ -332,6 +332,29 @@ When the user asks you to "review the code" or "check before pushing":
 
 When the user asks you to "review PR #N", "look at this PR", or gives you a PR URL, follow this recipe:
 
+### What is easy vs. what is brittle
+
+**Easy**
+- Open a PR page and read metadata, changed files, and checks.
+- Pull the branch locally and review it with `git diff`, `read_file`, tests, and search.
+- Leave top-level comments and inline review comments once you have the PR SHA.
+
+**Brittle**
+- Reviewer assignment can fail if the login is wrong or the org doesn't expose that reviewer.
+- GitHub Copilot review is configured by repo/org settings; it is not always a normal GitHub user login.
+- PR review quality drops if you review a stale branch instead of refreshing from `origin/main` first.
+- Inline comments are line-sensitive and must target the current head commit.
+
+### Why some agents struggle
+
+- They try to infer review context from memory instead of re-reading the live PR.
+- They skip `git fetch` / checkout and review stale local state.
+- They assume `@copilot` is a universally valid reviewer login.
+- They use `gh pr view` only and miss inline review comments, which require the API.
+- They don't align with repo-specific instruction files, so review comments drift from the project's conventions.
+
+When reviewing a repository that has custom Copilot review instructions, align with those instructions instead of inventing a separate rubric.
+
 ### Step 1: Set up environment
 
 ```bash
