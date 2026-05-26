@@ -2,7 +2,7 @@
 id: LKPR-27
 title: Upgrade auto-link to configurable — env vars, lore_insert hook, dedup guard
 type: feature
-status: backlog
+status: review
 priority: medium
 sprint: ~
 rice_score: ~

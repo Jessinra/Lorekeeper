@@ -13,7 +13,7 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
     echo ""
     echo "🚫  BLOCKED: Direct commit to '$BRANCH' is not allowed."
     echo "    All changes must go through a feature branch and PR."
-    echo "    To bypass (emergency): SKIP_BRANCH_CHECK=1 git commit"
+    echo "    To bypass: SKIP_BRANCH_CHECK=1 git commit"
     echo "    Or use: git checkout -b <branch-name>"
     echo ""
     exit 1
