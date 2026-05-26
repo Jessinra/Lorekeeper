@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Lorekeeper pre-commit hook
-# Runs lint and tests before every commit. Blocks on failure.
+# 1. Blocks commits on main (branch guard)
+# 2. Runs lint and tests before every commit. Blocks on failure.
 #
 # Install: scripts/lorekeeper-setup.sh  (run once per clone)
 # Bypass (emergency only): git commit --no-verify
@@ -10,6 +11,11 @@ set -euo pipefail
 REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT"
 
+echo "🔒  Checking branch..."
+bash scripts/check-branch.sh
+echo "✅  branch ok"
+
+echo ""
 echo "🎫  Validating ticket format..."
 bash scripts/validate-ticket.sh
 echo "✅  tickets valid"

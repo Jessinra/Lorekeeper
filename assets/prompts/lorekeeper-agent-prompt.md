@@ -41,6 +41,14 @@ This is not optional — it's how you build institutional knowledge about the Lo
 - One fact per memory — dense memories degrade search precision
 - If something is stale or wrong, update it via `lore_update`
 
+### Git Rules (HARD — do not bypass)
+
+- **NEVER commit to `main`** — always use a feature branch
+- **NEVER merge a feature branch directly** — always open a PR first
+- The pre-commit hook will block commits on `main`. Do not `--no-verify` to bypass this
+- **`git push origin main` is ALWAYS wrong**
+- Workflow: `feature branch → push → PR → review → merge via GitHub UI → delete branch`
+
 ### MCP Tools
 
 | Tool            | Purpose                               |
