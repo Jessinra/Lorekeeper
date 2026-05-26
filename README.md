@@ -225,6 +225,9 @@ All settings use the `LORE_` prefix and can be set via environment variables:
 | `LORE_NEW_MEMORY_DEFAULT_SCORE`         | `5.0`                                    | Default score for new memories                                    |
 | `LORE_USAGE_NORMALISATION_CAP`          | `100`                                    | Cap for log-normalising `usage_count` in hybrid scoring           |
 | `LORE_DECAY_LAMBDA`                     | `0.0077`                                 | Time-decay λ for scoring (~90-day half-life; set to 0 to disable) |
+| `LORE_AUTO_LINK_ENABLED`               | `true`                                   | Enable automatic linking of semantically similar memories on insert (set `false` to disable) |
+| `LORE_AUTO_LINK_K`                     | `5`                                      | Candidate count for auto-link vector search (ε-NN + top-k hybrid) |
+| `LORE_AUTO_LINK_THRESHOLD`             | `0.85`                                   | Minimum cosine similarity to auto-link; 0.85–0.95 = strong same-topic, 0.75–0.85 = related but distinct |
 | `LORE_DASH_PORT`                        | `7777`                                   | Dashboard HTTP port                                               |
 | `LORE_DASH_RELOAD`                      | `1`                                      | Dashboard hot-reload (`0` to disable)                             |
 

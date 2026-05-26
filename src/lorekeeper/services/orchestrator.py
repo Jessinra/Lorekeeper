@@ -263,6 +263,14 @@ engine: MemoryEngine,
         Uses settings for k (candidate count) and threshold. Checks link_store
         before inserting to prevent duplicate links. Tracks metrics for observability.
 
+        Creates at most one link per call (first candidate above threshold that is
+        not a duplicate). Intentional — bulk inserts could produce noisy graph edges
+        if multiple links were created per call.
+
+        ``auto_link_candidates`` metric is incremented once per invocation (tracks
+        auto-link calls, not total candidates evaluated — ``_increment_metric`` has
+        no count param).
+
         Args:
             text: Content to search against (thought or concatenated memory fields).
             lore_id: The new memory's ID to link from.
