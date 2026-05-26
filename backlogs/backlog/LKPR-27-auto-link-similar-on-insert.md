@@ -24,7 +24,7 @@ Without configurable knobs:
 
 ## Solution
 
-Refactor the existing `_auto_link()` into a configurable, reusable method and hook it into `insert()` as well.
+Refactor the existing `_auto_link()` into a configurable, reusable method and hook it into `insert()` as well. Add observability so you can tune threshold by seeing what's being linked vs rejected.
 
 **Current `_auto_link()` (already in code):**
 ```python
@@ -50,6 +50,19 @@ Changes:
 3. **Extend to `lore_insert`** — call `_auto_link()` after `_insert_one_memory()` succeeds
 4. `_auto_link` already handles `lore_remember` — nothing changes there, just picks up the new settings
 
+**Observability (so you can tune threshold):**
+
+Currently you can see auto-linked links in the Links tab — `relation_type: auto_linked` badge + reason shows the cosine score. But to know if threshold is too high/low, you also need:
+
+- **Filter by relation_type** in Links tab — toggle to show only `auto_linked` links
+- **Metrics tracking** — `_increment_metric("auto_linked")` tracks created links vs `_increment_metric("auto_link_candidates")` tracks total candidates evaluated. The dashboard Metrics tab shows the ratio — if 100 candidates but only 5 linked, threshold is too high. If 100 candidates and 95 linked, threshold is too low.
+- **Reason includes cosine score** — already works, each link has `reason: "cosine: 0.91"` so you can see the actual similarity
+
+The thought process for tuning:
+- Check Links tab → filter `auto_linked` → look at the `reason` column → see cosine scores
+- Check Metrics tab → see `auto_linked` links created vs `auto_link_candidates` evaluated → ratio tells you if you're over/under filtering
+- Adjust threshold in Config tab → watch the ratio change in Metrics
+
 ## Acceptance Criteria
 
 - [ ] `LORE_AUTO_LINK_ENABLED` env var (default true) — when false, `_auto_link()` is a no-op for both `remember()` and `insert()`
@@ -61,7 +74,9 @@ Changes:
 - [ ] `lore_remember` continues working as before, just picks up the new defaults (k=5, threshold=0.85)
 - [ ] Config documented in README with threshold rationale
 - [ ] **Dashboard:** Auto-link controls added to Config tab (enabled toggle, k spinbutton, threshold spinbutton) under their own "AUTO-LINK" section
-- [ ] **Dashboard:** Auto-link metrics tracked and visible (links created count via `_increment_metric`)
+- [ ] **Dashboard:** Links tab supports filtering by relation_type (`auto_linked` / `related_to`)
+- [ ] **Dashboard:** Auto-link metrics tracked — `_increment_metric("auto_linked", count)` for created links AND `_increment_metric("auto_link_candidates", count)` for total evaluated candidates (so Metrics tab shows a ratio)
+- [ ] **Dashboard:** TODO_COLORS has entries for both `auto_linked` and `auto_link_candidates`
 
 ## Affected Files
 
@@ -74,7 +89,8 @@ Changes:
 - `src/lorekeeper/dashboard/app.py` — add `auto_link_enabled`, `auto_link_k`, `auto_link_threshold` to `get_config()` return + `ConfigUpdate` model
 - `src/lorekeeper/dashboard/static/js/config.js` — add `auto_link` section to `CFG_FIELDS` with enabled toggle, k spinbutton, threshold spinbutton; render + save
 - `src/lorekeeper/dashboard/static/index.html` — add `.config-section` container for auto-link
-- `src/lorekeeper/dashboard/static/js/metrics.js` — add `auto_linked` to `TOOL_COLORS` for the metrics heatmap
+- `src/lorekeeper/dashboard/static/js/links.js` — add `<select>` filter for relation_type (all / auto_linked / related_to), filter data before render
+- `src/lorekeeper/dashboard/static/js/metrics.js` — add `auto_linked` and `auto_link_candidates` to `TOOL_COLORS` for the metrics heatmap
 
 ## Dependencies
 
