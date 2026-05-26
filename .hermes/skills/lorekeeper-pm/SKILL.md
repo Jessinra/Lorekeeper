@@ -49,13 +49,23 @@ This is enforced by the `commit-msg` hook. Load `commit-convention` skill for fu
 
 ---
 
-## Backlog Conventions
+## Backlog Workflow (PM)
 
 > Full ticket lifecycle, numbering, scripts, and template → load the `backlog-management` skill.
 
 Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`. Numbering: sequential (highest+1), never fill gaps.
 
-**When filing a ticket, always separate:**
+### Weekly Planning
+
+Once per week, pull up to **10 proposal tickets** into the active backlog:
+
+1. Review proposals in `backlogs/proposal/` — pick high-value, unblocked items
+2. Update their status to `backlog` and set priority
+3. Commit + push on the **`chore/backlog`** branch
+4. Open a PR against `main` — auto-approved, no review needed
+5. Jason will squash-merge it
+
+### Filing a New Ticket
 
 - **Backend** — services, handlers, config, tests
 - **Dashboard** — UI changes in `dashboard/`. If backend-only, write `_none_` explicitly.

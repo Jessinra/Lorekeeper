@@ -154,6 +154,9 @@ Rules:
 - one logical change per commit — if you need "and", split it
 - never bundle unrelated changes
 - no WIP commits in main — squash before merging
+- **never commit directly to main** — all work goes through a feature branch → PR → merge
+- **no direct pushes to main** — only PR merges land on main
+- **PM exception removed:** Akane now uses the `chore/backlog` branch for backlog management, opens a PR → auto-approved → merged. No more direct pushes for anyone.
 - **author name must be `Dev` or `Diana`, email `jessinra.kai@gmail.com`** — enforced by hook
   ```bash
   # Dev
