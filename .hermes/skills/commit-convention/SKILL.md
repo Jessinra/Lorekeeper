@@ -15,9 +15,10 @@ All commits to the Lorekeeper repo are enforced by `.git/hooks/commit-msg` (inst
 ## Author Identity
 
 | Role | `user.name` | `user.email` |
-|------|------------|-------------|
+|---|---|---|
 | PM (Akane) | `Akane (PM)` | `jessinra.kai@gmail.com` |
 | Dev | `Dev` | `jessinra.kai@gmail.com` |
+| Engineer (Diana) | `Diana` | `jessinra.kai@gmail.com` |
 
 Set locally in the repo (not globally, to avoid polluting other projects):
 
@@ -28,6 +29,10 @@ git config --local user.email "jessinra.kai@gmail.com"
 
 # Dev
 git config --local user.name "Dev"
+git config --local user.email "jessinra.kai@gmail.com"
+
+# Diana
+git config --local user.name "Diana"
 git config --local user.email "jessinra.kai@gmail.com"
 ```
 

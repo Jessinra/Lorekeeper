@@ -199,6 +199,10 @@ git config --local user.email "jessinra.kai@gmail.com"
 # Dev
 git config --local user.name "Dev"
 git config --local user.email "jessinra.kai@gmail.com"
+
+# Diana
+git config --local user.name "Diana"
+git config --local user.email "jessinra.kai@gmail.com"
 ```
 
 **Commit title format**: `[LKPR-N] type: short imperative title`
@@ -222,6 +226,25 @@ After **every set of code changes**, load the `after-changes` skill and follow i
 **Opening PRs:** load the `github-pr` skill. In short: `gh pr create --base main --title "..." --body "..." --reviewer @copilot`
 
 Do not skip this. It is the discipline that keeps the repo clean and auditable.
+
+---
+
+## Git Workflow — Hard Rules
+
+### NEVER merge to main directly
+
+- **All changes go through feature branches** (`LKPR-*`, `feat/*`, `fix/*`) — never work on `main`
+- **All feature branches MUST go through a PR** before reaching `main`
+- **The pre-commit hook blocks commits on `main`** — a deliberate hard stop. Use `git checkout -b <branch>` first.
+- **`git push origin main` is ALWAYS wrong** unless you are the CI/CD pipeline
+- **`git checkout main && git merge <branch>` runs on a local feature branch** — push the feature branch, open a PR, merge via the web UI
+- **Emergency bypass**: `git commit --no-verify` skips both the branch check AND lint/tests (use only when the repo is broken and needs urgent fix)
+- This rule applies to ALL agents — Hermes, Claude Code, Cursor. No exceptions without human approval.
+
+**The workflow is always:**
+```
+feature branch → push → PR → review → merge via GitHub UI → delete branch
+```
 
 ---
 

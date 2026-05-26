@@ -168,6 +168,16 @@ engine: MemoryEngine,
                     lore_id = result["inserted"]["id"]
                     inserted_memories.append(result["inserted"])
 
+                    # Auto-link this new memory to similar existing ones
+                    try:
+                        link_text = (
+                            f"{m.get('title', '')} {m.get('description', '')} "
+                            f"{m.get('content', '')}"
+                        )
+                        self._auto_link(link_text.strip(), lore_id, source="insert")
+                    except Exception:
+                        log.warning("auto_link_failed", lore_id=lore_id, exc_info=True)
+
                     # Normalize inline links to standard format and delegate to _insert_one_link
                     if inline_links:
                         for link_def in inline_links:
@@ -247,23 +257,93 @@ engine: MemoryEngine,
         linked_to = self._auto_link(thought, lore_id)
         return {"id": lore_id, "title": title, "linked_to": linked_to}
 
-    def _auto_link(self, thought: str, lore_id: str) -> dict | None:
+    def _auto_link(self, text: str, lore_id: str, source: str = "remember") -> dict | None:
         """Auto-link a new memory to its nearest neighbor above threshold.
 
-        Reusable by lore_insert in the future. Queries Chroma for top-2 nearest
-        neighbors, links the first that's not self and above 0.75.
+        Uses settings for k (candidate count) and threshold. Checks link_store
+        before inserting to prevent duplicate links. Tracks metrics for observability.
+
+        Creates at most one link per call (first candidate above threshold that is
+        not a duplicate). Intentional — bulk inserts could produce noisy graph edges
+        if multiple links were created per call.
+
+        ``auto_link_candidates`` metric is incremented once per invocation (tracks
+        auto-link calls, not total candidates evaluated — ``_increment_metric`` has
+        no count param).
+
+        Never raises — all failures are caught and logged so callers (remember,
+        insert) are never broken by a bad auto-link.
+
+        Args:
+            text: Content to search against (thought or concatenated memory fields).
+            lore_id: The new memory's ID to link from.
+            source: Origin label for the reason string ("remember" or "insert").
         """
-        sem_hits = self._engine.search(thought, limit=2)
+        if not self._settings.auto_link_enabled:
+            return None
+
+        if not text or not text.strip():
+            return None
+
+        # Clamp k to [1, 200] — non-positive values crash some vector backends
+        k = max(1, min(self._settings.auto_link_k, 200))
+        threshold = self._settings.auto_link_threshold
+
+        try:
+            sem_hits = self._engine.search(text, limit=k)
+        except Exception:
+            log.warning("auto_link: engine.search failed", exc_info=True)
+            return None
+
+        self._increment_metric("auto_link_candidates")
+
+        # Pre-compute the set of IDs already linked to lore_id (both directions)
+        try:
+            existing_links = self._store.links_for_memory(lore_id)
+            linked_ids: set[str] = set()
+            for link in existing_links:
+                linked_ids.add(link.target_memory_id)
+                if link.source_memory_id != lore_id:
+                    linked_ids.add(link.source_memory_id)
+        except Exception:
+            log.warning("auto_link: links_for_memory failed", exc_info=True)
+            return None
+
         for hit in sem_hits:
-            if hit["lore_id"] != lore_id and hit["score"] >= 0.75:
-                raw_score = round(hit["score"], 4)
+            if hit["lore_id"] == lore_id or hit["score"] < threshold:
+                continue
+
+            if hit["lore_id"] in linked_ids:
+                continue
+
+            # Verify target memory exists and is not soft-deleted
+            try:
+                target_row = self._store.get_memory_row(hit["lore_id"])
+                if target_row is None or target_row["soft_deleted"]:
+                    continue
+            except Exception:
+                log.warning(
+                    "auto_link: get_memory_row failed for %s (target %s)",
+                    lore_id,
+                    hit["lore_id"],
+                    exc_info=True,
+                )
+                continue
+
+            raw_score = round(hit["score"], 4)
+            try:
                 self._store.insert_link(
                     source_memory_id=lore_id,
                     target_memory_id=hit["lore_id"],
                     relation_type="related_to",
-                    reason=f"auto-linked from lore_remember: {raw_score:.2f}",
+                    reason=f"auto-linked from lore_{source}: {raw_score:.2f}",
                 )
-                return {"id": hit["lore_id"], "score": raw_score}
+            except Exception:
+                log.warning("auto_link: insert_link failed", exc_info=True)
+                continue
+
+            self._increment_metric("auto_linked")
+            return {"id": hit["lore_id"], "score": raw_score}
         return None
 
     def _insert_one_memory(self, m: dict, force: bool) -> dict:

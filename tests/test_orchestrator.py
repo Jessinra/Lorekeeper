@@ -503,6 +503,143 @@ def test_insert_inline_link_missing_relation_type(svc):
     assert "relation_type" in result["errors"][0]["error"]
 
 
+# ── Auto-link on insert ────────────────────────────────────────────────────
+
+
+def test_insert_auto_link_creates_link(svc):
+    """Insert calls auto-link — a link is created when a similar memory exists."""
+    service, engine = svc
+
+    # Seed a memory
+    seed = service.insert(
+        memories=[{"title": "checkout", "description": "", "content": "checkout flow details"}],
+        links=[],
+    )
+    seed_id = seed["inserted_memories"][0]["id"]
+
+    # Point engine to treat any new content as similar to seed
+    engine._search_results = [{"lore_id": seed_id, "score": 0.90}]
+
+    # Insert a new memory — should auto-link to seed
+    result = service.insert(
+        memories=[{
+            "title": "payment",
+            "description": "",
+            "content": "payment processing in checkout",
+        }],
+        links=[],
+    )
+    new_id = result["inserted_memories"][0]["id"]
+
+    links = service._store.links_for_memory(new_id)
+    assert len(links) == 1
+    assert links[0].target_memory_id == seed_id
+    assert "auto-linked from lore_insert" in links[0].reason
+
+
+def test_insert_auto_link_respects_disabled(svc):
+    """When auto_link_enabled=False, insert should not auto-link."""
+    service, engine = svc
+    service._settings.auto_link_enabled = False
+
+    seed = service.insert(
+        memories=[{"title": "checkout", "description": "", "content": "checkout"}],
+        links=[],
+    )
+    seed_id = seed["inserted_memories"][0]["id"]
+
+    engine._search_results = [{"lore_id": seed_id, "score": 0.90}]
+
+    result = service.insert(
+        memories=[{"title": "payment", "description": "", "content": "payment"}],
+        links=[],
+    )
+    new_id = result["inserted_memories"][0]["id"]
+
+    links = service._store.links_for_memory(new_id)
+    assert len(links) == 0
+
+
+def test_insert_auto_link_respects_threshold(svc):
+    """Auto-link should not create links below the configured threshold."""
+    service, engine = svc
+
+    seed = service.insert(
+        memories=[{"title": "seed", "description": "", "content": "seed content"}],
+        links=[],
+    )
+    seed_id = seed["inserted_memories"][0]["id"]
+
+    # Score below default threshold of 0.85
+    engine._search_results = [{"lore_id": seed_id, "score": 0.70}]
+
+    result = service.insert(
+        memories=[{"title": "new", "description": "", "content": "new content"}],
+        links=[],
+    )
+    new_id = result["inserted_memories"][0]["id"]
+
+    links = service._store.links_for_memory(new_id)
+    assert len(links) == 0
+
+
+def test_auto_link_duplicate_guard(svc):
+    """Auto-link should skip candidates already linked to avoid duplicate links."""
+    service, engine = svc
+
+    seed = service.insert(
+        memories=[{"title": "seed", "description": "", "content": "seed content"}],
+        links=[],
+    )
+    seed_id = seed["inserted_memories"][0]["id"]
+
+    # First insert — auto-links A→seed
+    engine._search_results = [{"lore_id": seed_id, "score": 0.90}]
+    result = service.insert(
+        memories=[{"title": "mem A", "description": "", "content": "related content"}],
+        links=[],
+    )
+    mem_a_id = result["inserted_memories"][0]["id"]
+    assert len(service._store.links_for_memory(mem_a_id)) == 1
+
+    # Call _auto_link directly with the same lore_id — should skip because
+    # mem_a already has a link to seed
+    engine._search_results = [{"lore_id": seed_id, "score": 0.90}]
+    linked = service._auto_link("related content", mem_a_id, source="insert")
+    assert linked is None  # skipped by duplicate guard
+
+    # Still only 1 link from mem_a to seed
+    assert len(service._store.links_for_memory(mem_a_id)) == 1
+
+
+def test_auto_link_uses_settings_k(svc):
+    """_auto_link searches with settings.auto_link_k candidates, not hardcoded 2."""
+    service, engine = svc
+    service._settings.auto_link_k = 10
+
+    seed = service.insert(
+        memories=[{"title": "seed", "description": "", "content": "seed"}],
+        links=[],
+    )
+    seed_id = seed["inserted_memories"][0]["id"]
+
+    # If engine is called with limit=10, the first 2 results are below threshold
+    # but the 10th is a 0.95 match
+    hits = [{"lore_id": f"noise-{i}", "score": 0.5} for i in range(9)]
+    hits.append({"lore_id": seed_id, "score": 0.95})
+    engine._search_results = hits
+
+    result = service.insert(
+        memories=[{"title": "test", "description": "", "content": "test content"}],
+        links=[],
+    )
+    new_id = result["inserted_memories"][0]["id"]
+
+    links = service._store.links_for_memory(new_id)
+    assert len(links) == 1
+    assert links[0].target_memory_id == seed_id
+
+
 def test_insert_with_inline_links_and_top_level_links(svc):
     """Both inline links (per memory) and top-level links work together."""
     service, _ = svc

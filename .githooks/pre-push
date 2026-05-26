@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Pre-push branch guard: block all pushes to main from any source.
+# - Blocks: git push origin main, git push origin feature:main, accidental pushes
+# - Does NOT block: pushes to feature branches (LKPR-*, feat/*, chore/*, etc.)
+set -euo pipefail
+
+echo "🔒  Checking push targets..."
+
+BLOCKED=0
+
+# Pre-push stdin format: <local-ref> <local-sha> <remote-ref> <remote-sha>
+while read -r local_ref local_sha remote_ref remote_sha; do
+    # Strip 'refs/heads/' prefix
+    ref_name="${remote_ref#refs/heads/}"
+
+    if [ "$ref_name" = "main" ] || [ "$ref_name" = "master" ]; then
+        echo "🚫  BLOCKED: Push to '$ref_name' is not allowed."
+        echo "    All changes to main must go through a pull request (squash-merge)."
+        echo "    Push your branch and open a PR instead."
+        echo ""
+        BLOCKED=1
+    fi
+done
+
+if [ "$BLOCKED" -eq 1 ]; then
+    exit 1
+fi
+
+echo "✅  push targets ok"

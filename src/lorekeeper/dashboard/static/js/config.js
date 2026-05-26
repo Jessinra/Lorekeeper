@@ -137,6 +137,31 @@ export const CFG_FIELDS = {
 			type: "float",
 		},
 	],
+	auto_link: [
+		{
+			key: "auto_link_enabled",
+			env: "LORE_AUTO_LINK_ENABLED",
+			label: "Auto-link enabled",
+			desc: "When disabled, auto-link is a no-op for both remember() and insert()",
+			type: "bool",
+		},
+		{
+			key: "auto_link_k",
+			env: "LORE_AUTO_LINK_K",
+			label: "Auto-link K",
+			desc: "Number of nearest neighbors to evaluate as auto-link candidates",
+			step: 1,
+			type: "int",
+		},
+		{
+			key: "auto_link_threshold",
+			env: "LORE_AUTO_LINK_THRESHOLD",
+			label: "Auto-link threshold",
+			desc: "Minimum cosine similarity score required to auto-link (default 0.85)",
+			step: 0.01,
+			type: "float",
+		},
+	],
 	readonly: [
 		{
 			key: "data_dir",
@@ -158,7 +183,9 @@ let _cfgOriginal = {};
 export function _cfgRow(f, value, readonly) {
 	const valHTML = readonly
 		? `<span style="font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:var(--muted)">${esc(String(value))}</span>`
-		: `<input type="number" id="cfg-${f.key}" value="${value}" step="${f.step}" oninput="onCfgChange()" style="width:110px">`;
+		: f.type === "bool"
+			? `<input type="checkbox" id="cfg-${f.key}" ${value ? "checked" : ""} onchange="onCfgChange()" style="width:20px;height:20px;accent-color:#0066ff;cursor:pointer">`
+			: `<input type="number" id="cfg-${f.key}" value="${value}" step="${f.step}" oninput="onCfgChange()" style="width:110px">`;
 	return `
     <div class="config-row">
       <div class="config-row-info">
@@ -192,6 +219,9 @@ export async function loadConfig() {
 	document.getElementById("cfg-limits").innerHTML = CFG_FIELDS.limits
 		.map((f) => _cfgRow(f, cfg[f.key], false))
 		.join("");
+	document.getElementById("cfg-auto-link").innerHTML = CFG_FIELDS.auto_link
+		.map((f) => _cfgRow(f, cfg[f.key], false))
+		.join("");
 	document.getElementById("cfg-readonly").innerHTML = CFG_FIELDS.readonly
 		.map((f) => _cfgRow(f, cfg[f.key], true))
 		.join("");
@@ -203,12 +233,17 @@ export async function saveConfig() {
 		CFG_FIELDS.weights,
 		CFG_FIELDS.quality,
 		CFG_FIELDS.limits,
+		CFG_FIELDS.auto_link,
 	]) {
 		for (const f of group) {
 			const el = document.getElementById(`cfg-${f.key}`);
 			if (!el) continue;
 			body[f.key] =
-				f.type === "int" ? parseInt(el.value, 10) : parseFloat(el.value);
+				f.type === "bool"
+					? el.checked
+					: f.type === "int"
+						? parseInt(el.value, 10)
+						: parseFloat(el.value);
 		}
 	}
 	try {

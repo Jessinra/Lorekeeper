@@ -154,9 +154,14 @@ Rules:
 - one logical change per commit — if you need "and", split it
 - never bundle unrelated changes
 - no WIP commits in main — squash before merging
-- **author name must be `Dev`, email `jessinra.kai@gmail.com`** — enforced by hook
+- **author name must be `Dev` or `Diana`, email `jessinra.kai@gmail.com`** — enforced by hook
   ```bash
+  # Dev
   git config --local user.name "Dev"
+  git config --local user.email "jessinra.kai@gmail.com"
+
+  # Diana
+  git config --local user.name "Diana"
   git config --local user.email "jessinra.kai@gmail.com"
   ```
 
@@ -211,6 +216,42 @@ def test_memory_engine_empty_store_returns_empty_list():
 - Don't mock Mem0/Chroma in memory_engine tests — real behavior only
 
 ---
+
+## GitHub CLI (`gh`) — Efficient Operation
+
+> See the `github-app-bot-auth` skill for full auth setup, token rotation, and troubleshooting.
+
+This repo uses `jessinra-megumi-dev[bot]` for all `gh` operations. The bot auth token auto-refreshes every 45 min via cron (no manual intervention needed).
+
+**Quick reference for common operations:**
+
+```bash
+# Check auth
+gh auth status
+
+# PR from current branch (standard flow)
+git push -u origin HEAD
+gh pr create --base main --title "[LKPR-N] type: title" --body "## Summary\n\nCloses LKPR-N" --reviewer @copilot
+
+# View PR details
+gh pr view 12
+gh pr diff 12
+gh pr checks 12
+
+# Inline review comments (not shown by pr view)
+gh api repos/Jessinra/Lorekeeper/pulls/12/comments --jq '.[] | {path, body, line}'
+
+# Merge
+gh pr merge 12 --squash --delete-branch
+
+# General API
+gh api repos/Jessinra/Lorekeeper/pulls --jq '.[] | {number, title, state}'
+```
+
+The token is short-lived (1hr) but auto-refreshed. If `gh` returns 401, run:
+```bash
+python3 ~/.hermes/scripts/gh-token-refresh.py
+```
 
 ## Pre-Push Self-Review Checklist
 
