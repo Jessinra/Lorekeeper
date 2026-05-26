@@ -82,6 +82,34 @@ Dev should not have to guess whether a backend change needs a dashboard update.
 
 ---
 
+## GitHub Issue Integration
+
+Since LKPR-24, status and priority are tracked via **GitHub Issue labels** — specs still live in markdown files. See `backlogs/backlog/LKPR-24-hybrid-backlog.md` for full details.
+
+**Quick reference:**
+
+```bash
+# View active backlog on GitHub
+gh issue list --label backlog --repo Jessinra/Lorekeeper
+
+# Start work
+gh issue edit LKPR-30 --add-label "in-progress" --remove-label "backlog"
+
+# PR ready for review
+gh issue edit LKPR-30 --add-label "review" --remove-label "in-progress"
+
+# Solved
+gh issue edit LKPR-30 --add-label "done" --remove-label "review"
+
+# View all done tickets this sprint
+gh issue list --label done --repo Jessinra/Lorekeeper
+
+# Proposals
+gh issue list --label proposal --repo Jessinra/Lorekeeper
+```
+
+**Weekly sync (PM):** Pull all issue labels → update markdown `status:` fields → commit on `chore/backlog` → PR → auto-merge.
+
 ## Review Workflow (Dev → PM)
 
 Dev must submit work via a **pull request** (PR) — never direct commits to `main`.

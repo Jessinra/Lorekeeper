@@ -174,6 +174,18 @@ Rules:
 
 > Full details → load the `backlog-management` skill. Brief summary below:
 
+Tickets live in `backlogs/` as `LKPR-N-slug.md`. Status & priority tracked via **GitHub Issue labels** (LKPR-24 hybrid model).
+
+**During sprint (no git needed):**
+
+```bash
+gh issue edit LKPR-30 --add-label "in-progress" --remove-label "backlog"
+gh issue edit LKPR-30 --add-label "review" --remove-label "in-progress"
+gh issue edit LKPR-30 --add-label "done" --remove-label "review"
+```
+
+**Weekly sync (PM):** markdown `status:` fields updated to match labels, committed on `chore/backlog`, opened as PR.
+
 Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`. Numbering: sequential (highest+1), never fill gaps.
 
 **Picking up a ticket:**
