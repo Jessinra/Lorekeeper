@@ -1,6 +1,6 @@
 ---
 id: LKPR-27
-title: Auto-link similar/duplicate memories on insert via vector similarity
+title: Upgrade auto-link to configurable — env vars, lore_insert hook, dedup guard
 type: feature
 status: backlog
 priority: medium
@@ -8,45 +8,57 @@ sprint: ~
 rice_score: ~
 filed_by: Akane (PM)
 filed_date: 2026-05-23
+updated: 2026-05-26
 ---
 
 # [LKPR-27] Auto-link similar/duplicate memories on insert via vector similarity
 
 ## Problem
 
-New memories exist in isolation — no links to existing nodes. Over time this creates a dense cluster of semantically similar memories that aren't connected, making graph traversal (lore_related) less useful. Duplicate or near-duplicate entries accumulate without detection.
+LKPR-29 shipped a basic `_auto_link()` in `remember()` — hardcoded top-2 candidates, 0.75 threshold, max 1 link. It works for the basic case but has no env-var control, no duplicate-link guard, and `lore_insert()` doesn't use it at all.
+
+Without configurable knobs:
+- Can't tighten/loosen the threshold per deployment
+- Can't disable auto-link entirely (no kill switch)
+- `lore_insert` users miss out on automatic graph building
 
 ## Solution
 
-After every `lore_insert`, query Chroma's existing HNSW index for the new memory's nearest neighbors. Auto-link to neighbors that pass both filters.
+Refactor the existing `_auto_link()` into a configurable, reusable method and hook it into `insert()` as well.
 
-**Algorithm (ε-NN + top-k hybrid):**
+**Current `_auto_link()` (already in code):**
+```python
+sem_hits = self._engine.search(thought, limit=2)
+for hit in sem_hits:
+    if hit["lore_id"] != lore_id and hit["score"] >= 0.75:
+        link A→B, max 1 link
 ```
-top-k = query_chroma(embedding, n_results=5)       # HNSW fast-query, sub-100ms
-candidates = [n for n in top-k if n.score > 0.85]  # threshold filter
-for c in candidates:
-    link_store.link(c.memory_id, new_memory_id, "auto_linked", f"cosine: {c.score:.2f}")
+
+**Upgrade to:**
+```python
+# settings: LORE_AUTO_LINK_K, LORE_AUTO_LINK_THRESHOLD, LORE_AUTO_LINK_ENABLED
+sem_hits = search(text, limit=settings.k)
+for hit in sem_hits:
+    if hit["lore_id"] != lore_id and hit["score"] >= settings.threshold:
+        if not already_linked(self, lore_id, hit["lore_id"]):
+            link A→B
 ```
 
-Key points:
-- **Piggybacks on existing Chroma HNSW index** — no new index or storage needed. Chroma's internal graph is already a navigable small-world for the full store.
-- **Threshold range**: 0.85 is safe for `all-MiniLM-L6-v2` embeddings (>0.95 = near-duplicate, >0.85 = strong same-topic cluster, >0.75 = related). Configurable via env var.
-- **k=5 cap**: prevents hub flooding (one vague memory linking to everything). Controls graph density.
-- **No LLM call** — pure vector math. At most 5 cosine comparisons (Chromai already scored them).
-- **Insert is never blocked** — linking is additive only.
-- **Reason includes cosine score** for agent inspection + tuning.
-
-Contrast with LKPR-28: this detects **closeness** (semantic proximity), not **relational intent** (why A connects to B). Two different link types.
+Changes:
+1. **Promote hardcoded values → config.py env vars** — `LORE_AUTO_LINK_K` (default 5), `LORE_AUTO_LINK_THRESHOLD` (default 0.85), `LORE_AUTO_LINK_ENABLED` (default true)
+2. **Add duplicate link guard** — check `link_store` before inserting a link that already exists
+3. **Extend to `lore_insert`** — call `_auto_link()` after `_insert_one_memory()` succeeds
+4. `_auto_link` already handles `lore_remember` — nothing changes there, just picks up the new settings
 
 ## Acceptance Criteria
 
-- [ ] After lore_insert, query Chroma for top-k nearest neighbors (k configurable, default 5)
-- [ ] For each neighbor with score > threshold (default 0.85), create `MemoryLink` with `relation_type: "auto_linked"` and reason `"cosine: {score:.2f}"`
-- [ ] No links created if no neighbors pass threshold (silent skip)
-- [ ] Guard against duplicate link creation (same A→B pair shouldn't re-link if A is inserted again)
-- [ ] `LORE_AUTO_LINK_K` (env var, default 5) — how many candidates to fetch
-- [ ] `LORE_AUTO_LINK_THRESHOLD` (env var, default 0.85) — minimum cosine score
-- [ ] `LORE_AUTO_LINK_ENABLED` (env var, default true) — kill switch
+- [ ] `LORE_AUTO_LINK_ENABLED` env var (default true) — when false, `_auto_link()` is a no-op for both `remember()` and `insert()`
+- [ ] `LORE_AUTO_LINK_K` env var (default 5) — how many candidates to fetch from vector search
+- [ ] `LORE_AUTO_LINK_THRESHOLD` env var (default 0.85) — minimum cosine score to create a link
+- [ ] `_auto_link()` uses the new env vars instead of hardcoded 2/0.75
+- [ ] `lore_insert` calls `_auto_link()` after each successful memory insert
+- [ ] Duplicate guard: same A→B pair is never linked twice (check `link_store` before inserting)
+- [ ] `lore_remember` continues working as before, just picks up the new defaults (k=5, threshold=0.85)
 - [ ] Config documented in README with threshold rationale
 
 ## Affected Files
