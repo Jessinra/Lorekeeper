@@ -2,13 +2,15 @@
 id: LKPR-27
 title: Upgrade auto-link to configurable — env vars, lore_insert hook, dedup guard
 type: feature
-status: review
+status: done
 priority: medium
-sprint: ~
+sprint: 1
 rice_score: ~
 filed_by: Akane (PM)
 filed_date: 2026-05-23
 updated: 2026-05-26
+resolved_date: 2026-05-26
+pr_number: 13
 ---
 
 # [LKPR-27] Auto-link similar/duplicate memories on insert via vector similarity
@@ -100,7 +102,7 @@ _None_ — Chroma's HNSW index is already built and maintained by every insert. 
 
 - **CLAUDE.md**: [ ] N/A — passive feature, no workflow change
 - **README.md**: [ ] Document `LORE_AUTO_LINK_ENABLED`, `LORE_AUTO_LINK_K`, `LORE_AUTO_LINK_THRESHOLD` env vars
-- **Skills**: ~~[ ] Update `memory-linker` skill — linking now has automatic and manual modes~~ _(removed: `memory-linker` skill does not exist; no update required)_
+- **Skills**: [ ] Update `memory-linker` skill — linking now has automatic and manual modes
 - **Backlog**: [ ] N/A — complementary with LKPR-28
 
 ## Open Questions
