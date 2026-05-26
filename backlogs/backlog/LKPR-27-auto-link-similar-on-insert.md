@@ -100,7 +100,7 @@ _None_ — Chroma's HNSW index is already built and maintained by every insert. 
 
 - **CLAUDE.md**: [ ] N/A — passive feature, no workflow change
 - **README.md**: [ ] Document `LORE_AUTO_LINK_ENABLED`, `LORE_AUTO_LINK_K`, `LORE_AUTO_LINK_THRESHOLD` env vars
-- **Skills**: [ ] Update `memory-linker` skill — linking now has automatic and manual modes
+- **Skills**: ~~[ ] Update `memory-linker` skill — linking now has automatic and manual modes~~ _(removed: `memory-linker` skill does not exist; no update required)_
 - **Backlog**: [ ] N/A — complementary with LKPR-28
 
 ## Open Questions
