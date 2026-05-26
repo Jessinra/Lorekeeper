@@ -48,7 +48,13 @@ export function setLinkSort(field) {
 export function renderLinks() {
 	let filtered = state.allLinks;
 	if (_relationFilter) {
-		filtered = filtered.filter((l) => l.relation_type === _relationFilter);
+		if (_relationFilter === "auto_linked") {
+			filtered = filtered.filter((l) =>
+				l.reason?.startsWith("auto-linked from"),
+			);
+		} else {
+			filtered = filtered.filter((l) => l.relation_type === _relationFilter);
+		}
 	}
 	const sorted = clientSort(filtered, state.linkSort.field, state.linkSort.dir);
 	document.getElementById("links-count").textContent =

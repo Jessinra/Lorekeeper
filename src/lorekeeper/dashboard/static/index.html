@@ -98,13 +98,12 @@
     <label style="font-size:13px">Relation:
       <select id="links-relation-filter" onchange="setLinkRelationFilterFromUI()" style="margin-left:4px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);font-size:12px">
         <option value="">All</option>
+        <option value="auto_linked">auto_linked</option>
         <option value="related_to">related_to</option>
         <option value="used_in">used_in</option>
-        <option value="supersedes">supersedes</option>
-        <option value="superseded_by">superseded_by</option>
-        <option value="clarifies">clarifies</option>
-        <option value="example_of">example_of</option>
-        <option value="references">references</option>
+        <option value="used_for">used_for</option>
+        <option value="used_by">used_by</option>
+        <option value="used_as">used_as</option>
       </select>
     </label>
     <span class="item-count" id="links-count"></span>
