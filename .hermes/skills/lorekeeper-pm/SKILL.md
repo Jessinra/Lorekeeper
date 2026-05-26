@@ -49,13 +49,23 @@ This is enforced by the `commit-msg` hook. Load `commit-convention` skill for fu
 
 ---
 
-## Backlog Conventions
+## Backlog Workflow (PM)
 
 > Full ticket lifecycle, numbering, scripts, and template → load the `backlog-management` skill.
 
 Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`. Numbering: sequential (highest+1), never fill gaps.
 
-**When filing a ticket, always separate:**
+### Weekly Planning
+
+Once per week, pull up to **10 proposal tickets** into the active backlog:
+
+1. Review proposals in `backlogs/proposal/` — pick high-value, unblocked items
+2. Update their status to `backlog` and set priority
+3. Commit + push on the **`chore/backlog`** branch
+4. Open a PR against `main` — auto-approved, no review needed
+5. Jason will squash-merge it
+
+### Filing a New Ticket
 
 - **Backend** — services, handlers, config, tests
 - **Dashboard** — UI changes in `dashboard/`. If backend-only, write `_none_` explicitly.
@@ -71,6 +81,34 @@ Dev should not have to guess whether a backend change needs a dashboard update.
 5. Commit: `[LKPR-0] chore: add LKPR-N <short title>` (housekeeping = `[LKPR-0]`, not `[LKPR-dev]`)
 
 ---
+
+## GitHub Issue Integration
+
+Since LKPR-24, status and priority are tracked via **GitHub Issue labels** — specs still live in markdown files. See `backlogs/backlog/LKPR-24-hybrid-backlog.md` for full details.
+
+**Quick reference:**
+
+```bash
+# View active backlog on GitHub
+gh issue list --label backlog --repo Jessinra/Lorekeeper
+
+# Start work
+gh issue edit LKPR-30 --add-label "in-progress" --remove-label "backlog"
+
+# PR ready for review
+gh issue edit LKPR-30 --add-label "review" --remove-label "in-progress"
+
+# Solved
+gh issue edit LKPR-30 --add-label "done" --remove-label "review"
+
+# View all done tickets this sprint
+gh issue list --label done --repo Jessinra/Lorekeeper
+
+# Proposals
+gh issue list --label proposal --repo Jessinra/Lorekeeper
+```
+
+**Weekly sync (PM):** Pull all issue labels → update markdown `status:` fields → commit on `chore/backlog` → PR → auto-merge.
 
 ## Review Workflow (Dev → PM)
 

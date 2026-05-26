@@ -154,6 +154,9 @@ Rules:
 - one logical change per commit — if you need "and", split it
 - never bundle unrelated changes
 - no WIP commits in main — squash before merging
+- **never commit directly to main** — all work goes through a feature branch → PR → merge
+- **no direct pushes to main** — only PR merges land on main
+- **PM exception removed:** Akane now uses the `chore/backlog` branch for backlog management, opens a PR → auto-approved → merged. No more direct pushes for anyone.
 - **author name must be `Dev` or `Diana`, email `jessinra.kai@gmail.com`** — enforced by hook
   ```bash
   # Dev
@@ -170,6 +173,18 @@ Rules:
 ## Backlog Workflow
 
 > Full details → load the `backlog-management` skill. Brief summary below:
+
+Tickets live in `backlogs/` as `LKPR-N-slug.md`. Status & priority tracked via **GitHub Issue labels** (LKPR-24 hybrid model).
+
+**During sprint (no git needed):**
+
+```bash
+gh issue edit LKPR-30 --add-label "in-progress" --remove-label "backlog"
+gh issue edit LKPR-30 --add-label "review" --remove-label "in-progress"
+gh issue edit LKPR-30 --add-label "done" --remove-label "review"
+```
+
+**Weekly sync (PM):** markdown `status:` fields updated to match labels, committed on `chore/backlog`, opened as PR.
 
 Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`. Numbering: sequential (highest+1), never fill gaps.
 
