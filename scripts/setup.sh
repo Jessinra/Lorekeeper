@@ -227,12 +227,13 @@ PYEOF
 
 # Install user-facing skills (assets/skills/) to a target directory.
 # Uses copies so the target doesn't depend on this repo's path.
-# Prints a line per skill: installed | updated | skip
+# Per-skill progress lines go to stderr (shown on terminal).
+# Echoes a summary token to stdout for capture: synced | "updated N" | "installed N" | none
 _install_user_skills() {
     local dst="$1"
-    [ -d "$SKILLS_USER" ] || { echo "  → (no assets/skills/)"; return; }
+    [ -d "$SKILLS_USER" ] || { echo "  → (no assets/skills/)" >&2; echo "none"; return; }
     mkdir -p "$dst"
-    local any=0
+    local any=0 n_updated=0 n_installed=0
     for skill_dir in "$SKILLS_USER"/*/; do
         [ -d "$skill_dir" ] || continue
         any=1
@@ -242,18 +243,31 @@ _install_user_skills() {
         target="$dst/$skill_name"
         installed_ver="$(_skill_version "$target/SKILL.md")"
         if [ -n "$src_ver" ] && [ "$installed_ver" = "$src_ver" ]; then
-            echo "  → $skill_name — already up to date ($src_ver)"
+            echo "  → $skill_name — already up to date ($src_ver)" >&2
         else
             rm -rf "$target"
             cp -r "$skill_dir" "$target"
             if [ -n "$installed_ver" ] && [ "$installed_ver" != "$src_ver" ]; then
-                echo "  ✓ $skill_name — updated ($installed_ver → $src_ver)"
+                echo "  ✓ $skill_name — updated ($installed_ver → $src_ver)" >&2
+                n_updated=$((n_updated + 1))
             else
-                echo "  ✓ $skill_name — installed ($src_ver)"
+                echo "  ✓ $skill_name — installed ($src_ver)" >&2
+                n_installed=$((n_installed + 1))
             fi
         fi
     done
-    [ "$any" -eq 0 ] && echo "  → (no skills found)"
+    if [ "$any" -eq 0 ]; then
+        echo "  → (no skills found)" >&2
+        echo "none"
+    elif [ "$n_updated" -gt 0 ] && [ "$n_installed" -gt 0 ]; then
+        echo "updated $n_updated, installed $n_installed"
+    elif [ "$n_updated" -gt 0 ]; then
+        echo "updated $n_updated"
+    elif [ "$n_installed" -gt 0 ]; then
+        echo "installed $n_installed"
+    else
+        echo "synced"
+    fi
     return 0
 }
 
@@ -291,14 +305,19 @@ _install_dev_skills_hermes() {
 
 # Format summary cell: add/skip/missing/error → display string
 _cell() {
+    # Returns a plain-text token for summary table cells (no ANSI codes).
+    # Color is applied at print time but padding is computed on visible chars only.
     case "$1" in
-        added*)   printf "${GREEN}✓ added${NC}" ;;
-        updated*) printf "${GREEN}✓ updated${NC}" ;;
-        skip)     printf "→ skip" ;;
-        missing)  printf "${YELLOW}— N/A${NC}" ;;
-        error)    printf "${RED}✗ failed${NC}" ;;
-        "")       printf "—" ;;
-        *)        printf "%s" "$1" ;;
+        added*)            printf "✓ added" ;;
+        updated\ *|updated) printf "✓ updated" ;;
+        "updated "*|"installed "*) printf "✓ %s" "$1" ;;
+        synced)            printf "→ synced" ;;
+        none)              printf "→ none" ;;
+        skip)              printf "→ skip" ;;
+        missing)           printf "— N/A" ;;
+        error)             printf "✗ failed" ;;
+        "")                printf "—" ;;
+        *)                 printf "%s" "$1" ;;
     esac
 }
 
@@ -407,60 +426,34 @@ for i in "${!AGENT_NAMES[@]}"; do
             prompt_result="$(_inject_prompt "$dir/soul.md")"
             ;;
         claude)
-            # Inject into CLAUDE.md in the current working directory (if present).
-            # Run setup.sh from your project root to inject into that project's CLAUDE.md.
-            if [ -f "$WORK_DIR/CLAUDE.md" ]; then
-                prompt_result="$(_inject_prompt "$WORK_DIR/CLAUDE.md")"
-            fi
+            # Inject into ~/.claude/CLAUDE.md in the root directory (if present).
+            prompt_result="$(_inject_prompt "$dir/CLAUDE.md")"
             ;;
         cursor)
-            # Inject into .cursorrules and/or AGENTS.md in the current directory.
-            # Run setup.sh from your project root to target the right files.
-            cursor_echoed=0
-            if [ -f "$WORK_DIR/.cursorrules" ]; then
-                cursorrules_result="$(_inject_prompt "$WORK_DIR/.cursorrules")"
-                if [ "$cursorrules_result" != "missing" ]; then
-                    prompt_result="$cursorrules_result"
-                    echo -e "${GREEN}✓ .cursorrules: $cursorrules_result${NC}"
-                    cursor_echoed=1
-                fi
-            fi
-            if [ -f "$WORK_DIR/AGENTS.md" ]; then
-                agents_result="$(_inject_prompt "$WORK_DIR/AGENTS.md")"
-                if [ "$agents_result" != "missing" ]; then
-                    prompt_result="$agents_result"
-                    echo -e "${GREEN}✓ AGENTS.md: $agents_result${NC}"
-                    cursor_echoed=1
-                fi
-            fi
+            # Inject into ~/.cursor/AGENTS.md in the root directory (if present).
+            prompt_result="$(_inject_prompt "$dir/AGENTS.md")"
             ;;
     esac
-    # Cursor already echoes per-file results inline; skip the summary echo
-    if [ "${cursor_echoed:-0}" -eq 0 ]; then
-        case "$prompt_result" in
-            added*)   echo -e "${GREEN}✓ $prompt_result${NC}" ;;
-            updated*) echo -e "${GREEN}✓ $prompt_result${NC}" ;;
-            skip)     echo "→ already up to date" ;;
-            missing)  echo "→ prompt file not found — skipped" ;;
-        esac
-    fi
-    cursor_echoed=0
+    case "$prompt_result" in
+        added)   echo -e "${GREEN}✓ added${NC}" ;;
+        updated) echo -e "${GREEN}✓ updated${NC}" ;;
+        skip)    echo "→ already configured" ;;
+        missing) echo -e "${YELLOW}! config file not found — skipped${NC}" ;;
+        error)   echo -e "${RED}✗ failed — see error above${NC}" ;;
+    esac
 
     # ── Skills installation ────────────────────────────────────────────────
     echo "    Skills:"
     case "$type" in
         hermes_main|hermes_profile)
             # User skills (copies, flat)
-            _install_user_skills "$dir/skills"
-            skills_result="synced"
+            skills_result="$(_install_user_skills "$dir/skills")"
             ;;
         claude)
-            _install_user_skills "$dir/skills"
-            skills_result="synced"
+            skills_result="$(_install_user_skills "$dir/skills")"
             ;;
         cursor)
-            _install_user_skills "$dir/skills"
-            skills_result="synced"
+            skills_result="$(_install_user_skills "$dir/skills")"
             ;;
     esac
 
@@ -480,10 +473,11 @@ if [ "${#SUMMARY_NAMES[@]}" -gt 0 ]; then
     printf "%-30s %-18s %-18s %-10s\n" "Agent" "MCP" "Prompt" "Skills"
     printf "%-30s %-18s %-18s %-10s\n" "──────────────────────────────" "──────────────────" "──────────────────" "──────────"
     for i in "${!SUMMARY_NAMES[@]}"; do
-        printf "%-30s " "${SUMMARY_NAMES[$i]}"
-        printf "%-18b " "$(_cell "${SUMMARY_MCP[$i]}")"
-        printf "%-18b " "$(_cell "${SUMMARY_PROMPT[$i]}")"
-        printf "%-10b\n" "$(_cell "${SUMMARY_SKILLS[$i]}")"
+        printf "%-30s %-18s %-18s %-10s\n" \
+            "${SUMMARY_NAMES[$i]}" \
+            "$(_cell "${SUMMARY_MCP[$i]}")" \
+            "$(_cell "${SUMMARY_PROMPT[$i]}")" \
+            "$(_cell "${SUMMARY_SKILLS[$i]}")"
     done
     echo ""
     echo "Restart each agent to activate Lorekeeper."
