@@ -76,19 +76,21 @@ Smart multi-agent setup. Run from the repo root:
 ```
 
 **What it does:**
+
 1. Detects installed agents — Hermes (main + all profiles), Claude Code (`~/.claude`), Cursor (`~/.cursor`)
 2. Injects MCP entry into each agent's config with `LORE_DATA_DIR` + `LOREKEEPER_SETUP_VERSION` env vars
 3. Upserts `## Lorekeeper` section into each agent's prompt file — version-stamped, only updates when source version changes
 4. Syncs skills — `assets/skills/` (copied, flat) and `.hermes/skills/` (symlinked, with category subdirs) into each agent's skills dir
 
 **Verification after running setup.sh:**
+
 - Hermes config contains `lorekeeper:` under `mcp_servers` with both `LORE_DATA_DIR` and `LOREKEEPER_SETUP_VERSION`
-- Hermes `soul.md` (or profile `soul.md`) has a `## Lorekeeper` section with version comment matching `scripts/prompts/lorekeeper-agent-prompt.md`
+- Hermes `soul.md` (or profile `soul.md`) has a `## Lorekeeper` section with version comment matching `assets/prompts/lorekeeper-agent-prompt.md`
 - `~/.hermes/skills/software-development/lorekeeper-dev` symlink exists and points into repo
 - `~/.hermes/skills/` contains all user skills from `assets/skills/` (as copies, not symlinks)
 - Version format on all skills: `v{M.m.m}` (with `v` prefix) — script uses string equality for idempotency
 
-**Prompt source of truth:** `scripts/prompts/lorekeeper-agent-prompt.md` — edit this to change the Lorekeeper section injected into all agents.
+**Prompt source of truth:** `assets/prompts/lorekeeper-agent-prompt.md` — edit this to change the Lorekeeper section injected into all agents.
 
 Re-run after editing any skill, updating the prompt file, or adding a new agent install.
 
@@ -268,7 +270,7 @@ Before opening a PR, run through this:
 - [ ] Booleans prefixed: `is_valid`, `has_permission`, `can_retry`
 - [ ] No abbreviations unless universal (`url`, `id`, `db` OK; `usrNm` ❌)
 - [ ] Function length ≤ 30 lines; decompose if longer
-- [ ] Comments explain *why*, not *what*
+- [ ] Comments explain _why_, not _what_
 - [ ] TODOs include a ticket ref: `# TODO(LKPR-N): description`
 - [ ] Errors never silently swallowed — no bare `except: pass`
 - [ ] Error messages include context (what failed, what was the input)

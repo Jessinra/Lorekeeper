@@ -3,6 +3,7 @@
 **What this is**: A personal AI memory MCP server, and simultaneously the **first working sample of the Living Agentic Loop** — a self-improving agent system that autonomously updates its own `CLAUDE.md`, skills, and code over time by capturing session learnings and feeding them back in.
 
 The repo serves two purposes:
+
 1. **The product**: MCP server providing `lore_search`, `lore_remember`, `lore_insert`, `lore_update`. Replaces the Node.js v1 with Python + Mem0.
 2. **The demonstration**: The development process itself is looped. Session learnings are captured → consolidated → applied back to agent config. This repo is the proof of concept.
 
@@ -99,15 +100,16 @@ Run this once (or after updating skills or agent configs):
 
 1. **Detects installed agents** — scans for Hermes (main + all profiles), Claude Code (`~/.claude`), and Cursor (`~/.cursor`) automatically.
 2. **Injects MCP entry** — adds `lorekeeper` under `mcpServers`/`mcp_servers` in each agent's config file with `LORE_DATA_DIR` and `LOREKEEPER_SETUP_VERSION` env vars. Idempotent — skips if already present.
-3. **Injects prompt** — upserts a `## Lorekeeper` section into each agent's prompt file (`soul.md`, `CLAUDE.md`, `.cursorrules`, `AGENTS.md`) from `scripts/prompts/lorekeeper-agent-prompt.md`. Version-stamped — only re-injects when the source version changes.
+3. **Injects prompt** — upserts a `## Lorekeeper` section into each agent's prompt file (`soul.md`, `CLAUDE.md`, `.cursorrules`, `AGENTS.md`) from `assets/prompts/lorekeeper-agent-prompt.md`. Version-stamped — only re-injects when the source version changes.
 4. **Installs skills** — syncs `assets/skills/` (user-facing, copied) and `.hermes/skills/` (dev, symlinked with category dirs) into each agent's skills directory.
 
 Re-run after:
+
 - Editing any skill in `.hermes/skills/` or `assets/skills/`
-- Updating `scripts/prompts/lorekeeper-agent-prompt.md`
+- Updating `assets/prompts/lorekeeper-agent-prompt.md`
 - Adding a new agent install (new Hermes profile, fresh Cursor, etc.)
 
-**Prompt source of truth:** `scripts/prompts/lorekeeper-agent-prompt.md` — edit this file to change the Lorekeeper section injected into all agents.
+**Prompt source of truth:** `assets/prompts/lorekeeper-agent-prompt.md` — edit this file to change the Lorekeeper section injected into all agents.
 
 ---
 
@@ -147,6 +149,7 @@ loop/
 ### Session Log Format
 
 Each `loop/sessions/` file captures:
+
 - **Task type**: (build, debug, review, design)
 - **What was done**: brief summary
 - **Decisions made**: with rationale
@@ -187,6 +190,7 @@ Implementation plans live in `docs/plans/YYYY-MM-DD_HHMMSS-<slug>.md` (not `.her
 All commits are enforced by `.git/hooks/commit-msg` (installed via `./scripts/setup.sh`).
 
 **Author identity** (set once per clone):
+
 ```bash
 # PM
 git config --local user.name "Akane (PM)"
@@ -210,6 +214,7 @@ Full details → `commit-convention` skill.
 ## Post-Change Rule
 
 After **every set of code changes**, load the `after-changes` skill and follow it. It covers three steps in order:
+
 1. Code review — fix reuse, quality, and efficiency issues
 2. README consistency check — update `README.md` for anything that drifted
 3. Git commit — stage and commit with a descriptive message
