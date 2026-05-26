@@ -13,8 +13,8 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
 cd "$REPO_ROOT"
 
 VALID_TYPES="feature|bug|enhancement|research|chore"
-VALID_STATUSES="proposal|backlog|in-progress|review|done|deferred|cancelled"
-VALID_PRIORITIES="critical|high|medium|low"
+VALID_STATUSES="S:proposal|S:ready|S:in-progress|S:review|S:done|S:deferred|S:cancelled"
+VALID_PRIORITIES="P0:critical|P1:high|P2:medium|P3:low"
 
 # Required frontmatter fields
 REQUIRED_FIELDS="id|title|type|status|priority|sprint|rice_score|filed_by|filed_date"

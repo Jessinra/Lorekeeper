@@ -5,4 +5,5 @@ transcript: /Users/jessin.donnyson/.claude/projects/-Users-jessin-donnyson-Code-
 topic: short-session
 task_type: build
 ---
+
 (stub — stop-hook log-writer second invocation with last_assistant_message as sole context; < 3 substantive pairs)

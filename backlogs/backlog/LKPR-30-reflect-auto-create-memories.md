@@ -2,10 +2,10 @@
 id: LKPR-30
 title: lore_reflect auto-creates memories from factual_discoveries and lessons_learnt
 type: feature
-status: backlog
-priority: critical
+status: S:ready
+priority: P0:critical
 sprint: 1
-rice_score: ~  # TBD: R:9 I:9 C:80% E:0.5w
+rice_score: ~ # TBD: R:9 I:9 C:80% E:0.5w
 filed_by: Akane (PM)
 filed_date: 2026-05-24
 ---
@@ -25,6 +25,7 @@ When `lore_reflect` is called with `factual_discoveries` or `lessons_learnt`, au
 **New param**: `auto_insert: bool = true` on `lore_reflect`.
 
 **Behavior when auto_insert=true:**
+
 1. For each item in `factual_discoveries`:
    - `lore_remember(item)` — same auto-extract logic as LKPR-29
    - Plus link: `{from: memory_id, to: reflection_id, relation: "discovered_in"}`
@@ -35,6 +36,7 @@ When `lore_reflect` is called with `factual_discoveries` or `lessons_learnt`, au
    - Score: 8 (lessons are higher value)
 
 **Return value gets extended:**
+
 ```
 {
   "reflection_id": "r-123",
@@ -61,6 +63,7 @@ When `lore_reflect` is called with `factual_discoveries` or `lessons_learnt`, au
 ## Affected Files
 
 **Backend:**
+
 - `src/lorekeeper/schemas.py` — add `auto_insert: bool` to reflect schema
 - `src/lorekeeper/services/orchestrator.py` — auto-insert loop
 - `src/lorekeeper/handlers.py` — extend return value

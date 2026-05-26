@@ -10,8 +10,8 @@ These are grouped stub entries for ~38 Hermes sessions that contain SeaTalk webh
 
 ## Sessions in this group
 
-| Session ID | Date/Time |
-|---|---|
+| Session ID               | Date/Time        |
+| ------------------------ | ---------------- |
 | 20260520_144004_e70ee285 | 2026-05-20 14:40 |
 | 20260520_144037_cf3cb0b4 | 2026-05-20 14:40 |
 | 20260520_144129_e6b8df7b | 2026-05-20 14:41 |

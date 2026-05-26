@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKLOG_DIR="${BACKLOG_DIR:-$SCRIPT_DIR/../backlogs}"
 
 # All valid statuses, in display order
-STATUSES=(proposal backlog in-progress review done deferred cancelled)
+STATUSES=(S:proposal S:ready S:in-progress S:review S:done S:deferred S:cancelled)
 
 # If a filter arg is given, only show that status
 if [ -n "$1" ]; then

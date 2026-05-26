@@ -8,7 +8,13 @@ platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [code-review, security, verification, quality, pre-commit, auto-fix]
-    related_skills: [subagent-driven-development, writing-plans, test-driven-development, github-code-review]
+    related_skills:
+      [
+        subagent-driven-development,
+        writing-plans,
+        test-driven-development,
+        github-code-review,
+      ]
 ---
 
 # Pre-Commit Code Verification
@@ -42,6 +48,7 @@ If `git diff --cached` is empty but `git diff` shows changes, tell the user to
 `git add <files>` first. If still empty, run `git status` — nothing to verify.
 
 If the diff exceeds 15,000 characters, split by file:
+
 ```bash
 git diff --name-only
 git diff HEAD -- specific_file.py
@@ -75,6 +82,7 @@ count BEFORE your changes as **baseline_failures** (stash changes, run, pop).
 Only NEW failures introduced by your changes block the commit.
 
 **Test frameworks** (auto-detect by project files):
+
 ```bash
 # Python (pytest)
 python -m pytest --tb=no -q 2>&1 | tail -5
@@ -90,6 +98,7 @@ go test ./... 2>&1 | tail -5
 ```
 
 **Linting and type checking** (run only if installed):
+
 ```bash
 # Python
 which ruff && ruff check . 2>&1 | tail -10
@@ -220,6 +229,7 @@ Fix each issue precisely. Describe what you changed and why.""",
 ```
 
 After the fix agent completes, re-run Steps 1-6 (full verification cycle).
+
 - Passed: proceed to Step 8
 - Failed and attempts < 2: repeat Step 7
 - Failed after 2 attempts: escalate to user with the remaining issues and
@@ -238,6 +248,7 @@ The `[verified]` prefix indicates an independent reviewer approved this change.
 ## Reference: Common Patterns to Flag
 
 ### Python
+
 ```python
 # Bad: SQL injection
 cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
@@ -251,6 +262,7 @@ subprocess.run(["ls", user_input], check=True)
 ```
 
 ### JavaScript
+
 ```javascript
 // Bad: XSS
 element.innerHTML = userInput;

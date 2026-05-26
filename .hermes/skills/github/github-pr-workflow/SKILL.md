@@ -90,6 +90,7 @@ git checkout -b feat/add-user-authentication
 ```
 
 Branch naming conventions:
+
 - `feat/description` — new features
 - `fix/description` — bug fixes
 - `refactor/description` — code restructuring
@@ -114,6 +115,7 @@ git commit -m "feat: add JWT-based user authentication
 ```
 
 Commit message format (Conventional Commits):
+
 ```
 type(scope): short description
 
@@ -127,6 +129,7 @@ Types: `feat`, `fix`, `refactor`, `docs`, `test`, `ci`, `chore`, `perf`
 If you want automatic PR creation for new feature branches, prefer a post-push hook or a wrapper command over a commit hook.
 
 Why:
+
 - commit hooks fire before the branch is on GitHub
 - PR creation needs a pushed branch to be meaningful
 - wrapper commands are easier to debug when `gh pr create` fails
@@ -186,6 +189,7 @@ To create as a draft, add `"draft": true` to the JSON body.
 If you want automatic PR creation for new feature branches, prefer a post-push hook or a wrapper command over a commit hook.
 
 Why:
+
 - commit hooks fire before the branch is on GitHub
 - PR creation needs a pushed branch to be meaningful
 - wrapper commands are easier to debug when `gh pr create` fails
@@ -473,11 +477,11 @@ git push -u origin HEAD
 
 ## Useful PR Commands Reference
 
-| Action | gh | git + curl |
-|--------|-----|-----------|
-| List my PRs | `gh pr list --author @me` | `curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$OWNER/$REPO/pulls?state=open"` |
-| View PR diff | `gh pr diff` | `git diff main...HEAD` (local) or `curl -H "Accept: application/vnd.github.diff" ...` |
-| Add comment | `gh pr comment N --body "..."` | `curl -X POST .../issues/N/comments -d '{"body":"..."}'` |
-| Request review | `gh pr edit N --add-reviewer user` | `curl -X POST .../pulls/N/requested_reviewers -d '{"reviewers":["user"]}'` |
-| Close PR | `gh pr close N` | `curl -X PATCH .../pulls/N -d '{"state":"closed"}'` |
-| Check out someone's PR | `gh pr checkout N` | `git fetch origin pull/N/head:pr-N && git checkout pr-N` |
+| Action                 | gh                                 | git + curl                                                                                                     |
+| ---------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| List my PRs            | `gh pr list --author @me`          | `curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$OWNER/$REPO/pulls?state=open"` |
+| View PR diff           | `gh pr diff`                       | `git diff main...HEAD` (local) or `curl -H "Accept: application/vnd.github.diff" ...`                          |
+| Add comment            | `gh pr comment N --body "..."`     | `curl -X POST .../issues/N/comments -d '{"body":"..."}'`                                                       |
+| Request review         | `gh pr edit N --add-reviewer user` | `curl -X POST .../pulls/N/requested_reviewers -d '{"reviewers":["user"]}'`                                     |
+| Close PR               | `gh pr close N`                    | `curl -X PATCH .../pulls/N -d '{"state":"closed"}'`                                                            |
+| Check out someone's PR | `gh pr checkout N`                 | `git fetch origin pull/N/head:pr-N && git checkout pr-N`                                                       |

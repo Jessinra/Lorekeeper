@@ -26,20 +26,20 @@ Hermes infrastructure tickets (Docker, profiles, swarm) → `~/.hermes/backlogs/
 ## Ticket Lifecycle
 
 ```
-proposal → backlog → in-progress → review → done
+S:proposal → S:ready → S:in-progress → S:review → S:done
                          ↓
-                    deferred/cancelled
+               S:deferred / S:cancelled
 ```
 
-| Status | Meaning | Who moves it |
-|---|---|---|
-| `proposal` | Raw idea, not yet committed | Anyone |
-| `backlog` | Validated & prioritised, ready to work | PM |
-| `in-progress` | Being worked on | Dev |
-| `review` | Code done, pending PM review | Dev |
-| `done` | Shipped, verified → moved to `backlogs/done/` | PM |
-| `deferred` | Valid but not now | PM |
-| `cancelled` | Won't do | PM |
+| Status          | Meaning                                       | Who moves it |
+| --------------- | --------------------------------------------- | ------------ |
+| `S:proposal`    | Raw idea, not yet committed                   | Anyone       |
+| `S:ready`       | Validated & prioritised, ready to work        | PM           |
+| `S:in-progress` | Being worked on                               | Dev          |
+| `S:review`      | Code done, pending PM review                  | Dev          |
+| `S:done`        | Shipped, verified → moved to `backlogs/done/` | PM           |
+| `S:deferred`    | Valid but not now                             | PM           |
+| `S:cancelled`   | Won't do                                      | PM           |
 
 ## Numbering Convention
 
@@ -77,13 +77,14 @@ Symlinks `.hermes/skills/` from the repo into `~/.hermes/skills/`. Run once per 
 ## Ticket Format
 
 Frontmatter:
+
 ```yaml
 ---
 id: LKPR-N
 title: Short descriptive title
 type: bug | feature | chore | research
-status: proposal | backlog | in-progress | review | done | deferred | cancelled
-priority: critical | high | medium | low
+status: S:proposal | S:ready | S:in-progress | S:review | S:done | S:deferred | S:cancelled
+priority: P0:critical | P1:high | P2:medium | P3:low
 filed_by: Akane | Dev | Jason
 filed_date: YYYY-MM-DD
 ---
@@ -95,11 +96,11 @@ For dashboard changes, list the UI component. If backend-only, write `_none_` fo
 
 ## Discipline Rules
 
-1. **Check backlog before starting work** → `./scripts/lorekeeper-backlog.sh backlog`
-2. **When starting a ticket** → change `status` to `in-progress`
-3. **When submitting for review** → change `status` to `review`
-4. **When verifying done** → change `status` to `done`, add `resolved_date`, move file to `backlogs/done/`
-5. **No ticket left in `in-progress` at session end** — move to `review` or revert to `backlog`
+1. **Check backlog before starting work** → `./scripts/lorekeeper-backlog.sh S:ready`
+2. **When starting a ticket** → change `status` to `S:in-progress`
+3. **When submitting for review** → change `status` to `S:review`, add label `S:Review`
+4. **When verifying done** → change `status` to `S:done`, add `resolved_date`, move file to `backlogs/done/`
+5. **No ticket left in `S:in-progress` at session end** — move to `S:review` or revert to `S:ready`
 6. **Check next number before filing** → `./scripts/lorekeeper-backlog.sh | grep "Next ticket number"`
 7. **File symptoms first, not speculative root cause** — label unconfirmed hypotheses clearly
 

@@ -1,8 +1,9 @@
 # Auto PR creation via git hooks or wrappers
 
-Automatic PR creation is feasible, but the reliable trigger is *after the branch has been pushed*.
+Automatic PR creation is feasible, but the reliable trigger is _after the branch has been pushed_.
 
 Preferred order:
+
 1. post-push hook
 2. wrapper command like `git publish` or `scripts/publish.sh`
 3. post-commit / post-checkout helper that only checks and prompts
@@ -10,6 +11,7 @@ Preferred order:
 Avoid using pre-commit or commit-msg hooks for PR creation.
 
 Guardrails:
+
 - skip `main`
 - check whether an open PR already exists for the branch
 - do nothing if a PR already exists

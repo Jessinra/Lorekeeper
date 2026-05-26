@@ -11,33 +11,33 @@ Settled during LKPR-25 (2026-05-23). Revisit if the codebase changes significant
 
 ### Selected rulesets
 
-| Code | Ruleset | Rationale |
-|------|---------|-----------|
-| `E` | pycodestyle errors | Canonical style errors (indentation, spacing) |
-| `W` | pycodestyle warnings | Whitespace warnings (trailing whitespace, blank lines) |
-| `F` | pyflakes | Undefined names, unused imports/variables |
-| `I` | isort | Import ordering — keeps diffs clean, removes merge conflicts |
-| `B` | flake8-bugbear | Catches likely bugs and design issues (mutable defaults, bare `except`, etc.) |
-| `UP` | pyupgrade | Modernises syntax for Python 3.11+ (`datetime.UTC`, `X | Y` unions, etc.) |
-| `C4` | flake8-comprehensions | Simplifies list/set/dict comprehensions |
-| `RUF` | Ruff-specific | Ruff-native rules — unused `noqa`, ambiguous unicode, unpacked unused vars |
+| Code  | Ruleset               | Rationale                                                                     |
+| ----- | --------------------- | ----------------------------------------------------------------------------- | ---------------- |
+| `E`   | pycodestyle errors    | Canonical style errors (indentation, spacing)                                 |
+| `W`   | pycodestyle warnings  | Whitespace warnings (trailing whitespace, blank lines)                        |
+| `F`   | pyflakes              | Undefined names, unused imports/variables                                     |
+| `I`   | isort                 | Import ordering — keeps diffs clean, removes merge conflicts                  |
+| `B`   | flake8-bugbear        | Catches likely bugs and design issues (mutable defaults, bare `except`, etc.) |
+| `UP`  | pyupgrade             | Modernises syntax for Python 3.11+ (`datetime.UTC`, `X                        | Y` unions, etc.) |
+| `C4`  | flake8-comprehensions | Simplifies list/set/dict comprehensions                                       |
+| `RUF` | Ruff-specific         | Ruff-native rules — unused `noqa`, ambiguous unicode, unpacked unused vars    |
 
 ### Explicit ignores
 
-| Code | Reason |
-|------|--------|
-| `B008` | FastAPI uses `File()` / `Depends()` in function argument defaults — this is the intended pattern, not a bug |
+| Code     | Reason                                                                                                                            |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `B008`   | FastAPI uses `File()` / `Depends()` in function argument defaults — this is the intended pattern, not a bug                       |
 | `RUF003` | En-dashes (`–`) and multiplication signs (`×`) appear in math comments and documentation strings — intentional unicode, not typos |
 
 ### Not selected (and why)
 
-| Code | Reason skipped |
-|------|---------------|
-| `D` (pydocstring) | Docstring coverage would require a large retrofitting effort. Internal codebase, not a library. Add later if needed. |
-| `N` (pep8-naming) | No naming convention violations in existing code; rule is noisy on single-char vars in math/algo code |
-| `ANN` (annotations) | mypy strict mode already enforces type annotations with better error messages |
-| `S` (bandit/security) | Low-risk internal tool; adds noise on `subprocess`, `tempfile`, etc. Add if surface area grows |
-| `PTH` (pathlib) | Existing code mixes `os.path` and `pathlib`; migration has no correctness benefit right now |
+| Code                  | Reason skipped                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `D` (pydocstring)     | Docstring coverage would require a large retrofitting effort. Internal codebase, not a library. Add later if needed. |
+| `N` (pep8-naming)     | No naming convention violations in existing code; rule is noisy on single-char vars in math/algo code                |
+| `ANN` (annotations)   | mypy strict mode already enforces type annotations with better error messages                                        |
+| `S` (bandit/security) | Low-risk internal tool; adds noise on `subprocess`, `tempfile`, etc. Add if surface area grows                       |
+| `PTH` (pathlib)       | Existing code mixes `os.path` and `pathlib`; migration has no correctness benefit right now                          |
 
 ### Line length
 
@@ -64,13 +64,13 @@ Settled during LKPR-25 (2026-05-23). Revisit if the codebase changes significant
 
 ### Why Biome over ESLint
 
-| Criteria | Biome | ESLint |
-|----------|-------|--------|
-| Zero npm deps | ✅ Single binary via npx | ❌ Needs `node_modules/` install |
-| Speed | Fast (Rust) | Slower |
-| Config | One `biome.json` | Multiple config files + plugins |
-| Formatting | Built-in | Needs Prettier |
-| JS-only project | ✅ Good fit | Overkill for plain JS |
+| Criteria        | Biome                    | ESLint                           |
+| --------------- | ------------------------ | -------------------------------- |
+| Zero npm deps   | ✅ Single binary via npx | ❌ Needs `node_modules/` install |
+| Speed           | Fast (Rust)              | Slower                           |
+| Config          | One `biome.json`         | Multiple config files + plugins  |
+| Formatting      | Built-in                 | Needs Prettier                   |
+| JS-only project | ✅ Good fit              | Overkill for plain JS            |
 
 The dashboard JS is plain browser-side JavaScript (no TypeScript, no build step). Biome covers linting + formatting in one tool with no `package.json` / `node_modules` needed in the repo.
 
@@ -89,6 +89,7 @@ The dashboard JS is plain browser-side JavaScript (no TypeScript, no build step)
 **Installed by**: `bash scripts/setup.sh` (run once per clone)
 
 The hook runs:
+
 1. `uv run ruff check src tests` — Python lint
 2. `npx --yes @biomejs/biome check src/lorekeeper/dashboard/static/js/` — JS lint
 3. `uv run pytest tests/ -q --tb=short` — test suite
@@ -101,9 +102,9 @@ The hook runs:
 
 ## Open Questions Resolved
 
-| Question | Decision |
-|----------|----------|
+| Question                                     | Decision                                                                                             |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | Should `ruff format --check` be in the hook? | No — `ruff format` is not configured, only `ruff check`. Add if we adopt Black-style autoformatting. |
-| Should `uv run mypy` be in the hook? | No — too slow. Run manually before push. |
-| ESLint or Biome for JS? | Biome — zero deps, fast, covers lint + format in one tool. |
-| Pre-commit framework vs manual shell hook? | Manual shell hook — simpler, no Python package dependency, no config drift. |
+| Should `uv run mypy` be in the hook?         | No — too slow. Run manually before push.                                                             |
+| ESLint or Biome for JS?                      | Biome — zero deps, fast, covers lint + format in one tool.                                           |
+| Pre-commit framework vs manual shell hook?   | Manual shell hook — simpler, no Python package dependency, no config drift.                          |

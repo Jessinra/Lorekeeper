@@ -2,11 +2,11 @@
 id: LKPR-29
 title: Add lore_remember for one-shot fast memory insert (friction-killer)
 type: feature
-status: done
+status: S:done
 resolved_date: 2026-05-24
-priority: critical
+priority: P0:critical
 sprint: 1
-rice_score: 180  # R:10 I:10 C:90% E:0.5w
+rice_score: 180 # R:10 I:10 C:90% E:0.5w
 filed_by: Akane (PM)
 filed_date: 2026-05-24
 ---
@@ -32,6 +32,7 @@ lore_remember("Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score 
 ```
 
 **Auto-extraction rules:**
+
 - Title = first 80 chars (whitespace-trimmed, ends at sentence boundary if possible)
 - Description = first 60 chars of title (or empty if title is short enough)
 - Content = the full `thought` string verbatim
@@ -47,13 +48,14 @@ lore_remember("Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score 
 - [x] Returns `{id, title, linked_to: {id, score} | null}` — agent sees the ink
 - [x] No duplicate check bypass — still uses existing dedup logic
 - [x] No field is required beyond `thought` — zero configuration
-- [x] MCP tool description: "Fast one-shot memory insert. Pass a thought, get  memory with auto-title."
+- [x] MCP tool description: "Fast one-shot memory insert. Pass a thought, get memory with auto-title."
 - [x] `_increment_metric("lore_remember")` called in orchestrator.remember() — racks usage in dashboard metrics tab
 - [x] `metrics.js` in dashboard: add `lore_remember` entry to `TOOL_COLORS` with a distinct hue
 
 ## Affected Files
 
 **Backend:**
+
 - `src/lorekeeper/server.py` — register new tool
 - `src/lorekeeper/schemas.py` — LoreRememberInput (just thought: str)
 - `src/lorekeeper/handlers.py` — handle_remember handler
@@ -61,6 +63,7 @@ lore_remember("Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score 
 - `tests/test_orchestrator.py` — test auto-extract, test auto-link
 
 **Dashboard:**
+
 - `src/lorekeeper/dashboard/static/js/metrics.js` — add `lore_remember: { h: 305, s: "70%" }` to `TOOL_COLORS`
 
 ## Dependencies

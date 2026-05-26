@@ -14,20 +14,20 @@ The Lorekeeper ecosystem uses a **GitHub App** (`jessinra-megumi-dev`) for bot-a
 
 ## Key Facts
 
-| Item | Value |
-|---|---|
-| App ID | `3823074` |
-| Installation ID | `134866394` |
-| Account | `Jessinra` (User, selected repos) |
-| Bot display name | `jessinra-megumi-dev[bot]` |
-| Private key | `~/.hermes/keys/jessinra-megumi-dev.private-key.pem` |
-| Auth file | `~/.config/gh/hosts.yml` |
-| Token prefix | `ghs_` (installation token) |
+| Item             | Value                                                |
+| ---------------- | ---------------------------------------------------- |
+| App ID           | `3823074`                                            |
+| Installation ID  | `134866394`                                          |
+| Account          | `Jessinra` (User, selected repos)                    |
+| Bot display name | `jessinra-megumi-dev[bot]`                           |
+| Private key      | `~/.hermes/keys/jessinra-megumi-dev.private-key.pem` |
+| Auth file        | `~/.config/gh/hosts.yml`                             |
+| Token prefix     | `ghs_` (installation token)                          |
 
 ## Authentication Flow
 
 ```
-Private Key (.pem) 
+Private Key (.pem)
     → Sign JWT (RS256, App ID 3823074, 10min expiry)
     → POST /app/installations/134866394/access_tokens
     → Installation token (ghs_..., 1hr expiry)
@@ -44,6 +44,7 @@ Installation tokens expire in **1 hour**. A cron job refreshes them automaticall
 - **Delivery:** `local` (silent — no Telegram spam)
 
 The script:
+
 1. Reads the PEM key from `~/.hermes/keys/jessinra-megumi-dev.private-key.pem`
 2. Generates a JWT signed with RS256 (PyJWT preferred, falls back to `openssl dgst -sha256 -sign`)
 3. Exchanges for an installation token via GitHub API

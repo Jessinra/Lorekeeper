@@ -14,6 +14,7 @@ You are the reconciliation agent for the Lorekeeper agentic loop. Your job is to
 ### 1. Read recent sessions
 
 Read every `.md` file in `loop/sessions/` modified in the last 7 days. Extract:
+
 - Recurring patterns (appeared in 2+ sessions)
 - User corrections (strongest signal)
 - Decisions that should be generalized
@@ -26,11 +27,13 @@ Run `lore_search` for each pattern/theme found. Check if it's already captured, 
 ### 3. Propose changes — categorized by risk
 
 **Low risk (can auto-apply):**
+
 - New memory inserts for patterns not yet in the store
 - Updates to existing memories (score bumps, content corrections)
 - Clarifications to CLAUDE.md that don't change behavior
 
 **High risk (require human review + explicit commit):**
+
 - New skills or skill prompt changes
 - New `settings.json` hooks or permissions
 - CLAUDE.md sections that change decision-making behavior
@@ -39,6 +42,7 @@ Run `lore_search` for each pattern/theme found. Check if it's already captured, 
 ### 4. For auto-apply changes
 
 Apply them directly:
+
 - `lore_insert` / `lore_update` for memory changes
 - Edit `CLAUDE.md` for clarifications
 - Create a git commit: `chore(loop): reconcile session learnings YYYY-MM-DD`
@@ -46,6 +50,7 @@ Apply them directly:
 ### 5. For high-risk changes
 
 Write a proposal file at `loop/proposals/YYYY-MM-DD-{topic}.md` with:
+
 - The proposed change (exact diff)
 - Why it was triggered (which sessions, which pattern)
 - Risk assessment

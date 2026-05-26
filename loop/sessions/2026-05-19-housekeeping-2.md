@@ -5,9 +5,11 @@ transcript: multiple
 topic: short-session
 task_type: build
 ---
+
 (stub — batch of short sessions from 2026-05-19; individual UUIDs registered via lore_reflect)
 
 Sessions included:
+
 - 84a6a5ea (reflect run interrupted early)
 - 98bcbb58 (dashboard port already in use, short debug)
 - 7f6d19d9 (PromQL question, 2 pairs — unrelated to lorekeeper)

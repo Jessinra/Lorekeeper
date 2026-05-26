@@ -242,6 +242,7 @@ Do not skip this. It is the discipline that keeps the repo clean and auditable.
 - This rule applies to ALL agents — Hermes, Claude Code, Cursor. No exceptions without human approval.
 
 **The workflow is always:**
+
 ```
 feature branch → push → PR → review → merge via GitHub UI → delete branch
 ```

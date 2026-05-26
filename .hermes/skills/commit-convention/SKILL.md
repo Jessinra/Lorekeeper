@@ -14,11 +14,11 @@ All commits to the Lorekeeper repo are enforced by `.git/hooks/commit-msg` (inst
 
 ## Author Identity
 
-| Role | `user.name` | `user.email` |
-|---|---|---|
-| PM (Akane) | `Akane (PM)` | `jessinra.kai@gmail.com` |
-| Dev | `Dev` | `jessinra.kai@gmail.com` |
-| Engineer (Diana) | `Diana` | `jessinra.kai@gmail.com` |
+| Role             | `user.name`  | `user.email`             |
+| ---------------- | ------------ | ------------------------ |
+| PM (Akane)       | `Akane (PM)` | `jessinra.kai@gmail.com` |
+| Dev              | `Dev`        | `jessinra.kai@gmail.com` |
+| Engineer (Diana) | `Diana`      | `jessinra.kai@gmail.com` |
 
 Set locally in the repo (not globally, to avoid polluting other projects):
 
@@ -46,9 +46,9 @@ git config --local user.email "jessinra.kai@gmail.com"
 
 ### Ticket Tags
 
-| Tag | When to use |
-|-----|-------------|
-| `[LKPR-N]` | Work tied to a specific ticket (feature, fix, refactor, test) |
+| Tag        | When to use                                                                                                     |
+| ---------- | --------------------------------------------------------------------------------------------------------------- |
+| `[LKPR-N]` | Work tied to a specific ticket (feature, fix, refactor, test)                                                   |
 | `[LKPR-0]` | Housekeeping with no ticket — chore, backlog edits, moving tickets, changing status, updating skills, docs-only |
 
 ### Types

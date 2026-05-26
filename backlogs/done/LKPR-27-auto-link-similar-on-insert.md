@@ -2,9 +2,9 @@
 id: LKPR-27
 title: Upgrade auto-link to configurable — env vars, lore_insert hook, dedup guard
 type: feature
-status: done
-priority: medium
-sprint: 1
+status: S:done
+priority: P2:medium
+sprint: ~
 rice_score: ~
 filed_by: Akane (PM)
 filed_date: 2026-05-23
@@ -20,6 +20,7 @@ pr_number: 13
 LKPR-29 shipped a basic `_auto_link()` in `remember()` — hardcoded top-2 candidates, 0.75 threshold, max 1 link. It works for the basic case but has no env-var control, no duplicate-link guard, and `lore_insert()` doesn't use it at all.
 
 Without configurable knobs:
+
 - Can't tighten/loosen the threshold per deployment
 - Can't disable auto-link entirely (no kill switch)
 - `lore_insert` users miss out on automatic graph building
@@ -29,6 +30,7 @@ Without configurable knobs:
 Refactor the existing `_auto_link()` into a configurable, reusable method and hook it into `insert()` as well. Add observability so you can tune threshold by seeing what's being linked vs rejected.
 
 **Current `_auto_link()` (already in code):**
+
 ```python
 sem_hits = self._engine.search(thought, limit=2)
 for hit in sem_hits:
@@ -37,6 +39,7 @@ for hit in sem_hits:
 ```
 
 **Upgrade to:**
+
 ```python
 # settings: LORE_AUTO_LINK_K, LORE_AUTO_LINK_THRESHOLD, LORE_AUTO_LINK_ENABLED
 sem_hits = search(text, limit=settings.k)
@@ -47,6 +50,7 @@ for hit in sem_hits:
 ```
 
 Changes:
+
 1. **Promote hardcoded values → config.py env vars** — `LORE_AUTO_LINK_K` (default 5), `LORE_AUTO_LINK_THRESHOLD` (default 0.85), `LORE_AUTO_LINK_ENABLED` (default true)
 2. **Add duplicate link guard** — check `link_store` before inserting a link that already exists
 3. **Extend to `lore_insert`** — call `_auto_link()` after `_insert_one_memory()` succeeds
@@ -61,6 +65,7 @@ Currently you can see auto-linked links in the Links tab — `relation_type: aut
 - **Reason includes cosine score** — already works, each link has `reason: "cosine: 0.91"` so you can see the actual similarity
 
 The thought process for tuning:
+
 - Check Links tab → filter `auto_linked` → look at the `reason` column → see cosine scores
 - Check Metrics tab → see `auto_linked` links created vs `auto_link_candidates` evaluated → ratio tells you if you're over/under filtering
 - Adjust threshold in Config tab → watch the ratio change in Metrics
@@ -83,11 +88,13 @@ The thought process for tuning:
 ## Affected Files
 
 **Backend:**
+
 - `src/lorekeeper/services/orchestrator.py` — call vector store after insert, create links
 - `src/lorekeeper/config.py` — add `LORE_AUTO_LINK_K`, `LORE_AUTO_LINK_THRESHOLD`, `LORE_AUTO_LINK_ENABLED`
 - `tests/test_orchestrator.py` — assert auto-link created with correct score, no-link for low-similarity inserts, no duplicate link on second insert
 
 **Dashboard:**
+
 - `src/lorekeeper/dashboard/app.py` — add `auto_link_enabled`, `auto_link_k`, `auto_link_threshold` to `get_config()` return + `ConfigUpdate` model
 - `src/lorekeeper/dashboard/static/js/config.js` — add `auto_link` section to `CFG_FIELDS` with enabled toggle, k spinbutton, threshold spinbutton; render + save
 - `src/lorekeeper/dashboard/static/index.html` — add `.config-section` container for auto-link
@@ -115,20 +122,22 @@ _None_ — Chroma's HNSW index is already built and maintained by every insert. 
 
 Research notes on embedding-based graph construction:
 
-| Approach | What it does | Problem |
-|----------|-------------|---------|
-| **ε-NN** (threshold only) | Connect all pairs > 0.85 | Hub nodes with degree 100+ |
-| **k-NN** (top-k only) | Each node gets exactly k edges | Weak matches at k=5 still link at 0.4 |
-| **Mutual k-NN** | Only if A ranks B AND B ranks A | Sparsest, highest quality |
+| Approach                  | What it does                    | Problem                               |
+| ------------------------- | ------------------------------- | ------------------------------------- |
+| **ε-NN** (threshold only) | Connect all pairs > 0.85        | Hub nodes with degree 100+            |
+| **k-NN** (top-k only)     | Each node gets exactly k edges  | Weak matches at k=5 still link at 0.4 |
+| **Mutual k-NN**           | Only if A ranks B AND B ranks A | Sparsest, highest quality             |
 
 Our approach = **ε-NN + top-k hybrid** (cap by k, floor by threshold). Two knobs, no noise.
 
 Typical cosine ranges for all-MiniLM-L6-v2 embeddings:
-- >0.95: near-duplicate (merge candidate)
+
+- > 0.95: near-duplicate (merge candidate)
 - 0.85–0.95: strong same-topic (safe auto-link)
 - 0.75–0.85: related but distinct (possible, needs tuning)
 - <0.75: too weak for auto-linking
 
 Pairs with LKPR-28:
+
 - **LKPR-27** = machine-detected (passive, automatic, for dedup/navigation)
 - **LKPR-28** = agent-intended (active, explicit, for knowledge graph)

@@ -12,23 +12,23 @@ Verify stored memories against authoritative sources to identify incorrect, outd
 
 Choose whichever method(s) suit the memory being verified. Combine multiple methods when a single one is insufficient.
 
-| Method | Tools | Use When |
-| --- | --- | --- |
-| Source verification | `extract_confluence`, Read tool | User provided PRDs/TDs/files to check against |
-| Documentation cross-ref | `search_docs`, `scan_docs` | Corroborating against existing docs |
-| Codebase verification | SemanticSearch, Grep | Technical facts (APIs, error codes, service flows) |
-| Internal consistency | `lore_search` | Checking for contradictions/divergence between memories |
-| Inference | Agent reasoning | No authoritative source available |
+| Method                  | Tools                           | Use When                                                |
+| ----------------------- | ------------------------------- | ------------------------------------------------------- |
+| Source verification     | `extract_confluence`, Read tool | User provided PRDs/TDs/files to check against           |
+| Documentation cross-ref | `search_docs`, `scan_docs`      | Corroborating against existing docs                     |
+| Codebase verification   | SemanticSearch, Grep            | Technical facts (APIs, error codes, service flows)      |
+| Internal consistency    | `lore_search`                   | Checking for contradictions/divergence between memories |
+| Inference               | Agent reasoning                 | No authoritative source available                       |
 
 ## Workflow
 
 ### Step 1: Gather and Scope
 
-| Input Type | Action |
-| --- | --- |
-| Confluence URL(s) | `extract_confluence` → save to `.docs-cache/reconcile-{slug}.md` |
-| Local files | Read directly |
-| Topic/domain request | Skip to Step 2 |
+| Input Type           | Action                                                           |
+| -------------------- | ---------------------------------------------------------------- |
+| Confluence URL(s)    | `extract_confluence` → save to `.docs-cache/reconcile-{slug}.md` |
+| Local files          | Read directly                                                    |
+| Topic/domain request | Skip to Step 2                                                   |
 
 ### Step 2: Search Lorekeeper
 
@@ -46,14 +46,14 @@ Use `include_deleted: true` when auditing previously soft-deleted memories.
 
 For each memory, use suitable verification methods (see table above) to reach a verdict. Map the verdict to a confidence score:
 
-| Verdict | Meaning | Confidence | Action |
-| --- | --- | --- | --- |
-| Confirmed | Source/docs/code validates the claims | 9-10 | `useful: true` |
-| Corroborated | Multiple indirect sources agree | 7-8 | `useful: true` |
-| Plausible | Cannot verify, but no contradicting evidence | 5-6 | `useful: true` or `false` (by relevance) |
-| Partially correct | Some claims right, others wrong or outdated | 3-4 | `useful: false` |
-| Outdated | Source describes a newer state | 2-3 | `useful: false` (2 → soft-deleted) |
-| Contradicted | Source directly conflicts with the claims | 1-2 | `useful: false` → **soft-deleted** |
+| Verdict           | Meaning                                      | Confidence | Action                                   |
+| ----------------- | -------------------------------------------- | ---------- | ---------------------------------------- |
+| Confirmed         | Source/docs/code validates the claims        | 9-10       | `useful: true`                           |
+| Corroborated      | Multiple indirect sources agree              | 7-8        | `useful: true`                           |
+| Plausible         | Cannot verify, but no contradicting evidence | 5-6        | `useful: true` or `false` (by relevance) |
+| Partially correct | Some claims right, others wrong or outdated  | 3-4        | `useful: false`                          |
+| Outdated          | Source describes a newer state               | 2-3        | `useful: false` (2 → soft-deleted)       |
+| Contradicted      | Source directly conflicts with the claims    | 1-2        | `useful: false` → **soft-deleted**       |
 
 ### Step 4: Update and Correct
 
@@ -89,24 +89,27 @@ Present a reconciliation report to the user:
 ## Reconciliation Report
 
 ### Scope
+
 - **Sources**: {list of reference materials used}
 - **Memories examined**: {count}
 
 ### Summary
 
-| Status | Count |
-| --- | --- |
-| Confirmed correct (9-10) | N |
-| Likely correct (7-8) | N |
-| Uncertain (5-6) | N |
-| Corrected (old → soft-deleted, new inserted) | N |
-| New memories (gaps filled) | N |
-| Soft-deleted (1-2) | N |
+| Status                                       | Count |
+| -------------------------------------------- | ----- |
+| Confirmed correct (9-10)                     | N     |
+| Likely correct (7-8)                         | N     |
+| Uncertain (5-6)                              | N     |
+| Corrected (old → soft-deleted, new inserted) | N     |
+| New memories (gaps filled)                   | N     |
+| Soft-deleted (1-2)                           | N     |
 
 ### Findings
+
 - **{memory title}** — confidence: {N}, verdict: {verdict}. {Brief reason}.
 
 ### Recommendations
+
 - {Follow-up actions or topics needing further verification.}
 ```
 

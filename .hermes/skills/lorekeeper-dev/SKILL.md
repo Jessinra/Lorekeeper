@@ -158,6 +158,7 @@ Rules:
 - **no direct pushes to main** — only PR merges land on main
 - **PM exception removed:** Akane now uses the `chore/backlog` branch for backlog management, opens a PR → auto-approved → merged. No more direct pushes for anyone.
 - **author name must be `Dev` or `Diana`, email `jessinra.kai@gmail.com`** — enforced by hook
+
   ```bash
   # Dev
   git config --local user.name "Dev"
@@ -264,6 +265,7 @@ gh api repos/Jessinra/Lorekeeper/pulls --jq '.[] | {number, title, state}'
 ```
 
 The token is short-lived (1hr) but auto-refreshed. If `gh` returns 401, run:
+
 ```bash
 python3 ~/.hermes/scripts/gh-token-refresh.py
 ```

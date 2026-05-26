@@ -21,6 +21,11 @@ bash scripts/validate-ticket.sh
 echo "✅  tickets valid"
 
 echo ""
+echo "🌸  Run Prettier"
+npx prettier --write "*"
+echo "✅  prettier done"
+
+echo ""
 echo "🔍  ruff check..."
 uv run ruff check src tests
 echo "✅  ruff passed"

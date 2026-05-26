@@ -5,4 +5,5 @@ transcript: /Users/jessin.donnyson/.claude/projects/-Users-jessin-donnyson-Code-
 topic: short-session
 task_type: debug
 ---
+
 (stub — stop-hook fired and asked to write loop/sessions log; hit write permission wall due to MCP restriction; < 3 substantive pairs)

@@ -5,4 +5,5 @@ transcript: /Users/jessin.donnyson/.claude/projects/-Users-jessin-donnyson-Code-
 topic: short-session
 task_type: build
 ---
+
 (stub — 1 pair: "say hi in one word" test)

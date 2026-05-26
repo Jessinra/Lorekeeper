@@ -5,4 +5,5 @@ transcript: /Users/jessin.donnyson/.claude/projects/-Users-jessin-donnyson-Code-
 topic: short-session
 task_type: build
 ---
+
 (stub — unrelated task: formatting a PHP subscription pricing table, not related to lorekeeper)

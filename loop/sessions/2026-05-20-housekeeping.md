@@ -9,6 +9,7 @@ task_type: build
 (stub — batch housekeeping file for short Hermes sessions < 6 turns on 2026-05-20)
 
 Sessions covered:
+
 - 20260520_144004_e70ee285 (2 turns)
 - 20260520_144037_cf3cb0b4 (2 turns)
 - 20260520_144129_e6b8df7b (2 turns)

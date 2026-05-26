@@ -7,16 +7,21 @@ task_type: review
 ---
 
 ## What was done
+
 Jason asked via SeaTalk whether /reflect covers Hermes sessions. This Hermes agent session involved loading and verifying the reflect SKILL.md to confirm the answer. Confirmed /reflect does cover both Claude Code and Hermes sessions after the recent update.
 
 ## Decisions made
+
 - No changes — confirmation only
 
 ## Corrections / discoveries
+
 - After the bf48cdc commit, /reflect does include Hermes sessions
 
 ## Lessons learnt
+
 - **Hermes answers queries about the system state by reading skills/SOUL.md directly** → reliable self-reference pattern
 
 ## Good patterns observed
+
 - **Load skill before answering questions about it** → correct pattern for factual accuracy

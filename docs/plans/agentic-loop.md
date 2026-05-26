@@ -8,6 +8,7 @@
 ## Goal
 
 Build a reinforcement-learning-inspired system where the agent:
+
 - Memorizes each chat session (key points, decisions, corrections)
 - Periodically consolidates learnings
 - Auto-updates `CLAUDE.md`, skills, MCP configs
@@ -48,6 +49,7 @@ session/
 ```
 
 Each episode captures:
+
 - **Task type** (debugging, code gen, review, brainstorm)
 - **Key decisions** and their outcomes
 - **Tools/skills used** and effectiveness
@@ -64,6 +66,7 @@ Periodically reviews episodic memories and distills into durable knowledge:
 - **Prune stale knowledge** that contradicts recent experience
 
 Could run as a **cron-scheduled Claude agent** that:
+
 1. Reads recent episodes
 2. Compares against existing CLAUDE.md / skills / memories
 3. Proposes updates (or auto-applies with guardrails)
@@ -72,25 +75,25 @@ Could run as a **cron-scheduled Claude agent** that:
 
 The "reward function" for the learning loop. Signals ranked by strength:
 
-| Signal | Strength | How to Capture |
-|--------|----------|----------------|
-| Explicit user correction ("no, don't do that") | Strongest | Parse transcript for correction patterns |
-| User acceptance without edits | Strong positive | Task completed, no follow-up corrections |
-| Repeated tool failures | Negative | Count retries per tool/approach |
-| Session length vs. task complexity | Weak | Short session = efficient; long = struggling |
-| User re-asking same question across sessions | Strong negative | Cross-session dedup detection |
+| Signal                                         | Strength        | How to Capture                               |
+| ---------------------------------------------- | --------------- | -------------------------------------------- |
+| Explicit user correction ("no, don't do that") | Strongest       | Parse transcript for correction patterns     |
+| User acceptance without edits                  | Strong positive | Task completed, no follow-up corrections     |
+| Repeated tool failures                         | Negative        | Count retries per tool/approach              |
+| Session length vs. task complexity             | Weak            | Short session = efficient; long = struggling |
+| User re-asking same question across sessions   | Strong negative | Cross-session dedup detection                |
 
 ### 5. Self-Modifying Agent Config
 
 What the system can actually update:
 
-| Target | What Changes | Risk Level |
-|--------|-------------|------------|
-| `CLAUDE.md` | Coding conventions, project rules | Low |
-| `memory/` files | Facts, preferences, references | Low |
-| Skills (`.claude/skills/`) | New workflows, refined prompts | Medium |
-| `settings.json` (hooks, permissions) | Behavioral triggers | High |
-| MCP server configs | New tool integrations | High |
+| Target                               | What Changes                      | Risk Level |
+| ------------------------------------ | --------------------------------- | ---------- |
+| `CLAUDE.md`                          | Coding conventions, project rules | Low        |
+| `memory/` files                      | Facts, preferences, references    | Low        |
+| Skills (`.claude/skills/`)           | New workflows, refined prompts    | Medium     |
+| `settings.json` (hooks, permissions) | Behavioral triggers               | High       |
+| MCP server configs                   | New tool integrations             | High       |
 
 Higher-risk changes should require human approval. Lower-risk ones can auto-apply.
 
@@ -159,23 +162,27 @@ This is essentially **meta-learning** — an agent that learns how to make anoth
 ## Practical Implementation Plan
 
 ### Phase 1 — Capture (week 1)
+
 - Create a post-session hook that auto-summarizes each conversation into `log/sessions/`
 - Structure: task type, tools used, corrections received, outcome
 - Use the `lorekeeper-memorize` skill as the storage backend
 
 ### Phase 2 — Reconcile (week 2)
+
 - Build a `reconcile` skill that reads recent session logs
 - Compares against current CLAUDE.md and memories
 - Generates a diff of proposed updates
 - Presents for approval (human-in-the-loop)
 
 ### Phase 3 — Automate (week 3)
+
 - Schedule the reconciliation as a cron agent (daily)
 - Auto-apply low-risk changes (memory updates)
 - Queue high-risk changes (CLAUDE.md, skills) for review
 - Add a "learning dashboard" skill that shows what's been learned
 
 ### Phase 4 — Close the loop (week 4+)
+
 - Add pre-session context injection based on task type detection
 - Track improvement metrics (session length, correction frequency)
 - Experiment with skill auto-generation from repeated patterns

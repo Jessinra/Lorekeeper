@@ -204,32 +204,32 @@ Data is stored at `~/.lorekeeper/` by default:
 
 All settings use the `LORE_` prefix and can be set via environment variables:
 
-| Variable                                | Default                                  | Description                                                       |
-| --------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------- |
-| `LORE_VECTOR_STORE`                     | `lancedb`                                | Vector store backend: `lancedb` (default) or `chroma`             |
-| `LORE_DATA_DIR`                         | `~/.lorekeeper`                          | Storage directory                                                 |
-| `LORE_EMBEDDING_MODEL`                  | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model                                                   |
-| `LORE_DUPLICATE_THRESHOLD`              | `0.85`                                   | Similarity above which inserts are blocked                        |
-| `LORE_W_SEMANTIC`                       | `0.45`                                   | Semantic score weight                                             |
-| `LORE_W_KEYWORD`                        | `0.30`                                   | BM25 keyword score weight                                         |
-| `LORE_W_MEMORY`                         | `0.15`                                   | Memory score weight                                               |
-| `LORE_W_USAGE`                          | `0.10`                                   | Usage frequency weight                                            |
-| `LORE_SCORE_BUMP_UP`                    | `0.1`                                    | Score increase on positive feedback                               |
-| `LORE_SCORE_BUMP_DOWN`                  | `0.05`                                   | Score decrease on negative feedback                               |
-| `LORE_SOFT_DELETE_CONFIDENCE_THRESHOLD` | `2`                                      | Confidence ≤ this + `useful=false` triggers soft-delete           |
-| `LORE_CONFIDENCE_WINDOW_SIZE`           | `20`                                     | Rolling window size for confidence EMA                            |
-| `LORE_SEARCH_LIMIT`                     | `5`                                      | Default number of memories returned by `lore_search`              |
-| `LORE_MAX_LINKS_PER_MEMORY`             | `5`                                      | Limit links returned per memory in search results                 |
-| `LORE_SCORE_MIN`                        | `0.0`                                    | Minimum allowed memory score                                      |
-| `LORE_SCORE_MAX`                        | `10.0`                                   | Maximum allowed memory score                                      |
-| `LORE_NEW_MEMORY_DEFAULT_SCORE`         | `5.0`                                    | Default score for new memories                                    |
-| `LORE_USAGE_NORMALISATION_CAP`          | `100`                                    | Cap for log-normalising `usage_count` in hybrid scoring           |
-| `LORE_DECAY_LAMBDA`                     | `0.0077`                                 | Time-decay λ for scoring (~90-day half-life; set to 0 to disable) |
-| `LORE_AUTO_LINK_ENABLED`               | `true`                                   | Enable automatic linking of semantically similar memories on insert (set `false` to disable) |
-| `LORE_AUTO_LINK_K`                     | `5`                                      | Candidate count for auto-link vector search (ε-NN + top-k hybrid) |
-| `LORE_AUTO_LINK_THRESHOLD`             | `0.85`                                   | Minimum cosine similarity to auto-link; 0.85–0.95 = strong same-topic, 0.75–0.85 = related but distinct |
-| `LORE_DASH_PORT`                        | `7777`                                   | Dashboard HTTP port                                               |
-| `LORE_DASH_RELOAD`                      | `1`                                      | Dashboard hot-reload (`0` to disable)                             |
+| Variable                                | Default                                  | Description                                                                                             |
+| --------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `LORE_VECTOR_STORE`                     | `lancedb`                                | Vector store backend: `lancedb` (default) or `chroma`                                                   |
+| `LORE_DATA_DIR`                         | `~/.lorekeeper`                          | Storage directory                                                                                       |
+| `LORE_EMBEDDING_MODEL`                  | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model                                                                                         |
+| `LORE_DUPLICATE_THRESHOLD`              | `0.85`                                   | Similarity above which inserts are blocked                                                              |
+| `LORE_W_SEMANTIC`                       | `0.45`                                   | Semantic score weight                                                                                   |
+| `LORE_W_KEYWORD`                        | `0.30`                                   | BM25 keyword score weight                                                                               |
+| `LORE_W_MEMORY`                         | `0.15`                                   | Memory score weight                                                                                     |
+| `LORE_W_USAGE`                          | `0.10`                                   | Usage frequency weight                                                                                  |
+| `LORE_SCORE_BUMP_UP`                    | `0.1`                                    | Score increase on positive feedback                                                                     |
+| `LORE_SCORE_BUMP_DOWN`                  | `0.05`                                   | Score decrease on negative feedback                                                                     |
+| `LORE_SOFT_DELETE_CONFIDENCE_THRESHOLD` | `2`                                      | Confidence ≤ this + `useful=false` triggers soft-delete                                                 |
+| `LORE_CONFIDENCE_WINDOW_SIZE`           | `20`                                     | Rolling window size for confidence EMA                                                                  |
+| `LORE_SEARCH_LIMIT`                     | `5`                                      | Default number of memories returned by `lore_search`                                                    |
+| `LORE_MAX_LINKS_PER_MEMORY`             | `5`                                      | Limit links returned per memory in search results                                                       |
+| `LORE_SCORE_MIN`                        | `0.0`                                    | Minimum allowed memory score                                                                            |
+| `LORE_SCORE_MAX`                        | `10.0`                                   | Maximum allowed memory score                                                                            |
+| `LORE_NEW_MEMORY_DEFAULT_SCORE`         | `5.0`                                    | Default score for new memories                                                                          |
+| `LORE_USAGE_NORMALISATION_CAP`          | `100`                                    | Cap for log-normalising `usage_count` in hybrid scoring                                                 |
+| `LORE_DECAY_LAMBDA`                     | `0.0077`                                 | Time-decay λ for scoring (~90-day half-life; set to 0 to disable)                                       |
+| `LORE_AUTO_LINK_ENABLED`                | `true`                                   | Enable automatic linking of semantically similar memories on insert (set `false` to disable)            |
+| `LORE_AUTO_LINK_K`                      | `5`                                      | Candidate count for auto-link vector search (ε-NN + top-k hybrid)                                       |
+| `LORE_AUTO_LINK_THRESHOLD`              | `0.85`                                   | Minimum cosine similarity to auto-link; 0.85–0.95 = strong same-topic, 0.75–0.85 = related but distinct |
+| `LORE_DASH_PORT`                        | `7777`                                   | Dashboard HTTP port                                                                                     |
+| `LORE_DASH_RELOAD`                      | `1`                                      | Dashboard hot-reload (`0` to disable)                                                                   |
 
 ---
 

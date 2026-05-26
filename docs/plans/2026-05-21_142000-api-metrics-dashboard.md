@@ -15,6 +15,7 @@
 ### 1. SQLite table for metrics
 
 Add to `link_store.py` SCHEMA:
+
 ```sql
 CREATE TABLE IF NOT EXISTS api_metrics (
   minute_bucket  TEXT NOT NULL,   -- ISO minute boundary, e.g. '2026-05-21T14:30:00'
@@ -31,8 +32,9 @@ Add method: `get_metrics(hours: int = 24) -> list[sqlite3.Row]` — returns rows
 ### 2. Increment metrics in `orchestrator.py`
 
 Add `_increment_metric(tool_name: str)` to `MemoryService` which calls `self._store.increment_metric(tool_name)`. Call it at the start of each public method:
+
 - `search()` → `_increment_metric("lore_search")`
-- `insert()` → `_increment_metric("lore_insert")`  
+- `insert()` → `_increment_metric("lore_insert")`
 - `update()` → `_increment_metric("lore_update")`
 - `submit_reflection()` → `_increment_metric("lore_reflect")`
 - `get_processed_session_ids()` → `_increment_metric("lore_processed_sessions")`
@@ -42,6 +44,7 @@ Also increment on the dashboard REST endpoints that call these methods (since th
 ### 3. Dashboard REST endpoint
 
 Add to `dashboard/app.py`:
+
 ```python
 @app.get("/api/metrics")
 def get_metrics(hours: int = 24) -> dict:
@@ -54,16 +57,19 @@ def get_metrics(hours: int = 24) -> dict:
 ### 4. Dashboard UI — new "Metrics" tab
 
 **index.html** — add tab button between Query and Sessions:
+
 ```html
 <button class="tab" onclick="switchTab('metrics')">Metrics</button>
 ```
 
 Add tab pane div with:
+
 - Time range selector (1h / 6h / 24h / 7d buttons)
 - Sum total at top (total API calls in range)
 - Canvas-based chart (line chart: X = time, Y = count, one line per tool)
 
 **JS file**: `static/js/metrics.js`
+
 - Vanilla Canvas 2D line chart — no dependencies
 - Fetch `/api/metrics?hours=N`, transform data, draw
 - Responsive to tab switching (refresh on tab activate)
@@ -72,15 +78,15 @@ Add tab pane div with:
 
 ### Files to change
 
-| File | Change |
-|------|--------|
-| `src/lorekeeper/services/link_store.py` | Add `api_metrics` table to SCHEMA, `increment_metric()`, `get_metrics()` |
-| `src/lorekeeper/services/orchestrator.py` | Call `_increment_metric()` in each public method |
-| `src/lorekeeper/dashboard/app.py` | Add `GET /api/metrics` endpoint |
-| `src/lorekeeper/dashboard/static/index.html` | Add Metrics tab button + pane |
-| `src/lorekeeper/dashboard/static/js/metrics.js` | **New file** — fetch + canvas chart |
-| `src/lorekeeper/dashboard/static/js/app.js` | Import + wire `metrics.js` |
-| `README.md` | Update layout tree, add Metrics tab to dashboard section |
+| File                                            | Change                                                                   |
+| ----------------------------------------------- | ------------------------------------------------------------------------ |
+| `src/lorekeeper/services/link_store.py`         | Add `api_metrics` table to SCHEMA, `increment_metric()`, `get_metrics()` |
+| `src/lorekeeper/services/orchestrator.py`       | Call `_increment_metric()` in each public method                         |
+| `src/lorekeeper/dashboard/app.py`               | Add `GET /api/metrics` endpoint                                          |
+| `src/lorekeeper/dashboard/static/index.html`    | Add Metrics tab button + pane                                            |
+| `src/lorekeeper/dashboard/static/js/metrics.js` | **New file** — fetch + canvas chart                                      |
+| `src/lorekeeper/dashboard/static/js/app.js`     | Import + wire `metrics.js`                                               |
+| `README.md`                                     | Update layout tree, add Metrics tab to dashboard section                 |
 
 ### Tests
 

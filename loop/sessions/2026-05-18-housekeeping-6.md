@@ -5,9 +5,11 @@ transcript: multiple
 topic: short-session
 task_type: build
 ---
+
 (stub — batch of short/hook sessions from 2026-05-18 backlog; individual UUIDs registered via lore_reflect)
 
 Sessions included:
+
 - 0225c20e, 024811a6, 04810421, 07161ac9, 071fb392, 1033fc97, 1417d067
 - 1937c3b9, 19c8d567, 1b5048df, 1c64cd99, 24c3a52a, 25d13875, 2ad91a3c
 - 2bc66a95, 33c257d6, 3459fdde, 370e7965, 3cd58d7d, 3d64a1e0, 3f812e4d

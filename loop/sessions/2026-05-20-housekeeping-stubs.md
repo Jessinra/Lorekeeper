@@ -7,9 +7,11 @@ task_type: build
 ---
 
 ## What was done
+
 Grouped 29 Hermes stub sessions (< 3 user+assistant pairs) and 1 Claude Code stub session from May 20-21 into a single housekeeping log.
 
 ### Hermes stub sessions (29):
+
 20260520_144004_e70ee285 - SeaTalk webhook (2 turns, template unfilled)
 20260520_144037_cf3cb0b4 - Stub (2 turns)
 20260520_144129_e6b8df7b - Stub (2 turns)
@@ -41,24 +43,31 @@ Grouped 29 Hermes stub sessions (< 3 user+assistant pairs) and 1 Claude Code stu
 20260521_192812_111fb629 - Stub (2 turns)
 
 ### Claude Code stub session (1):
+
 18e7fc7b-6167-47a4-9873-66527652ac12 - opc-core /exit (3 turns, user commands only, no substantive interaction)
 
 ## Decisions made
+
 - Stub sessions grouped into one housekeeping log per the reflect skill instructions for handling sessions with < 3 user+assistant pairs
 
 ## Corrections / discoveries
+
 - Many Hermes stub sessions appear to be SeaTalk webhook notifications that arrive with template placeholders unfilled or minimal user interaction
 
 ## Lessons learnt
+
 - **None** — stubs contain no redirections
 
 ## Good patterns observed
+
 - **None** — stubs contain no notable patterns
 
 ## What I learned about the user
+
 - **None** — stubs contain no signal
 
 ## Proposed updates
+
 - CLAUDE.md: none
 - Skills: none
 - Memory: none
