@@ -21,11 +21,6 @@ bash scripts/validate-ticket.sh
 echo "✅  tickets valid"
 
 echo ""
-echo "🌸  Run Prettier"
-npx prettier --write "*"
-echo "✅  prettier done"
-
-echo ""
 echo "🔍  ruff check..."
 uv run ruff check src tests
 echo "✅  ruff passed"
@@ -37,7 +32,7 @@ echo "✅  biome passed"
 
 echo ""
 echo "🧪  pytest..."
-uv run pytest tests/ -q --tb=short
+uv run pytest tests/ -q -x --tb=short
 echo "✅  tests passed"
 
 echo ""
