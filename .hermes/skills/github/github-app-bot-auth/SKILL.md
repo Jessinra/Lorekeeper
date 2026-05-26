@@ -20,7 +20,7 @@ The Lorekeeper ecosystem uses a **GitHub App** (`jessinra-megumi-dev`) for bot-a
 | Installation ID | `134866394` |
 | Account | `Jessinra` (User, selected repos) |
 | Bot display name | `jessinra-megumi-dev[bot]` |
-| Private key | `~/Downloads/jessinra-megumi-dev.2026-05-25.private-key (1).pem` |
+| Private key | `~/.hermes/keys/jessinra-megumi-dev.private-key.pem` |
 | Auth file | `~/.config/gh/hosts.yml` |
 | Token prefix | `ghs_` (installation token) |
 
@@ -44,7 +44,7 @@ Installation tokens expire in **1 hour**. A cron job refreshes them automaticall
 - **Delivery:** `local` (silent — no Telegram spam)
 
 The script:
-1. Reads the PEM key from `~/Downloads/`
+1. Reads the PEM key from `~/.hermes/keys/jessinra-megumi-dev.private-key.pem`
 2. Generates a JWT signed with RS256 (PyJWT preferred, falls back to `openssl dgst -sha256 -sign`)
 3. Exchanges for an installation token via GitHub API
 4. Writes `~/.config/gh/hosts.yml` with the fresh token inline
