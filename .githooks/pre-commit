@@ -11,8 +11,14 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT"
 
 echo "🔒  Checking branch..."
-bash scripts/check-branch.sh
-echo "✅  branch ok"
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ "$BRANCH" = "main" ]; then
+    echo "🚫  ERROR: Direct commits to 'main' are not allowed."
+    echo "    Use a feature branch and open a PR instead."
+    echo "    PM branch for backlog management: git checkout chore/backlog"
+    exit 1
+fi
+echo "✅  branch ok ($BRANCH)"
 
 echo ""
 echo "🎫  Validating ticket format..."
