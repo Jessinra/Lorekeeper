@@ -60,6 +60,8 @@ Changes:
 - [ ] Duplicate guard: same A→B pair is never linked twice (check `link_store` before inserting)
 - [ ] `lore_remember` continues working as before, just picks up the new defaults (k=5, threshold=0.85)
 - [ ] Config documented in README with threshold rationale
+- [ ] **Dashboard:** Auto-link controls added to Config tab (enabled toggle, k spinbutton, threshold spinbutton) under their own "AUTO-LINK" section
+- [ ] **Dashboard:** Auto-link metrics tracked and visible (links created count via `_increment_metric`)
 
 ## Affected Files
 
@@ -69,7 +71,10 @@ Changes:
 - `tests/test_orchestrator.py` — assert auto-link created with correct score, no-link for low-similarity inserts, no duplicate link on second insert
 
 **Dashboard:**
-_none_ — existing link display shows auto_linked results naturally
+- `src/lorekeeper/dashboard/app.py` — add `auto_link_enabled`, `auto_link_k`, `auto_link_threshold` to `get_config()` return + `ConfigUpdate` model
+- `src/lorekeeper/dashboard/static/js/config.js` — add `auto_link` section to `CFG_FIELDS` with enabled toggle, k spinbutton, threshold spinbutton; render + save
+- `src/lorekeeper/dashboard/static/index.html` — add `.config-section` container for auto-link
+- `src/lorekeeper/dashboard/static/js/metrics.js` — add `auto_linked` to `TOOL_COLORS` for the metrics heatmap
 
 ## Dependencies
 
