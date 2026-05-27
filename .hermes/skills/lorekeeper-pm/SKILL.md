@@ -3,7 +3,7 @@ name: lorekeeper-pm
 description: PM workflow for Lorekeeper. Load this when managing the backlog, filing tickets, reviewing dev work, or planning features. For ticket lifecycle, numbering, and script details, see the backlog-management skill.
 version: v2.3.0
 tags: []
-related_skills: [backlog-management, lorekeeper-dev]
+related_skills: [backlog-management, lorekeeper-dev, sprint-review]
 ---
 
 # Lorekeeper PM
