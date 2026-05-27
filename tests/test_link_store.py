@@ -77,3 +77,86 @@ def test_all_memory_rows_excludes_deleted(store):
 
     all_rows = store.all_memory_rows(include_deleted=True)
     assert len(all_rows) == 3
+
+
+def test_upsert_memory_row_stores_namespace(tmp_path):
+    s = LinkStore(tmp_path / "ns.db")
+    s.upsert_memory_row(
+        id="x", title="mem-x", description="d", content="c",
+        created_at="2026-01-01T00:00:00+00:00",
+        updated_at="2026-01-01T00:00:00+00:00",
+        namespace="diana",
+    )
+    row = s.get_memory_row("x")
+    assert row is not None
+    assert row["namespace"] == "diana"
+    s.close()
+
+
+def test_upsert_defaults_namespace_to_shared(tmp_path):
+    s = LinkStore(tmp_path / "ns2.db")
+    s.upsert_memory_row(
+        id="y", title="mem-y", description="d", content="c",
+        created_at="2026-01-01T00:00:00+00:00",
+        updated_at="2026-01-01T00:00:00+00:00",
+    )
+    row = s.get_memory_row("y")
+    assert row is not None
+    assert row["namespace"] == "shared"
+    s.close()
+
+
+def test_upsert_does_not_overwrite_namespace(tmp_path):
+    """ON CONFLICT update must not clobber the existing namespace."""
+    s = LinkStore(tmp_path / "ns3.db")
+    s.upsert_memory_row(
+        id="z", title="mem-z", description="d", content="c",
+        created_at="2026-01-01T00:00:00+00:00",
+        updated_at="2026-01-01T00:00:00+00:00",
+        namespace="diana",
+    )
+    # Re-upsert with default namespace — should NOT overwrite
+    s.upsert_memory_row(
+        id="z", title="mem-z-updated", description="d2", content="c2",
+        created_at="2026-01-01T00:00:00+00:00",
+        updated_at="2026-01-02T00:00:00+00:00",
+    )
+    row = s.get_memory_row("z")
+    assert row is not None
+    assert row["namespace"] == "diana"  # preserved
+    assert row["title"] == "mem-z-updated"  # other fields updated
+    s.close()
+
+
+def test_all_memory_rows_namespace_filter(tmp_path):
+    s = LinkStore(tmp_path / "ns4.db")
+    s.upsert_memory_row(
+        id="1", title="m1", description="d", content="c",
+        created_at="2026-01-01T00:00:00+00:00",
+        updated_at="2026-01-01T00:00:00+00:00",
+        namespace="diana",
+    )
+    s.upsert_memory_row(
+        id="2", title="m2", description="d", content="c",
+        created_at="2026-01-01T00:00:00+00:00",
+        updated_at="2026-01-01T00:00:00+00:00",
+        namespace="shared",
+    )
+    s.upsert_memory_row(
+        id="3", title="m3", description="d", content="c",
+        created_at="2026-01-01T00:00:00+00:00",
+        updated_at="2026-01-01T00:00:00+00:00",
+        namespace="bella",
+    )
+
+    # diana reads own + shared
+    rows = s.all_memory_rows(namespaces=["diana", "shared"])
+    ids = {r["id"] for r in rows}
+    assert ids == {"1", "2"}
+
+    # no filter → all
+    rows = s.all_memory_rows()
+    assert len(rows) == 3
+
+    s.close()
+
