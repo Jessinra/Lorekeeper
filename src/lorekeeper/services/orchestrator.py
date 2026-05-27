@@ -66,6 +66,8 @@ engine: MemoryEngine,
         self._namespace: str = settings.namespace
 
     def _all_memories(self, include_deleted: bool = False) -> dict[str, Memory]:
+        # None → no filter → reads all rows (backward-compat for the default "shared" agent).
+        # Non-shared agents scope reads to their own namespace + the shared pool.
         namespaces = None if self._namespace == "shared" else [self._namespace, "shared"]
         rows = self._store.all_memory_rows(include_deleted=include_deleted, namespaces=namespaces)
         return {r["id"]: _row_to_memory(r) for r in rows}
