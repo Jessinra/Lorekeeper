@@ -768,3 +768,62 @@ def test_no_namespace_sees_all(tmp_path):
 
     memories = svc._all_memories()
     assert len(memories) == 2  # sees all
+
+
+def test_same_title_different_namespace_not_duplicate(tmp_path):
+    """Two agents in different namespaces can use the same title without false duplicate."""
+    diana_svc, _ = _make_svc(tmp_path, "dup.db", "diana")
+    bella_svc, _ = _make_svc(tmp_path, "dup.db", "bella")
+
+    # Insert same title in different namespaces
+    diana_res = diana_svc.insert(
+        memories=[{"title": "common title", "content": "diana's", "description": "d"}],
+        links=[],
+    )
+    diana_id = diana_res["inserted_memories"][0]["id"]
+
+    bella_res = bella_svc.insert(
+        memories=[{"title": "common title", "content": "bella's", "description": "d"}],
+        links=[],
+    )
+    bella_id = bella_res["inserted_memories"][0]["id"]
+
+    # Both should succeed with different IDs
+    assert diana_id != bella_id
+
+
+def test_same_title_same_namespace_still_detects_duplicate(tmp_path):
+    """Same title in same namespace still triggers duplicate detection."""
+    svc, _ = _make_svc(tmp_path, "dup2.db", "diana")
+
+    first = svc.insert(
+        memories=[{"title": "my memory", "content": "first", "description": "d"}],
+        links=[],
+    )
+    first_id = first["inserted_memories"][0]["id"]
+
+    second = svc.insert(
+        memories=[{"title": "my memory", "content": "second", "description": "d"}],
+        links=[],
+    )
+    assert len(second["duplicates"]) == 1
+    assert second["duplicates"][0]["existing_memory"]["id"] == first_id
+
+
+def test_same_title_in_shared_still_detects_duplicate(tmp_path):
+    """Memory with namespace='shared' is visible as duplicate to any agent."""
+    store = LinkStore(tmp_path / "dup3.db")
+    engine = FakeEngine()
+    kw = KeywordIndex()
+    store.upsert_memory_row(id="shared-id", title="overlap", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="shared")
+
+    diana_svc = MemoryService(engine, store, kw, Settings(namespace="diana"))
+    result = diana_svc.insert(
+        memories=[{"title": "overlap", "content": "new", "description": "d"}],
+        links=[],
+    )
+    assert len(result["duplicates"]) == 1
+    assert result["duplicates"][0]["existing_memory"]["id"] == "shared-id"

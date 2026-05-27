@@ -36,7 +36,7 @@ export async function loadMemories() {
 	updateHeaderMeta();
 }
 
-function _populateNamespaceFilter() {
+export function _populateNamespaceFilter() {
 	const sel = document.getElementById("ns-filter");
 	const current = sel.value;
 	const namespaces = [
@@ -50,6 +50,11 @@ function _populateNamespaceFilter() {
 					`<option value="${esc(ns)}"${ns === current ? " selected" : ""}>${esc(ns)}</option>`,
 			)
 			.join("");
+	// Reconcile state — if the previously-selected namespace no longer exists, reset
+	if (current && !namespaces.includes(current)) {
+		state.setNamespaceFilter("");
+		sel.value = "";
+	}
 }
 
 export function setNamespaceFilter(ns) {

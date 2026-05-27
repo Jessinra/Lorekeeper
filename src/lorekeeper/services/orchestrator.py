@@ -358,8 +358,9 @@ engine: MemoryEngine,
         text = f"{title} {description} {content}"
 
         if not force:
+            ns_filter = [self._namespace, "shared"]
             # Exact title match is a definitive duplicate — skip semantic search
-            existing_by_title = self._store.get_memory_row_by_title(title)
+            existing_by_title = self._store.get_memory_row_by_title(title, namespaces=ns_filter)
             if existing_by_title:
                 return {"duplicate": {
                     "input_title": title,
@@ -374,7 +375,7 @@ engine: MemoryEngine,
                 sem = hit["score"]
                 kw = kw_hits.get(lid, 0.0)
                 if is_duplicate(sem, kw, self._settings):
-                    existing_row = self._store.get_memory_row(lid)
+                    existing_row = self._store.get_memory_row(lid, namespaces=ns_filter)
                     if existing_row:
                         return {"duplicate": {
                             "input_title": title,

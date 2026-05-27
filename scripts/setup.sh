@@ -117,7 +117,7 @@ new_entry = (
     f"      LOREKEEPER_SETUP_VERSION: {setup_ver}\n"
 )
 if namespace:
-    new_entry += f"      LORE_NAMESPACE: {namespace}\n"
+    new_entry += f'      LORE_NAMESPACE: "{namespace}"\n'
 
 if mcp_match:
     # Insert at the end of the existing mcp_servers block (inside it, not after)
