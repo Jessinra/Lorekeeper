@@ -252,6 +252,9 @@ class LinkStore:
             conditions.append("soft_deleted = 0")
 
         if namespaces is not None:
+            if not namespaces:
+                # Empty list → no rows can match; short-circuit
+                return []
             placeholders = ",".join("?" * len(namespaces))
             conditions.append(f"namespace IN ({placeholders})")
             params.extend(namespaces)
