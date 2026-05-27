@@ -10,6 +10,7 @@ export const linkSort = { field: "score", dir: "desc" };
 export let linksLoaded = false;
 export let filterText = "";
 export let timeFilterDays = null; // null = all, 0 = today, 3 = 3 days, 7 = 1 week
+export let namespaceFilter = ""; // "" = all namespaces
 export let detailEditMode = false;
 export let detailData = null;
 
@@ -37,6 +38,9 @@ export function setFilterText(v) {
 }
 export function setTimeFilterDays(v) {
 	timeFilterDays = v;
+}
+export function setNamespaceFilter(v) {
+	namespaceFilter = v;
 }
 export function setDetailEditMode(v) {
 	detailEditMode = v;

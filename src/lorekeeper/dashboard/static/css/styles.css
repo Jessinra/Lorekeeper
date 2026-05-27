@@ -203,6 +203,7 @@ tr > th:last-child,  tr > td:last-child  { padding-right: 40px; }
 .col-title-main { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .col-title-sub  { font-size: 11px; color: var(--subtle); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; margin-top: 2px; }
 .col-score  { width: 64px; text-align: right; }
+.col-ns     { width: 80px; }
 .col-conf   { width: 52px; text-align: right; color: var(--subtle); }
 .col-usage  { width: 52px; text-align: right; color: var(--subtle); }
 .col-links  { width: 44px; text-align: right; color: var(--subtle); }
@@ -229,6 +230,7 @@ tr > th:last-child,  tr > td:last-child  { padding-right: 40px; }
 
 .badge { display: inline-block; border-radius: 4px; padding: 1px 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
 .badge-deleted { background: #fee2e2; color: #991b1b; }
+.ns-badge { display: inline-block; border-radius: 3px; padding: 1px 5px; font-size: 11px; font-weight: 500; background: var(--surface-2, #e8eaf0); color: var(--subtle); }
 .relation-badge { background: #ede9fe; color: #5b21b6; border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 
 /* ── Detail tab ── */
