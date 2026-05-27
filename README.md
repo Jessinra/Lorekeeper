@@ -208,6 +208,7 @@ All settings use the `LORE_` prefix and can be set via environment variables:
 | --------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `LORE_VECTOR_STORE`                     | `lancedb`                                | Vector store backend: `lancedb` (default) or `chroma`                                                   |
 | `LORE_DATA_DIR`                         | `~/.lorekeeper`                          | Storage directory                                                                                       |
+| `LORE_NAMESPACE`                        | `shared`                                 | Agent write namespace. Writes are tagged with this value; reads return memories in `[namespace, "shared"]`. Set automatically by `setup.sh` for all Hermes agents (`hermes_main` gets `"shared"`, profiles get their directory name). |
 | `LORE_EMBEDDING_MODEL`                  | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model                                                                                         |
 | `LORE_DUPLICATE_THRESHOLD`              | `0.85`                                   | Similarity above which inserts are blocked                                                              |
 | `LORE_W_SEMANTIC`                       | `0.45`                                   | Semantic score weight                                                                                   |

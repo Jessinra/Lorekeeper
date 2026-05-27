@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS memories (
   score            REAL    NOT NULL DEFAULT 1.0,
   soft_deleted     INTEGER NOT NULL DEFAULT 0,
   confidence       REAL,
-  confidence_count INTEGER NOT NULL DEFAULT 0
+  confidence_count INTEGER NOT NULL DEFAULT 0,
+  namespace        TEXT    NOT NULL DEFAULT 'shared'
 );
 
 CREATE INDEX IF NOT EXISTS idx_memories_soft_deleted ON memories(soft_deleted);
@@ -112,6 +113,8 @@ class LinkStore:
         self._migrate_dedup_memories()
         self._migrate_add_session_content_columns()
         self._migrate_add_last_used_column()
+        self._migrate_add_namespace_column()
+        self._migrate_namespace_unique_title()
 
     def _migrate_add_last_used_column(self) -> None:
         existing = {row[1] for row in self._conn.execute("PRAGMA table_info(memories)")}
@@ -119,6 +122,35 @@ class LinkStore:
             self._conn.execute("ALTER TABLE memories ADD COLUMN last_used TEXT")
             self._conn.commit()
             log.info("memories_last_used_column_added")
+
+    def _migrate_add_namespace_column(self) -> None:
+        existing = {row[1] for row in self._conn.execute("PRAGMA table_info(memories)")}
+        if "namespace" not in existing:
+            self._conn.execute(
+                "ALTER TABLE memories ADD COLUMN namespace TEXT NOT NULL DEFAULT 'shared'"
+            )
+            self._conn.commit()
+            log.info("memories_namespace_column_added")
+
+    def _migrate_namespace_unique_title(self) -> None:
+        """Migrate unique title index to namespace-scoped unique index."""
+        old_idx = self._conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_memories_unique_title'"
+        ).fetchone()
+        if not old_idx:
+            return
+        # Check if it's the old global index (not namespace-scoped)
+        idx_info = self._conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='index' AND name='idx_memories_unique_title'"
+        ).fetchone()
+        if idx_info and "(namespace, title)" in idx_info["sql"]:
+            return  # Already migrated
+        self._conn.execute("DROP INDEX IF EXISTS idx_memories_unique_title")
+        self._conn.execute("""
+            CREATE UNIQUE INDEX idx_memories_unique_title ON memories(namespace, title)
+        """)
+        self._conn.commit()
+        log.info("memories_unique_title_migrated_to_namespace_scoped")
 
     def _migrate_add_session_content_columns(self) -> None:
         existing = {row[1] for row in self._conn.execute("PRAGMA table_info(sessions)")}
@@ -198,13 +230,14 @@ class LinkStore:
         confidence: float | None = None,
         confidence_count: int = 0,
         last_used: str | None = None,
+        namespace: str = "shared",
     ) -> None:
         self._conn.execute(
             """
             INSERT INTO memories
               (id, title, description, content, created_at, updated_at,
-               usage_count, score, soft_deleted, confidence, confidence_count, last_used)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+               usage_count, score, soft_deleted, confidence, confidence_count, last_used, namespace)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(id) DO UPDATE SET
               title=excluded.title, description=excluded.description,
               content=excluded.content, updated_at=excluded.updated_at,
@@ -214,28 +247,60 @@ class LinkStore:
               last_used=COALESCE(excluded.last_used, last_used)
             """,
             (id, title, description, content, created_at, updated_at,
-             usage_count, score, int(soft_deleted), confidence, confidence_count, last_used),
+             usage_count, score, int(soft_deleted), confidence,
+             confidence_count, last_used, namespace),
         )
         self._conn.commit()
 
-    def get_memory_row(self, id: str) -> sqlite3.Row | None:
-        return self._conn.execute(
-            "SELECT * FROM memories WHERE id = ?", (id,)
-        ).fetchone()
+    def get_memory_row(self, id: str, namespaces: list[str] | None = None) -> sqlite3.Row | None:
+        sql = "SELECT * FROM memories WHERE id = ?"
+        params: list[object] = [id]
+        if namespaces is not None:
+            if not namespaces:
+                return None
+            placeholders = ",".join("?" * len(namespaces))
+            sql += f" AND namespace IN ({placeholders})"
+            params.extend(namespaces)
+        return self._conn.execute(sql, params).fetchone()
 
-    def get_memory_row_by_title(self, title: str) -> sqlite3.Row | None:
-        sql = (
-            "SELECT * FROM memories WHERE title = ? "
-            "AND soft_deleted = 0 ORDER BY score DESC LIMIT 1"
-        )
-        return self._conn.execute(sql, (title,)).fetchone()
+    def get_memory_row_by_title(
+        self, title: str, namespaces: list[str] | None = None
+    ) -> sqlite3.Row | None:
+        sql = "SELECT * FROM memories WHERE title = ? AND soft_deleted = 0"
+        params: list[object] = [title]
+        if namespaces is not None:
+            if not namespaces:
+                return None
+            placeholders = ",".join("?" * len(namespaces))
+            sql += f" AND namespace IN ({placeholders})"
+            params.extend(namespaces)
+        sql += " ORDER BY score DESC LIMIT 1"
+        return self._conn.execute(sql, params).fetchone()
 
-    def all_memory_rows(self, include_deleted: bool = False) -> list[sqlite3.Row]:
-        if include_deleted:
-            return self._conn.execute("SELECT * FROM memories").fetchall()
-        return self._conn.execute(
-            "SELECT * FROM memories WHERE soft_deleted = 0"
-        ).fetchall()
+    def all_memory_rows(
+        self,
+        include_deleted: bool = False,
+        namespaces: list[str] | None = None,
+    ) -> list[sqlite3.Row]:
+        conditions = []
+        params: list[object] = []
+
+        if not include_deleted:
+            conditions.append("soft_deleted = 0")
+
+        if namespaces is not None:
+            if not namespaces:
+                # Empty list → no rows can match; short-circuit
+                return []
+            placeholders = ",".join("?" * len(namespaces))
+            conditions.append(f"namespace IN ({placeholders})")
+            params.extend(namespaces)
+
+        sql = "SELECT * FROM memories"
+        if conditions:
+            sql += " WHERE " + " AND ".join(conditions)
+
+        return self._conn.execute(sql, params).fetchall()
 
     def update_memory_fields(self, id: str, **fields: object) -> None:
         allowed = {

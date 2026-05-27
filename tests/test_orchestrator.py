@@ -694,3 +694,171 @@ def test_insert_with_inline_links_and_top_level_links(svc):
     assert has_c_link
 
 
+# ── Namespace isolation tests ──────────────────────────────────────────────────
+
+def _make_svc(tmp_path, db_name: str, namespace: str):
+    """Helper: create a MemoryService with a given namespace."""
+    store = LinkStore(tmp_path / db_name)
+    engine = FakeEngine()
+    kw = KeywordIndex()
+    settings = Settings(namespace=namespace)
+    return MemoryService(engine, store, kw, settings), store
+
+
+def test_insert_tags_with_agent_namespace(tmp_path):
+    svc, store = _make_svc(tmp_path, "ns.db", "diana")
+    svc.insert(memories=[{"title": "diana memory", "content": "c", "description": "d"}], links=[])
+    rows = store.all_memory_rows()
+    assert len(rows) == 1
+    assert rows[0]["namespace"] == "diana"
+
+
+def test_insert_tags_with_shared_when_no_namespace(tmp_path):
+    svc, store = _make_svc(tmp_path, "ns.db", "shared")
+    svc.insert(memories=[{"title": "shared memory", "content": "c", "description": "d"}], links=[])
+    rows = store.all_memory_rows()
+    assert rows[0]["namespace"] == "shared"
+
+
+def test_agent_reads_own_and_shared(tmp_path):
+    """Diana agent should see diana + shared memories, not bella's."""
+    # Seed the DB directly with memories from multiple namespaces
+    store = LinkStore(tmp_path / "multi.db")
+    store.upsert_memory_row(id="a", title="diana mem", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="diana")
+    store.upsert_memory_row(id="b", title="shared mem", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="shared")
+    store.upsert_memory_row(id="c", title="bella mem", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="bella")
+
+    engine = FakeEngine()
+    kw = KeywordIndex()
+    settings = Settings(namespace="diana")
+    svc = MemoryService(engine, store, kw, settings)
+
+    memories = svc._all_memories()
+    ids = set(memories.keys())
+    assert "a" in ids   # own namespace
+    assert "b" in ids   # shared
+    assert "c" not in ids  # bella's — invisible
+
+
+def test_no_namespace_sees_all(tmp_path):
+    """With namespace='shared' (default), _all_memories returns all rows."""
+    store = LinkStore(tmp_path / "all.db")
+    store.upsert_memory_row(id="a", title="t1", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="diana")
+    store.upsert_memory_row(id="b", title="t2", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="shared")
+
+    engine = FakeEngine()
+    kw = KeywordIndex()
+    settings = Settings(namespace="shared")
+    svc = MemoryService(engine, store, kw, settings)
+
+    memories = svc._all_memories()
+    assert len(memories) == 2  # sees all
+
+
+def test_same_title_different_namespace_not_duplicate(tmp_path):
+    """Two agents in different namespaces can use the same title without false duplicate."""
+    diana_svc, _ = _make_svc(tmp_path, "dup.db", "diana")
+    bella_svc, _ = _make_svc(tmp_path, "dup.db", "bella")
+
+    # Insert same title in different namespaces
+    diana_res = diana_svc.insert(
+        memories=[{"title": "common title", "content": "diana's", "description": "d"}],
+        links=[],
+    )
+    diana_id = diana_res["inserted_memories"][0]["id"]
+
+    bella_res = bella_svc.insert(
+        memories=[{"title": "common title", "content": "bella's", "description": "d"}],
+        links=[],
+    )
+    bella_id = bella_res["inserted_memories"][0]["id"]
+
+    # Both should succeed with different IDs
+    assert diana_id != bella_id
+
+
+def test_same_title_same_namespace_still_detects_duplicate(tmp_path):
+    """Same title in same namespace still triggers duplicate detection."""
+    svc, _ = _make_svc(tmp_path, "dup2.db", "diana")
+
+    first = svc.insert(
+        memories=[{"title": "my memory", "content": "first", "description": "d"}],
+        links=[],
+    )
+    first_id = first["inserted_memories"][0]["id"]
+
+    second = svc.insert(
+        memories=[{"title": "my memory", "content": "second", "description": "d"}],
+        links=[],
+    )
+    assert len(second["duplicates"]) == 1
+    assert second["duplicates"][0]["existing_memory"]["id"] == first_id
+
+
+def test_same_title_in_shared_still_detects_duplicate(tmp_path):
+    """Memory with namespace='shared' is visible as duplicate to any agent."""
+    store = LinkStore(tmp_path / "dup3.db")
+    engine = FakeEngine()
+    kw = KeywordIndex()
+    store.upsert_memory_row(id="shared-id", title="overlap", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="shared")
+
+    diana_svc = MemoryService(engine, store, kw, Settings(namespace="diana"))
+    result = diana_svc.insert(
+        memories=[{"title": "overlap", "content": "new", "description": "d"}],
+        links=[],
+    )
+    assert len(result["duplicates"]) == 1
+    assert result["duplicates"][0]["existing_memory"]["id"] == "shared-id"
+
+
+def test_shared_agent_deduplicates_against_all_namespaces(tmp_path):
+    """Regression: shared agent's insert duplicate check spans all namespaces.
+
+    A memory seeded in a non-shared namespace must still be detected as a
+    duplicate when the shared agent tries to insert the same title. Without
+    this, the shared agent could re-insert titles that already exist in
+    profile namespaces and later surface duplicates to every reader.
+    """
+    store = LinkStore(tmp_path / "shared_dedup.db")
+    engine = FakeEngine()
+    kw = KeywordIndex()
+
+    # Seed a memory in "diana" namespace directly (bypassing the service)
+    store.upsert_memory_row(
+        id="diana-mem-1",
+        title="cross-ns title",
+        description="original in diana ns",
+        content="content",
+        created_at="2026-01-01T00:00:00+00:00",
+        updated_at="2026-01-01T00:00:00+00:00",
+        namespace="diana",
+    )
+
+    # Shared agent should detect it as a duplicate (namespaces=None → global scan)
+    shared_svc = MemoryService(engine, store, kw, Settings(namespace="shared"))
+    result = shared_svc.insert(
+        memories=[{"title": "cross-ns title", "content": "new", "description": "d"}],
+        links=[],
+    )
+    assert len(result["duplicates"]) == 1, (
+        "Shared agent must detect duplicates from all namespaces"
+    )
+    assert result["duplicates"][0]["existing_memory"]["id"] == "diana-mem-1"

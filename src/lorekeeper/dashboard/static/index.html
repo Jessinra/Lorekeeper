@@ -45,6 +45,9 @@
     </div>
     <span class="item-count" id="memory-count"></span>
     <span class="panel-divider"></span>
+    <select id="ns-filter" class="ns-filter-select" onchange="setNamespaceFilter(this.value)" title="Filter by namespace">
+      <option value="">All namespaces</option>
+    </select>
     <button id="btn-show-deleted" class="btn-secondary btn-sm" onclick="toggleShowDeleted()">Show deleted</button>
     <button id="btn-refresh-memories" class="btn-ghost btn-sm btn-refresh" onclick="triggerRefresh()" title="Refresh memories (auto-refreshes every 30s)"><span class="refresh-icon">↺</span> Refresh</button>
   </div>
@@ -63,6 +66,7 @@
         <tr>
           <th class="col-status"></th>
           <th class="sortable"           onclick="setMemSort('title')"       id="th-title">Title <span class="sort-arrow"></span></th>
+          <th class="sortable col-ns"    onclick="setMemSort('namespace')"   id="th-namespace">NS <span class="sort-arrow"></span></th>
           <th class="sortable col-score" onclick="setMemSort('score')"       id="th-score">Score <span class="sort-arrow">↓</span></th>
           <th class="sortable col-conf"  onclick="setMemSort('confidence')"  id="th-confidence">Conf <span class="sort-arrow"></span></th>
           <th class="sortable col-usage" onclick="setMemSort('usage_count')" id="th-usage_count">Uses <span class="sort-arrow"></span></th>

@@ -63,9 +63,17 @@ engine: MemoryEngine,
         self._store = store
         self._kw = keyword_index
         self._settings = settings
+        self._namespace: str = settings.namespace
+        # Namespace filter for all read/write operations: None = no filter (shared sees all).
+        self._ns_filter: list[str] | None = (
+            None if self._namespace == "shared" else [self._namespace, "shared"]
+        )
 
     def _all_memories(self, include_deleted: bool = False) -> dict[str, Memory]:
-        rows = self._store.all_memory_rows(include_deleted=include_deleted)
+        # None → no filter → reads all rows (backward-compat for the default "shared" agent).
+        # Non-shared agents scope reads to their own namespace + the shared pool.
+        namespaces = self._ns_filter
+        rows = self._store.all_memory_rows(include_deleted=include_deleted, namespaces=namespaces)
         return {r["id"]: _row_to_memory(r) for r in rows}
 
     def _rebuild_kw(self) -> None:
@@ -182,9 +190,10 @@ engine: MemoryEngine,
                     if inline_links:
                         for link_def in inline_links:
                             try:
-                                # Validate target exists before inserting
+                                # Validate target exists and is within scoped namespaces
                                 target_row = self._store.get_memory_row(
-                                    link_def["target_memory_id"]
+                                    link_def["target_memory_id"],
+                                    namespaces=self._ns_filter,
                                 )
                                 if target_row is None:
                                     raise ValueError(
@@ -316,9 +325,9 @@ engine: MemoryEngine,
             if hit["lore_id"] in linked_ids:
                 continue
 
-            # Verify target memory exists and is not soft-deleted
+            # Verify target memory exists, is not soft-deleted, and is within scoped namespaces
             try:
-                target_row = self._store.get_memory_row(hit["lore_id"])
+                target_row = self._store.get_memory_row(hit["lore_id"], namespaces=self._ns_filter)
                 if target_row is None or target_row["soft_deleted"]:
                     continue
             except Exception:
@@ -356,8 +365,12 @@ engine: MemoryEngine,
         text = f"{title} {description} {content}"
 
         if not force:
+            # Shared agent checks across all namespaces (no filter) to preserve
+            # pre-existing global dedup behavior. Non-shared agents scope checks
+            # to their own namespace + the shared pool.
+            ns_filter = self._ns_filter
             # Exact title match is a definitive duplicate — skip semantic search
-            existing_by_title = self._store.get_memory_row_by_title(title)
+            existing_by_title = self._store.get_memory_row_by_title(title, namespaces=ns_filter)
             if existing_by_title:
                 return {"duplicate": {
                     "input_title": title,
@@ -372,7 +385,7 @@ engine: MemoryEngine,
                 sem = hit["score"]
                 kw = kw_hits.get(lid, 0.0)
                 if is_duplicate(sem, kw, self._settings):
-                    existing_row = self._store.get_memory_row(lid)
+                    existing_row = self._store.get_memory_row(lid, namespaces=ns_filter)
                     if existing_row:
                         return {"duplicate": {
                             "input_title": title,
@@ -385,7 +398,7 @@ engine: MemoryEngine,
         self._engine.add(text, lore_id)
         self._store.upsert_memory_row(
             id=lore_id, title=title, description=description, content=content,
-            created_at=now, updated_at=now, score=score,
+            created_at=now, updated_at=now, score=score, namespace=self._namespace,
         )
         log.info("memory_inserted", lore_id=lore_id, title=title)
         return {"inserted": {"id": lore_id, "title": title}}
@@ -470,6 +483,7 @@ engine: MemoryEngine,
                         soft_deleted=bool(m.get("soft_deleted", False)),
                         confidence=m.get("confidence"),
                         confidence_count=int(m.get("confidence_count", 0)),
+                        namespace=m.get("namespace", self._namespace),
                     )
                     log.info("import_memory_inserted", lore_id=mid, title=m.get("title", ""))
                 except Exception as e:
@@ -553,7 +567,7 @@ engine: MemoryEngine,
                 mid = fb["id"]
                 useful = bool(fb["useful"])
                 confidence = fb.get("confidence")
-                row = self._store.get_memory_row(mid)
+                row = self._store.get_memory_row(mid, namespaces=self._ns_filter)
                 if row is None:
                     errors.append({"id": mid, "error": "not found"})
                     continue
@@ -712,4 +726,5 @@ def _row_to_memory(row: object) -> Memory:
         confidence=row["confidence"],
         confidence_count=row["confidence_count"],
         last_used=row["last_used"] if "last_used" in row.keys() else None,  # type: ignore[union-attr]
+        namespace=row["namespace"] if "namespace" in row.keys() else "shared",  # type: ignore[union-attr]
     )
