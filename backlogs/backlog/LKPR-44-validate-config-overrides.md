@@ -2,8 +2,8 @@
 id: LKPR-44
 title: Validate config overrides before applying on restart
 type: bug
-status: backlog
-priority: medium
+status: S:ready
+priority: P2:medium
 sprint: 2
 rice_score: ~  # TBD: R:5 I:6 C:95% E:0.1w
 filed_by: Diana
