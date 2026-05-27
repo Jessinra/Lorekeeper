@@ -90,7 +90,7 @@ _skill_version() {
 # Uses regex-based YAML manipulation (no PyYAML dep) to correctly insert inside mcp_servers block.
 _inject_mcp_yaml() {
     local config="$1"
-    local namespace="${2:-}"   # optional LORE_NAMESPACE to inject (e.g. profile name)
+    local namespace="${2:-shared}"  # LORE_NAMESPACE: profile name or "shared" for main
     [ -f "$config" ] || { echo "missing"; return; }
     local result setup_ver
     setup_ver="$(_prompt_version)"
@@ -115,9 +115,8 @@ new_entry = (
     "    env:\n"
     f"      LORE_DATA_DIR: {data_dir}\n"
     f"      LOREKEEPER_SETUP_VERSION: {setup_ver}\n"
+    f'      LORE_NAMESPACE: "{namespace}"\n'
 )
-if namespace:
-    new_entry += f'      LORE_NAMESPACE: "{namespace}"\n'
 
 if mcp_match:
     # Insert at the end of the existing mcp_servers block (inside it, not after)
