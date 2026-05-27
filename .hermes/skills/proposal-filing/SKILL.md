@@ -19,12 +19,20 @@ Create a new Lorekeeper proposal ticket end-to-end.
 
 ### 1. Get the next ticket number
 
+**Always use the GitHub Issues-based script** — this works from any git state (no need to pull latest):
+
 ```bash
 cd ~/Code/lorekeeper
-./scripts/lorekeeper-backlog.sh | grep "Next ticket number"
+./scripts/next-ticket-number.sh -m
 ```
 
-This returns `LKPR-N` — use N+1 for the new ticket.
+This queries GitHub Issues for the highest existing LKPR-N and returns the next one, e.g. `LKPR-43`. Also available as machine-parseable:
+
+```bash
+./scripts/next-ticket-number.sh  # just "LKPR-43"
+```
+
+**Do NOT rely on the local git state** — you may not have the latest main branch, leading to duplicate ticket numbers.
 
 ### 2. Create the markdown file
 

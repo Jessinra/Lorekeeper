@@ -107,8 +107,9 @@ For dashboard changes, list the UI component. If backend-only, write `_none_` fo
 ## Filing a New Ticket
 
 ```bash
-# 1. Check next number
-./scripts/lorekeeper-backlog.sh | grep "Next ticket number"
+# 1. Get next number from GitHub Issues (authoritative — works without latest pull)
+./scripts/next-ticket-number.sh
+# Returns e.g. "LKPR-43"
 
 # 2. Copy template
 cp backlogs/TEMPLATE.md backlogs/LKPR-NEXT-<slug>.md
@@ -116,8 +117,10 @@ cp backlogs/TEMPLATE.md backlogs/LKPR-NEXT-<slug>.md
 # 3. Fill it in (symptoms first, then solution)
 # 4. Commit
 git add backlogs/LKPR-NEXT-<slug>.md
-git commit -m "[LKPR-dev] chore: add LKPR-NEXT <short title>"
+git commit -m "[LKPR-0] chore: add LKPR-NEXT <short title>"
 ```
+
+**Important:** Use `./scripts/next-ticket-number.sh` (GitHub Issues API), not the local script — it's authoritative regardless of which branch you're on or when you last pulled.
 
 ## Pitfalls
 
