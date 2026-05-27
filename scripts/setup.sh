@@ -90,13 +90,14 @@ _skill_version() {
 # Uses regex-based YAML manipulation (no PyYAML dep) to correctly insert inside mcp_servers block.
 _inject_mcp_yaml() {
     local config="$1"
+    local namespace="${2:-}"   # optional LORE_NAMESPACE to inject (e.g. profile name)
     [ -f "$config" ] || { echo "missing"; return; }
     local result setup_ver
     setup_ver="$(_prompt_version)"
-    result=$(python3 - "$config" "$REPO_DIR" "$DATA_DIR" "$setup_ver" <<'PYEOF'
+    result=$(python3 - "$config" "$REPO_DIR" "$DATA_DIR" "$setup_ver" "$namespace" <<'PYEOF'
 import sys, re
 
-config_path, repo_dir, data_dir, setup_ver = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+config_path, repo_dir, data_dir, setup_ver, namespace = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
 
 with open(config_path) as f:
     content = f.read()
@@ -115,6 +116,8 @@ new_entry = (
     f"      LORE_DATA_DIR: {data_dir}\n"
     f"      LOREKEEPER_SETUP_VERSION: {setup_ver}\n"
 )
+if namespace:
+    new_entry += f"      LORE_NAMESPACE: {namespace}\n"
 
 if mcp_match:
     # Insert at the end of the existing mcp_servers block (inside it, not after)
@@ -402,7 +405,9 @@ for i in "${!AGENT_NAMES[@]}"; do
     printf "    MCP:    "
     case "$type" in
         hermes_main|hermes_profile)
-            mcp_result="$(_inject_mcp_yaml "$dir/config.yaml")"
+            _ns=""
+            [[ "$type" == "hermes_profile" ]] && _ns="$(basename "$dir")"
+            mcp_result="$(_inject_mcp_yaml "$dir/config.yaml" "$_ns")"
             ;;
         claude)
             mcp_result="$(_inject_mcp_json "$dir/settings.json")"

@@ -88,6 +88,11 @@ See `docs/linter-decisions.md` for rule selection rationale.
 
 All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 
+| Env var | Default | Purpose |
+|---|---|---|
+| `LORE_DATA_DIR` | `~/.lorekeeper` | Where SQLite + vector DB live |
+| `LORE_NAMESPACE` | `shared` | Agent write namespace. Writes tagged with this value; reads return union of `[namespace, "shared"]`. Set automatically by `setup.sh` for Hermes profiles. |
+
 ### First-Time Setup
 
 Run this once (or after updating skills or agent configs):
