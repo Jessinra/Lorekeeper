@@ -230,7 +230,8 @@ tr > th:last-child,  tr > td:last-child  { padding-right: 40px; }
 
 .badge { display: inline-block; border-radius: 4px; padding: 1px 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
 .badge-deleted { background: #fee2e2; color: #991b1b; }
-.ns-badge { display: inline-block; border-radius: 3px; padding: 1px 5px; font-size: 11px; font-weight: 500; background: var(--surface-2, #e8eaf0); color: var(--subtle); }
+.ns-badge { display: inline-block; border-radius: 3px; padding: 1px 5px; font-size: 11px; font-weight: 500; background: #e8eaf0; color: var(--subtle); }
+.ns-filter-select { font-size: 12px; padding: 2px 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); cursor: pointer; }
 .relation-badge { background: #ede9fe; color: #5b21b6; border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 
 /* ── Detail tab ── */
