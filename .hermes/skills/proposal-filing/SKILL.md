@@ -79,20 +79,30 @@ git commit -m "[LKPR-0] chore: add LKPR-N <short title>"
 
 Use `[LKPR-0]` prefix for chores/proposals (not `[LKPR-dev]` — that's for implementation work).
 
-### 5. Push
+### 5. Push and open a PR
+
+Direct pushes to `main` are blocked by the pre-push hook. Always use a feature branch:
 
 ```bash
-git push origin main
+# Create a feature branch for this proposal
+git checkout -b proposal/LKPR-N-<slug>
+
+# Commit is already done in step 4, so just push
+git push origin proposal/LKPR-N-<slug>
 ```
 
-Or push to `chore/backlog` if this is a PM batch:
+Then open a PR against main:
 
 ```bash
-git checkout -b chore/backlog 2>/dev/null || git checkout chore/backlog
-# rebase on main first to keep PR clean:
-git pull origin main --rebase
-git push origin chore/backlog
+gh pr create \
+  --base main \
+  --head proposal/LKPR-N-<slug> \
+  --title "LKPR-N: <short title>" \
+  --body "Proposal ticket filed. Awaiting PM review." \
+  --repo Jessinra/Lorekeeper
 ```
+
+**Do not merge your own PR.** Wait for PM (Akane) or Jason to review and approve.
 
 ## Troubleshooting
 
