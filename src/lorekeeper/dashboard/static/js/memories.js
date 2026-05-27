@@ -176,7 +176,7 @@ export function renderList() {
 	}
 
 	const countLabel =
-		ft || state.timeFilterDays !== null
+		ft || state.timeFilterDays !== null || state.namespaceFilter
 			? `${filtered.length} / ${state.allMemories.length}`
 			: `${state.allMemories.length}`;
 	document.getElementById("memory-count").textContent = countLabel;
