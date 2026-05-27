@@ -125,7 +125,9 @@ class LinkStore:
     def _migrate_add_namespace_column(self) -> None:
         existing = {row[1] for row in self._conn.execute("PRAGMA table_info(memories)")}
         if "namespace" not in existing:
-            self._conn.execute("ALTER TABLE memories ADD COLUMN namespace TEXT NOT NULL DEFAULT 'shared'")
+            self._conn.execute(
+                "ALTER TABLE memories ADD COLUMN namespace TEXT NOT NULL DEFAULT 'shared'"
+            )
             self._conn.commit()
             log.info("memories_namespace_column_added")
 
@@ -224,7 +226,8 @@ class LinkStore:
               last_used=COALESCE(excluded.last_used, last_used)
             """,
             (id, title, description, content, created_at, updated_at,
-             usage_count, score, int(soft_deleted), confidence, confidence_count, last_used, namespace),
+             usage_count, score, int(soft_deleted), confidence,
+             confidence_count, last_used, namespace),
         )
         self._conn.commit()
 

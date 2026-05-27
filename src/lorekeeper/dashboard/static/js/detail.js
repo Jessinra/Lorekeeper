@@ -93,6 +93,11 @@ export function _renderDetail(data, editMode) {
 				"span-2",
 			)}
       ${field(
+				"Namespace",
+				`<div class="field-value"><span class="ns-badge">${esc(m.namespace ?? "shared")}</span></div>`,
+				`<div class="field-value"><span class="ns-badge">${esc(m.namespace ?? "shared")}</span></div>`,
+			)}
+      ${field(
 				"Score",
 				`<div class="field-value"><span class="score-badge ${scoreClass(m.score)}">${fmt2(m.score)}</span></div>`,
 				`<input type="number" id="d-score" value="${fmt2(m.score)}" min="0" max="10" step="0.01">`,
