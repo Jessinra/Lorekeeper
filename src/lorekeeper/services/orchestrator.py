@@ -63,9 +63,11 @@ engine: MemoryEngine,
         self._store = store
         self._kw = keyword_index
         self._settings = settings
+        self._namespace: str = settings.namespace
 
     def _all_memories(self, include_deleted: bool = False) -> dict[str, Memory]:
-        rows = self._store.all_memory_rows(include_deleted=include_deleted)
+        namespaces = None if self._namespace == "shared" else [self._namespace, "shared"]
+        rows = self._store.all_memory_rows(include_deleted=include_deleted, namespaces=namespaces)
         return {r["id"]: _row_to_memory(r) for r in rows}
 
     def _rebuild_kw(self) -> None:
@@ -385,7 +387,7 @@ engine: MemoryEngine,
         self._engine.add(text, lore_id)
         self._store.upsert_memory_row(
             id=lore_id, title=title, description=description, content=content,
-            created_at=now, updated_at=now, score=score,
+            created_at=now, updated_at=now, score=score, namespace=self._namespace,
         )
         log.info("memory_inserted", lore_id=lore_id, title=title)
         return {"inserted": {"id": lore_id, "title": title}}
@@ -470,6 +472,7 @@ engine: MemoryEngine,
                         soft_deleted=bool(m.get("soft_deleted", False)),
                         confidence=m.get("confidence"),
                         confidence_count=int(m.get("confidence_count", 0)),
+                        namespace=m.get("namespace", self._namespace),
                     )
                     log.info("import_memory_inserted", lore_id=mid, title=m.get("title", ""))
                 except Exception as e:
@@ -712,4 +715,5 @@ def _row_to_memory(row: object) -> Memory:
         confidence=row["confidence"],
         confidence_count=row["confidence_count"],
         last_used=row["last_used"] if "last_used" in row.keys() else None,  # type: ignore[union-attr]
+        namespace=row["namespace"] if "namespace" in row.keys() else "shared",  # type: ignore[union-attr]
     )
