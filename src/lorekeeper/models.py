@@ -22,6 +22,7 @@ class Memory(BaseModel):
     confidence: float | None = None
     confidence_count: int = 0
     last_used: str | None = None  # ISO datetime; null → fall back to created_at for decay
+    namespace: str = "shared"  # agent write namespace; reads union [namespace, "shared"]
 
 
 class MemoryLink(BaseModel):

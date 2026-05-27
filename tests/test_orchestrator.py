@@ -694,3 +694,72 @@ def test_insert_with_inline_links_and_top_level_links(svc):
     assert has_c_link
 
 
+# ── Namespace isolation tests ──────────────────────────────────────────────────
+
+def _make_svc(tmp_path, db_name: str, namespace: str):
+    """Helper: create a MemoryService with a given namespace."""
+    store = LinkStore(tmp_path / db_name)
+    engine = FakeEngine()
+    kw = KeywordIndex()
+    settings = Settings(namespace=namespace)
+    return MemoryService(engine, store, kw, settings), store
+
+
+def test_insert_tags_with_agent_namespace(tmp_path):
+    svc, store = _make_svc(tmp_path, "ns.db", "diana")
+    svc.insert(memories=[{"title": "diana memory", "content": "c", "description": "d"}], links=[])
+    rows = store.all_memory_rows()
+    assert len(rows) == 1
+    assert rows[0]["namespace"] == "diana"
+
+
+def test_insert_tags_with_shared_when_no_namespace(tmp_path):
+    svc, store = _make_svc(tmp_path, "ns.db", "shared")
+    svc.insert(memories=[{"title": "shared memory", "content": "c", "description": "d"}], links=[])
+    rows = store.all_memory_rows()
+    assert rows[0]["namespace"] == "shared"
+
+
+def test_agent_reads_own_and_shared(tmp_path):
+    """Diana agent should see diana + shared memories, not bella's."""
+    # Seed the DB directly with memories from multiple namespaces
+    store = LinkStore(tmp_path / "multi.db")
+    store.upsert_memory_row(id="a", title="diana mem", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00", updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="diana")
+    store.upsert_memory_row(id="b", title="shared mem", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00", updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="shared")
+    store.upsert_memory_row(id="c", title="bella mem", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00", updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="bella")
+
+    engine = FakeEngine()
+    kw = KeywordIndex()
+    settings = Settings(namespace="diana")
+    svc = MemoryService(engine, store, kw, settings)
+
+    memories = svc._all_memories()
+    ids = set(memories.keys())
+    assert "a" in ids   # own namespace
+    assert "b" in ids   # shared
+    assert "c" not in ids  # bella's — invisible
+
+
+def test_no_namespace_sees_all(tmp_path):
+    """With namespace='shared' (default), _all_memories returns all rows."""
+    store = LinkStore(tmp_path / "all.db")
+    store.upsert_memory_row(id="a", title="t1", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00", updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="diana")
+    store.upsert_memory_row(id="b", title="t2", description="d", content="c",
+                            created_at="2026-01-01T00:00:00+00:00", updated_at="2026-01-01T00:00:00+00:00",
+                            namespace="shared")
+
+    engine = FakeEngine()
+    kw = KeywordIndex()
+    settings = Settings(namespace="shared")
+    svc = MemoryService(engine, store, kw, settings)
+
+    memories = svc._all_memories()
+    assert len(memories) == 2  # sees all
