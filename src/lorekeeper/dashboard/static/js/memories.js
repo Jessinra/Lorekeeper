@@ -30,9 +30,31 @@ export async function loadMemories() {
 	state.setAllMemories(
 		await api("GET", `/api/memories?include_deleted=${state.showDeleted}`),
 	);
+	_populateNamespaceFilter();
 	updateStats();
 	renderList();
 	updateHeaderMeta();
+}
+
+function _populateNamespaceFilter() {
+	const sel = document.getElementById("ns-filter");
+	const current = sel.value;
+	const namespaces = [
+		...new Set(state.allMemories.map((m) => m.namespace ?? "shared")),
+	].sort();
+	sel.innerHTML =
+		`<option value="">All namespaces</option>` +
+		namespaces
+			.map(
+				(ns) =>
+					`<option value="${esc(ns)}"${ns === current ? " selected" : ""}>${esc(ns)}</option>`,
+			)
+			.join("");
+}
+
+export function setNamespaceFilter(ns) {
+	state.setNamespaceFilter(ns);
+	renderList();
 }
 
 export function updateStats() {
@@ -106,6 +128,7 @@ export function setMemSort(field) {
 	state.memSort.field = field;
 	updateSortHeaders("th-", state.memSort, [
 		"title",
+		"namespace",
 		"score",
 		"confidence",
 		"usage_count",
@@ -136,6 +159,12 @@ export function renderList() {
 					(m.content || "").toLowerCase().includes(ft),
 			)
 		: state.allMemories;
+
+	if (state.namespaceFilter) {
+		filtered = filtered.filter(
+			(m) => (m.namespace ?? "shared") === state.namespaceFilter,
+		);
+	}
 
 	if (state.timeFilterDays !== null) {
 		const cutoff = new Date();
@@ -171,6 +200,7 @@ export function renderList() {
 			return `<tr class="${cls}" onclick="selectMemory('${m.id}')">
       <td class="col-status">${m.soft_deleted ? '<span class="badge badge-deleted">del</span>' : ""}</td>
       <td class="col-title"><div class="col-title-main" title="${esc(m.title)}">${newDot}${esc(m.title)}</div>${sub}</td>
+      <td class="col-ns"><span class="ns-badge">${esc(m.namespace ?? "shared")}</span></td>
       <td class="col-score"><span class="score-badge ${scoreClass(m.score)}">${fmt2(m.score)}</span></td>
       <td class="col-conf">${conf}</td>
       <td class="col-usage">${m.usage_count}</td>
@@ -188,3 +218,4 @@ window.onFilterInput = onFilterInput;
 window.clearFilter = clearFilter;
 window.setMemSort = setMemSort;
 window.setTimeFilter = setTimeFilter;
+window.setNamespaceFilter = setNamespaceFilter;

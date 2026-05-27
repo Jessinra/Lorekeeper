@@ -725,13 +725,16 @@ def test_agent_reads_own_and_shared(tmp_path):
     # Seed the DB directly with memories from multiple namespaces
     store = LinkStore(tmp_path / "multi.db")
     store.upsert_memory_row(id="a", title="diana mem", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00", updated_at="2026-01-01T00:00:00+00:00",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
                             namespace="diana")
     store.upsert_memory_row(id="b", title="shared mem", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00", updated_at="2026-01-01T00:00:00+00:00",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
                             namespace="shared")
     store.upsert_memory_row(id="c", title="bella mem", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00", updated_at="2026-01-01T00:00:00+00:00",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
                             namespace="bella")
 
     engine = FakeEngine()
@@ -750,10 +753,12 @@ def test_no_namespace_sees_all(tmp_path):
     """With namespace='shared' (default), _all_memories returns all rows."""
     store = LinkStore(tmp_path / "all.db")
     store.upsert_memory_row(id="a", title="t1", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00", updated_at="2026-01-01T00:00:00+00:00",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
                             namespace="diana")
     store.upsert_memory_row(id="b", title="t2", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00", updated_at="2026-01-01T00:00:00+00:00",
+                            created_at="2026-01-01T00:00:00+00:00",
+                            updated_at="2026-01-01T00:00:00+00:00",
                             namespace="shared")
 
     engine = FakeEngine()
