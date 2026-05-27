@@ -51,9 +51,9 @@ _None_
 
 ## Notes
 
-**DO NOT BUILD YET** — premature until there's a concrete second agent. Revisit when setting up multiple Hermes profiles (e.g. personal assistant vs. Lorekeeper PM bot).
+**ABSORBED INTO LKPR-38** (2026-05-27) — approach shifted from env-var-per-agent to server-side token resolution. LKPR-38 covers the core namespace plumbing, LKPR-39 adds token management, LKPR-40 adds RBAC.
 
-**Updated trigger (2026-05-22):** Use case confirmed — running 2 Hermes profiles on the same machine (personal assistant + Lorekeeper PM Telegram bot). Both would share the same Lorekeeper MCP instance and memory store. Namespace isolation is the clean fix; workaround for now is to only enable Lorekeeper MCP on one profile.
+The original deferred note is no longer valid — the trigger condition (multiple Hermes profiles) is active: Bella + Diana + Akane all on the same Lorekeeper DB. Building now.
 
 ## Required Updates
 

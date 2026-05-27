@@ -2,12 +2,14 @@
 id: LKPR-24
 title: Hybrid backlog — GitHub Issues for status, markdown files for specs
 type: chore
-status: S:ready
+status: S:done
 priority: P1:high
 sprint: 1
 rice_score: ~
 filed_by: Akane (PM)
 filed_date: 2026-05-26
+resolved_date: 2026-05-27
+github_issue: 53
 ---
 
 # [LKPR-24] Hybrid backlog — GitHub Issues for status, markdown files for specs
@@ -77,10 +79,11 @@ gh issue edit LKPR-N --add-label "S:Ready" --remove-label "S:Proposal"
 ## Acceptance Criteria
 
 - [x] Labels created: status (S:Proposal, S:Ready, S:In-progress, S:Review, S:Done, S:Deferred, S:Cancelled) + priority (P0:critical, P1:high, P2:medium, P3:low)
-- [ ] All existing tickets imported as GitHub Issues with correct labels
-- [ ] `lorekeeper-pm` and `lorekeeper-dev` skills updated with hybrid workflow
-- [ ] Markdown files remain the source of truth for specs
-- [ ] Read-only migration — no files deleted, no numbering changed
+- [x] All existing tickets imported as GitHub Issues with correct labels (22 issues: #53-#74)
+- [x] `lorekeeper-pm` skill updated with GitHub Issue workflow
+- [x] `lorekeeper-dev` skill updated with `S:` label conventions
+- [x] Markdown files remain the source of truth for specs
+- [x] Read-only migration — no files deleted, no numbering changed
 
 ## Affected Files
 

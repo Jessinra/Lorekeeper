@@ -178,12 +178,20 @@ Tickets live in `backlogs/` as `LKPR-N-slug.md`. Status & priority tracked via *
 **During sprint (no git needed):**
 
 ```bash
-gh issue edit LKPR-30 --add-label "in-progress" --remove-label "backlog"
-gh issue edit LKPR-30 --add-label "review" --remove-label "in-progress"
-gh issue edit LKPR-30 --add-label "done" --remove-label "review"
+gh issue edit LKPR-30 --add-label "S:In-progress" --remove-label "S:Ready"
+gh issue edit LKPR-30 --add-label "S:Review" --remove-label "S:In-progress"
+gh issue edit LKPR-30 --add-label "S:Done" --remove-label "S:Review"
 ```
 
 **Weekly sync (PM):** markdown `status:` fields updated to match labels, committed on `chore/backlog`, opened as PR.
+
+**All active tickets now have corresponding GitHub Issues** (LKPR-24 migration). Every non-done ticket was imported with status and priority labels. Command to find your ticket:
+
+```bash
+gh issue list --label "LKPR-N" --repo Jessinra/Lorekeeper   # by number (label not needed — filter by title)
+gh issue list --label "S:Ready" --repo Jessinra/Lorekeeper  # ready to build
+gh issue list --label "S:Proposal" --repo Jessinra/Lorekeeper  # proposals
+```
 
 Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`. Numbering: sequential (highest+1), never fill gaps.
 
