@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     decay_lambda: float = 0.0077  # time-decay λ; 0 disables decay (LORE_DECAY_LAMBDA)
     new_memory_default_score: float = 5.0  # default score for new memories
 
+    namespace: str = Field(default="shared")  # LORE_NAMESPACE — agent write namespace + read scope
+
     # Auto-link
     auto_link_enabled: bool = True
     auto_link_k: int = 5
