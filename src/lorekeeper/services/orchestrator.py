@@ -360,7 +360,10 @@ engine: MemoryEngine,
         text = f"{title} {description} {content}"
 
         if not force:
-            ns_filter = [self._namespace, "shared"]
+            # Shared agent checks across all namespaces (no filter) to preserve
+            # pre-existing global dedup behavior. Non-shared agents scope checks
+            # to their own namespace + the shared pool.
+            ns_filter = None if self._namespace == "shared" else [self._namespace, "shared"]
             # Exact title match is a definitive duplicate — skip semantic search
             existing_by_title = self._store.get_memory_row_by_title(title, namespaces=ns_filter)
             if existing_by_title:

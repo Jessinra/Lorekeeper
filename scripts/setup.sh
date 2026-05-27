@@ -115,7 +115,7 @@ new_entry = (
     "    env:\n"
     f"      LORE_DATA_DIR: {data_dir}\n"
     f"      LOREKEEPER_SETUP_VERSION: {setup_ver}\n"
-    f'      LORE_NAMESPACE: "{namespace}"\n'
+    f'      LORE_NAMESPACE: {__import__("json").dumps(namespace)}\n'
 )
 
 if mcp_match:

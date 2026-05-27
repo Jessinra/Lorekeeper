@@ -827,3 +827,38 @@ def test_same_title_in_shared_still_detects_duplicate(tmp_path):
     )
     assert len(result["duplicates"]) == 1
     assert result["duplicates"][0]["existing_memory"]["id"] == "shared-id"
+
+
+def test_shared_agent_deduplicates_against_all_namespaces(tmp_path):
+    """Regression: shared agent's insert duplicate check spans all namespaces.
+
+    A memory seeded in a non-shared namespace must still be detected as a
+    duplicate when the shared agent tries to insert the same title. Without
+    this, the shared agent could re-insert titles that already exist in
+    profile namespaces and later surface duplicates to every reader.
+    """
+    store = LinkStore(tmp_path / "shared_dedup.db")
+    engine = FakeEngine()
+    kw = KeywordIndex()
+
+    # Seed a memory in "diana" namespace directly (bypassing the service)
+    store.upsert_memory_row(
+        id="diana-mem-1",
+        title="cross-ns title",
+        description="original in diana ns",
+        content="content",
+        created_at="2026-01-01T00:00:00+00:00",
+        updated_at="2026-01-01T00:00:00+00:00",
+        namespace="diana",
+    )
+
+    # Shared agent should detect it as a duplicate (namespaces=None → global scan)
+    shared_svc = MemoryService(engine, store, kw, Settings(namespace="shared"))
+    result = shared_svc.insert(
+        memories=[{"title": "cross-ns title", "content": "new", "description": "d"}],
+        links=[],
+    )
+    assert len(result["duplicates"]) == 1, (
+        "Shared agent must detect duplicates from all namespaces"
+    )
+    assert result["duplicates"][0]["existing_memory"]["id"] == "diana-mem-1"
