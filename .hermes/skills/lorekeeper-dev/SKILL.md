@@ -308,6 +308,12 @@ Before opening a PR, run through this:
 - [ ] Commits follow `[LKPR-N] type: title` format (housekeeping = `[LKPR-0]`)?
 - [ ] Branch named `<type>/LKPR-N-slug`?
 - [ ] Ticket updated: `status: review`, `resolved_date`, root cause written?
+- [ ] **Pre-PR self-review pass completed** (see checklist below — catch before Copilot does):
+  - [ ] For cross-cutting features: enumerated ALL data-access paths and applied constraint to each?
+  - [ ] Config/script injections: escaped all injected values?
+  - [ ] Frontend stateful UI: state invalidation handled?
+  - [ ] Docs written AFTER code is final — do they match actual behavior (not intent)?
+  - [ ] No partial fixes — if Jason commented on area X before, is X fully resolved?
 - [ ] Pushed to `origin` and PR opened via `gh pr create --reviewer @copilot`?
 - [ ] Jason pinged on Telegram to review and merge?
 
@@ -375,6 +381,35 @@ Before opening a PR, run through this:
 - [ ] All external input validated/sanitized before use
 - [ ] New `pip` or `npm` packages checked via `pip audit` / `npm audit`
 - [ ] Least privilege — DB/file/API access uses minimum required permissions
+
+### Cross-cutting constraints (isolation, auth, scoping, ACLs)
+
+When a PR adds a new cross-cutting constraint (e.g. namespace scoping, auth checks, rate limits):
+
+- [ ] **Enumerate ALL data-access paths** — list every `get_*`, `all_*`, `update_*`, `delete_*`, `insert_*` call in scope. Apply the constraint to each, not just the "main" read path.
+- [ ] **Shared vs scoped agents handled explicitly** — if shared means "sees all" (`None`), non-shared means `[ns, 'shared']`. Verify both branches, don't collapse them to the same value.
+- [ ] **Write paths also guarded** — if an agent reads only from its namespace, it must also reject writes to IDs outside. Guard at the `get` step: `get()` returns `None` for out-of-scope IDs → reject before writing.
+- [ ] **Regression test for cross-namespace isolation** — seed a memory in namespace A, prove namespace B agent cannot see/modify/dedup it (and vice versa for shared agent).
+
+### Config/script injection safety
+
+When injecting values into YAML, JSON, shell, or any structured config format:
+
+- [ ] **Always escape the injected value** — `json.dumps(value)` for YAML scalars, `shlex.quote()` for shell. Never bare f-string inject.
+- [ ] **Test with adversarial input** — value contains `:`, `#`, `"`, `\`, newlines? Prove it doesn't corrupt the config.
+- [ ] **No unnecessary conditional guards** — if you always want the var set, always write it unconditionally.
+
+### Stateful UI completeness
+
+For every piece of frontend state that reflects backend data:
+
+- [ ] **State invalidation on refresh** — when data changes, reconcile stale selected state. If previously-selected option disappears, reset to default and update the corresponding state var.
+- [ ] **Dropdown options and state in sync** — after rebuilding `<select>` options, set `el.value` and check if the prior value still exists.
+
+### DB migration correctness
+
+- [ ] **Migration detection uses schema introspection** — `PRAGMA index_info()` / `PRAGMA table_info()`, not string-matching `sqlite_master.sql`. DDL whitespace is not normalized across SQLite versions.
+- [ ] **Migration is idempotent** — running twice must not error or corrupt.
 
 ### Performance
 
