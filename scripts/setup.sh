@@ -405,7 +405,7 @@ for i in "${!AGENT_NAMES[@]}"; do
     printf "    MCP:    "
     case "$type" in
         hermes_main|hermes_profile)
-            _ns=""
+            _ns="shared"
             [[ "$type" == "hermes_profile" ]] && _ns="$(basename "$dir")"
             mcp_result="$(_inject_mcp_yaml "$dir/config.yaml" "$_ns")"
             ;;

@@ -217,7 +217,13 @@ After **every set of code changes**, load the `after-changes` skill and follow i
 2. README consistency check — update `README.md` for anything that drifted
 3. Git commit — stage and commit with a descriptive message
 
-**Opening PRs:** load the `github-pr` skill. In short: `gh pr create --base main --title "..." --body "..." --reviewer @copilot`
+**Opening PRs:** load the `github-pr` skill. In short:
+
+```bash
+gh pr create --base main --title "[LKPR-N] type: short imperative title" --body "[see .github/PULL_REQUEST_TEMPLATE.md]" --reviewer @copilot
+```
+
+PR title format: same as commit — `[LKPR-N] type: imperative title`. This is enforced by the PR template at `.github/PULL_REQUEST_TEMPLATE.md`.
 
 Do not skip this. It is the discipline that keeps the repo clean and auditable.
 
