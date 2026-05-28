@@ -110,6 +110,30 @@ gh issue list --label "S:Proposal" --repo Jessinra/Lorekeeper
 
 **Weekly sync (PM):** Pull all issue labels → update markdown `status:` fields → commit on `chore/backlog` → PR → auto-merge.
 
+## Reconciliation (PM)
+
+Run this to check for inconsistencies between GitHub Issues, merged PRs, and backlog markdown files:
+
+```bash
+python3 ~/.hermes/scripts/gh-reconcile.py
+```
+
+**What it checks:**
+
+| Check | What it finds |
+|---|---|
+| Merged PRs → issue not S:Done | Implementation PRs merged but ticket not marked done |
+| S:Done issues still open | Tickets labeled done but not closed |
+| Duplicate issues | Multiple issues with the same LKPR-N |
+| Markdown vs GitHub mismatch | `status:` field in .md ≠ label on GitHub issue |
+| Orphan branches | Remote branches with no associated PR |
+
+**Options:**
+- `--markdown-only` — compare only backlog files vs labels (no GH API calls)
+- `--fix-done` — auto-close issues with merged PRs
+
+The script lives at `~/.hermes/scripts/gh-reconcile.py`. Run it before weekly sync to catch drift.
+
 ## Review Workflow (Dev → PM)
 
 Dev must submit work via a **pull request** (PR) — never direct commits to `main`.
