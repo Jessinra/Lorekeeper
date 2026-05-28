@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from lorekeeper.models import RelationType
+from lorekeeper.serializers import serialize_search_result
 from lorekeeper.server import get_service, init_service
 
 log = structlog.get_logger()
@@ -302,22 +303,14 @@ def search(body: SearchRequest) -> list[dict[str, Any]]:
         body.query, limit=body.limit, min_score=body.min_score, include_links=False
     )
     return [
-        {
-            "memory": {
-                "id": r.memory.id,
-                "title": r.memory.title,
-                "description": r.memory.description,
-                "content": r.memory.content[:300],
-                "score": r.memory.score,
-                "usage_count": r.memory.usage_count,
-                "soft_deleted": r.memory.soft_deleted,
-            },
-            "relevance": {
-                "combined_score": round(r.combined_score, 4),
-                "semantic_score": round(r.semantic_score, 4),
-                "keyword_score": round(r.keyword_score, 4),
-            },
-        }
+        serialize_search_result(
+            r,
+            truncate_content=300,
+            exclude_memory_fields={"created_at", "updated_at", "confidence", "confidence_count"},
+            exclude_relevance_fields={"decay_factor"},
+            round_relevance=4,
+            include_links=False,
+        )
         for r in results
     ]
 

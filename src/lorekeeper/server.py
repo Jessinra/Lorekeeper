@@ -36,8 +36,9 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     for key, value in overrides.items():
         try:
             setattr(s, key, value)
-        except Exception:
-            log.warning("config_override_skipped", key=key, value=value)
+            getattr(s, key)  # confirm it reads back (catches silent failures)
+        except (ValueError, TypeError, AttributeError) as e:
+            log.warning("config_override_skipped", key=key, value=value, error=str(e))
     if overrides:
         log.info("config_overrides_loaded", keys=list(overrides))
 
