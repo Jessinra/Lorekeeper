@@ -31,7 +31,7 @@ def serialize_memory(
         "id": memory.id,
         "title": memory.title,
         "description": memory.description,
-        "content": memory.content[:truncate_content] if truncate_content else memory.content,
+        "content": memory.content[:truncate_content] if truncate_content is not None else memory.content,
         "created_at": memory.created_at,
         "updated_at": memory.updated_at,
         "usage_count": memory.usage_count,
