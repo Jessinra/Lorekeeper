@@ -1,5 +1,6 @@
 import structlog
 from fastmcp import FastMCP
+from pydantic import ValidationError
 
 from lorekeeper.config import Settings
 from lorekeeper.handlers import handle_insert, handle_remember, handle_search
@@ -37,7 +38,7 @@ def init_service(settings: Settings | None = None) -> MemoryService:
         try:
             setattr(s, key, value)
             getattr(s, key)  # confirm it reads back (catches silent failures)
-        except (ValueError, TypeError, AttributeError) as e:
+        except (ValueError, TypeError, AttributeError, ValidationError) as e:
             log.warning("config_override_skipped", key=key, value=value, error=str(e))
     if overrides:
         log.info("config_overrides_loaded", keys=list(overrides))

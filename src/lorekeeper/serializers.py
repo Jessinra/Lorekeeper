@@ -96,11 +96,11 @@ def serialize_search_result(
         "keyword_score": result.keyword_score,
         "decay_factor": result.decay_factor,
     }
-    if round_relevance is not None:
-        relevance = {k: round(v, round_relevance) for k, v in relevance.items()}
     if exclude_relevance_fields:
         for field in exclude_relevance_fields:
             relevance.pop(field, None)
+    if round_relevance is not None:
+        relevance = {k: round(v, round_relevance) for k, v in relevance.items()}
 
     output: dict = {
         "memory": mem_dict,
