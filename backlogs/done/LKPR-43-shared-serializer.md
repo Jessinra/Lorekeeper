@@ -2,7 +2,7 @@
 id: LKPR-43
 title: Shared serializer for MCP + dashboard responses
 type: enhancement
-status: S:ready
+status: S:done
 priority: P2:medium
 sprint: 2
 rice_score: ~  # TBD: R:6 I:7 C:90% E:0.3w
