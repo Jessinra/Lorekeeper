@@ -1,6 +1,6 @@
 """Shared serializers for Memory, MemoryLink, and SearchResult.
 
-Each endpoint can pass optional kwargs to override default output:
+Each endpoint accepts keyword arguments to customize output:
 - truncation for content field
 - field exclusion (omit created_at/updated_at from dashboard list view)
 - relevance score rounding
@@ -9,6 +9,8 @@ Each endpoint can pass optional kwargs to override default output:
 Adding a new field to Memory/MemoryLink/SearchResult now requires
 touching only this file — not handlers.py AND dashboard/app.py.
 """
+
+from typing import Any
 
 from lorekeeper.models import Memory, MemoryLink
 from lorekeeper.services.search import SearchResult
@@ -19,7 +21,7 @@ def serialize_memory(
     *,
     truncate_content: int | None = None,
     exclude_fields: set[str] | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Serialize a Memory model to a dict.
 
     Args:
@@ -27,11 +29,12 @@ def serialize_memory(
         truncate_content: If set, truncates content to this many chars.
         exclude_fields: Set of field names to omit from output.
     """
-    result: dict = {
+    content = memory.content[:truncate_content] if truncate_content is not None else memory.content
+    result: dict[str, Any] = {
         "id": memory.id,
         "title": memory.title,
         "description": memory.description,
-        "content": memory.content[:truncate_content] if truncate_content is not None else memory.content,
+        "content": content,
         "created_at": memory.created_at,
         "updated_at": memory.updated_at,
         "usage_count": memory.usage_count,
@@ -46,7 +49,7 @@ def serialize_memory(
     return result
 
 
-def serialize_memory_link(link: MemoryLink) -> dict:
+def serialize_memory_link(link: MemoryLink) -> dict[str, Any]:
     """Serialize a MemoryLink to a dict (no optional overrides — shape is stable)."""
     return {
         "id": link.id,
@@ -71,7 +74,7 @@ def serialize_search_result(
     exclude_relevance_fields: set[str] | None = None,
     round_relevance: int | None = None,
     include_links: bool = True,
-) -> dict:
+) -> dict[str, Any]:
     """Serialize a SearchResult to a dict.
 
     Composes serialize_memory + serialize_memory_link, adding relevance.
@@ -90,7 +93,7 @@ def serialize_search_result(
         exclude_fields=exclude_memory_fields,
     )
 
-    relevance: dict = {
+    relevance: dict[str, Any] = {
         "combined_score": result.combined_score,
         "semantic_score": result.semantic_score,
         "keyword_score": result.keyword_score,
@@ -102,7 +105,7 @@ def serialize_search_result(
     if round_relevance is not None:
         relevance = {k: round(v, round_relevance) for k, v in relevance.items()}
 
-    output: dict = {
+    output: dict[str, Any] = {
         "memory": mem_dict,
         "relevance": relevance,
     }
