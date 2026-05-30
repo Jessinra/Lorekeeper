@@ -18,8 +18,8 @@ import "./runs.js";
 import { initBackup } from "./backup.js";
 import { loadLinks } from "./links.js";
 import { loadMemories, updateSortHeaders } from "./memories.js";
-import { loadSessions } from "./sessions.js";
 import { runQuery } from "./query.js";
+import { loadSessions } from "./sessions.js";
 import * as state from "./state.js";
 import { dispatch } from "./tab.js";
 
