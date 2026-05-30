@@ -1,13 +1,23 @@
 import { showToast } from "./api.js";
+import { registerTab } from "./tab-registry.js";
 import { esc } from "./utils.js";
 
-let _stagedFile = null;
+// ── Self-register ──
+
+registerTab("backup", {});
+
+// ── Event listeners ──
+
+document.addEventListener("app:backup:export", () => triggerExport());
+document.addEventListener("app:backup:confirm-import", () => confirmImport());
 
 export function initBackup() {
 	document
 		.getElementById("import-file")
 		.addEventListener("change", onImportFileChosen);
 }
+
+let _stagedFile = null;
 
 export function triggerExport() {
 	const includeDel = document.getElementById("export-include-deleted").checked;
@@ -138,6 +148,3 @@ function _resetUI() {
 	btn.disabled = true;
 	btn.textContent = "Import";
 }
-
-window.triggerExport = triggerExport;
-window.confirmImport = confirmImport;

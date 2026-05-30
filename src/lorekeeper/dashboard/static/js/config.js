@@ -1,6 +1,16 @@
 // ── Config tab ──
 import { api, showToast } from "./api.js";
+import { registerTab } from "./tab-registry.js";
 import { esc } from "./utils.js";
+
+// ── Self-register ──
+
+registerTab("config", { load: loadConfig });
+
+// ── Event listeners ──
+
+document.addEventListener("app:config:save", () => saveConfig());
+document.addEventListener("app:config:load", () => loadConfig());
 
 export const CFG_FIELDS = {
 	weights: [
@@ -184,8 +194,8 @@ export function _cfgRow(f, value, readonly) {
 	const valHTML = readonly
 		? `<span style="font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:var(--muted)">${esc(String(value))}</span>`
 		: f.type === "bool"
-			? `<input type="checkbox" id="cfg-${f.key}" ${value ? "checked" : ""} onchange="onCfgChange()" style="width:20px;height:20px;accent-color:#0066ff;cursor:pointer">`
-			: `<input type="number" id="cfg-${f.key}" value="${value}" step="${f.step}" oninput="onCfgChange()" style="width:110px">`;
+			? `<input type="checkbox" id="cfg-${f.key}" ${value ? "checked" : ""} data-change="config:change" style="width:20px;height:20px;accent-color:#0066ff;cursor:pointer">`
+			: `<input type="number" id="cfg-${f.key}" value="${value}" step="${f.step}" data-input="config:change" style="width:110px">`;
 	return `
     <div class="config-row">
       <div class="config-row-info">
@@ -199,6 +209,8 @@ export function _cfgRow(f, value, readonly) {
 export function onCfgChange() {
 	document.getElementById("cfg-unsaved").style.display = "inline";
 }
+
+document.addEventListener("app:config:change", () => onCfgChange());
 
 export async function loadConfig() {
 	let cfg;
@@ -255,8 +267,3 @@ export async function saveConfig() {
 		showToast(e.message, "error");
 	}
 }
-
-// Expose onclick targets on window
-window.loadConfig = loadConfig;
-window.saveConfig = saveConfig;
-window.onCfgChange = onCfgChange;

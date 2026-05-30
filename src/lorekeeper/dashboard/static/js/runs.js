@@ -1,6 +1,18 @@
 // ── Runs tab ──
 import { api } from "./api.js";
+import { registerTab } from "./tab-registry.js";
 import { esc, fmtDate } from "./utils.js";
+
+// ── Self-register ──
+
+registerTab("runs", { load: () => loadRuns(false) });
+
+// ── Event listeners ──
+
+document.addEventListener("app:runs:load", () => loadRuns(true));
+document.addEventListener("app:runs:detail-toggle", (e) => {
+	toggleRunDetail(e.detail.id);
+});
 
 let _runs = [];
 let _loaded = false;
@@ -65,7 +77,7 @@ function renderRow(r, i) {
 		.join("");
 
 	return `
-    <tr class="${hasDetail ? "run-row-clickable" : ""}" ${hasDetail ? `onclick="toggleRunDetail('${detId}')"` : ""}>
+    <tr class="${hasDetail ? "run-row-clickable" : ""}" ${hasDetail ? `data-run-detail="${detId}"` : ""}>
       <td>
         <div class="col-date-primary">${esc(fmtDate(r.completed_at))}</div>
         <div class="col-date-secondary">${esc(r.trigger ?? "manual")}</div>
@@ -87,9 +99,7 @@ function renderRow(r, i) {
   `;
 }
 
-window.toggleRunDetail = (id) => {
+export function toggleRunDetail(id) {
 	const el = document.getElementById(id);
 	if (el) el.classList.toggle("hidden");
-};
-
-window.loadRuns = loadRuns;
+}

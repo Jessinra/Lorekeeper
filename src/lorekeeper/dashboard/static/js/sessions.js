@@ -1,6 +1,7 @@
 // ── Sessions tab ──
 import { api } from "./api.js";
 import { updateSortHeaders } from "./memories.js";
+import { registerTab } from "./tab-registry.js";
 import {
 	clientSort,
 	esc,
@@ -8,6 +9,35 @@ import {
 	fmtRelative,
 	htmlSection,
 } from "./utils.js";
+
+// ── Self-register ──
+
+registerTab("sessions", { load: () => loadSessions(false) });
+
+// ── Event listeners ──
+
+document.addEventListener("app:sessions:load", () => loadSessions(true));
+document.addEventListener("app:sessions:toggle-stubs", () => toggleHideStubs());
+document.addEventListener("app:sessions:filter-task", (e) => {
+	const task = e.detail.task;
+	// Find the matching chip button to pass to filterByTask (for UI state)
+	const btn = document.querySelector(`.sess-chip[data-task="${task}"]`);
+	filterByTask(btn, task);
+});
+document.addEventListener("app:sessions:filter-session-id", (e) => {
+	filterBySessionId(e.detail.value);
+});
+document.addEventListener("app:sessions:toggle-date-sort", () =>
+	toggleDateSort(),
+);
+document.addEventListener("app:sessions:clear-session-id", () => {
+	const input = document.getElementById("sess-id-search");
+	if (input) input.value = "";
+	filterBySessionId("");
+});
+document.addEventListener("app:sessions:detail-toggle", (e) => {
+	toggleSessDetail(e.detail.id);
+});
 
 let _sessions = [];
 let _loaded = false;
@@ -69,7 +99,7 @@ function renderSessions() {
 		visible.length === 0
 			? `<tr><td colspan="5" class="run-empty">${
 					_hideStubs && stubCount > 0
-						? `All ${stubCount} sessions are stubs — <a href="#" onclick="window.toggleHideStubs();return false">show them</a> or invoke <code>/reflect</code> to process sessions`
+						? `All ${stubCount} sessions are stubs — <a href="#" data-action="sessions:toggle-stubs">show them</a> or invoke <code>/reflect</code> to process sessions`
 						: _filterTask
 							? `No ${_filterTask} sessions found`
 							: "No sessions yet — invoke <code>/reflect</code> to create one"
@@ -106,15 +136,7 @@ function renderTaskDist(sessions) {
       </div>`;
 		})
 		.join("");
-	el.querySelectorAll(".sess-dist-row").forEach((row) => {
-		row.addEventListener("click", () => {
-			const task = row.dataset.task;
-			window.filterByTask(
-				document.querySelector(`.sess-chip[data-filter="${task}"]`),
-				task,
-			);
-		});
-	});
+	// No manual addEventListener needed — the delegation handler catches data-task clicks
 }
 
 // ── Row rendering ──
@@ -136,7 +158,7 @@ function renderRow(s, i) {
 	const relStr = s.reviewed_at ? fmtRelative(s.reviewed_at) : "";
 
 	return `
-    <tr class="run-row-clickable${isStub ? " sess-row-stub" : ""}" onclick="toggleSessDetail('${detId}')">
+    <tr class="run-row-clickable${isStub ? " sess-row-stub" : ""}" data-sess-detail="${detId}">
       <td class="col-date-primary">
         ${dateStr}
         ${relStr ? `<div class="col-date-secondary">${relStr}</div>` : ""}
@@ -175,33 +197,31 @@ function renderDetail(s) {
 	].join("");
 }
 
-window.toggleSessDetail = (detId) => {
+export function toggleSessDetail(detId) {
 	const el = document.getElementById(detId);
 	if (el) el.classList.toggle("hidden");
-};
+}
 
-window.toggleHideStubs = () => {
+export function toggleHideStubs() {
 	_hideStubs = !_hideStubs;
 	renderSessions();
-};
+}
 
-window.filterByTask = (btn, task) => {
+export function filterByTask(btn, task) {
 	_filterTask = task;
 	document.querySelectorAll(".sess-chip").forEach((c) => {
 		c.classList.remove("active");
 	});
 	if (btn) btn.classList.add("active");
 	renderSessions();
-};
+}
 
-window.filterBySessionId = (val) => {
+export function filterBySessionId(val) {
 	_filterSessId = val;
 	renderSessions();
-};
+}
 
-window.toggleDateSort = () => {
+export function toggleDateSort() {
 	_sortDate = _sortDate === "desc" ? "asc" : "desc";
 	renderSessions();
-};
-
-window.loadSessions = loadSessions;
+}

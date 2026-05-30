@@ -1,6 +1,7 @@
 // ── Memories tab ──
 import { api } from "./api.js";
 import * as state from "./state.js";
+import { registerTab } from "./tab-registry.js";
 import {
 	clientSort,
 	esc,
@@ -10,12 +11,44 @@ import {
 	scoreClass,
 } from "./utils.js";
 
-// Cross-module callback — wired by app.js to avoid circular imports.
-// memories.js needs to call selectMemory (lives in detail.js).
-let _selectMemory = () => {};
-export function registerSelectMemory(fn) {
-	_selectMemory = fn;
-}
+// ── Self-register ──
+
+registerTab("memories", { load: loadMemories });
+
+// ── Event listeners ──
+
+document.addEventListener("app:memory:selected", () => renderList());
+
+document.addEventListener("app:memories:changed", () => loadMemories());
+
+document.addEventListener("app:refresh", () => loadMemories());
+
+// ── UI action listeners (from delegation handler) ──
+
+document.addEventListener("app:memories:clear-filter", () => clearFilter());
+
+document.addEventListener("app:memories:toggle-deleted", () =>
+	toggleShowDeleted(),
+);
+
+document.addEventListener("app:memories:time-filter", (e) => {
+	const daysStr = e.detail.days;
+	setTimeFilterByValue(daysStr === "" ? null : Number(daysStr));
+});
+
+document.addEventListener("app:memories:namespace-filter", (e) => {
+	setNamespaceFilter(e.detail.value);
+});
+
+document.addEventListener("app:memories:filter-input", (e) => {
+	onFilterInputValue(e.detail.value);
+});
+
+document.addEventListener("app:sort:set", (e) => {
+	if (e.detail.target === "mem") setMemSort(e.detail.field);
+});
+
+// ── Core ──
 
 export function toggleShowDeleted() {
 	state.setShowDeleted(!state.showDeleted);
@@ -97,11 +130,9 @@ export function updateHeaderMeta() {
 }
 
 let _filterTimer = null;
-export function onFilterInput() {
-	state.setFilterText(document.getElementById("mem-filter").value);
-	document
-		.getElementById("mem-filter-clear")
-		.classList.toggle("hidden", !state.filterText);
+export function onFilterInputValue(val) {
+	state.setFilterText(val);
+	document.getElementById("mem-filter-clear").classList.toggle("hidden", !val);
 	clearTimeout(_filterTimer);
 	_filterTimer = setTimeout(renderList, 150);
 }
@@ -113,14 +144,20 @@ export function clearFilter() {
 	renderList();
 }
 
-export function setTimeFilter(btn, days) {
-	// days: '' = all, 0 = today, 3 = 3d, 7 = 1w
-	state.setTimeFilterDays(days === "" ? null : Number(days));
-	document.querySelectorAll(".time-filter-btn").forEach((b) => {
-		b.classList.remove("active");
+export function setTimeFilterByValue(days) {
+	state.setTimeFilterDays(days);
+	// Update active button state via data-time-filter attributes
+	document.querySelectorAll("[data-time-filter]").forEach((b) => {
+		const btnDays = b.dataset.timeFilter;
+		const match = days === null ? btnDays === "" : Number(btnDays) === days;
+		b.classList.toggle("active", match);
 	});
-	btn.classList.add("active");
 	renderList();
+}
+
+// Set time filter from button click (kept for compatibility)
+export function setTimeFilter(_btn, days) {
+	setTimeFilterByValue(days);
 }
 
 export function setMemSort(field) {
@@ -202,7 +239,7 @@ export function renderList() {
 			const sub = m.description
 				? `<div class="col-title-sub">${esc(m.description)}</div>`
 				: "";
-			return `<tr class="${cls}" onclick="selectMemory('${m.id}')">
+			return `<tr class="${cls}" data-memory-id="${m.id}">
       <td class="col-status">${m.soft_deleted ? '<span class="badge badge-deleted">del</span>' : ""}</td>
       <td class="col-title"><div class="col-title-main" title="${esc(m.title)}">${newDot}${esc(m.title)}</div>${sub}</td>
       <td class="col-ns"><span class="ns-badge">${esc(m.namespace ?? "shared")}</span></td>
@@ -215,12 +252,3 @@ export function renderList() {
 		})
 		.join("");
 }
-
-// Expose onclick targets on window
-window.toggleShowDeleted = toggleShowDeleted;
-window.loadMemories = loadMemories;
-window.onFilterInput = onFilterInput;
-window.clearFilter = clearFilter;
-window.setMemSort = setMemSort;
-window.setTimeFilter = setTimeFilter;
-window.setNamespaceFilter = setNamespaceFilter;

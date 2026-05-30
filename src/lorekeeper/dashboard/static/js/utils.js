@@ -84,14 +84,3 @@ export function htmlSection(title, text) {
 	if (!text) return "";
 	return `<div class="ref-section"><div class="ref-section-title">${title}</div><div class="ref-section-body">${esc(text)}</div></div>`;
 }
-
-// Expose on window for any inline onclick that may need it (none currently do,
-// but kept for symmetry and future safety).
-window.esc = esc;
-window.scoreClass = scoreClass;
-window.fmt2 = fmt2;
-window.fmtDate = fmtDate;
-window.fmtDatePlus8 = fmtDatePlus8;
-window.fmtRelative = fmtRelative;
-window.isToday = isToday;
-window.clientSort = clientSort;

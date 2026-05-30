@@ -2,13 +2,32 @@
 import { api, showToast } from "./api.js";
 import { updateHeaderMeta, updateSortHeaders } from "./memories.js";
 import * as state from "./state.js";
+import { registerTab } from "./tab-registry.js";
 import { clientSort, esc, fmt2, scoreClass } from "./utils.js";
 
-// Cross-module callback — wired by app.js.
-let _selectMemory = () => {};
-export function registerLinksSelectMemory(fn) {
-	_selectMemory = fn;
-}
+// ── Self-register ──
+
+registerTab("links", { load: loadLinks });
+
+// ── Event listeners ──
+
+document.addEventListener("app:links:changed", () => {
+	if (state.linksLoaded) loadLinks();
+});
+
+document.addEventListener("app:sort:set", (e) => {
+	if (e.detail.target === "link") setLinkSort(e.detail.field);
+});
+
+document.addEventListener("app:links:delete", (e) => {
+	deleteLinkFromTab(e.detail.id);
+});
+
+document.addEventListener("app:links:relation-filter", (e) => {
+	setLinkRelationFilter(e.detail.value);
+});
+
+document.addEventListener("app:links:load", () => loadLinks());
 
 let _relationFilter = "";
 
@@ -63,13 +82,13 @@ export function renderLinks() {
 		.map(
 			(l) => `
     <tr>
-      <td class="col-link-title" onclick="selectMemory('${l.source_memory_id}')" title="${esc(l.source_title)}">${esc(l.source_title)}</td>
+      <td class="col-link-title" data-memory-id="${l.source_memory_id}" title="${esc(l.source_title)}">${esc(l.source_title)}</td>
       <td><span class="relation-badge">${esc(l.relation_type)}</span></td>
-      <td class="col-link-title" onclick="selectMemory('${l.target_memory_id}')" title="${esc(l.target_title)}">${esc(l.target_title)}</td>
+      <td class="col-link-title" data-memory-id="${l.target_memory_id}" title="${esc(l.target_title)}">${esc(l.target_title)}</td>
       <td class="col-reason" title="${esc(l.reason)}">${esc(l.reason)}</td>
       <td class="col-score"><span class="score-badge ${scoreClass(l.score)}">${fmt2(l.score)}</span></td>
       <td class="col-usage-r">${l.usage_count}</td>
-      <td class="col-actions"><button class="btn-sm btn-danger" onclick="deleteLinkFromTab('${l.id}')">×</button></td>
+      <td class="col-actions"><button class="btn-sm btn-danger" data-link-delete="${l.id}">×</button></td>
     </tr>
   `,
 		)
@@ -86,12 +105,3 @@ export async function deleteLinkFromTab(linkId) {
 		showToast(e.message, "error");
 	}
 }
-
-// Expose onclick targets on window
-window.loadLinks = loadLinks;
-window.setLinkSort = setLinkSort;
-window.deleteLinkFromTab = deleteLinkFromTab;
-window.setLinkRelationFilterFromUI = () => {
-	const sel = document.getElementById("links-relation-filter");
-	setLinkRelationFilter(sel ? sel.value : "");
-};

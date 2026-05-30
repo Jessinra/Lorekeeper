@@ -1,12 +1,15 @@
 // ── Query tab ──
 import { api } from "./api.js";
+import { registerTab } from "./tab-registry.js";
 import { esc, fmt2 } from "./utils.js";
 
-// Cross-module callback — wired by app.js.
-let _selectMemory = () => {};
-export function registerQuerySelectMemory(fn) {
-	_selectMemory = fn;
-}
+// ── Self-register ──
+
+registerTab("query", {});
+
+// ── Event listener ──
+
+document.addEventListener("app:query:run", () => runQuery());
 
 export async function runQuery() {
 	const query = document.getElementById("q-text").value.trim();
@@ -30,7 +33,7 @@ export async function runQuery() {
 				const rel = r.relevance;
 				const barW = Math.round(rel.combined_score * 100);
 				return `
-        <div class="result-card" onclick="selectMemory('${r.memory.id}')">
+        <div class="result-card" data-memory-id="${r.memory.id}">
           <span class="result-rank">#${i + 1}</span>
           <div class="result-title">${esc(r.memory.title)}</div>
           <div class="score-bar-wrap"><div class="score-bar" style="width:${barW}%"></div></div>
@@ -51,4 +54,4 @@ export async function runQuery() {
 	}
 }
 
-window.runQuery = runQuery;
+// ── Cmd+Enter shortcut (attached in app.js) ──
