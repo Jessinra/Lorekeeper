@@ -1,4 +1,4 @@
-import { getTab, getTabs } from "./tab-registry.js";
+import { getTab } from "./tab-registry.js";
 
 // ── Unified event dispatcher ──
 
@@ -25,9 +25,8 @@ export function switchTab(name) {
 		p.classList.remove("active");
 	});
 
-	const tabs = getTabs();
-	document.querySelectorAll(".tab").forEach((t, i) => {
-		t.classList.toggle("active", tabs[i]?.name === name);
+	document.querySelectorAll(".tab").forEach((t) => {
+		t.classList.toggle("active", t.dataset.tab === name);
 	});
 
 	const pane = document.getElementById(`tab-${name}`);

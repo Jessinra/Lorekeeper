@@ -18,6 +18,7 @@ import "./runs.js";
 import { initBackup } from "./backup.js";
 import { loadLinks } from "./links.js";
 import { loadMemories, updateSortHeaders } from "./memories.js";
+import { loadSessions } from "./sessions.js";
 import { runQuery } from "./query.js";
 import * as state from "./state.js";
 import { dispatch } from "./tab.js";
@@ -33,7 +34,13 @@ async function triggerRefresh() {
 	if (icon) icon.classList.add("spinning");
 	btn?.setAttribute("disabled", "");
 	try {
-		await loadMemories();
+		// Refresh the active tab — not just memories
+		const sessionsPane = document.getElementById("tab-sessions");
+		if (sessionsPane?.classList.contains("active")) {
+			await loadSessions(true);
+		} else {
+			await loadMemories();
+		}
 	} finally {
 		if (icon) icon.classList.remove("spinning");
 		btn?.removeAttribute("disabled");
