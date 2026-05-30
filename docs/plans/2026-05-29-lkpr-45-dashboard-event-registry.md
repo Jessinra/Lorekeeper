@@ -8,7 +8,7 @@ window.\* pollution, onclick= in index.html) with tab-registry + CustomEvent + d
 Three architectural changes, zero new dependencies:
 
 1. **`tab-registry.js`** — shared module with `registerTab()` and `TABS` array. Each tab
-   module calls `registerTab({name, load, init})` at module-scope import time.
+   module calls `registerTab(name, { load, init })` at module-scope import time.
 2. **`tab.js` uses registry** — drives tab order and lazy loading from `TABS` instead
    of hardcoded `TAB_ORDER` + callback variables.
 3. **Event delegation + CustomEvent** — root-level click handler in `tab.js` replaces

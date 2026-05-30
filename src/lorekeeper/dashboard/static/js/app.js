@@ -33,9 +33,7 @@ async function triggerRefresh() {
 	if (icon) icon.classList.add("spinning");
 	btn?.setAttribute("disabled", "");
 	try {
-		dispatch("refresh");
-		// Give async loads time to settle, then reschedule
-		await new Promise((resolve) => setTimeout(resolve, 100));
+		await loadMemories();
 	} finally {
 		if (icon) icon.classList.remove("spinning");
 		btn?.removeAttribute("disabled");
@@ -88,6 +86,11 @@ function init() {
 
 	_attachRefreshListener();
 	initBackup();
+
+	// Wire the Refresh button directly to triggerRefresh (includes spinner, timer reset)
+	document
+		.getElementById("btn-refresh-memories")
+		.addEventListener("click", triggerRefresh);
 
 	// Bootstrap the memories tab sort headers and load data
 	updateSortHeaders("th-", state.memSort, [
