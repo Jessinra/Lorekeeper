@@ -2,7 +2,7 @@
 id: LKPR-51
 title: LinkStore decomposition — split god object into focused data stores
 type: enhancement
-status: S:proposal
+status: S:ready
 priority: P2:medium
 sprint: ~
 rice_score: ~
@@ -30,7 +30,7 @@ filed_date: 2026-05-31
 **Impact:**
 - **Every new feature** adds methods to this file. The gravity well makes it the default place to put things, even when they don't belong together.
 - **`orchestrator.py`** (730 lines) accesses `self._store` for ALL domains — memories, links, reflections, sessions, metrics. The orchestrator knows about the SQLite schema because the store exposes raw `sqlite3.Row` objects instead of typed models.
-- **`dashboard/app.py`** accesses `get_service()._store` directly through a private attribute (14 call sites) for every domain, bypassing both the orchestrator and the type system.
+- **`dashboard/app.py`** accesses `get_service()._store` directly through a private attribute (17 call sites) for memory/links/sessions/reflections/metrics/config data access, plus 2 `get_service()._settings` accesses for settings data — **19 private attribute accesses** total, bypassing both the orchestrator and the type system.
 - **Migrations are ad-hoc** — run at every `__init__`, unversioned, destructive (deletes rows), and can't be rolled back. Adding a new migration requires adding another `_migrate_*` method and calling it in the chain.
 
 ## Solution
@@ -186,7 +186,7 @@ Migration functions are named `migrate_001_add_last_used_column()`, `migrate_002
 - [ ] `Database` class owns connection lifecycle + versioned migrations; ad-hoc `_migrate_*` methods removed
 - [ ] `MemoryService.__init__` accepts focused stores instead of one `LinkStore`; orchestrator uses typed stores
 - [ ] Dashboard accesses stores via named attributes (`get_service().memories`) not `_store`
-- [ ] All stores return typed Pydantic models (`Memory`, `MemoryLink`, etc.) where possible, not `dict`-shaped `sqlite3.Row`
+- [ ] All stores return dict-shaped rows (compatible with current `sqlite3.Row` callers); typed Pydantic model conversion deferred to a follow-up ticket
 - [ ] All 121+ existing tests pass with minimal fixture changes (test helper pattern that instantiates stores from a shared `Database`)
 - [ ] `LinkStore` file drops from 637 to ~150 lines (link-only + `_row_to_link`)
 
@@ -226,13 +226,13 @@ Migration functions are named `migrate_001_add_last_used_column()`, `migrate_002
 
 ## Open Questions
 
-- Should `MemoryStore` return `Memory` model instances or dicts? Models would be a behavior change (callers currently get dict-shaped rows). Start with dicts for minimal diff, convert to models in a follow-up.
+- _`MemoryStore` return type resolved: dict-shaped for now, typed models deferred_ (see AC #5 — the decomposition diff is already big enough without changing the type contract)
 - How to handle the `close()` lifecycle? `Database.close()` closes the one connection; no per-store close needed.
 
 ## Notes
 
 **Effort:** Medium — comparable to LKPR-50 in scope. The fixture changes in tests are the most fiddly part.
 
-**Not in scope — `_row_to_memory` deduplication:** The `_row_to_memory()` function in `orchestrator.py` does the same `{keys()}` guard dance as `_row_to_link` in `link_store.py`. If stores return typed models, both row-to-model converters become the store's responsibility and the orchestrator's copy disappears.
+**Not in scope — `_row_to_memory` deduplication:** The `_row_to_memory()` function in `orchestrator.py` does the same `{keys()}` guard dance as `_row_to_link` in `link_store.py`. Since stores return dict-shaped rows (not typed models), both converters stay where they are for now. Cleaning this up is bundled with the typed-model follow-up ticket.
 
 **Migration data loss risk:** The old `_migrate_dedup_links()` and `_migrate_dedup_memories()` delete rows. In the new versioned system, these become irreversible numbered migrations — document them clearly so nobody accidentally runs them on a production store.
