@@ -1,0 +1,171 @@
+"""Tests for the shared Database class — connection lifecycle + migrations."""
+
+import sqlite3
+
+from lorekeeper.services.database import (
+    MIGRATIONS,
+    Database,
+    _migration_1_bootstrap,
+)
+
+
+def test_fresh_db_starts_at_version_zero(tmp_path):
+    db = Database(tmp_path / "v0.db")
+    assert db.current_version() == 0
+    db.close()
+
+
+def test_migrate_applies_bootstrap_to_fresh_db(tmp_path):
+    db = Database(tmp_path / "boot.db")
+    db.migrate()
+    assert db.current_version() == 1
+
+    # All expected tables exist
+    tables = {
+        row[0]
+        for row in db.conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )
+    }
+    expected = {
+        "memories", "memory_links", "reflections", "sessions",
+        "api_metrics", "config_overrides", "_schema_version",
+    }
+    assert expected.issubset(tables)
+    db.close()
+
+
+def test_migrate_is_idempotent(tmp_path):
+    db = Database(tmp_path / "idem.db")
+    db.migrate()
+    db.migrate()
+    db.migrate()
+    # Only one row in _schema_version per version
+    versions = db.conn.execute(
+        "SELECT version, COUNT(*) FROM _schema_version GROUP BY version"
+    ).fetchall()
+    assert all(count == 1 for _, count in versions)
+    db.close()
+
+
+def test_bootstrap_creates_namespace_scoped_unique_title_index(tmp_path):
+    db = Database(tmp_path / "ns.db")
+    db.migrate()
+    idx_sql = db.conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='index' "
+        "AND name='idx_memories_unique_title'"
+    ).fetchone()
+    assert idx_sql is not None
+    assert "(namespace, title)" in idx_sql["sql"]
+    db.close()
+
+
+def test_bootstrap_creates_unique_link_pair_index(tmp_path):
+    db = Database(tmp_path / "links.db")
+    db.migrate()
+    idx = db.conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='index' "
+        "AND name='idx_links_unique_pair'"
+    ).fetchone()
+    assert idx is not None
+    db.close()
+
+
+def test_bootstrap_adds_namespace_and_last_used_columns(tmp_path):
+    db = Database(tmp_path / "cols.db")
+    db.migrate()
+    cols = {row[1] for row in db.conn.execute("PRAGMA table_info(memories)")}
+    assert "namespace" in cols
+    assert "last_used" in cols
+    db.close()
+
+
+def test_bootstrap_adds_session_content_columns(tmp_path):
+    db = Database(tmp_path / "sess.db")
+    db.migrate()
+    cols = {row[1] for row in db.conn.execute("PRAGMA table_info(sessions)")}
+    for expected in (
+        "transcript", "what_was_done", "decisions",
+        "lessons_learnt", "good_patterns", "user_profile", "discoveries",
+    ):
+        assert expected in cols
+    db.close()
+
+
+def test_wal_mode_and_foreign_keys_enabled(tmp_path):
+    db = Database(tmp_path / "wal.db")
+    journal_mode = db.conn.execute("PRAGMA journal_mode").fetchone()[0]
+    fk = db.conn.execute("PRAGMA foreign_keys").fetchone()[0]
+    assert journal_mode.lower() == "wal"
+    assert fk == 1
+    db.close()
+
+
+def test_unknown_version_in_db_is_treated_as_floor(tmp_path):
+    """If _schema_version already has higher version than known MIGRATIONS,
+    migrate() must not regress — it just skips since nothing is pending."""
+    db = Database(tmp_path / "future.db")
+    db.migrate()
+    db.conn.execute(
+        "INSERT INTO _schema_version (version, applied_at) VALUES (99, ?)",
+        ("2099-01-01T00:00:00+00:00",),
+    )
+    db.conn.commit()
+    # Re-running migrate should be a no-op (no version > 99 in MIGRATIONS)
+    db.migrate()
+    assert db.current_version() == 99
+    db.close()
+
+
+def test_bootstrap_dedups_duplicate_memory_titles_on_legacy_db(tmp_path):
+    """Simulate a legacy DB that has duplicate-title memories pre-bootstrap.
+
+    Build the DB manually without the unique index, seed dupes, then run
+    bootstrap directly — it should keep the highest-score row per title.
+    """
+    db_path = tmp_path / "legacy.db"
+    conn = sqlite3.connect(str(db_path))
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute(
+        """
+        CREATE TABLE memories (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL,
+          content TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          usage_count INTEGER NOT NULL DEFAULT 0,
+          score REAL NOT NULL DEFAULT 1.0,
+          soft_deleted INTEGER NOT NULL DEFAULT 0,
+          confidence REAL,
+          confidence_count INTEGER NOT NULL DEFAULT 0
+        )
+        """
+    )
+    ts = "2026-01-01T00:00:00+00:00"
+    conn.execute(
+        "INSERT INTO memories VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        ("a", "dup-title", "d", "c", ts, ts, 0, 3.0, 0, None, 0),
+    )
+    conn.execute(
+        "INSERT INTO memories VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        ("b", "dup-title", "d", "c", ts, ts, 0, 7.0, 0, None, 0),
+    )
+    conn.commit()
+
+    # Apply bootstrap directly on this connection — should dedup
+    _migration_1_bootstrap(conn)
+    conn.commit()
+
+    rows = conn.execute("SELECT id, score FROM memories").fetchall()
+    assert len(rows) == 1
+    assert rows[0][0] == "b"  # highest score wins
+    assert rows[0][1] == 7.0
+    conn.close()
+
+
+def test_migrations_list_versions_strictly_increasing():
+    versions = [v for v, _, _ in MIGRATIONS]
+    assert versions == sorted(set(versions))
+    assert versions[0] == 1

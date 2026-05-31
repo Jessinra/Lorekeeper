@@ -1,162 +1,171 @@
+"""LinkStore tests — post-LKPR-51 decomposition.
+
+LinkStore now owns only link CRUD; memory rows are seeded through MemoryStore
+(via the shared Database).
+"""
+
+import sqlite3
+
 import pytest
 
-from lorekeeper.services.link_store import LinkStore
+from tests._helpers import build_stores
 
 
 @pytest.fixture
-def store(tmp_path):
-    s = LinkStore(tmp_path / "test.db")
-    # seed two memory rows so FK constraints are satisfied
+def stores(tmp_path):
+    s = build_stores(tmp_path / "test.db")
+    ts = "2026-01-01T00:00:00+00:00"
+    # Seed memory rows so FK constraints are satisfied
     for i in ("a", "b", "c"):
-        s.upsert_memory_row(
+        s.memories.upsert_memory_row(
             id=i, title=f"mem-{i}", description="d", content="c",
-            created_at="2026-01-01T00:00:00+00:00",
-            updated_at="2026-01-01T00:00:00+00:00",
+            created_at=ts, updated_at=ts,
         )
     yield s
-    s.close()
+    s.db.close()
 
 
-def test_insert_and_retrieve_link(store):
-    link = store.insert_link("a", "b", "related_to", "they are related")
+def test_insert_and_retrieve_link(stores):
+    link = stores.links.insert_link("a", "b", "related_to", "they are related")
     assert link.id
     assert link.source_memory_id == "a"
     assert link.target_memory_id == "b"
 
-    fetched = store.get_link(link.id)
+    fetched = stores.links.get_link(link.id)
     assert fetched is not None
     assert fetched.id == link.id
 
 
-def test_links_for_memory_bidirectional(store):
-    store.insert_link("a", "b", "related_to", "a→b")
-    store.insert_link("c", "a", "used_in", "c→a")
+def test_links_for_memory_bidirectional(stores):
+    stores.links.insert_link("a", "b", "related_to", "a→b")
+    stores.links.insert_link("c", "a", "used_in", "c→a")
 
-    links = store.links_for_memory("a")
+    links = stores.links.links_for_memory("a")
     assert len(links) == 2
 
 
-def test_fk_rejects_missing_memory(store):
-    import sqlite3
+def test_fk_rejects_missing_memory(stores):
     with pytest.raises(sqlite3.IntegrityError):
-        store.insert_link("a", "nonexistent", "related_to", "bad link")
+        stores.links.insert_link("a", "nonexistent", "related_to", "bad link")
 
 
-def test_update_link_score(store):
-    link = store.insert_link("a", "b", "related_to", "r")
-    store.update_link_fields(link.id, score=5.0)
-    updated = store.get_link(link.id)
+def test_update_link_score(stores):
+    link = stores.links.insert_link("a", "b", "related_to", "r")
+    stores.links.update_link_fields(link.id, score=5.0)
+    updated = stores.links.get_link(link.id)
     assert updated is not None
     assert updated.score == 5.0
 
 
-def test_cascade_delete(store):
-    link = store.insert_link("a", "b", "related_to", "r")
-    store.delete_memory_row("a")
-    assert store.get_link(link.id) is None
+def test_cascade_delete(stores):
+    """Deleting a memory cascades to remove links referencing it.
+
+    Crosses MemoryStore + LinkStore — kept here because it verifies the FK
+    cascade semantics of the link table.
+    """
+    link = stores.links.insert_link("a", "b", "related_to", "r")
+    stores.memories.delete_memory_row("a")
+    assert stores.links.get_link(link.id) is None
 
 
-def test_upsert_memory_row_updates(store):
-    store.upsert_memory_row(
+def test_upsert_memory_row_updates(stores):
+    """Sanity check that MemoryStore upsert still updates fields correctly.
+
+    Lives here historically — could move to test_memory_store.py in a follow-up.
+    """
+    ts = "2026-01-01T00:00:00+00:00"
+    stores.memories.upsert_memory_row(
         id="a", title="updated", description="d2", content="c2",
-        created_at="2026-01-01T00:00:00+00:00",
+        created_at=ts,
         updated_at="2026-01-02T00:00:00+00:00",
         score=7.0,
     )
-    row = store.get_memory_row("a")
+    row = stores.memories.get_memory_row("a")
     assert row["title"] == "updated"
     assert row["score"] == 7.0
 
 
-def test_all_memory_rows_excludes_deleted(store):
-    store.update_memory_fields("a", soft_deleted=1)
-    rows = store.all_memory_rows(include_deleted=False)
+def test_all_memory_rows_excludes_deleted(stores):
+    stores.memories.update_memory_fields("a", soft_deleted=1)
+    rows = stores.memories.all_memory_rows(include_deleted=False)
     ids = [r["id"] for r in rows]
     assert "a" not in ids
     assert "b" in ids
 
-    all_rows = store.all_memory_rows(include_deleted=True)
+    all_rows = stores.memories.all_memory_rows(include_deleted=True)
     assert len(all_rows) == 3
 
 
 def test_upsert_memory_row_stores_namespace(tmp_path):
-    s = LinkStore(tmp_path / "ns.db")
-    s.upsert_memory_row(
+    s = build_stores(tmp_path / "ns.db")
+    ts = "2026-01-01T00:00:00+00:00"
+    s.memories.upsert_memory_row(
         id="x", title="mem-x", description="d", content="c",
-        created_at="2026-01-01T00:00:00+00:00",
-        updated_at="2026-01-01T00:00:00+00:00",
-        namespace="diana",
+        created_at=ts, updated_at=ts, namespace="diana",
     )
-    row = s.get_memory_row("x")
+    row = s.memories.get_memory_row("x")
     assert row is not None
     assert row["namespace"] == "diana"
-    s.close()
+    s.db.close()
 
 
 def test_upsert_defaults_namespace_to_shared(tmp_path):
-    s = LinkStore(tmp_path / "ns2.db")
-    s.upsert_memory_row(
+    s = build_stores(tmp_path / "ns2.db")
+    ts = "2026-01-01T00:00:00+00:00"
+    s.memories.upsert_memory_row(
         id="y", title="mem-y", description="d", content="c",
-        created_at="2026-01-01T00:00:00+00:00",
-        updated_at="2026-01-01T00:00:00+00:00",
+        created_at=ts, updated_at=ts,
     )
-    row = s.get_memory_row("y")
+    row = s.memories.get_memory_row("y")
     assert row is not None
     assert row["namespace"] == "shared"
-    s.close()
+    s.db.close()
 
 
 def test_upsert_does_not_overwrite_namespace(tmp_path):
     """ON CONFLICT update must not clobber the existing namespace."""
-    s = LinkStore(tmp_path / "ns3.db")
-    s.upsert_memory_row(
+    s = build_stores(tmp_path / "ns3.db")
+    ts = "2026-01-01T00:00:00+00:00"
+    s.memories.upsert_memory_row(
         id="z", title="mem-z", description="d", content="c",
-        created_at="2026-01-01T00:00:00+00:00",
-        updated_at="2026-01-01T00:00:00+00:00",
-        namespace="diana",
+        created_at=ts, updated_at=ts, namespace="diana",
     )
     # Re-upsert with default namespace — should NOT overwrite
-    s.upsert_memory_row(
+    s.memories.upsert_memory_row(
         id="z", title="mem-z-updated", description="d2", content="c2",
-        created_at="2026-01-01T00:00:00+00:00",
+        created_at=ts,
         updated_at="2026-01-02T00:00:00+00:00",
     )
-    row = s.get_memory_row("z")
+    row = s.memories.get_memory_row("z")
     assert row is not None
     assert row["namespace"] == "diana"  # preserved
     assert row["title"] == "mem-z-updated"  # other fields updated
-    s.close()
+    s.db.close()
 
 
 def test_all_memory_rows_namespace_filter(tmp_path):
-    s = LinkStore(tmp_path / "ns4.db")
-    s.upsert_memory_row(
+    s = build_stores(tmp_path / "ns4.db")
+    ts = "2026-01-01T00:00:00+00:00"
+    s.memories.upsert_memory_row(
         id="1", title="m1", description="d", content="c",
-        created_at="2026-01-01T00:00:00+00:00",
-        updated_at="2026-01-01T00:00:00+00:00",
-        namespace="diana",
+        created_at=ts, updated_at=ts, namespace="diana",
     )
-    s.upsert_memory_row(
+    s.memories.upsert_memory_row(
         id="2", title="m2", description="d", content="c",
-        created_at="2026-01-01T00:00:00+00:00",
-        updated_at="2026-01-01T00:00:00+00:00",
-        namespace="shared",
+        created_at=ts, updated_at=ts, namespace="shared",
     )
-    s.upsert_memory_row(
+    s.memories.upsert_memory_row(
         id="3", title="m3", description="d", content="c",
-        created_at="2026-01-01T00:00:00+00:00",
-        updated_at="2026-01-01T00:00:00+00:00",
-        namespace="bella",
+        created_at=ts, updated_at=ts, namespace="bella",
     )
 
     # diana reads own + shared
-    rows = s.all_memory_rows(namespaces=["diana", "shared"])
+    rows = s.memories.all_memory_rows(namespaces=["diana", "shared"])
     ids = {r["id"] for r in rows}
     assert ids == {"1", "2"}
 
     # no filter → all
-    rows = s.all_memory_rows()
+    rows = s.memories.all_memory_rows()
     assert len(rows) == 3
 
-    s.close()
-
+    s.db.close()

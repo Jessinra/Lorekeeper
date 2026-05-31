@@ -74,10 +74,10 @@ def index() -> Response:
 
 @app.get("/api/memories")
 def list_memories(include_deleted: bool = False) -> list[dict[str, Any]]:
-    store = get_service()._store
-    rows = store.all_memory_rows(include_deleted=include_deleted)
+    svc = get_service()
+    rows = svc.memories.all_memory_rows(include_deleted=include_deleted)
     link_counts: dict[str, int] = {}
-    for lnk in store.all_links():
+    for lnk in svc.links.all_links():
         link_counts[lnk.source_memory_id] = link_counts.get(lnk.source_memory_id, 0) + 1
         link_counts[lnk.target_memory_id] = link_counts.get(lnk.target_memory_id, 0) + 1
     result = []
@@ -90,11 +90,11 @@ def list_memories(include_deleted: bool = False) -> list[dict[str, Any]]:
 
 @app.get("/api/memories/{memory_id}")
 def get_memory(memory_id: str) -> dict[str, Any]:
-    store = get_service()._store
-    row = store.get_memory_row(memory_id)
+    svc = get_service()
+    row = svc.memories.get_memory_row(memory_id)
     if row is None:
         raise HTTPException(status_code=404, detail="Memory not found")
-    links = store.links_for_memory(memory_id)
+    links = svc.links.links_for_memory(memory_id)
     return {
         "memory": serialize_memory(Memory(**dict(row))),
         "links": [serialize_memory_link(lnk) for lnk in links],
@@ -111,7 +111,7 @@ class MemoryUpdate(BaseModel):
 
 @app.patch("/api/memories/{memory_id}")
 def update_memory(memory_id: str, body: MemoryUpdate) -> dict[str, bool]:
-    store = get_service()._store
+    store = get_service().memories
     if store.get_memory_row(memory_id) is None:
         raise HTTPException(status_code=404, detail="Memory not found")
     fields = body.model_dump(exclude_none=True)
@@ -123,7 +123,7 @@ def update_memory(memory_id: str, body: MemoryUpdate) -> dict[str, bool]:
 
 @app.delete("/api/memories/{memory_id}")
 def delete_memory(memory_id: str) -> dict[str, bool]:
-    store = get_service()._store
+    store = get_service().memories
     if store.get_memory_row(memory_id) is None:
         raise HTTPException(status_code=404, detail="Memory not found")
     store.delete_memory_row(memory_id)
@@ -142,9 +142,9 @@ class LinkCreate(BaseModel):
 
 @app.get("/api/links")
 def list_all_links(include_deleted: bool = False) -> list[dict[str, Any]]:
-    store = get_service()._store
-    links = store.all_links()
-    all_rows = store.all_memory_rows(include_deleted=True)
+    svc = get_service()
+    links = svc.links.all_links()
+    all_rows = svc.memories.all_memory_rows(include_deleted=True)
     title_map = {r["id"]: r["title"] for r in all_rows}
     deleted_ids = {r["id"] for r in all_rows if r["soft_deleted"]}
     if not include_deleted:
@@ -164,12 +164,12 @@ def list_all_links(include_deleted: bool = False) -> list[dict[str, Any]]:
 
 @app.post("/api/links", status_code=201)
 def create_link(body: LinkCreate) -> dict[str, Any]:
-    store = get_service()._store
-    if store.get_memory_row(body.source_memory_id) is None:
+    svc = get_service()
+    if svc.memories.get_memory_row(body.source_memory_id) is None:
         raise HTTPException(status_code=404, detail="Source memory not found")
-    if store.get_memory_row(body.target_memory_id) is None:
+    if svc.memories.get_memory_row(body.target_memory_id) is None:
         raise HTTPException(status_code=404, detail="Target memory not found")
-    link = store.insert_link(
+    link = svc.links.insert_link(
         source_memory_id=body.source_memory_id,
         target_memory_id=body.target_memory_id,
         relation_type=body.relation_type,
@@ -181,7 +181,7 @@ def create_link(body: LinkCreate) -> dict[str, Any]:
 
 @app.delete("/api/links/{link_id}")
 def delete_link(link_id: str) -> dict[str, bool]:
-    store = get_service()._store
+    store = get_service().links
     if store.get_link(link_id) is None:
         raise HTTPException(status_code=404, detail="Link not found")
     store.delete_link(link_id)
@@ -213,8 +213,8 @@ def _unwrap_optional(tp: Any) -> Any:
 
 @app.get("/api/config")
 def get_config() -> dict[str, Any]:
-    s = get_service()._settings
-    overridden_keys = set(get_service()._store.get_config_overrides().keys())
+    s = get_service().settings
+    overridden_keys = set(get_service().config.get_overrides().keys())
     return {
         "data_dir":                        str(s.data_dir),
         "embedding_model":                 s.embedding_model,
@@ -270,8 +270,8 @@ def update_config(body: ConfigUpdate) -> dict[str, bool]:
     Returns 422 with detail on type mismatch.
     """
     _TYPE_MAP = {k: _unwrap_optional(v.annotation) for k, v in ConfigUpdate.model_fields.items()}
-    s = get_service()._settings
-    store = get_service()._store
+    svc = get_service()
+    s = svc.settings
     for key, value in body.model_dump(exclude_none=True).items():
         if key in _READONLY_KEYS:
             continue
@@ -282,19 +282,19 @@ def update_config(body: ConfigUpdate) -> dict[str, bool]:
                 detail=f"Config '{key}' expects {expected.__name__}, got {type(value).__name__}",
             )
         setattr(s, key, value)
-        store.set_config_override(key, value)
+        svc.config.set_override(key, value)
     return {"ok": True}
 
 
 @app.get("/api/reflections")
 def list_reflections() -> list[dict[str, Any]]:
-    store = get_service()._store
+    store = get_service().reflections
     return [serialize_reflection(dict(r)) for r in store.all_reflections()]
 
 
 @app.get("/api/reflections/{reflection_id}")
 def get_reflection_detail(reflection_id: str) -> dict[str, Any]:
-    store = get_service()._store
+    store = get_service().reflections
     row = store.get_reflection(reflection_id)
     if row is None:
         raise HTTPException(status_code=404, detail="Reflection not found")
@@ -307,14 +307,14 @@ def get_reflection_detail(reflection_id: str) -> dict[str, Any]:
 
 @app.get("/api/sessions")
 def list_sessions(with_content: bool = True) -> list[dict[str, Any]]:
-    store = get_service()._store
+    store = get_service().reflections
     rows = store.sessions_with_content() if with_content else store.all_sessions()
     return [serialize_session(dict(s)) for s in rows]
 
 
 @app.get("/api/sessions/{session_id}")
 def get_session_detail(session_id: str) -> dict[str, Any]:
-    store = get_service()._store
+    store = get_service().reflections
     row = store.get_session(session_id)
     if row is None:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -352,13 +352,13 @@ def search(body: SearchRequest) -> list[dict[str, Any]]:
 
 @app.get("/api/export")
 def export_dump(include_deleted: bool = False) -> Response:
-    store = get_service()._store
+    svc = get_service()
     now = datetime.now(UTC)
     memories = [
         serialize_memory(Memory(**dict(r)))
-        for r in store.all_memory_rows(include_deleted=include_deleted)
+        for r in svc.memories.all_memory_rows(include_deleted=include_deleted)
     ]
-    links = [serialize_memory_link(lnk) for lnk in store.all_links()]
+    links = [serialize_memory_link(lnk) for lnk in svc.links.all_links()]
     payload = {
         "version": "2",
         "exported_at": now.isoformat(),
@@ -400,7 +400,7 @@ async def import_confirm(file: UploadFile = File(...)) -> dict[str, Any]:
 @app.get("/api/metrics")
 def get_metrics(hours: int = 24) -> dict[str, Any]:
     """Return per-minute API call counts bucketed by tool, for the last `hours` hours."""
-    store = get_service()._store
+    store = get_service().metrics
     rows = store.get_metrics(hours=hours)
     # Build sorted list of unique buckets and tools
     buckets: list[str] = []

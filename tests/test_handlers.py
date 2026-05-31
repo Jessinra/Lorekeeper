@@ -7,8 +7,8 @@ import pytest
 from lorekeeper.config import Settings
 from lorekeeper.handlers import handle_insert, handle_search
 from lorekeeper.services.keyword_index import KeywordIndex
-from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.orchestrator import MemoryService
+from lorekeeper.services.link_store import LinkStore  # noqa: F401  # legacy import
+from tests._helpers import build_service, build_stores
 
 
 class FakeEngine:
@@ -38,11 +38,11 @@ class FakeEngine:
 
 @pytest.fixture
 def svc(tmp_path):
-    store = LinkStore(tmp_path / "test.db")
+    store = build_stores(tmp_path / "test.db")
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    return MemoryService(engine, store, kw, settings)
+    return build_service(store, engine, kw, settings)
 
 
 def test_handle_insert_missing_title_raises_at_handler_layer(svc):

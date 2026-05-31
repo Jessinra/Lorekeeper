@@ -6,8 +6,9 @@ import pytest
 
 from lorekeeper.config import Settings
 from lorekeeper.services.keyword_index import KeywordIndex
-from lorekeeper.services.link_store import LinkStore
+from lorekeeper.services.link_store import LinkStore  # noqa: F401  # legacy import
 from lorekeeper.services.orchestrator import MemoryService
+from tests._helpers import build_service, build_stores
 
 
 class FakeEngine:
@@ -39,11 +40,11 @@ class FakeEngine:
 
 @pytest.fixture
 def svc(tmp_path):
-    store = LinkStore(tmp_path / "test.db")
+    store = build_stores(tmp_path / "test.db")
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    return MemoryService(engine, store, kw, settings), engine
+    return build_service(store, engine, kw, settings), engine
 
 
 def test_insert_and_search(svc):
@@ -73,10 +74,10 @@ def test_update_bumps_score(svc):
         links=[],
     )
     mid = result["inserted_memories"][0]["id"]
-    row_before = service._store.get_memory_row(mid)
+    row_before = service.memories.get_memory_row(mid)
 
     service.update(memory_feedback=[{"id": mid, "useful": True}], link_feedback=[])
-    row_after = service._store.get_memory_row(mid)
+    row_after = service.memories.get_memory_row(mid)
 
     assert row_after["score"] > row_before["score"]
 
@@ -94,7 +95,7 @@ def test_soft_delete_on_low_confidence_not_useful(svc):
         link_feedback=[],
     )
     assert update_result["soft_deleted_memories"] == 1
-    row = service._store.get_memory_row(mid)
+    row = service.memories.get_memory_row(mid)
     assert row["soft_deleted"] == 1
 
 
@@ -197,8 +198,8 @@ def test_submit_reflection_duplicate_does_not_create_extra_reflection_row(svc):
             memory_ids=[],
         )
     # Only one reflection row should exist for this session
-    reflections = service._store.all_reflections()
-    session_row = service._store.get_session(session_id)
+    reflections = service.reflections.all_reflections()
+    session_row = service.reflections.get_session(session_id)
     matching = [r for r in reflections if r["id"] == session_row["reflection_id"]]
     assert len(matching) == 1
     assert len(reflections) == 1  # only one reflection total in this test DB
@@ -211,7 +212,7 @@ def test_search_excludes_soft_deleted(svc):
         links=[],
     )
     mid = r["inserted_memories"][0]["id"]
-    service._store.update_memory_fields(mid, soft_deleted=1)
+    service.memories.update_memory_fields(mid, soft_deleted=1)
 
     engine._search_results = [{"lore_id": mid, "score": 0.9}]
     results = service.search("deleted", include_deleted=False)
@@ -269,7 +270,7 @@ def test_extract_title_no_boundary_breaks_at_word():
 def test_new_memory_default_score_is_five(svc):
     service, _engine = svc
     result = service.remember("test thought")
-    row = service._store.get_memory_row(result["id"])
+    row = service.memories.get_memory_row(result["id"])
     assert row["score"] == 5.0
 
 
@@ -277,7 +278,7 @@ def test_remember_stores_full_content(svc):
     service, _ = svc
     thought = "Project checkout uses GAS framework and SPEX protocol."
     result = service.remember(thought)
-    row = service._store.get_memory_row(result["id"])
+    row = service.memories.get_memory_row(result["id"])
     assert row["content"] == thought
 
 
@@ -373,7 +374,7 @@ def test_insert_with_inline_links(svc):
     source_id = result["inserted_memories"][0]["id"]
 
     # Verify link was created
-    links = service._store.links_for_memory(source_id)
+    links = service.links.links_for_memory(source_id)
     assert len(links) == 1
     assert links[0].target_memory_id == target_id
     assert links[0].relation_type == "related_to"
@@ -531,7 +532,7 @@ def test_insert_auto_link_creates_link(svc):
     )
     new_id = result["inserted_memories"][0]["id"]
 
-    links = service._store.links_for_memory(new_id)
+    links = service.links.links_for_memory(new_id)
     assert len(links) == 1
     assert links[0].target_memory_id == seed_id
     assert "auto-linked from lore_insert" in links[0].reason
@@ -540,7 +541,7 @@ def test_insert_auto_link_creates_link(svc):
 def test_insert_auto_link_respects_disabled(svc):
     """When auto_link_enabled=False, insert should not auto-link."""
     service, engine = svc
-    service._settings.auto_link_enabled = False
+    service.settings.auto_link_enabled = False
 
     seed = service.insert(
         memories=[{"title": "checkout", "description": "", "content": "checkout"}],
@@ -556,7 +557,7 @@ def test_insert_auto_link_respects_disabled(svc):
     )
     new_id = result["inserted_memories"][0]["id"]
 
-    links = service._store.links_for_memory(new_id)
+    links = service.links.links_for_memory(new_id)
     assert len(links) == 0
 
 
@@ -579,7 +580,7 @@ def test_insert_auto_link_respects_threshold(svc):
     )
     new_id = result["inserted_memories"][0]["id"]
 
-    links = service._store.links_for_memory(new_id)
+    links = service.links.links_for_memory(new_id)
     assert len(links) == 0
 
 
@@ -600,7 +601,7 @@ def test_auto_link_duplicate_guard(svc):
         links=[],
     )
     mem_a_id = result["inserted_memories"][0]["id"]
-    assert len(service._store.links_for_memory(mem_a_id)) == 1
+    assert len(service.links.links_for_memory(mem_a_id)) == 1
 
     # Call _auto_link directly with the same lore_id — should skip because
     # mem_a already has a link to seed
@@ -609,13 +610,13 @@ def test_auto_link_duplicate_guard(svc):
     assert linked is None  # skipped by duplicate guard
 
     # Still only 1 link from mem_a to seed
-    assert len(service._store.links_for_memory(mem_a_id)) == 1
+    assert len(service.links.links_for_memory(mem_a_id)) == 1
 
 
 def test_auto_link_uses_settings_k(svc):
     """_auto_link searches with settings.auto_link_k candidates, not hardcoded 2."""
     service, engine = svc
-    service._settings.auto_link_k = 10
+    service.settings.auto_link_k = 10
 
     seed = service.insert(
         memories=[{"title": "seed", "description": "", "content": "seed"}],
@@ -635,7 +636,7 @@ def test_auto_link_uses_settings_k(svc):
     )
     new_id = result["inserted_memories"][0]["id"]
 
-    links = service._store.links_for_memory(new_id)
+    links = service.links.links_for_memory(new_id)
     assert len(links) == 1
     assert links[0].target_memory_id == seed_id
 
@@ -683,13 +684,13 @@ def test_insert_with_inline_links_and_top_level_links(svc):
     source_id = result["inserted_memories"][0]["id"]
 
     # Verify inline link
-    source_links = service._store.links_for_memory(source_id)
+    source_links = service.links.links_for_memory(source_id)
     assert len(source_links) >= 1
     assert source_links[0].source_memory_id == source_id
     assert source_links[0].target_memory_id == id_a
 
     # Verify top-level link
-    b_links = service._store.links_for_memory(id_b)
+    b_links = service.links.links_for_memory(id_b)
     has_c_link = any(lnk.target_memory_id == id_c for lnk in b_links)
     assert has_c_link
 
@@ -698,17 +699,17 @@ def test_insert_with_inline_links_and_top_level_links(svc):
 
 def _make_svc(tmp_path, db_name: str, namespace: str):
     """Helper: create a MemoryService with a given namespace."""
-    store = LinkStore(tmp_path / db_name)
+    store = build_stores(tmp_path / db_name)
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings(namespace=namespace)
-    return MemoryService(engine, store, kw, settings), store
+    return build_service(store, engine, kw, settings), store
 
 
 def test_insert_tags_with_agent_namespace(tmp_path):
     svc, store = _make_svc(tmp_path, "ns.db", "diana")
     svc.insert(memories=[{"title": "diana memory", "content": "c", "description": "d"}], links=[])
-    rows = store.all_memory_rows()
+    rows = store.memories.all_memory_rows()
     assert len(rows) == 1
     assert rows[0]["namespace"] == "diana"
 
@@ -716,23 +717,23 @@ def test_insert_tags_with_agent_namespace(tmp_path):
 def test_insert_tags_with_shared_when_no_namespace(tmp_path):
     svc, store = _make_svc(tmp_path, "ns.db", "shared")
     svc.insert(memories=[{"title": "shared memory", "content": "c", "description": "d"}], links=[])
-    rows = store.all_memory_rows()
+    rows = store.memories.all_memory_rows()
     assert rows[0]["namespace"] == "shared"
 
 
 def test_agent_reads_own_and_shared(tmp_path):
     """Diana agent should see diana + shared memories, not bella's."""
     # Seed the DB directly with memories from multiple namespaces
-    store = LinkStore(tmp_path / "multi.db")
-    store.upsert_memory_row(id="a", title="diana mem", description="d", content="c",
+    store = build_stores(tmp_path / "multi.db")
+    store.memories.upsert_memory_row(id="a", title="diana mem", description="d", content="c",
                             created_at="2026-01-01T00:00:00+00:00",
                             updated_at="2026-01-01T00:00:00+00:00",
                             namespace="diana")
-    store.upsert_memory_row(id="b", title="shared mem", description="d", content="c",
+    store.memories.upsert_memory_row(id="b", title="shared mem", description="d", content="c",
                             created_at="2026-01-01T00:00:00+00:00",
                             updated_at="2026-01-01T00:00:00+00:00",
                             namespace="shared")
-    store.upsert_memory_row(id="c", title="bella mem", description="d", content="c",
+    store.memories.upsert_memory_row(id="c", title="bella mem", description="d", content="c",
                             created_at="2026-01-01T00:00:00+00:00",
                             updated_at="2026-01-01T00:00:00+00:00",
                             namespace="bella")
@@ -740,7 +741,7 @@ def test_agent_reads_own_and_shared(tmp_path):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings(namespace="diana")
-    svc = MemoryService(engine, store, kw, settings)
+    svc = build_service(store, engine, kw, settings)
 
     memories = svc._all_memories()
     ids = set(memories.keys())
@@ -751,12 +752,12 @@ def test_agent_reads_own_and_shared(tmp_path):
 
 def test_no_namespace_sees_all(tmp_path):
     """With namespace='shared' (default), _all_memories returns all rows."""
-    store = LinkStore(tmp_path / "all.db")
-    store.upsert_memory_row(id="a", title="t1", description="d", content="c",
+    store = build_stores(tmp_path / "all.db")
+    store.memories.upsert_memory_row(id="a", title="t1", description="d", content="c",
                             created_at="2026-01-01T00:00:00+00:00",
                             updated_at="2026-01-01T00:00:00+00:00",
                             namespace="diana")
-    store.upsert_memory_row(id="b", title="t2", description="d", content="c",
+    store.memories.upsert_memory_row(id="b", title="t2", description="d", content="c",
                             created_at="2026-01-01T00:00:00+00:00",
                             updated_at="2026-01-01T00:00:00+00:00",
                             namespace="shared")
@@ -764,7 +765,7 @@ def test_no_namespace_sees_all(tmp_path):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings(namespace="shared")
-    svc = MemoryService(engine, store, kw, settings)
+    svc = build_service(store, engine, kw, settings)
 
     memories = svc._all_memories()
     assert len(memories) == 2  # sees all
@@ -812,15 +813,15 @@ def test_same_title_same_namespace_still_detects_duplicate(tmp_path):
 
 def test_same_title_in_shared_still_detects_duplicate(tmp_path):
     """Memory with namespace='shared' is visible as duplicate to any agent."""
-    store = LinkStore(tmp_path / "dup3.db")
+    store = build_stores(tmp_path / "dup3.db")
     engine = FakeEngine()
     kw = KeywordIndex()
-    store.upsert_memory_row(id="shared-id", title="overlap", description="d", content="c",
+    store.memories.upsert_memory_row(id="shared-id", title="overlap", description="d", content="c",
                             created_at="2026-01-01T00:00:00+00:00",
                             updated_at="2026-01-01T00:00:00+00:00",
                             namespace="shared")
 
-    diana_svc = MemoryService(engine, store, kw, Settings(namespace="diana"))
+    diana_svc = build_service(store, engine, kw, Settings(namespace="diana"))
     result = diana_svc.insert(
         memories=[{"title": "overlap", "content": "new", "description": "d"}],
         links=[],
@@ -837,12 +838,12 @@ def test_shared_agent_deduplicates_against_all_namespaces(tmp_path):
     this, the shared agent could re-insert titles that already exist in
     profile namespaces and later surface duplicates to every reader.
     """
-    store = LinkStore(tmp_path / "shared_dedup.db")
+    store = build_stores(tmp_path / "shared_dedup.db")
     engine = FakeEngine()
     kw = KeywordIndex()
 
     # Seed a memory in "diana" namespace directly (bypassing the service)
-    store.upsert_memory_row(
+    store.memories.upsert_memory_row(
         id="diana-mem-1",
         title="cross-ns title",
         description="original in diana ns",
@@ -853,7 +854,7 @@ def test_shared_agent_deduplicates_against_all_namespaces(tmp_path):
     )
 
     # Shared agent should detect it as a duplicate (namespaces=None → global scan)
-    shared_svc = MemoryService(engine, store, kw, Settings(namespace="shared"))
+    shared_svc = build_service(store, engine, kw, Settings(namespace="shared"))
     result = shared_svc.insert(
         memories=[{"title": "cross-ns title", "content": "new", "description": "d"}],
         links=[],

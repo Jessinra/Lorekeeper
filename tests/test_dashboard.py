@@ -13,8 +13,9 @@ from fastapi.testclient import TestClient
 
 from lorekeeper.config import Settings
 from lorekeeper.services.keyword_index import KeywordIndex
-from lorekeeper.services.link_store import LinkStore
+from lorekeeper.services.link_store import LinkStore  # noqa: F401  # legacy import
 from lorekeeper.services.orchestrator import MemoryService
+from tests._helpers import build_service, build_stores
 
 # ── Fake Engine ───────────────────────────────────────────────────────────────
 
@@ -50,11 +51,11 @@ class FakeEngine:
 
 
 def _make_svc(tmp_path: str) -> tuple[MemoryService, FakeEngine]:
-    store = LinkStore(tmp_path / "test.db")
+    store = build_stores(tmp_path / "test.db")
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    svc = MemoryService(engine, store, kw, settings)
+    svc = build_service(store, engine, kw, settings)
     return svc, engine
 
 
@@ -84,7 +85,7 @@ def seeded_client(tmp_path):
         memories=[{"title": "test memory", "description": "desc", "content": "content"}],
         links=[],
     )
-    mem_id = svc_obj._store.all_memory_rows(include_deleted=True)[0]["id"]
+    mem_id = svc_obj.memories.all_memory_rows(include_deleted=True)[0]["id"]
     engine._store[mem_id] = "test memory desc content"
 
     import lorekeeper.server as srv
@@ -134,7 +135,7 @@ def test_list_memories_include_deleted(seeded_client):
 
 def test_get_memory_found(seeded_client):
     client, svc_obj, _engine = seeded_client
-    mem_id = svc_obj._store.all_memory_rows(include_deleted=True)[0]["id"]
+    mem_id = svc_obj.memories.all_memory_rows(include_deleted=True)[0]["id"]
     resp = client.get(f"/api/memories/{mem_id}")
     assert resp.status_code == 200
     body = resp.json()
@@ -154,12 +155,12 @@ def test_get_memory_not_found(fresh_client):
 
 def test_update_memory(seeded_client):
     client, svc_obj, _engine = seeded_client
-    mem_id = svc_obj._store.all_memory_rows(include_deleted=True)[0]["id"]
+    mem_id = svc_obj.memories.all_memory_rows(include_deleted=True)[0]["id"]
     resp = client.patch(f"/api/memories/{mem_id}", json={"title": "updated title"})
     assert resp.status_code == 200
     assert resp.json()["ok"] is True
 
-    row = svc_obj._store.get_memory_row(mem_id)
+    row = svc_obj.memories.get_memory_row(mem_id)
     assert row["title"] == "updated title"
 
 
@@ -174,10 +175,10 @@ def test_update_memory_not_found(fresh_client):
 
 def test_delete_memory(seeded_client):
     client, svc_obj, _engine = seeded_client
-    mem_id = svc_obj._store.all_memory_rows(include_deleted=True)[0]["id"]
+    mem_id = svc_obj.memories.all_memory_rows(include_deleted=True)[0]["id"]
     resp = client.delete(f"/api/memories/{mem_id}")
     assert resp.status_code == 200
-    assert svc_obj._store.get_memory_row(mem_id) is None
+    assert svc_obj.memories.get_memory_row(mem_id) is None
 
 
 def test_delete_memory_not_found(fresh_client):
@@ -198,14 +199,14 @@ def test_list_links_empty(fresh_client):
 
 def test_list_links_with_data(seeded_client):
     client, svc_obj, _engine = seeded_client
-    src_id = svc_obj._store.all_memory_rows(include_deleted=True)[0]["id"]
+    src_id = svc_obj.memories.all_memory_rows(include_deleted=True)[0]["id"]
     # Insert a second memory to link to
     svc_obj.insert(
         memories=[{"title": "target mem", "description": "desc", "content": "c"}],
         links=[],
     )
-    tgt_id = svc_obj._store.all_memory_rows(include_deleted=True)[1]["id"]
-    svc_obj._store.insert_link(
+    tgt_id = svc_obj.memories.all_memory_rows(include_deleted=True)[1]["id"]
+    svc_obj.links.insert_link(
         source_memory_id=src_id,
         target_memory_id=tgt_id,
         relation_type="related_to",
@@ -224,14 +225,14 @@ def test_list_links_with_data(seeded_client):
 
 def test_create_link(seeded_client):
     client, svc_obj, _engine = seeded_client
-    memories = svc_obj._store.all_memory_rows(include_deleted=True)
+    memories = svc_obj.memories.all_memory_rows(include_deleted=True)
     src_id = memories[0]["id"]
     # Insert a target memory
     svc_obj.insert(
         memories=[{"title": "target", "description": "d", "content": "c"}],
         links=[],
     )
-    tgt_id = svc_obj._store.all_memory_rows(include_deleted=True)[1]["id"]
+    tgt_id = svc_obj.memories.all_memory_rows(include_deleted=True)[1]["id"]
     resp = client.post(
         "/api/links",
         json={
@@ -278,9 +279,9 @@ def test_delete_link_success(seeded_client):
         memories=[{"title": "link target", "description": "d", "content": "c"}],
         links=[],
     )
-    rows = svc_obj._store.all_memory_rows(include_deleted=True)
+    rows = svc_obj.memories.all_memory_rows(include_deleted=True)
     src_id, tgt_id = rows[0]["id"], rows[1]["id"]
-    link = svc_obj._store.insert_link(
+    link = svc_obj.links.insert_link(
         source_memory_id=src_id,
         target_memory_id=tgt_id,
         relation_type="related_to",
@@ -289,7 +290,7 @@ def test_delete_link_success(seeded_client):
     resp = client.delete(f"/api/links/{link.id}")
     assert resp.status_code == 200
     assert resp.json()["ok"] is True
-    assert svc_obj._store.get_link(link.id) is None
+    assert svc_obj.links.get_link(link.id) is None
 
 
 # ── POST /api/search ──────────────────────────────────────────────────────────

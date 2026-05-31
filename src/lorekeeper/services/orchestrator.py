@@ -9,6 +9,7 @@ import structlog
 
 from lorekeeper.config import Settings
 from lorekeeper.models import RELATION_TYPES, Memory, MemoryLink
+from lorekeeper.services.config_store import ConfigStore
 from lorekeeper.services.dedup import is_duplicate
 from lorekeeper.services.feedback import (
     apply_score_delta,
@@ -18,6 +19,9 @@ from lorekeeper.services.feedback import (
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_engine import MemoryEngine
+from lorekeeper.services.memory_store import MemoryStore
+from lorekeeper.services.metrics_store import MetricsStore
+from lorekeeper.services.reflection_store import ReflectionStore
 from lorekeeper.services.search import SearchResult, rank_results
 
 log = structlog.get_logger()
@@ -57,15 +61,23 @@ class MemoryService:
 
     def __init__(
         self,
-engine: MemoryEngine,
-         store: LinkStore,
-         keyword_index: KeywordIndex,
-         settings: Settings,
-     ) -> None:
+        engine: MemoryEngine,
+        memories: MemoryStore,
+        links: LinkStore,
+        reflections: ReflectionStore,
+        metrics: MetricsStore,
+        config: ConfigStore,
+        keyword_index: KeywordIndex,
+        settings: Settings,
+    ) -> None:
         self._engine = engine
-        self._store = store
+        self.memories = memories
+        self.links = links
+        self.reflections = reflections
+        self.metrics = metrics
+        self.config = config
         self._kw = keyword_index
-        self._settings = settings
+        self.settings = settings
         self._namespace: str = settings.namespace
         # Namespace filter for all read/write operations: None = no filter (shared sees all).
         self._ns_filter: list[str] | None = (
@@ -76,7 +88,7 @@ engine: MemoryEngine,
         # None → no filter → reads all rows (backward-compat for the default "shared" agent).
         # Non-shared agents scope reads to their own namespace + the shared pool.
         namespaces = self._ns_filter
-        rows = self._store.all_memory_rows(include_deleted=include_deleted, namespaces=namespaces)
+        rows = self.memories.all_memory_rows(include_deleted=include_deleted, namespaces=namespaces)
         return {r["id"]: _row_to_memory(r) for r in rows}
 
     def _rebuild_kw(self) -> None:
@@ -87,7 +99,7 @@ engine: MemoryEngine,
 
     def _increment_metric(self, tool_name: str) -> None:
         try:
-            self._store.increment_metric(tool_name)
+            self.metrics.increment_metric(tool_name)
         except Exception:
             pass  # Metrics must never break a real call
 
@@ -108,24 +120,24 @@ engine: MemoryEngine,
         memories = self._all_memories(include_deleted=include_deleted)
 
         if limit is None:
-            limit = self._settings.search_limit
+            limit = self.settings.search_limit
 
         links_by_id: dict[str, list[MemoryLink]] = {}
         if include_links:
-            max_links = self._settings.max_links_per_memory
+            max_links = self.settings.max_links_per_memory
             for mid in memories:
-                all_links = self._store.links_for_memory(mid)
+                all_links = self.links.links_for_memory(mid)
                 links_by_id[mid] = all_links[:max_links]
 
         results = rank_results(
             sem_hits, kw_hits, memories, links_by_id,
-            self._settings, limit, min_score, include_deleted,
+            self.settings, limit, min_score, include_deleted,
             refine_from=refine_from,
         )
 
         # Increment usage on returned memories
         for r in results:
-            self._store.update_memory_fields(r.memory.id, usage_count=r.memory.usage_count + 1)
+            self.memories.update_memory_fields(r.memory.id, usage_count=r.memory.usage_count + 1)
 
         return results
 
@@ -194,7 +206,7 @@ engine: MemoryEngine,
                         for link_def in inline_links:
                             try:
                                 # Validate target exists and is within scoped namespaces
-                                target_row = self._store.get_memory_row(
+                                target_row = self.memories.get_memory_row(
                                     link_def["target_memory_id"],
                                     namespaces=self._ns_filter,
                                 )
@@ -244,7 +256,7 @@ engine: MemoryEngine,
         self._increment_metric("lore_remember")
         title = self._extract_title(thought)
         description = title
-        score = self._settings.new_memory_default_score
+        score = self.settings.new_memory_default_score
 
         result = self._insert_one_memory({
             "title": title,
@@ -291,15 +303,15 @@ engine: MemoryEngine,
             lore_id: The new memory's ID to link from.
             source: Origin label for the reason string ("remember" or "insert").
         """
-        if not self._settings.auto_link_enabled:
+        if not self.settings.auto_link_enabled:
             return None
 
         if not text or not text.strip():
             return None
 
         # Clamp k to [1, 200] — non-positive values crash some vector backends
-        k = max(1, min(self._settings.auto_link_k, 200))
-        threshold = self._settings.auto_link_threshold
+        k = max(1, min(self.settings.auto_link_k, 200))
+        threshold = self.settings.auto_link_threshold
 
         try:
             sem_hits = self._engine.search(text, limit=k)
@@ -311,7 +323,7 @@ engine: MemoryEngine,
 
         # Pre-compute the set of IDs already linked to lore_id (both directions)
         try:
-            existing_links = self._store.links_for_memory(lore_id)
+            existing_links = self.links.links_for_memory(lore_id)
             linked_ids: set[str] = set()
             for link in existing_links:
                 linked_ids.add(link.target_memory_id)
@@ -330,7 +342,9 @@ engine: MemoryEngine,
 
             # Verify target memory exists, is not soft-deleted, and is within scoped namespaces
             try:
-                target_row = self._store.get_memory_row(hit["lore_id"], namespaces=self._ns_filter)
+                target_row = self.memories.get_memory_row(
+                    hit["lore_id"], namespaces=self._ns_filter
+                )
                 if target_row is None or target_row["soft_deleted"]:
                     continue
             except Exception:
@@ -344,7 +358,7 @@ engine: MemoryEngine,
 
             raw_score = round(hit["score"], 4)
             try:
-                self._store.insert_link(
+                self.links.insert_link(
                     source_memory_id=lore_id,
                     target_memory_id=hit["lore_id"],
                     relation_type="related_to",
@@ -364,7 +378,7 @@ engine: MemoryEngine,
         title = m["title"]
         description = m.get("description", "")
         content = m.get("content", "")
-        score = float(m.get("score", self._settings.new_memory_default_score))
+        score = float(m.get("score", self.settings.new_memory_default_score))
         text = f"{title} {description} {content}"
 
         if not force:
@@ -373,7 +387,7 @@ engine: MemoryEngine,
             # to their own namespace + the shared pool.
             ns_filter = self._ns_filter
             # Exact title match is a definitive duplicate — skip semantic search
-            existing_by_title = self._store.get_memory_row_by_title(title, namespaces=ns_filter)
+            existing_by_title = self.memories.get_memory_row_by_title(title, namespaces=ns_filter)
             if existing_by_title:
                 return {"duplicate": {
                     "input_title": title,
@@ -387,8 +401,8 @@ engine: MemoryEngine,
                 lid = hit["lore_id"]
                 sem = hit["score"]
                 kw = kw_hits.get(lid, 0.0)
-                if is_duplicate(sem, kw, self._settings):
-                    existing_row = self._store.get_memory_row(lid, namespaces=ns_filter)
+                if is_duplicate(sem, kw, self.settings):
+                    existing_row = self.memories.get_memory_row(lid, namespaces=ns_filter)
                     if existing_row:
                         return {"duplicate": {
                             "input_title": title,
@@ -399,7 +413,7 @@ engine: MemoryEngine,
         lore_id = str(uuid.uuid4())
         now = datetime.now(UTC).isoformat()
         self._engine.add(text, lore_id)
-        self._store.upsert_memory_row(
+        self.memories.upsert_memory_row(
             id=lore_id, title=title, description=description, content=content,
             created_at=now, updated_at=now, score=score, namespace=self._namespace,
         )
@@ -408,7 +422,7 @@ engine: MemoryEngine,
 
     def _insert_one_link(self, lnk: dict) -> dict:
         self._validate_relation_type(lnk.get("relation_type", ""))
-        link = self._store.insert_link(
+        link = self.links.insert_link(
             source_memory_id=lnk["source_memory_id"],
             target_memory_id=lnk["target_memory_id"],
             relation_type=lnk["relation_type"],
@@ -453,7 +467,7 @@ engine: MemoryEngine,
         preview_links: list[dict] = []
 
         # Track IDs that exist or were just inserted (for FK validation)
-        valid_ids: set[str] = {r["id"] for r in self._store.all_memory_rows(include_deleted=True)}
+        valid_ids: set[str] = {r["id"] for r in self.memories.all_memory_rows(include_deleted=True)}
 
         for m in memories:
             mid = m.get("id", "")
@@ -474,7 +488,7 @@ engine: MemoryEngine,
                 try:
                     text = f"{m.get('title', '')} {m.get('description', '')} {m.get('content', '')}"
                     self._engine.add(text, mid)
-                    self._store.upsert_memory_row(
+                    self.memories.upsert_memory_row(
                         id=mid,
                         title=m.get("title", ""),
                         description=m.get("description", ""),
@@ -498,7 +512,7 @@ engine: MemoryEngine,
         if not dry_run and memories_inserted:
             self._rebuild_kw()
 
-        existing_link_ids: set[str] = {lnk.id for lnk in self._store.all_links()}
+        existing_link_ids: set[str] = {lnk.id for lnk in self.links.all_links()}
 
         for lnk in links:
             lid = lnk.get("id", "")
@@ -523,7 +537,7 @@ engine: MemoryEngine,
                 })
             else:
                 try:
-                    self._store.insert_link(
+                    self.links.insert_link(
                         id=lid,
                         source_memory_id=src,
                         target_memory_id=tgt,
@@ -570,30 +584,30 @@ engine: MemoryEngine,
                 mid = fb["id"]
                 useful = bool(fb["useful"])
                 confidence = fb.get("confidence")
-                row = self._store.get_memory_row(mid, namespaces=self._ns_filter)
+                row = self.memories.get_memory_row(mid, namespaces=self._ns_filter)
                 if row is None:
                     errors.append({"id": mid, "error": "not found"})
                     continue
 
                 new_score = apply_score_delta(
-                    row["score"], useful, confidence, self._settings
+                    row["score"], useful, confidence, self.settings
                 )
                 fields: dict = {"score": new_score, "usage_count": row["usage_count"] + 1}
 
                 if confidence is not None:
                     new_conf = compute_running_confidence(
                         row["confidence"], row["confidence_count"],
-                        confidence, self._settings.confidence_window_size,
+                        confidence, self.settings.confidence_window_size,
                     )
                     fields["confidence"] = new_conf
                     fields["confidence_count"] = row["confidence_count"] + 1
 
-                threshold = self._settings.soft_delete_confidence_threshold
+                threshold = self.settings.soft_delete_confidence_threshold
                 if should_soft_delete(useful, confidence, threshold):
                     fields["soft_deleted"] = 1
                     soft_deleted += 1
 
-                self._store.update_memory_fields(mid, **fields)
+                self.memories.update_memory_fields(mid, **fields)
                 updated_memories += 1
             except Exception as e:
                 errors.append({"id": fb.get("id", "?"), "error": str(e)})
@@ -603,25 +617,25 @@ engine: MemoryEngine,
                 lid = fb["id"]
                 useful = bool(fb["useful"])
                 confidence = fb.get("confidence")
-                link = self._store.get_link(lid)
+                link = self.links.get_link(lid)
                 if link is None:
                     errors.append({"id": lid, "error": "not found"})
                     continue
 
                 new_score = apply_score_delta(
-                    link.score, useful, confidence, self._settings
+                    link.score, useful, confidence, self.settings
                 )
                 fields = {"score": new_score, "usage_count": link.usage_count + 1}
 
                 if confidence is not None:
                     new_conf = compute_running_confidence(
                         link.confidence, link.confidence_count,
-                        confidence, self._settings.confidence_window_size,
+                        confidence, self.settings.confidence_window_size,
                     )
                     fields["confidence"] = new_conf
                     fields["confidence_count"] = link.confidence_count + 1
 
-                self._store.update_link_fields(lid, **fields)
+                self.links.update_link_fields(lid, **fields)
                 updated_links += 1
             except Exception as e:
                 errors.append({"id": fb.get("id", "?"), "error": str(e)})
@@ -656,7 +670,7 @@ engine: MemoryEngine,
         # Guard: if this session has already been processed, return idempotent no-op.
         # Root cause confirmed (LKPR-1): without this check, every duplicate call inserts a
         # fresh orphaned reflection row and overwrites the session's reflection_id pointer.
-        existing_session = self._store.get_session(session_id)
+        existing_session = self.reflections.get_session(session_id)
         if existing_session is not None:
             log.info(
                 "reflection_already_processed",
@@ -676,7 +690,7 @@ engine: MemoryEngine,
         def _bullets(items: list[str]) -> str | None:
             return "\n".join(f"- {item}" for item in items) if items else None
 
-        self._store.insert_reflection(
+        self.reflections.insert_reflection(
             id=reflection_id,
             created_at=now,
             session_count=1,
@@ -688,7 +702,7 @@ engine: MemoryEngine,
             memory_ids=json.dumps(memory_ids) if memory_ids else None,
         )
 
-        self._store.upsert_session(
+        self.reflections.upsert_session(
             session_id=session_id,
             reviewed_at=now,
             session_date=session_date,
@@ -712,7 +726,7 @@ engine: MemoryEngine,
 
     def get_processed_session_ids(self) -> list[str]:
         self._increment_metric("lore_processed_sessions")
-        return list(self._store.all_processed_session_ids())
+        return list(self.reflections.all_processed_session_ids())
 
 
 def _row_to_memory(row: Any) -> Memory:
