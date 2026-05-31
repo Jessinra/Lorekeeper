@@ -43,10 +43,46 @@ def serialize_memory(
         "confidence": memory.confidence,
         "confidence_count": memory.confidence_count,
     }
+    result["namespace"] = memory.namespace
+    result["last_used"] = memory.last_used
     if exclude_fields:
         for field in exclude_fields:
             result.pop(field, None)
     return result
+
+
+def serialize_reflection(reflection: Any) -> dict[str, Any]:
+    """Serialize a reflection SQLite row to a stable dict shape."""
+    return {
+        "id": reflection["id"],
+        "created_at": reflection["created_at"],
+        "session_count": reflection["session_count"],
+        "lessons_learnt": reflection["lessons_learnt"],
+        "good_patterns": reflection.get("good_patterns"),
+        "user_profile_updates": reflection.get("user_profile_updates"),
+        "factual_discoveries": reflection.get("factual_discoveries"),
+        "summary": reflection["summary"],
+        "memory_ids": reflection.get("memory_ids"),
+    }
+
+
+def serialize_session(session: Any) -> dict[str, Any]:
+    """Serialize a session SQLite row to a stable dict shape."""
+    return {
+        "session_id": session["session_id"],
+        "session_date": session.get("session_date"),
+        "topic": session.get("topic"),
+        "task_type": session.get("task_type"),
+        "reviewed_at": session["reviewed_at"],
+        "reflection_id": session.get("reflection_id"),
+        "transcript": session.get("transcript"),
+        "what_was_done": session.get("what_was_done"),
+        "decisions": session.get("decisions"),
+        "lessons_learnt": session.get("lessons_learnt"),
+        "good_patterns": session.get("good_patterns"),
+        "user_profile": session.get("user_profile"),
+        "discoveries": session.get("discoveries"),
+    }
 
 
 def serialize_memory_link(link: MemoryLink) -> dict[str, Any]:

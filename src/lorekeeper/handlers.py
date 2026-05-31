@@ -15,6 +15,10 @@ def handle_search(
     include_deleted: bool = False,
     refine_from: list[str] | None = None,
 ) -> dict:
+    if refine_from is not None and len(refine_from) > 200:
+        raise ValueError(
+            f"refine_from exceeds cap of 200 IDs (got {len(refine_from)})"
+        )
     results = svc.search(
         query, limit, min_score, include_links, include_deleted,
         refine_from=refine_from,

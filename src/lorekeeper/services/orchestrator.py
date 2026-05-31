@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import json
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 import structlog
 
@@ -712,7 +715,7 @@ engine: MemoryEngine,
         return list(self._store.all_processed_session_ids())
 
 
-def _row_to_memory(row: object) -> Memory:
+def _row_to_memory(row: Any) -> Memory:
     return Memory(
         id=row["id"],
         title=row["title"],
@@ -725,6 +728,6 @@ def _row_to_memory(row: object) -> Memory:
         soft_deleted=bool(row["soft_deleted"]),
         confidence=row["confidence"],
         confidence_count=row["confidence_count"],
-        last_used=row["last_used"] if "last_used" in row.keys() else None,  # type: ignore[union-attr]
-        namespace=row["namespace"] if "namespace" in row.keys() else "shared",  # type: ignore[union-attr]
+        last_used=row["last_used"] if "last_used" in row.keys() else None,
+        namespace=row["namespace"] if "namespace" in row.keys() else "shared",
     )

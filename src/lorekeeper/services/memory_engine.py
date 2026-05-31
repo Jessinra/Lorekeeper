@@ -10,7 +10,13 @@ class MemoryEngine(ABC):
     def probe_score_scale(self) -> None: ...
 
     @abstractmethod
-    def normalize_score(self, raw: float) -> float: ...
+    def normalize_score(self, raw: float) -> float:
+        """Normalize a raw score from the backend to [0, 1] (higher = better).
+
+        Each engine handles normalization inline in ``search()``, but this
+        method is available for direct callers that need to normalize an
+        arbitrary raw score (e.g., during bulk migration or testing).
+        """
 
     @abstractmethod
     def add(self, text: str, lore_id: str, extra_metadata: dict | None = None) -> str: ...
@@ -22,4 +28,17 @@ class MemoryEngine(ABC):
     def get_all(self) -> list[dict]: ...
 
     @abstractmethod
-    def delete_by_mem0_id(self, mem0_id: str) -> None: ...
+    def find_mem0_id(self, lore_id: str) -> str | None:
+        """Look up the internal mem0_id for a given lore_id.
+
+        Returns None if the lore_id is not stored in the vector index.
+        Used by external tooling to correlate lore IDs with vector-store
+        internal IDs.
+
+        Note: this is a best-effort lookup. The ChromaDB engine limits the
+        search to the first 5000 results from mem0.get_all() (top_k=5000).
+        For deployments with more memories than top_k, a matching lore_id
+        may silently return None if its mem0 record falls outside the
+        queried range. The LanceDB engine scans the full table and has no
+        such limit.
+        """

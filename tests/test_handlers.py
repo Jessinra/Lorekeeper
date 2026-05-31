@@ -5,7 +5,7 @@ Validates that input validation happens early — before reaching the orchestrat
 import pytest
 
 from lorekeeper.config import Settings
-from lorekeeper.handlers import handle_insert
+from lorekeeper.handlers import handle_insert, handle_search
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.orchestrator import MemoryService
@@ -70,3 +70,41 @@ def test_handle_insert_valid_memory_succeeds(svc):
     )
     assert len(result["inserted_memories"]) == 1
     assert result["errors"] == []
+
+
+# ── MCP error paths ────────────────────────────────────────────────────────
+
+
+def test_handle_insert_no_memories(svc):
+    """Empty memories list should succeed with no inserted items."""
+    result = handle_insert(svc, memories=[], links=[])
+    assert result["inserted_memories"] == []
+    assert result["errors"] == []
+
+
+def test_handle_insert_invalid_inline_link_format(svc):
+    """Inline links as a string (not list) should be caught and returned as error."""
+    result = handle_insert(
+        svc,
+        memories=[{"title": "test", "links": "not-a-list"}],
+        links=[],
+    )
+    assert len(result["errors"]) == 1
+    assert "expected a list" in result["errors"][0]["error"]
+
+
+def test_search_refine_from_exceeds_cap(svc):
+    """refine_from with >200 IDs should raise ValueError at handler layer."""
+    oversize = [str(i) for i in range(201)]
+    with pytest.raises(ValueError, match="refine_from exceeds cap of 200 IDs"):
+        handle_search(svc, "test", refine_from=oversize)
+
+
+def test_search_refine_from_empty_is_noop(svc):
+    """refine_from with an empty list should succeed (no filtering)."""
+    svc.insert(
+        memories=[{"title": "m1", "content": "one"}],
+        links=[],
+    )
+    result = handle_search(svc, "test", refine_from=[])
+    assert result["total_matched"] >= 0

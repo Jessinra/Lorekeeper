@@ -65,8 +65,6 @@ async def lore_search(
     refine_from: list[str] | None = None,
 ) -> dict:
     try:
-        if refine_from is not None and len(refine_from) > 200:
-            raise ValueError(f"refine_from exceeds cap of 200 IDs (got {len(refine_from)})")
         return handle_search(
             get_service(), query, limit, min_score, include_links, include_deleted,
             refine_from=refine_from,
