@@ -4,10 +4,15 @@ from pydantic import ValidationError
 
 from lorekeeper.config import Settings
 from lorekeeper.handlers import handle_insert, handle_remember, handle_search
+from lorekeeper.services.config_store import ConfigStore
+from lorekeeper.services.database import Database
 from lorekeeper.services.engine_factory import build_engine
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
+from lorekeeper.services.memory_store import MemoryStore
+from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.orchestrator import MemoryService
+from lorekeeper.services.reflection_store import ReflectionStore
 
 log = structlog.get_logger()
 mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
@@ -30,10 +35,19 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     engine = build_engine(s.vector_store, s.chroma_path, s.lancedb_path, s.embedding_model)
     engine.probe_score_scale()
 
-    store = LinkStore(s.sqlite_path)
+    # Shared SQLite connection + versioned migrations
+    db = Database(s.sqlite_path)
+    db.migrate()
+
+    # Focused stores all share the same Database connection
+    memories = MemoryStore(db)
+    links = LinkStore(db)
+    reflections = ReflectionStore(db)
+    metrics = MetricsStore(db)
+    config = ConfigStore(db)
 
     # Apply persisted config overrides (dashboard changes that survived restart)
-    overrides = store.get_config_overrides()
+    overrides = config.get_overrides()
     for key, value in overrides.items():
         try:
             setattr(s, key, value)
@@ -45,7 +59,7 @@ def init_service(settings: Settings | None = None) -> MemoryService:
 
     kw = KeywordIndex()
 
-    svc = MemoryService(engine, store, kw, s)
+    svc = MemoryService(engine, memories, links, reflections, metrics, config, kw, s)
     # Bootstrap BM25 from existing memories
     all_mems = list(svc._all_memories(include_deleted=True).values())
     kw.rebuild(all_mems)
