@@ -3,7 +3,7 @@ import subprocess
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import structlog
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -255,28 +255,14 @@ class ConfigUpdate(BaseModel):
 
 @app.patch("/api/config")
 def update_config(body: ConfigUpdate) -> dict[str, bool]:
+    """Update config overrides. Type validation is handled by Pydantic at deserialization.
+    Read-only keys (data_dir, embedding_model) are silently skipped.
+    """
     s = get_service()._settings
     store = get_service()._store
-    # Build type map from ConfigUpdate annotations: {field_name: (expected_type, ...)}
-    type_map: dict[str, tuple[type, ...]] = {}
-    for fname, ftype in ConfigUpdate.__annotations__.items():
-        # Strip Optional/Union — get the actual types as a tuple
-        origin = getattr(ftype, "__origin__", None)
-        if origin is Union:
-            non_none = tuple(a for a in ftype.__args__ if a is not type(None))
-            type_map[fname] = non_none or (object,)
-        else:
-            type_map[fname] = (ftype,)
-
     for key, value in body.model_dump(exclude_none=True).items():
         if key in _READONLY_KEYS:
             continue
-        expected = type_map.get(key)
-        if expected is not None and not isinstance(value, expected):
-            raise HTTPException(
-                status_code=422,
-                detail=f"Config '{key}' expects {expected!r}, got {type(value).__name__}",
-            )
         setattr(s, key, value)
         store.set_config_override(key, value)
     return {"ok": True}
@@ -285,7 +271,7 @@ def update_config(body: ConfigUpdate) -> dict[str, bool]:
 @app.get("/api/reflections")
 def list_reflections() -> list[dict[str, Any]]:
     store = get_service()._store
-    return [serialize_reflection(r) for r in store.all_reflections()]
+    return [serialize_reflection(dict(r)) for r in store.all_reflections()]
 
 
 @app.get("/api/reflections/{reflection_id}")

@@ -58,19 +58,6 @@ def _make_svc(tmp_path: str) -> tuple[MemoryService, FakeEngine]:
     return svc, engine
 
 
-def _client_for(svc: MemoryService) -> TestClient:
-    """Create a TestClient patched at the dashboard level (where init_service is imported)."""
-    from lorekeeper.dashboard import app as dash_app
-
-    # Patch the dashboard's local references to init_service and get_service
-    with (
-        patch("lorekeeper.dashboard.app.init_service", return_value=svc),
-        patch("lorekeeper.dashboard.app.get_service", return_value=svc),
-    ):
-        # The lifespan will call the patched init_service (no-op) and then get_service works
-        yield TestClient(dash_app.app)
-
-
 @pytest.fixture
 def fresh_client(tmp_path):
     """Each test gets its own clean service + client with no seed data."""
@@ -112,11 +99,6 @@ def seeded_client(tmp_path):
     ):
         with TestClient(dash_app.app) as client:
             yield client, svc_obj, engine
-
-
-def c(fixture_val):
-    """Extract just the TestClient from a fixture tuple."""
-    return fixture_val[0]
 
 
 # ── GET /api/memories ─────────────────────────────────────────────────────────
@@ -288,6 +270,28 @@ def test_delete_link_not_found(fresh_client):
     assert resp.status_code == 404
 
 
+def test_delete_link_success(seeded_client):
+    """Delete an existing link — should return 200 and remove the link."""
+    client, svc_obj, _engine = seeded_client
+    # Create two memories and a link between them
+    svc_obj.insert(
+        memories=[{"title": "link target", "description": "d", "content": "c"}],
+        links=[],
+    )
+    rows = svc_obj._store.all_memory_rows(include_deleted=True)
+    src_id, tgt_id = rows[0]["id"], rows[1]["id"]
+    link = svc_obj._store.insert_link(
+        source_memory_id=src_id,
+        target_memory_id=tgt_id,
+        relation_type="related_to",
+        reason="test",
+    )
+    resp = client.delete(f"/api/links/{link.id}")
+    assert resp.status_code == 200
+    assert resp.json()["ok"] is True
+    assert svc_obj._store.get_link(link.id) is None
+
+
 # ── POST /api/search ──────────────────────────────────────────────────────────
 
 
@@ -396,6 +400,14 @@ def test_list_sessions(fresh_client):
     assert isinstance(resp.json(), list)
 
 
+def test_list_sessions_without_content(fresh_client):
+    """with_content=false should also work."""
+    client, _svc, _engine = fresh_client
+    resp = client.get("/api/sessions?with_content=false")
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)
+
+
 def test_get_session_not_found(fresh_client):
     client, _svc, _engine = fresh_client
     resp = client.get("/api/sessions/nonexistent")
@@ -410,6 +422,32 @@ def test_list_reflections(fresh_client):
     resp = client.get("/api/reflections")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
+
+
+def test_list_reflections_with_data(seeded_client):
+    """Reflections with real data should serialize correctly
+    (exercises the serialize_reflection dict() conversion path)."""
+    client, svc_obj, _engine = seeded_client
+    svc_obj.submit_reflection(
+        session_id="test-session-1",
+        session_date="2026-05-31",
+        topic="testing",
+        task_type="test",
+        what_was_done="ran tests",
+        decisions="none",
+        lessons_learnt=["lesson one"],
+        good_patterns=["pattern one"],
+        user_profile_updates=[],
+        factual_discoveries=[],
+        summary="test summary",
+        memory_ids=[],
+    )
+    resp = client.get("/api/reflections")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 1
+    assert data[0]["summary"] == "test summary"
+    assert "lessons_learnt" in data[0]
 
 
 def test_get_reflection_not_found(fresh_client):
