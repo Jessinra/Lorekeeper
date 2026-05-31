@@ -100,6 +100,7 @@ class LanceDBEngine(MemoryEngine):
         try:
             tbl = self._table.to_arrow()
         except Exception:
+            log.error("lancedb_get_all_failed", exc_info=True)
             return []
         out = []
         lore_ids = tbl.column("lore_id")
@@ -116,6 +117,7 @@ class LanceDBEngine(MemoryEngine):
         try:
             tbl = self._table.to_arrow()
         except Exception:
+            log.error("lancedb_find_mem0_id_failed", lore_id=lore_id, exc_info=True)
             return None
         ids = tbl.column("lore_id")
         mem0_ids = tbl.column("mem0_id")

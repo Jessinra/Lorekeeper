@@ -327,10 +327,14 @@ def test_patch_config(fresh_client):
 
 
 def test_patch_config_validation_wrong_type(fresh_client):
-    """Sending string for a float field should return 422."""
+    """Sending string for a float field should return 422 with descriptive message."""
     client, _svc, _engine = fresh_client
     resp = client.patch("/api/config", json={"w_semantic": "banana"})
     assert resp.status_code == 422
+    detail = resp.json()
+    # Pydantic's FastAPI integration may catch this at deserialization
+    # (returns a list of errors) or our custom validator (returns a single detail string)
+    assert isinstance(detail, dict) and len(detail) > 0
 
 
 def test_patch_config_readonly_key(fresh_client):

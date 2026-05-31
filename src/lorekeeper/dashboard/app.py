@@ -3,7 +3,7 @@ import subprocess
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Union, get_args, get_origin
 
 import structlog
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -201,6 +201,16 @@ class SearchRequest(BaseModel):
 _READONLY_KEYS = {"data_dir", "embedding_model"}
 
 
+def _unwrap_optional(tp: Any) -> Any:
+    """Unwrap Optional[T] / Union[T, None] to T."""
+    origin = get_origin(tp)
+    if origin is Union:
+        args = get_args(tp)
+        non_none = [a for a in args if a is not type(None)]
+        return non_none[0] if len(non_none) == 1 else tp
+    return tp
+
+
 @app.get("/api/config")
 def get_config() -> dict[str, Any]:
     s = get_service()._settings
@@ -255,14 +265,22 @@ class ConfigUpdate(BaseModel):
 
 @app.patch("/api/config")
 def update_config(body: ConfigUpdate) -> dict[str, bool]:
-    """Update config overrides. Type validation is handled by Pydantic at deserialization.
+    """Update config overrides with type validation.
     Read-only keys (data_dir, embedding_model) are silently skipped.
+    Returns 422 with detail on type mismatch.
     """
+    _TYPE_MAP = {k: _unwrap_optional(v.annotation) for k, v in ConfigUpdate.model_fields.items()}
     s = get_service()._settings
     store = get_service()._store
     for key, value in body.model_dump(exclude_none=True).items():
         if key in _READONLY_KEYS:
             continue
+        expected = _TYPE_MAP.get(key)
+        if expected is not None and not isinstance(value, expected):
+            raise HTTPException(
+                status_code=422,
+                detail=f"Config '{key}' expects {expected.__name__}, got {type(value).__name__}",
+            )
         setattr(s, key, value)
         store.set_config_override(key, value)
     return {"ok": True}

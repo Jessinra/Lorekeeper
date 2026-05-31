@@ -34,4 +34,11 @@ class MemoryEngine(ABC):
         Returns None if the lore_id is not stored in the vector index.
         Used by external tooling to correlate lore IDs with vector-store
         internal IDs.
+
+        Note: this is a best-effort lookup. The ChromaDB engine limits the
+        search to the first 5000 results from mem0.get_all() (top_k=5000).
+        For deployments with more memories than top_k, a matching lore_id
+        may silently return None if its mem0 record falls outside the
+        queried range. The LanceDB engine scans the full table and has no
+        such limit.
         """

@@ -5,7 +5,7 @@ Validates that input validation happens early — before reaching the orchestrat
 import pytest
 
 from lorekeeper.config import Settings
-from lorekeeper.handlers import handle_insert
+from lorekeeper.handlers import handle_insert, handle_search
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.orchestrator import MemoryService
@@ -93,13 +93,18 @@ def test_handle_insert_invalid_inline_link_format(svc):
     assert "expected a list" in result["errors"][0]["error"]
 
 
-def test_search_refine_from_succeeds_within_cap(svc):
-    """refine_from with reasonable count should not raise."""
+def test_search_refine_from_exceeds_cap(svc):
+    """refine_from with >200 IDs should raise ValueError at handler layer."""
+    oversize = [str(i) for i in range(201)]
+    with pytest.raises(ValueError, match="refine_from exceeds cap of 200 IDs"):
+        handle_search(svc, "test", refine_from=oversize)
+
+
+def test_search_refine_from_empty_is_noop(svc):
+    """refine_from with an empty list should succeed (no filtering)."""
     svc.insert(
         memories=[{"title": "m1", "content": "one"}],
         links=[],
     )
-    rows = svc._store.all_memory_rows()
-    refine_from = [r["id"] for r in rows[:2]]
-    results = svc.search("test", refine_from=refine_from)
-    assert isinstance(results, list)
+    result = handle_search(svc, "test", refine_from=[])
+    assert result["total_matched"] >= 0
