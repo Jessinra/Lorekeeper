@@ -16,9 +16,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from lorekeeper.config import Settings
+from lorekeeper.services.chromadb_engine import ChromaDBEngine, build_mem0
+from lorekeeper.services.database import Database
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.chromadb_engine import ChromaDBEngine, build_mem0
+from lorekeeper.services.memory_store import MemoryStore
 
 
 def load_source(path: Path) -> tuple[list[dict], list[dict]]:
@@ -50,7 +52,10 @@ def migrate(source: Path, dest: Path, dry_run: bool) -> None:
     mem0 = build_mem0(settings.chroma_path, settings.embedding_model)
     engine = ChromaDBEngine(mem0)
 
-    store = LinkStore(settings.sqlite_path)
+    db = Database(settings.sqlite_path)
+    db.migrate()
+    memories = MemoryStore(db)
+    links = LinkStore(db)
 
     # Get already-migrated lore_ids for idempotency
     existing = {e["lore_id"] for e in engine.get_all()}
@@ -66,7 +71,7 @@ def migrate(source: Path, dest: Path, dry_run: bool) -> None:
 
         text = f"{m['title']} {m.get('description', '')} {m.get('content', '')}"
         engine.add(text, lore_id)
-        store.upsert_memory_row(
+        memories.upsert_memory_row(
             id=lore_id,
             title=m["title"],
             description=m.get("description", ""),
@@ -98,12 +103,12 @@ def migrate(source: Path, dest: Path, dry_run: bool) -> None:
         if not src or not tgt:
             link_skipped += 1
             continue
-        if store.get_memory_row(src) is None or store.get_memory_row(tgt) is None:
+        if memories.get_memory_row(src) is None or memories.get_memory_row(tgt) is None:
             link_skipped += 1
             continue
 
         try:
-            store.insert_link(src, tgt, rel, reason, score)
+            links.insert_link(src, tgt, rel, reason, score)
             link_inserted += 1
         except Exception as e:
             print(f"  link skip ({src}→{tgt}): {e}")
@@ -113,7 +118,7 @@ def migrate(source: Path, dest: Path, dry_run: bool) -> None:
 
     # Rebuild BM25
     from lorekeeper.models import Memory
-    all_rows = store.all_memory_rows(include_deleted=True)
+    all_rows = memories.all_memory_rows(include_deleted=True)
     kw = KeywordIndex()
     kw.rebuild([
         Memory(

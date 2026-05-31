@@ -16,14 +16,17 @@ os.environ.setdefault("ANONYMIZED_TELEMETRY", "false")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from lorekeeper.config import Settings
+from lorekeeper.services.database import Database
 from lorekeeper.services.engine_factory import build_engine
-from lorekeeper.services.link_store import LinkStore
+from lorekeeper.services.memory_store import MemoryStore
 
 
 def main() -> None:
     s = Settings()
-    store = LinkStore(s.sqlite_path)
-    rows = store.all_memory_rows(include_deleted=True)
+    db = Database(s.sqlite_path)
+    db.migrate()
+    memories = MemoryStore(db)
+    rows = memories.all_memory_rows(include_deleted=True)
 
     if not rows:
         print("No memories found in SQLite — nothing to seed.")
