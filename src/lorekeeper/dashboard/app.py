@@ -340,8 +340,6 @@ def export_dump(include_deleted: bool = False) -> Response:
         serialize_memory(Memory(**dict(r)))
         for r in store.all_memory_rows(include_deleted=include_deleted)
     ]
-    for m in memories:
-        m["soft_deleted"] = bool(m["soft_deleted"])
     links = [serialize_memory_link(lnk) for lnk in store.all_links()]
     payload = {
         "version": "2",
