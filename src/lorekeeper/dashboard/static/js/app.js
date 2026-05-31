@@ -1,63 +1,32 @@
 // ── Entry point ──
-// Imports all modules, wires cross-module callbacks, then initialises the app.
+// Imports all modules (triggers self-registration via tab-registry),
+// sets up keyboard shortcuts and auto-refresh, then bootstraps the app.
 
+import "./tab-registry.js";
 import "./api.js";
 import "./utils.js";
+import "./tab.js"; // delegation handler + dispatch()
+import "./memories.js"; // self-registers
+import "./detail.js";
+import "./links.js";
+import "./query.js";
+import "./sessions.js";
+import "./config.js";
+import "./backup.js";
+import "./metrics.js";
+import "./runs.js";
 import { initBackup } from "./backup.js";
-import { loadConfig } from "./config.js";
-import { registerDetailCallbacks, selectMemory } from "./detail.js";
-import { loadLinks, registerLinksSelectMemory } from "./links.js";
-import {
-	clearFilter,
-	loadMemories,
-	registerSelectMemory,
-	renderList,
-	updateSortHeaders,
-} from "./memories.js";
-import { loadMetrics } from "./metrics.js";
-import { registerQuerySelectMemory, runQuery } from "./query.js";
+import { loadLinks } from "./links.js";
+import { loadMemories, updateSortHeaders } from "./memories.js";
+import { runQuery } from "./query.js";
 import { loadSessions } from "./sessions.js";
 import * as state from "./state.js";
-import { registerTabCallbacks } from "./tab.js";
-
-// ── Wire cross-module callbacks to break circular deps ──
-
-registerTabCallbacks({
-	onTabLinks: loadLinks,
-	onTabConfig: loadConfig,
-	onTabSessions: loadSessions,
-	onTabMetrics: loadMetrics,
-});
-
-// detail.js needs loadMemories, renderList, loadLinks
-registerDetailCallbacks({
-	loadMemories,
-	renderList,
-	loadLinks,
-});
-
-// links.js needs selectMemory
-registerLinksSelectMemory(selectMemory);
-
-// query.js needs selectMemory
-registerQuerySelectMemory(selectMemory);
-
-// memories.js renderList calls selectMemory via window.selectMemory (already set
-// in detail.js window assignments), but we also register it for any internal use.
-registerSelectMemory(selectMemory);
+import { dispatch } from "./tab.js";
 
 // ── Auto-refresh ──
 
 const AUTO_REFRESH_MS = 30_000;
 let _autoRefreshTimer = null;
-
-function activeTabRefresher() {
-	const active = document.querySelector(".tab.active");
-	if (!active) return loadMemories;
-	const tab = active.dataset.tab || active.textContent.trim().toLowerCase();
-	if (tab === "sessions") return () => loadSessions(false);
-	return loadMemories;
-}
 
 async function triggerRefresh() {
 	const btn = document.getElementById("btn-refresh-memories");
@@ -65,7 +34,13 @@ async function triggerRefresh() {
 	if (icon) icon.classList.add("spinning");
 	btn?.setAttribute("disabled", "");
 	try {
-		await activeTabRefresher()();
+		// Refresh the active tab — not just memories
+		const sessionsPane = document.getElementById("tab-sessions");
+		if (sessionsPane?.classList.contains("active")) {
+			await loadSessions(true);
+		} else {
+			await loadMemories();
+		}
 	} finally {
 		if (icon) icon.classList.remove("spinning");
 		btn?.removeAttribute("disabled");
@@ -73,13 +48,24 @@ async function triggerRefresh() {
 	}
 }
 
+// Hook up the Cmd+Enter listener for the query tab
+function _attachRefreshListener() {
+	document.addEventListener("keydown", (e) => {
+		if (
+			e.key === "r" &&
+			(e.metaKey || e.ctrlKey) &&
+			!["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
+		) {
+			e.preventDefault();
+			triggerRefresh();
+		}
+	});
+}
+
 function scheduleAutoRefresh() {
 	clearTimeout(_autoRefreshTimer);
 	_autoRefreshTimer = setTimeout(triggerRefresh, AUTO_REFRESH_MS);
 }
-
-window.triggerRefresh = triggerRefresh;
-window.loadMetricsFromGlobal = () => loadMetrics();
 
 // ── Init ──
 
@@ -90,7 +76,9 @@ function init() {
 	});
 
 	document.addEventListener("keydown", (e) => {
-		if (e.key === "Escape") clearFilter();
+		if (e.key === "Escape") {
+			dispatch("memories:clear-filter");
+		}
 		if (
 			e.key === "/" &&
 			!["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
@@ -103,7 +91,13 @@ function init() {
 		}
 	});
 
+	_attachRefreshListener();
 	initBackup();
+
+	// Wire the Refresh button directly to triggerRefresh (includes spinner, timer reset)
+	document
+		.getElementById("btn-refresh-memories")
+		.addEventListener("click", triggerRefresh);
 
 	// Bootstrap the memories tab sort headers and load data
 	updateSortHeaders("th-", state.memSort, [

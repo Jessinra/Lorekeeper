@@ -1,29 +1,57 @@
 // ── Detail tab ──
 import { api, showToast } from "./api.js";
 import * as state from "./state.js";
-import { switchTab } from "./tab.js";
+import { dispatch, switchTab } from "./tab.js";
+import { registerTab } from "./tab-registry.js";
 import { esc, fmt2, fmtDate, isToday, scoreClass } from "./utils.js";
 
-// Cross-module callbacks — wired by app.js to break circular deps.
-let _loadMemories = async () => {};
-let _renderList = () => {};
-let _loadLinks = async () => {};
+// ── Self-register ──
 
-export function registerDetailCallbacks({
-	loadMemories,
-	renderList,
-	loadLinks,
-}) {
-	_loadMemories = loadMemories;
-	_renderList = renderList;
-	_loadLinks = loadLinks;
-}
+registerTab("detail", {});
+
+// ── Event listener: memory selected → load detail ──
+
+document.addEventListener("app:memory:select", (e) => {
+	selectMemory(e.detail.id);
+});
+
+// ── Detail action listeners (from delegated data-action clicks) ──
+
+document.addEventListener("app:detail:enter-edit", () => enterEditMode());
+document.addEventListener("app:detail:cancel-edit", () => cancelEditMode());
+
+document.addEventListener("app:detail:save", (e) => {
+	saveMemory(e.detail.id);
+});
+
+document.addEventListener("app:detail:soft-delete", (e) => {
+	const current = e.detail.current === "true";
+	toggleSoftDelete(e.detail.id, current);
+});
+
+document.addEventListener("app:detail:hard-delete", (e) => {
+	confirmDelete(e.detail.id);
+});
+
+document.addEventListener("app:detail:delete-link", (e) => {
+	deleteLink(e.detail.linkid, e.detail.memoryid);
+});
+
+document.addEventListener("app:detail:add-link", (e) => {
+	submitAddLink(e.detail.sourceId);
+});
+
+document.addEventListener("app:detail:copy-id", (e) => {
+	copyId(e.detail.id);
+});
+
+// ── Core ──
 
 export async function selectMemory(id) {
 	state.setSelectedId(id);
 	state.setDetailEditMode(false);
 	switchTab("detail");
-	_renderList();
+	dispatch("memory:selected", { id });
 
 	let data;
 	try {
@@ -57,7 +85,7 @@ export function _renderDetail(data, editMode) {
 
 	const headerActions = editMode
 		? ""
-		: `<button class="btn-secondary btn-sm" onclick="enterEditMode()">Edit</button>`;
+		: `<button class="btn-secondary btn-sm" data-action="detail:enter-edit">Edit</button>`;
 
 	// Returns a field-group cell. In edit mode renders editHTML; in view mode renders viewHTML.
 	const field = (label, viewHTML, editHTML, spanClass = "") =>
@@ -132,13 +160,13 @@ export function _renderDetail(data, editMode) {
 			editMode
 				? `
     <div class="action-bar">
-      <button class="btn-primary" onclick="saveMemory('${m.id}')">Save</button>
-      <button class="btn-secondary" onclick="cancelEditMode()">Cancel</button>
+      <button class="btn-primary" data-action="detail:save" data-id="${m.id}">Save</button>
+      <button class="btn-secondary" data-action="detail:cancel-edit">Cancel</button>
       <span style="flex:1"></span>
-      <button class="btn-warning" onclick="toggleSoftDelete('${m.id}', ${!!m.soft_deleted})">
+      <button class="btn-warning" data-action="detail:soft-delete" data-id="${m.id}" data-current="${!!m.soft_deleted}">
         ${m.soft_deleted ? "Restore" : "Soft Delete"}
       </button>
-      <button class="btn-danger" onclick="confirmDelete('${m.id}')">Hard Delete</button>
+      <button class="btn-danger" data-action="detail:hard-delete" data-id="${m.id}">Hard Delete</button>
     </div>
     `
 				: ""
@@ -174,16 +202,16 @@ export function _renderDetail(data, editMode) {
           </select>
         </div>
         <textarea id="link-reason" placeholder="Reason for this link…" rows="2"></textarea>
-        <button class="btn-primary btn-sm" onclick="submitAddLink('${m.id}')">Add Link</button>
+        <button class="btn-primary btn-sm" data-action="detail:add-link" data-source-id="${m.id}">Add Link</button>
       </div>
     </div>
   `;
 
 	document.getElementById("detail-content").innerHTML = `
     <div class="detail-header">
-      <button class="btn-ghost btn-sm" onclick="switchTab('memories')">← Back</button>
+      <button class="btn-ghost btn-sm" data-tab="memories">← Back</button>
       <h2>${isToday(m.created_at) ? '<span class="new-dot"></span>' : ""}${esc(m.title)}</h2>
-      <span class="id-badge" title="Click to copy ID" onclick="copyId('${m.id}')">${m.id.slice(0, 8)}…</span>
+      <span class="id-badge" title="Click to copy ID" data-action="detail:copy-id" data-id="${m.id}">${m.id.slice(0, 8)}…</span>
       ${headerActions}
     </div>
     ${bodyHTML}
@@ -228,8 +256,8 @@ export function renderLinkItem(link, currentId) {
 	return `
     <div class="link-item">
       <span class="link-direction">${isSource ? "→" : "←"}</span>
-      <span class="link-target" onclick="selectMemory('${otherId}')" title="${esc(otherTitle)}">${esc(otherTitle)}</span>
-      <button class="btn-sm btn-danger link-del-btn" onclick="deleteLink('${link.id}','${currentId}')">×</button>
+      <span class="link-target" data-memory-id="${otherId}" title="${esc(otherTitle)}">${esc(otherTitle)}</span>
+      <button class="btn-sm btn-danger link-del-btn" data-action="detail:delete-link" data-linkid="${link.id}" data-memoryid="${currentId}">×</button>
       ${reason ? `<span class="link-reason">${esc(reason)}</span>` : ""}
     </div>`;
 }
@@ -247,7 +275,8 @@ export async function saveMemory(id) {
 		await api("PATCH", `/api/memories/${id}`, body);
 		showToast("Saved");
 		state.setDetailEditMode(false);
-		await _loadMemories();
+		dispatch("memories:changed");
+		dispatch("links:changed");
 		selectMemory(id);
 	} catch (e) {
 		showToast(e.message, "error");
@@ -258,7 +287,7 @@ export async function toggleSoftDelete(id, current) {
 	try {
 		await api("PATCH", `/api/memories/${id}`, { soft_deleted: !current });
 		showToast(current ? "Restored" : "Soft deleted");
-		await _loadMemories();
+		dispatch("memories:changed");
 		selectMemory(id);
 	} catch (e) {
 		showToast(e.message, "error");
@@ -278,8 +307,8 @@ export async function confirmDelete(id) {
 		state.setSelectedId(null);
 		document.getElementById("detail-placeholder").classList.remove("hidden");
 		document.getElementById("detail-page").classList.add("hidden");
-		await _loadMemories();
-		if (state.linksLoaded) _loadLinks();
+		dispatch("memories:changed");
+		dispatch("links:changed");
 		switchTab("memories");
 	} catch (e) {
 		showToast(e.message, "error");
@@ -289,7 +318,7 @@ export async function confirmDelete(id) {
 export async function deleteLink(linkId, memoryId) {
 	try {
 		await api("DELETE", `/api/links/${linkId}`);
-		if (state.linksLoaded) _loadLinks();
+		dispatch("links:changed");
 		selectMemory(memoryId);
 	} catch (e) {
 		showToast(e.message, "error");
@@ -316,7 +345,7 @@ export async function submitAddLink(sourceId) {
 			reason,
 		});
 		showToast("Link added");
-		if (state.linksLoaded) _loadLinks();
+		dispatch("links:changed");
 		selectMemory(sourceId);
 	} catch (e) {
 		showToast(e.message, "error");
@@ -327,14 +356,3 @@ export async function copyId(id) {
 	await navigator.clipboard.writeText(id);
 	showToast("ID copied");
 }
-
-// Expose onclick targets on window
-window.selectMemory = selectMemory;
-window.enterEditMode = enterEditMode;
-window.cancelEditMode = cancelEditMode;
-window.saveMemory = saveMemory;
-window.toggleSoftDelete = toggleSoftDelete;
-window.confirmDelete = confirmDelete;
-window.deleteLink = deleteLink;
-window.submitAddLink = submitAddLink;
-window.copyId = copyId;

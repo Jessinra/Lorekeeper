@@ -21,6 +21,3 @@ export async function api(method, path, body) {
 	}
 	return res.json();
 }
-
-window.showToast = showToast;
-window.api = api;

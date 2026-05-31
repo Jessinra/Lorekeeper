@@ -1,6 +1,15 @@
 // ── Metrics tab ──
 // Activity-box heatmap: rows = local date, columns = local hour (0–23).
 // Fixed to last 7 days. Timezone is detected from the browser.
+import { registerTab } from "./tab-registry.js";
+
+// ── Self-register ──
+
+registerTab("metrics", { load: loadMetrics });
+
+// ── Event listeners ──
+
+document.addEventListener("app:metrics:load", () => loadMetrics());
 
 const TOOL_COLORS = {
 	lore_search: { h: 217, s: "90%" },
