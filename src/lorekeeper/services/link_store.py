@@ -76,10 +76,14 @@ class LinkStore:
             )
             self._conn.commit()
         except sqlite3.IntegrityError as exc:
-            # Re-raise FK violations — only swallow unique-constraint duplicates
+            # Re-raise FK violations — only swallow the expected unique-pair
+            # duplicate case (same source + target + relation_type already exists).
             if "FOREIGN KEY" in str(exc).upper():
                 raise
-            # Duplicate (source, target, relation_type) — return the existing link
+            # Look up the existing link for the duplicate-pair case. If found,
+            # return it (idempotent insert). If NOT found, the IntegrityError
+            # was something else (e.g. UUID collision on `id`) — re-raise so
+            # the real failure isn't hidden.
             row = self._conn.execute(
                 """
                 SELECT * FROM memory_links
@@ -88,8 +92,9 @@ class LinkStore:
                 """,
                 (link.source_memory_id, link.target_memory_id, link.relation_type),
             ).fetchone()
-            if row:
-                return _row_to_link(row)
+            if row is None:
+                raise
+            return _row_to_link(row)
         return link
 
     def links_for_memory(self, memory_id: str) -> list[MemoryLink]:

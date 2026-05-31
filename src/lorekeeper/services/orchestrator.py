@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -100,8 +101,11 @@ class MemoryService:
     def _increment_metric(self, tool_name: str) -> None:
         try:
             self.metrics.increment_metric(tool_name)
-        except Exception:
-            pass  # Metrics must never break a real call
+        except sqlite3.Error:
+            # Metrics must never break a real call, but the failure should be
+            # observable. Log at WARNING (not ERROR) — metric write is degraded,
+            # not a request failure.
+            log.warning("metric_increment_failed", tool_name=tool_name, exc_info=True)
 
     # ── Search ────────────────────────────────────────────────────────────────
 

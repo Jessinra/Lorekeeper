@@ -114,9 +114,12 @@ class MemoryStore:
         return self._conn.execute(sql, params).fetchall()
 
     def update_memory_fields(self, id: str, **fields: object) -> None:
+        """Update memory fields. `updated_at` is always set to now — passing
+        it in the kwargs is ignored (the store owns this timestamp).
+        """
         allowed = {
             "score", "usage_count", "soft_deleted",
-            "confidence", "confidence_count", "updated_at",
+            "confidence", "confidence_count",
             "title", "description", "content", "last_used",
         }
         cols = {k: v for k, v in fields.items() if k in allowed}
