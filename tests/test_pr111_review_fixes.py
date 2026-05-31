@@ -153,20 +153,21 @@ def test_insert_link_duplicate_pair_returns_existing(tmp_path):
 
 # ── orchestrator._increment_metric — logs but does not raise ─────────────────
 
-
-def test_increment_metric_logs_on_sqlite_failure_and_does_not_raise(
-    tmp_path, caplog
-):
+def test_increment_metric_logs_on_sqlite_failure_and_does_not_raise(tmp_path):
     """If the metrics store raises sqlite3.Error, the orchestrator must
-    catch it, log a warning, and not propagate the failure.
+    catch it, log a warning with exc_info, and not propagate the failure.
+
+    Uses a mocked metrics store + spied logger to deterministically verify
+    both behaviors (catch + log). Avoids depending on structlog→caplog
+    routing, which is configuration-dependent.
     """
-    import logging
+    from unittest.mock import MagicMock, patch
 
     from lorekeeper.config import Settings
     from lorekeeper.services.keyword_index import KeywordIndex
     from tests._helpers import build_service
 
-    class _BoomEngine:
+    class _NoopEngine:
         def probe_score_scale(self): pass
         def add(self, *a, **kw): return ""
         def search(self, *a, **kw): return []
@@ -175,20 +176,25 @@ def test_increment_metric_logs_on_sqlite_failure_and_does_not_raise(
         def find_mem0_id(self, x): return None
 
     s = build_stores(tmp_path / "metric_boom.db")
-    svc = build_service(s, _BoomEngine(), KeywordIndex(), Settings())
+    svc = build_service(s, _NoopEngine(), KeywordIndex(), Settings())
 
-    # Sabotage the metrics store so increment_metric raises sqlite3.Error
-    s.db.close()  # closing the connection forces sqlite3.ProgrammingError... but
-    # ProgrammingError is a subclass of sqlite3.Error so the orchestrator catches it.
+    # Replace metrics.increment_metric with a function that raises sqlite3.Error.
+    boom = MagicMock(side_effect=sqlite3.OperationalError("simulated DB locked"))
+    svc.metrics.increment_metric = boom  # type: ignore[method-assign]
 
-    with caplog.at_level(logging.WARNING):
+    # Spy on the module-level structlog logger used by orchestrator.
+    with patch("lorekeeper.services.orchestrator.log") as mock_log:
         # Must NOT raise
         svc._increment_metric("test_tool")
-    # Structlog routes through std logging by default in tests — verify a
-    # warning was emitted.
-    matched = [r for r in caplog.records if "metric_increment_failed" in r.getMessage()]
-    # If structlog isn't routed to caplog in this test setup, fall back to
-    # just asserting no exception was raised — the silent-no-raise behavior
-    # is the contract regardless of logging adapter.
-    # (Either way the call above must have completed without raising.)
-    assert matched or True  # behavior: no raise is the hard contract
+
+    # The metrics store was called once
+    boom.assert_called_once_with("test_tool")
+
+    # A warning was logged with the expected event name + exc_info
+    mock_log.warning.assert_called_once()
+    call_args = mock_log.warning.call_args
+    assert call_args.args[0] == "metric_increment_failed"
+    assert call_args.kwargs.get("tool_name") == "test_tool"
+    assert call_args.kwargs.get("exc_info") is True
+
+    s.db.close()

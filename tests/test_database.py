@@ -169,3 +169,49 @@ def test_migrations_list_versions_strictly_increasing():
     versions = [v for v, _, _ in MIGRATIONS]
     assert versions == sorted(set(versions))
     assert versions[0] == 1
+
+
+def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
+    """If a migration raises mid-apply, the `with self._conn:` context manager
+    must roll back: no _schema_version row gets inserted, and the migration
+    is retried on the next migrate() call.
+    """
+    import pytest
+
+    from lorekeeper.services import database as db_module
+
+    db = Database(tmp_path / "rollback.db")
+    db.migrate()  # apply v1 baseline
+    assert db.current_version() == 1
+
+    # Inject a failing v2 migration into the MIGRATIONS list, then call migrate().
+    calls = {"count": 0}
+
+    def _failing_migration(conn):
+        calls["count"] += 1
+        # Make a real schema change so we can verify the rollback undoes it
+        conn.execute("CREATE TABLE failing_marker (id INTEGER PRIMARY KEY)")
+        raise RuntimeError("simulated migration failure")
+
+    original = list(db_module.MIGRATIONS)
+    db_module.MIGRATIONS.append((2, "failing_v2", _failing_migration))
+    try:
+        with pytest.raises(RuntimeError, match="simulated migration failure"):
+            db.migrate()
+
+        # Schema version must NOT have advanced
+        assert db.current_version() == 1
+
+        # The CREATE TABLE inside the failed migration must have been rolled back
+        table = db.conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='failing_marker'"
+        ).fetchone()
+        assert table is None, "failed migration's schema change was not rolled back"
+
+        # And the failing migration was attempted exactly once
+        assert calls["count"] == 1
+    finally:
+        # Restore registry so other tests aren't affected
+        db_module.MIGRATIONS[:] = original
+        db.close()

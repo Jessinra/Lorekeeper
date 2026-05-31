@@ -7,7 +7,6 @@ import pytest
 from lorekeeper.config import Settings
 from lorekeeper.handlers import handle_insert, handle_search
 from lorekeeper.services.keyword_index import KeywordIndex
-from lorekeeper.services.link_store import LinkStore  # noqa: F401  # legacy import
 from tests._helpers import build_service, build_stores
 
 

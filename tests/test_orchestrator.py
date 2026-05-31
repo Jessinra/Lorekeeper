@@ -1,12 +1,11 @@
 """
 Orchestrator integration tests.
-Uses real SQLite (via LinkStore) and a fake MemoryEngine.
+Uses real SQLite (via the focused stores from build_stores()) and a fake MemoryEngine.
 """
 import pytest
 
 from lorekeeper.config import Settings
 from lorekeeper.services.keyword_index import KeywordIndex
-from lorekeeper.services.link_store import LinkStore  # noqa: F401  # legacy import
 from lorekeeper.services.orchestrator import MemoryService
 from tests._helpers import build_service, build_stores
 

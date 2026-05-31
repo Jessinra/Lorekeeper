@@ -283,11 +283,32 @@ class Database:
         return self._conn
 
     def migrate(self) -> None:
-        """Apply all pending migrations in version order."""
+        """Apply all pending migrations in version order.
+
+        Each migration runs inside an explicit transaction (BEGIN ... COMMIT/
+        ROLLBACK). On success the migration's changes plus the
+        `_schema_version` insert commit together; on exception the entire
+        transaction rolls back and the exception is re-raised.
+
+        Caveat: migrations that call `executescript()` (notably the bootstrap
+        migration) — Python's sqlite3 module COMMITs any pending transaction
+        before `executescript()` runs. As a result, migrations that internally
+        use `executescript` cannot be rolled back as a whole. The fixup helpers
+        used by Migration 1 are all written to be idempotent (CREATE TABLE IF
+        NOT EXISTS, column-existence guards, etc.) so a partial-apply followed
+        by retry is safe.
+
+        For future migrations that need atomic rollback semantics, use
+        `conn.execute()` for individual DDL/DML statements rather than
+        `executescript()`.
+        """
         self._conn.execute(
             "CREATE TABLE IF NOT EXISTS _schema_version "
             "(version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
         )
+        # Ensure the create above is committed before we start per-migration txns
+        self._conn.commit()
+
         current = self._conn.execute(
             "SELECT COALESCE(MAX(version), 0) FROM _schema_version"
         ).fetchone()[0]
@@ -296,12 +317,24 @@ class Database:
             if version <= current:
                 continue
             log.info("schema_migration_applying", version=version, name=name)
-            fn(self._conn)
-            self._conn.execute(
-                "INSERT INTO _schema_version (version, applied_at) VALUES (?, ?)",
-                (version, _now()),
-            )
-            self._conn.commit()
+            # Explicit BEGIN — Python's sqlite3 doesn't auto-begin for DDL,
+            # so without this the migration's CREATE/ALTER statements would
+            # execute outside any transaction and could not be rolled back.
+            self._conn.execute("BEGIN")
+            try:
+                fn(self._conn)
+                self._conn.execute(
+                    "INSERT INTO _schema_version (version, applied_at) "
+                    "VALUES (?, ?)",
+                    (version, _now()),
+                )
+                self._conn.commit()
+            except Exception:
+                self._conn.rollback()
+                log.exception(
+                    "schema_migration_failed", version=version, name=name
+                )
+                raise
             log.info("schema_migration_applied", version=version, name=name)
 
     def current_version(self) -> int:
