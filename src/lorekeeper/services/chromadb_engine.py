@@ -149,5 +149,15 @@ class ChromaDBEngine(MemoryEngine):
                 out.append({"lore_id": lore_id, "mem0_id": item["id"]})
         return out
 
+    def find_mem0_id(self, lore_id: str) -> str | None:
+        """Look up mem0_id by lore_id."""
+        results = self._mem0.get_all(filters={"user_id": LORE_USER_ID}, top_k=5000)
+        items = results.get("results") if isinstance(results, dict) else results
+        for item in (items or []):
+            meta = item.get("metadata") or {}
+            if meta.get("lore_id") == lore_id:
+                return item["id"]
+        return None
+
     def delete_by_mem0_id(self, mem0_id: str) -> None:
         self._mem0.delete(mem0_id)

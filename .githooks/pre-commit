@@ -25,6 +25,10 @@ uv run ruff check src tests
 echo "✅  ruff passed"
 
 echo ""
+echo "🔍  mypy (advisory — failures don't block)..."
+uv run mypy src || echo "⚠️  mypy found issues — review before push"
+
+echo ""
 echo "🔍  biome check (JS)..."
 npx --yes @biomejs/biome check src/lorekeeper/dashboard/static/js/
 echo "✅  biome passed"

@@ -111,6 +111,19 @@ class LanceDBEngine(MemoryEngine):
                 out.append({"lore_id": lore_id, "mem0_id": mem0_id})
         return out
 
+    def find_mem0_id(self, lore_id: str) -> str | None:
+        """Look up mem0_id by lore_id."""
+        try:
+            tbl = self._table.to_arrow()
+        except Exception:
+            return None
+        ids = tbl.column("lore_id")
+        mem0_ids = tbl.column("mem0_id")
+        for i in range(tbl.num_rows):
+            if ids[i].as_py() == lore_id:
+                return mem0_ids[i].as_py()
+        return None
+
     def delete_by_mem0_id(self, mem0_id: str) -> None:
         """Delete a row by mem0_id."""
         escaped = mem0_id.replace("'", "''")

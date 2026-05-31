@@ -3,7 +3,7 @@ import subprocess
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 import structlog
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -11,8 +11,14 @@ from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from lorekeeper.models import RelationType
-from lorekeeper.serializers import serialize_search_result
+from lorekeeper.models import Memory, RelationType
+from lorekeeper.serializers import (
+    serialize_memory,
+    serialize_memory_link,
+    serialize_reflection,
+    serialize_search_result,
+    serialize_session,
+)
 from lorekeeper.server import get_service, init_service
 
 log = structlog.get_logger()
@@ -36,7 +42,7 @@ def _resolve_version() -> str:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):  # type: ignore[type-arg]
+async def lifespan(app: FastAPI):
     global _APP_VERSION
     log.info("dashboard_startup")
     _APP_VERSION = _resolve_version()
@@ -74,7 +80,12 @@ def list_memories(include_deleted: bool = False) -> list[dict[str, Any]]:
     for lnk in store.all_links():
         link_counts[lnk.source_memory_id] = link_counts.get(lnk.source_memory_id, 0) + 1
         link_counts[lnk.target_memory_id] = link_counts.get(lnk.target_memory_id, 0) + 1
-    return [{**dict(r), "link_count": link_counts.get(r["id"], 0)} for r in rows]
+    result = []
+    for r in rows:
+        mem = serialize_memory(Memory(**r))
+        mem["link_count"] = link_counts.get(r["id"], 0)
+        result.append(mem)
+    return result
 
 
 @app.get("/api/memories/{memory_id}")
@@ -85,8 +96,8 @@ def get_memory(memory_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Memory not found")
     links = store.links_for_memory(memory_id)
     return {
-        "memory": dict(row),
-        "links": [lnk.model_dump() for lnk in links],
+        "memory": serialize_memory(Memory(**dict(row))),
+        "links": [serialize_memory_link(lnk) for lnk in links],
     }
 
 
@@ -143,7 +154,7 @@ def list_all_links(include_deleted: bool = False) -> list[dict[str, Any]]:
         ]
     return [
         {
-            **lnk.model_dump(),
+            **serialize_memory_link(lnk),
             "source_title": title_map.get(lnk.source_memory_id, lnk.source_memory_id[:12] + "…"),
             "target_title": title_map.get(lnk.target_memory_id, lnk.target_memory_id[:12] + "…"),
         }
@@ -165,7 +176,7 @@ def create_link(body: LinkCreate) -> dict[str, Any]:
         reason=body.reason,
         score=body.score,
     )
-    return link.model_dump()
+    return serialize_memory_link(link)
 
 
 @app.delete("/api/links/{link_id}")
@@ -246,17 +257,35 @@ class ConfigUpdate(BaseModel):
 def update_config(body: ConfigUpdate) -> dict[str, bool]:
     s = get_service()._settings
     store = get_service()._store
+    # Build type map from ConfigUpdate annotations: {field_name: (expected_type, ...)}
+    type_map: dict[str, tuple[type, ...]] = {}
+    for fname, ftype in ConfigUpdate.__annotations__.items():
+        # Strip Optional/Union — get the actual types as a tuple
+        origin = getattr(ftype, "__origin__", None)
+        if origin is Union:
+            non_none = tuple(a for a in ftype.__args__ if a is not type(None))
+            type_map[fname] = non_none or (object,)
+        else:
+            type_map[fname] = (ftype,)
+
     for key, value in body.model_dump(exclude_none=True).items():
-        if key not in _READONLY_KEYS:
-            setattr(s, key, value)
-            store.set_config_override(key, value)
+        if key in _READONLY_KEYS:
+            continue
+        expected = type_map.get(key)
+        if expected is not None and not isinstance(value, expected):
+            raise HTTPException(
+                status_code=422,
+                detail=f"Config '{key}' expects {expected!r}, got {type(value).__name__}",
+            )
+        setattr(s, key, value)
+        store.set_config_override(key, value)
     return {"ok": True}
 
 
 @app.get("/api/reflections")
 def list_reflections() -> list[dict[str, Any]]:
     store = get_service()._store
-    return [dict(r) for r in store.all_reflections()]
+    return [serialize_reflection(r) for r in store.all_reflections()]
 
 
 @app.get("/api/reflections/{reflection_id}")
@@ -267,8 +296,8 @@ def get_reflection_detail(reflection_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Reflection not found")
     sessions = store.sessions_for_reflection(reflection_id)
     return {
-        "reflection": dict(row),
-        "sessions": [dict(s) for s in sessions],
+        "reflection": serialize_reflection(dict(row)),
+        "sessions": [serialize_session(dict(s)) for s in sessions],
     }
 
 
@@ -276,7 +305,7 @@ def get_reflection_detail(reflection_id: str) -> dict[str, Any]:
 def list_sessions(with_content: bool = True) -> list[dict[str, Any]]:
     store = get_service()._store
     rows = store.sessions_with_content() if with_content else store.all_sessions()
-    return [dict(s) for s in rows]
+    return [serialize_session(dict(s)) for s in rows]
 
 
 @app.get("/api/sessions/{session_id}")
@@ -294,7 +323,7 @@ def get_session_detail(session_id: str) -> dict[str, Any]:
                 "created_at": ref_row["created_at"],
                 "summary": ref_row["summary"],
             }
-    return {"session": dict(row), "reflection": reflection}
+    return {"session": serialize_session(dict(row)), "reflection": reflection}
 
 
 @app.post("/api/search")
@@ -321,10 +350,13 @@ def search(body: SearchRequest) -> list[dict[str, Any]]:
 def export_dump(include_deleted: bool = False) -> Response:
     store = get_service()._store
     now = datetime.now(UTC)
-    memories = [dict(r) for r in store.all_memory_rows(include_deleted=include_deleted)]
+    memories = [
+        serialize_memory(Memory(**dict(r)))
+        for r in store.all_memory_rows(include_deleted=include_deleted)
+    ]
     for m in memories:
         m["soft_deleted"] = bool(m["soft_deleted"])
-    links = [lnk.model_dump() for lnk in store.all_links()]
+    links = [serialize_memory_link(lnk) for lnk in store.all_links()]
     payload = {
         "version": "2",
         "exported_at": now.isoformat(),

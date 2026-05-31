@@ -70,3 +70,36 @@ def test_handle_insert_valid_memory_succeeds(svc):
     )
     assert len(result["inserted_memories"]) == 1
     assert result["errors"] == []
+
+
+# ── MCP error paths ────────────────────────────────────────────────────────
+
+
+def test_handle_insert_no_memories(svc):
+    """Empty memories list should succeed with no inserted items."""
+    result = handle_insert(svc, memories=[], links=[])
+    assert result["inserted_memories"] == []
+    assert result["errors"] == []
+
+
+def test_handle_insert_invalid_inline_link_format(svc):
+    """Inline links as a string (not list) should be caught and returned as error."""
+    result = handle_insert(
+        svc,
+        memories=[{"title": "test", "links": "not-a-list"}],
+        links=[],
+    )
+    assert len(result["errors"]) == 1
+    assert "expected a list" in result["errors"][0]["error"]
+
+
+def test_search_refine_from_succeeds_within_cap(svc):
+    """refine_from with reasonable count should not raise."""
+    svc.insert(
+        memories=[{"title": "m1", "content": "one"}],
+        links=[],
+    )
+    rows = svc._store.all_memory_rows()
+    refine_from = [r["id"] for r in rows[:2]]
+    results = svc.search("test", refine_from=refine_from)
+    assert isinstance(results, list)
