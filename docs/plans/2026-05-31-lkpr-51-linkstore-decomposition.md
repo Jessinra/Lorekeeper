@@ -24,29 +24,128 @@ from pathlib import Path
 from datetime import UTC, datetime
 
 MIGRATIONS: list[tuple[int, str, str]] = [
+    # Migration 1 — initial schema (all CREATE TABLE IF NOT EXISTS)
+    # This is idempotent — only creates missing tables.
     (1, "initial_schema", """
-        CREATE TABLE IF NOT EXISTS memories (...);
-        CREATE TABLE IF NOT EXISTS memory_links (...);
-        CREATE TABLE IF NOT EXISTS reflections (...);
-        CREATE TABLE IF NOT EXISTS sessions (...);
-        CREATE TABLE IF NOT EXISTS api_metrics (...);
-        CREATE TABLE IF NOT EXISTS config_overrides (...);
+        CREATE TABLE IF NOT EXISTS memories (
+          id               TEXT PRIMARY KEY,
+          title            TEXT NOT NULL,
+          description      TEXT NOT NULL,
+          content          TEXT NOT NULL,
+          created_at       TEXT NOT NULL,
+          updated_at       TEXT NOT NULL,
+          usage_count      INTEGER NOT NULL DEFAULT 0,
+          score            REAL    NOT NULL DEFAULT 1.0,
+          soft_deleted     INTEGER NOT NULL DEFAULT 0,
+          confidence       REAL,
+          confidence_count INTEGER NOT NULL DEFAULT 0,
+          last_used        TEXT,
+          namespace        TEXT    NOT NULL DEFAULT 'shared'
+        );
+        CREATE INDEX IF NOT EXISTS idx_memories_soft_deleted ON memories(soft_deleted);
+        CREATE TABLE IF NOT EXISTS memory_links (
+          id                TEXT PRIMARY KEY,
+          source_memory_id  TEXT NOT NULL,
+          target_memory_id  TEXT NOT NULL,
+          relation_type     TEXT NOT NULL,
+          reason            TEXT NOT NULL,
+          score             REAL    NOT NULL DEFAULT 1.0,
+          created_at        TEXT    NOT NULL,
+          updated_at        TEXT    NOT NULL,
+          usage_count       INTEGER NOT NULL DEFAULT 0,
+          confidence        REAL,
+          confidence_count  INTEGER NOT NULL DEFAULT 0,
+          FOREIGN KEY (source_memory_id) REFERENCES memories(id) ON DELETE CASCADE,
+          FOREIGN KEY (target_memory_id) REFERENCES memories(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_links_source ON memory_links(source_memory_id);
+        CREATE INDEX IF NOT EXISTS idx_links_target ON memory_links(target_memory_id);
+        CREATE TABLE IF NOT EXISTS reflections (
+          id            TEXT PRIMARY KEY,
+          session_id    TEXT NOT NULL UNIQUE,
+          topic         TEXT,
+          summary       TEXT NOT NULL,
+          task_type     TEXT,
+          factual_discoveries TEXT,
+          lessons_learnt      TEXT,
+          good_patterns       TEXT,
+          decisions           TEXT,
+          user_profile_updates TEXT,
+          memory_ids          TEXT,
+          created_at    TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS sessions (
+          id                TEXT PRIMARY KEY,
+          reflection_id     TEXT,
+          title             TEXT,
+          when_text         TEXT,
+          model             TEXT,
+          source            TEXT,
+          transcript        TEXT,
+          summary           TEXT,
+          what_was_done     TEXT,
+          decisions         TEXT,
+          lessons_learnt    TEXT,
+          good_patterns     TEXT,
+          user_profile      TEXT,
+          discoveries       TEXT,
+          FOREIGN KEY (reflection_id) REFERENCES reflections(id) ON DELETE SET NULL
+        );
+        CREATE TABLE IF NOT EXISTS api_metrics (
+          id           INTEGER PRIMARY KEY AUTOINCREMENT,
+          tool_name    TEXT NOT NULL,
+          called_at    TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS config_overrides (
+          key         TEXT PRIMARY KEY,
+          value       TEXT NOT NULL,
+          updated_at  TEXT NOT NULL
+        );
     """),
-    (2, "add_last_used_column", """
+    # Migration 2 — deduplicate links + add unique pair constraint
+    (2, "dedup_links", """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_links_unique_pair
+        ON memory_links(source_memory_id, target_memory_id, relation_type);
+        DELETE FROM memory_links WHERE rowid NOT IN (
+            SELECT MIN(rowid) FROM memory_links
+            GROUP BY source_memory_id, target_memory_id, relation_type
+        );
+    """),
+    # Migration 3 — deduplicate memories by title (keep highest score)
+    (3, "dedup_memories", """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_memories_unique_title ON memories(title);
+        DELETE FROM memories WHERE rowid NOT IN (
+            SELECT rowid FROM memories m1
+            WHERE rowid = (
+                SELECT rowid FROM memories m2
+                WHERE m2.title = m1.title
+                ORDER BY m2.score DESC, m2.created_at ASC
+                LIMIT 1
+            )
+        );
+    """),
+    # Migration 4 — add session content columns (transcript, decisions, etc.)
+    (4, "session_content_columns", """
+        ALTER TABLE sessions ADD COLUMN transcript TEXT;
+        ALTER TABLE sessions ADD COLUMN what_was_done TEXT;
+        ALTER TABLE sessions ADD COLUMN decisions TEXT;
+        ALTER TABLE sessions ADD COLUMN lessons_learnt TEXT;
+        ALTER TABLE sessions ADD COLUMN good_patterns TEXT;
+        ALTER TABLE sessions ADD COLUMN user_profile TEXT;
+        ALTER TABLE sessions ADD COLUMN discoveries TEXT;
+    """),
+    # Migration 5 — add last_used column to memories
+    (5, "add_last_used_column", """
         ALTER TABLE memories ADD COLUMN last_used TEXT;
     """),
-    (3, "add_namespace_column", """
+    # Migration 6 — add namespace column to memories
+    (6, "add_namespace_column", """
         ALTER TABLE memories ADD COLUMN namespace TEXT NOT NULL DEFAULT 'shared';
     """),
-    # ... continue with all existing migrations as numbered steps
+    # Migration 7 — switch unique title index to namespace-scoped
     (7, "namespace_unique_title", """
         DROP INDEX IF EXISTS idx_memories_unique_title;
         CREATE UNIQUE INDEX idx_memories_unique_title ON memories(namespace, title);
-    """),
-    (8, "session_content_columns", """
-        ALTER TABLE sessions ADD COLUMN transcript TEXT;
-        ALTER TABLE sessions ADD COLUMN what_was_done TEXT;
-        ...
     """),
 ]
 
@@ -93,9 +192,8 @@ class Database:
 ```
 
 **Key decisions:**
-- Migration SQL is inline in the `MIGRATIONS` list, not separate files. Simpler at this scale.
-- Each migration runs in its own transaction. If one fails, earlier ones are already committed (acceptable for local-first DB).
-- `_schema_version` tracks applied versions — no re-application, no `IF NOT EXISTS` hacks needed beyond migration 1.
+- Migration SQL is inline in the `MIGRATIONS` list, not separate files. Each migration entry includes the full DDL or DML. Simpler at this scale — no migration-directory scaffolding needed.
+- Each migration runs in its own transaction (via `executescript` + explicit `commit`). If one fails mid-chain, earlier migrations are already committed. Acceptable for a local-first DB — manual recovery is straightforward.
 
 **Tests:**
 - `tests/test_database.py` — verify migration 1 creates all tables, migration chain is idempotent, rolling forward from any version works
@@ -158,6 +256,21 @@ LinkStore.delete_config_override     → ConfigStore.delete_override
 
 **Tests:**
 - `tests/test_link_store.py` — adapt fixtures to pass `Database` instead of `Path`, but all existing test cases stay the same
+  - **Fixture split**: Current fixture seeds via `store.upsert_memory_row()` (a LinkStore method before extraction). After decomposition, the fixture pattern becomes:
+    ```python
+    @pytest.fixture
+    def link_store(tmp_path):
+        db = Database(tmp_path / "test.db")
+        db.migrate()
+        ls = LinkStore(db)
+        ms = MemoryStore(db)
+        # seed FK targets via MemoryStore
+        for i in ("a", "b", "c"):
+            ms.upsert_memory_row(...)
+        yield ls, ms, db
+        db.close()
+    ```
+  - Note: `test_cascade_delete` (seeds via `LinkStore.upsert_memory_row()` then deletes) becomes `ms.delete_memory_row()`. The test pairing conceptually crosses stores — written as a `LinkStore` test because it validates FK cascade behavior.
 - `tests/test_memory_store.py` — new file, can be thin (LinkStore memory tests already cover this)
 - `tests/test_reflection_store.py` — new file for session/reflection CRUD
 - `tests/test_config_store.py` — new file for override round-trips
@@ -216,6 +329,7 @@ class MemoryService:
         self._reflections = reflections
         self._metrics = metrics
         self._config = config
+        self.settings = settings   # public — dashboard accesses via get_service().settings
         self._kw = keyword_index
         ...
 ```
@@ -229,7 +343,7 @@ All internal references:
 
 **`dashboard/app.py`:**
 
-All 14 `get_service()._store.*` call sites become typed store accesses. The orchestrator exposes stores as public attributes (not prefixed with `_`):
+All 17 `get_service()._store.*` call sites (plus 2 `get_service()._settings` accesses for settings data) become typed store accesses. The orchestrator exposes stores as public attributes (not prefixed with `_`):
 
 ```python
 store = get_service().links          # was: get_service()._store
@@ -237,9 +351,10 @@ store = get_service().memories       # was: get_service()._store
 store = get_service().config         # was: get_service()._store.get_config_overrides()
 store = get_service().reflections    # was: get_service()._store
 store = get_service().metrics        # was: get_service()._store
+settings = get_service().settings    # was: get_service()._settings
 ```
 
-This also fixes the dashboard's private-attribute access — it was using `_store` because the orchestrator didn't expose individual stores.
+This also fixes the dashboard's private-attribute access — it was using `_store` and `_settings` because the orchestrator didn't expose individual stores or settings as public attributes.
 
 ## Risk Items
 
