@@ -3,7 +3,7 @@ id: LKPR-30
 title: lore_reflect auto-creates memories from factual_discoveries and lessons_learnt
 type: feature
 status: S:ready
-priority: P0:critical
+priority: P2:medium
 sprint: 1
 rice_score: ~ # TBD: R:9 I:9 C:80% E:0.5w
 filed_by: Akane (PM)
