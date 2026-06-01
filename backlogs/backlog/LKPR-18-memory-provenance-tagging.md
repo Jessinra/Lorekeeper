@@ -2,7 +2,7 @@
 id: LKPR-18
 title: Memory Metadata — Provenance Tagging + Agent Tags
 type: feature
-status: S:proposal
+status: S:ready
 priority: P2:medium
 sprint: ~
 rice_score: ~

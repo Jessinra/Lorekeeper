@@ -2,7 +2,7 @@
 id: LKPR-49
 title: Token-Efficient lore_search — title mode + ids bulk retrieval
 type: feature
-status: S:proposal
+status: S:ready
 priority: P1:high
 sprint: unplanned
 rice_score: ~
