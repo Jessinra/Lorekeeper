@@ -1,16 +1,17 @@
 ---
 id: LKPR-49
-title: Token-Efficient lore_search format (title-only probe mode)
+title: Token-Efficient lore_search — title mode + ids bulk retrieval
 type: feature
 status: S:proposal
-priority: P2:medium
+priority: P1:high
 sprint: unplanned
 rice_score: ~
 filed_by: Akane
 filed_date: 2026-05-30
+updated_date: 2026-06-01
 ---
 
-# [LKPR-49] Token-Efficient lore_search Format (Title-Only Probe Mode)
+# [LKPR-49] Token-Efficient lore_search — Title Mode + IDs Bulk Retrieval
 
 ## Problem
 
@@ -20,50 +21,54 @@ With cheaper models (DeepSeek V4-Pro at 75% off) and the MCP stateless protocol 
 
 ## Solution
 
-Add a `format` parameter to `lore_search` with two modes:
+**Part A — `format` param (title probe)**
 
-- **`full`** (default, current behaviour) — returns full memory bodies as today
-- **`title`** — returns just titles + scores + `lore_id`, no content body. This lets an agent probe with title mode, pick the 1-2 relevant memories, then call again with `full` for those specific IDs.
+Add a `format` parameter to `lore_search`:
+- **`full`** (default) — returns full memory bodies as today
+- **`title`** — returns just `lore_id`, `title`, `score`. No content body.
 
-No LLM summarization or compression — strictly cheaper than the status quo. The agent decides what to fetch in full.
+**Part B — `ids` param (bulk retrieval)**
 
-Example flow:
+Add an `ids` parameter to `lore_search`. When `ids=["uuid1", "uuid2"]` is provided, skip vector/BM25 entirely and do a SQL `SELECT WHERE id IN (...)` lookup. Returns the same result format as a regular search.
 
-1. Agent calls `lore_search("deployment patterns", format="title")` → gets titles + scores (~50 tokens)
-2. Picks the top 2 by `lore_id`
-3. Requests `lore_search` for those specific IDs in `full` mode
+Complete two-call workflow:
+1. `lore_search("deployment patterns", format="title")` → ~50 tokens, titles + lore_ids
+2. Pick top K → `lore_search(ids=["uuid1", "uuid2"])` → full content for exactly those
 
-Total: ~50 + 1,600 = 1,650 tokens instead of 2,400 — and the agent has more control over what it reads in full.
+~1,650 tokens total vs 2,400 upfront. No LLM calls, no new endpoints. Both parts extend the same tool.
 
 ## Acceptance Criteria
 
 - [ ] `lore_search` accepts new optional `format` param: `"full" | "title"` (default: `"full"`)
 - [ ] `title` mode returns `lore_id`, `title`, `score` only — no `content` field
-- [ ] Backward compatible — existing calls without `format` param return full content
-- [ ] No additional LLM calls or summarization — strictly cheaper than current behaviour
+- [ ] `lore_search` accepts new optional `ids` param: list of `lore_id` strings
+- [ ] When `ids` is provided, skip vector/BM25 — SQL lookup only (`SELECT WHERE id IN (...)`)
+- [ ] `ids` lookup returns same result schema as regular search (full content by default)
+- [ ] Backward compatible — existing calls without `format` or `ids` behave unchanged
+- [ ] No additional LLM calls or summarization
 - [ ] Existing skills that call `lore_search` continue working unchanged
 
 ## Affected Files
 
 **Backend:**
 
-- `src/lorekeeper/schemas.py` — add `format` param to `LoreSearchInput`
-- `src/lorekeeper/services/search.py` — branch on format value in search response builder
-- `src/lorekeeper/services/orchestrator.py` — pass format through if needed
+- `src/lorekeeper/schemas.py` — add `format` and `ids` params to `LoreSearchInput`
+- `src/lorekeeper/services/search.py` — branch on format; add SQL ids-lookup path
+- `src/lorekeeper/services/orchestrator.py` — pass both params through
 
 **Dashboard (if applicable):**
 
-- `_none_` — `format` param is MCP-only, dashboard search already shows what it needs
+- `_none_`
 
 ## Dependencies
 
-_None_ — simple param extension, no blockers.
+_None_ — simple param extensions, no blockers.
 
 ## Required Updates
 
-- **CLAUDE.md**: [x] N/A — minor, note the new param
-- **README.md**: [ ] Update `lore_search` docs to document `format` param
-- **Skills**: [ ] `lorekeeper-search` — update to use `format="title"` for quick probes when only titles are needed
+- **CLAUDE.md**: [x] N/A — minor, note the new params
+- **README.md**: [ ] Update `lore_search` docs to document `format` and `ids` params
+- **Skills**: [ ] `lorekeeper-search` — update to use `format="title"` for quick probes; document ids bulk-retrieval pattern
 
 ## Open Questions
 
@@ -71,4 +76,4 @@ _None._
 
 ## Notes
 
-Filed from cron output 2026-05-30. Jason rated this P2 and requested a simplified version — no `summary`/`bullet` formats, no LLM summarization. Just `title` (titles + scores only) and `full` (current behaviour). S-effort change.
+Filed from cron output 2026-05-30. `format` param: Jason rated P2, simplified to title+full only (no LLM modes). `ids` param: added 2026-06-01 from daily-ideas cron — completes the two-call workflow. Jason direction: extend existing ticket. Bumped to P1 since ids makes the title probe actually useful end-to-end.
