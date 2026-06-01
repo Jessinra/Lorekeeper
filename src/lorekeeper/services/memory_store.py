@@ -74,6 +74,35 @@ class MemoryStore:
             params.extend(namespaces)
         return self._conn.execute(sql, params).fetchone()
 
+    def get_memory_rows(
+        self, ids: list[str], namespaces: list[str] | None = None
+    ) -> list[sqlite3.Row]:
+        """Bulk lookup by IDs — SELECT WHERE id IN (...).
+
+        Batches into chunks of 500 to stay under SQLite's variable limit (999).
+        Returns only rows that exist (silently skips missing IDs).
+        Preserves no particular order — caller should re-order if needed.
+        """
+        if not ids:
+            return []
+        # De-duplicate while preserving order
+        ids = list(dict.fromkeys(ids))
+        _CHUNK_SIZE = 500
+        results: list[sqlite3.Row] = []
+        for i in range(0, len(ids), _CHUNK_SIZE):
+            chunk = ids[i : i + _CHUNK_SIZE]
+            placeholders = ",".join("?" * len(chunk))
+            sql = f"SELECT * FROM memories WHERE id IN ({placeholders})"
+            params: list[object] = list(chunk)
+            if namespaces is not None:
+                if not namespaces:
+                    continue
+                ns_placeholders = ",".join("?" * len(namespaces))
+                sql += f" AND namespace IN ({ns_placeholders})"
+                params.extend(namespaces)
+            results.extend(self._conn.execute(sql, params).fetchall())
+        return results
+
     def get_memory_row_by_title(
         self, title: str, namespaces: list[str] | None = None
     ) -> sqlite3.Row | None:
@@ -130,6 +159,19 @@ class MemoryStore:
         self._conn.execute(
             f"UPDATE memories SET {set_clause} WHERE id = ?",
             (*cols.values(), id),
+        )
+        self._conn.commit()
+
+    def bulk_increment_usage_count(self, ids: list[str]) -> None:
+        """Increment usage_count by 1 for all given IDs in a single transaction."""
+        if not ids:
+            return
+        updated_at = _now()
+        placeholders = ",".join("?" * len(ids))
+        self._conn.execute(
+            f"UPDATE memories SET usage_count = usage_count + 1, updated_at = ?"
+            f" WHERE id IN ({placeholders})",
+            (updated_at, *ids),
         )
         self._conn.commit()
 

@@ -4,7 +4,12 @@ Covers serialize_memory, serialize_memory_link, and serialize_search_result
 with truncation, exclusion, rounding, and edge cases.
 """
 from lorekeeper.models import Memory, MemoryLink
-from lorekeeper.serializers import serialize_memory, serialize_memory_link, serialize_search_result
+from lorekeeper.serializers import (
+    serialize_memory,
+    serialize_memory_link,
+    serialize_search_result,
+    serialize_search_result_title,
+)
 from lorekeeper.services.search import SearchResult
 
 
@@ -217,3 +222,36 @@ def test_serialize_search_result_truncate_content_with_exclude_memory():
     )
     assert result["memory"]["content"] == "a" * 5
     assert "usage_count" not in result["memory"]
+
+
+# --- serialize_search_result_title ---
+
+
+def test_serialize_search_result_title_returns_compact_shape():
+    """Title mode returns flat {id, title, score} — no memory/relevance nesting."""
+    sr = _make_search_result(memory=_make_memory(id="abc", title="my memory"))
+    result = serialize_search_result_title(sr)
+    assert result == {"id": "abc", "title": "my memory", "score": 0.8567}
+
+
+def test_serialize_search_result_title_no_content_field():
+    """Title mode must not leak content or full memory dict."""
+    sr = _make_search_result(memory=_make_memory(content="secret content"))
+    result = serialize_search_result_title(sr)
+    assert "content" not in result
+    assert "memory" not in result
+    assert "relevance" not in result
+
+
+def test_serialize_search_result_title_zero_score():
+    """Title mode handles zero-score search result (e.g. from ids lookup)."""
+    sr = _make_search_result(combined_score=0.0)
+    result = serialize_search_result_title(sr)
+    assert result["score"] == 0.0
+
+
+def test_serialize_search_result_title_rounds_score():
+    """Title mode score is rounded to 4 decimal places."""
+    sr = _make_search_result(combined_score=0.1234567)
+    result = serialize_search_result_title(sr)
+    assert result["score"] == 0.1235

@@ -31,6 +31,8 @@ class Settings(BaseSettings):
 
     search_limit: int = 5
     max_links_per_memory: int = 5
+    max_search_ids: int = 50  # max IDs for lore_search(ids=[...]) — LORE_MAX_SEARCH_IDS
+    max_refine_from_ids: int = 200  # max IDs for refine_from — LORE_MAX_REFINE_FROM_IDS
     usage_normalisation_cap: int = 100
     decay_lambda: float = 0.0077  # time-decay λ; 0 disables decay (LORE_DECAY_LAMBDA)
     new_memory_default_score: float = 5.0  # default score for new memories

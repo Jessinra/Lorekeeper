@@ -117,6 +117,7 @@ class MemoryService:
         include_links: bool = True,
         include_deleted: bool = False,
         refine_from: list[str] | None = None,
+        search_format: str = "full",
     ) -> list[SearchResult]:
         self._increment_metric("lore_search")
         sem_hits = self._engine.search(query, limit=200)
@@ -127,7 +128,7 @@ class MemoryService:
             limit = self.settings.search_limit
 
         links_by_id: dict[str, list[MemoryLink]] = {}
-        if include_links:
+        if include_links and search_format != "title":
             max_links = self.settings.max_links_per_memory
             for mid in memories:
                 all_links = self.links.links_for_memory(mid)
@@ -144,6 +145,48 @@ class MemoryService:
             self.memories.update_memory_fields(r.memory.id, usage_count=r.memory.usage_count + 1)
 
         return results
+
+    def search_by_ids(
+        self,
+        ids: list[str],
+        include_deleted: bool = False,
+        include_links: bool = True,
+    ) -> list[SearchResult]:
+        """Bulk lookup by lore_id — skips vector/BM25 entirely.
+
+        Returns SearchResult objects with zero relevance scores (SQL-only path).
+        """
+        if not ids:
+            return []
+
+        # De-duplicate while preserving order
+        ids = list(dict.fromkeys(ids))
+
+        rows = self.memories.get_memory_rows(ids, namespaces=self._ns_filter)
+        results: list[SearchResult] = []
+        for row in rows:
+            mem = _row_to_memory(row)
+            if not include_deleted and mem.soft_deleted:
+                continue
+            links: list[MemoryLink] = []
+            if include_links:
+                links = self.links.links_for_memory(mem.id)[:self.settings.max_links_per_memory]
+            results.append(SearchResult(
+                memory=mem,
+                combined_score=0.0,
+                semantic_score=0.0,
+                keyword_score=0.0,
+                links=links,
+                decay_factor=1.0,
+            ))
+        # Preserve input ID order
+        result_by_id = {r.memory.id: r for r in results}
+        ordered: list[SearchResult] = [result_by_id[i] for i in ids if i in result_by_id]
+
+        # Increment usage_count on all returned memories in one transaction
+        self.memories.bulk_increment_usage_count([r.memory.id for r in ordered])
+
+        return ordered
 
     # ── Insert ────────────────────────────────────────────────────────────────
 

@@ -71,17 +71,41 @@ def init_service(settings: Settings | None = None) -> MemoryService:
 
 @mcp.tool(name="lore_search")
 async def lore_search(
-    query: str,
+    query: str = "",
     limit: int | None = None,
     min_score: float = 0.1,
     include_links: bool = True,
     include_deleted: bool = False,
     refine_from: list[str] | None = None,
+    format: str = "full",
+    ids: list[str] | None = None,
 ) -> dict:
+    """Search memories by semantic + keyword query, or bulk-fetch by ID.
+
+    When ``ids`` is provided, skips the vector/BM25 pipeline entirely and does
+    a direct SQL lookup by lore_id. ``query`` is ignored in that path.
+
+    Args:
+        query: Search text. Required unless ``ids`` is set.
+        limit: Max results to return (default from settings).
+        min_score: Minimum combined_score threshold (default 0.1).
+        include_links: Attach memory links to results (default True; forced off
+            in ``format='title'`` mode since links add tokens with no gain).
+        include_deleted: Include soft-deleted memories (default False).
+        refine_from: Restrict search candidates to these lore_ids (configurable
+            cap, default 200 via ``LORE_MAX_REFINE_FROM_IDS``).
+        format: ``'full'`` (default) returns complete memory objects with
+            relevance scores. ``'title'`` returns compact ``{id, title, score}``
+            dicts — lower token cost for listing before a targeted fetch.
+        ids: When set, returns these specific lore_ids directly from SQL,
+            bypassing the search pipeline. Silently skips unknown IDs. Pair
+            with ``format='title'`` for a two-step list-then-fetch workflow.
+            Max 50 IDs (configurable via ``max_search_ids``).
+    """
     try:
         return handle_search(
             get_service(), query, limit, min_score, include_links, include_deleted,
-            refine_from=refine_from,
+            refine_from=refine_from, format=format, ids=ids,
         )
     except Exception:
         log.exception("lore_search_failed", query=query)
