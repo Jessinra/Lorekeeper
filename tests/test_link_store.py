@@ -169,3 +169,45 @@ def test_all_memory_rows_namespace_filter(tmp_path):
     assert len(rows) == 3
 
     s.db.close()
+
+
+def test_get_memory_rows_batching_exceeds_500_ids(tmp_path):
+    """get_memory_rows batches queries into 500-ID chunks — should handle 600+ IDs."""
+    s = build_stores(tmp_path / "batch.db")
+    ts = "2026-01-01T00:00:00+00:00"
+    ids = []
+    for i in range(600):
+        lid = f"batch-{i:04d}"
+        ids.append(lid)
+        s.memories.upsert_memory_row(
+            id=lid, title=f"mem-{i}", description="d", content="c",
+            created_at=ts, updated_at=ts,
+        )
+
+    rows = s.memories.get_memory_rows(ids)
+    assert len(rows) == 600
+
+    # With namespace filter
+    rows = s.memories.get_memory_rows(ids[:300], namespaces=["shared"])
+    assert len(rows) == 300
+
+    s.db.close()
+
+
+def test_get_memory_rows_dedup(tmp_path):
+    """get_memory_rows de-duplicates input IDs (returns no duplicate rows)."""
+    s = build_stores(tmp_path / "dedup.db")
+    ts = "2026-01-01T00:00:00+00:00"
+    s.memories.upsert_memory_row(
+        id="a", title="alpha", description="d", content="c",
+        created_at=ts, updated_at=ts,
+    )
+    s.memories.upsert_memory_row(
+        id="b", title="beta", description="d", content="c",
+        created_at=ts, updated_at=ts,
+    )
+
+    rows = s.memories.get_memory_rows(["a", "b", "a", "b"])
+    assert len(rows) == 2  # no duplicates
+
+    s.db.close()

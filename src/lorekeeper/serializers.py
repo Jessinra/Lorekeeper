@@ -102,6 +102,19 @@ def serialize_memory_link(link: MemoryLink) -> dict[str, Any]:
     }
 
 
+def serialize_search_result_title(result: SearchResult) -> dict[str, Any]:
+    """Serialize a SearchResult to a compact title-only dict (format='title').
+
+    Returns flat {id, title, score} — no memory body, no relevance nesting.
+    Score is rounded to 4 decimal places for token efficiency.
+    """
+    return {
+        "id": result.memory.id,
+        "title": result.memory.title,
+        "score": round(result.combined_score, 4),
+    }
+
+
 def serialize_search_result(
     result: SearchResult,
     *,

@@ -66,13 +66,26 @@ Confidence is stored as a running EMA over the last 20 ratings.
   "min_score": 0.1,
   "include_links": true,
   "include_deleted": false,
-  "refine_from": null
+  "refine_from": null,
+  "format": "full",
+  "ids": null
 }
 ```
 
 Returns ranked memories with relevance scores and linked memories.
 
-`refine_from` enables iterative narrowing: pass a list of `lore_id` strings from a previous search result to re-rank only within that candidate set using a new query. Unknown IDs are silently ignored. Maximum 200 IDs. Omit (or pass `null`) for a standard full-store search.
+Two search modes:
+
+**Query mode** (default) — runs the hybrid semantic + BM25 pipeline. Parameters:
+
+- `query` (required unless `ids` is set): search text
+- `min_score` (default `0.1`): minimum `combined_score` threshold
+- `refine_from`: pass a list of `lore_id` strings from a previous search result to re-rank only within that candidate set using a new query. Unknown IDs are silently ignored. Max 200 IDs (configurable via `LORE_MAX_REFINE_FROM_IDS`)
+- `format`: `"full"` (default) returns complete memory objects with relevance scores; `"title"` returns compact `{id, title, score}` dicts for lower token cost
+
+**ID lookup mode** — when `ids` is set, skips the vector/BM25 pipeline entirely and fetches those specific `lore_id`s directly from SQL. Unknown IDs are silently ignored. `query` is ignored in this path. Max 50 IDs (configurable via `LORE_MAX_SEARCH_IDS`). Pair `ids` with `format='title'` for a two-step workflow: list titles first, then fetch full objects for specific IDs.
+
+Other params: `limit` (max results, defaults to `LORE_SEARCH_LIMIT`), `include_links` (default `true`; forced off in `format='title'` mode), `include_deleted` (default `false`).
 
 ### `lore_insert`
 
@@ -220,6 +233,8 @@ All settings use the `LORE_` prefix and can be set via environment variables:
 | `LORE_SOFT_DELETE_CONFIDENCE_THRESHOLD` | `2`                                      | Confidence ≤ this + `useful=false` triggers soft-delete                                                 |
 | `LORE_CONFIDENCE_WINDOW_SIZE`           | `20`                                     | Rolling window size for confidence EMA                                                                  |
 | `LORE_SEARCH_LIMIT`                     | `5`                                      | Default number of memories returned by `lore_search`                                                    |
+| `LORE_MAX_SEARCH_IDS`                  | `50`                                     | Max IDs in `lore_search(ids=[...])` lookup — enforced at handler layer                                  |
+| `LORE_MAX_REFINE_FROM_IDS`             | `200`                                    | Max IDs in `lore_search(refine_from=[...])` — enforced at handler layer                                 |
 | `LORE_MAX_LINKS_PER_MEMORY`             | `5`                                      | Limit links returned per memory in search results                                                       |
 | `LORE_SCORE_MIN`                        | `0.0`                                    | Minimum allowed memory score                                                                            |
 | `LORE_SCORE_MAX`                        | `10.0`                                   | Maximum allowed memory score                                                                            |

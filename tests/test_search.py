@@ -1,3 +1,7 @@
+"""Unit tests for the hybrid search ranking engine.
+
+Tests the pure rank_results function — no database, no orchestrator.
+"""
 import pytest
 
 from lorekeeper.config import Settings
