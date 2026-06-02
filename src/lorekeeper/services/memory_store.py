@@ -59,10 +59,9 @@ class MemoryStore:
              usage_count, score, int(soft_deleted), confidence,
              confidence_count, last_used, namespace),
         )
-        self._conn.commit()
 
     def get_memory_row(
-        self, id: str, namespaces: list[str] | None = None
+        self, id: str, namespaces: list[str] | None = None,
     ) -> sqlite3.Row | None:
         sql = "SELECT * FROM memories WHERE id = ?"
         params: list[object] = [id]
@@ -160,7 +159,6 @@ class MemoryStore:
             f"UPDATE memories SET {set_clause} WHERE id = ?",
             (*cols.values(), id),
         )
-        self._conn.commit()
 
     def bulk_increment_usage_count(self, ids: list[str]) -> None:
         """Increment usage_count by 1 for all given IDs in a single transaction."""
@@ -173,8 +171,6 @@ class MemoryStore:
             f" WHERE id IN ({placeholders})",
             (updated_at, *ids),
         )
-        self._conn.commit()
 
     def delete_memory_row(self, id: str) -> None:
         self._conn.execute("DELETE FROM memories WHERE id = ?", (id,))
-        self._conn.commit()

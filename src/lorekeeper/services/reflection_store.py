@@ -64,7 +64,6 @@ class ReflectionStore:
             (id, created_at, session_count, lessons_learnt, good_patterns,
              user_profile_updates, factual_discoveries, summary, memory_ids),
         )
-        self._conn.commit()
 
     def get_reflection(self, reflection_id: str) -> sqlite3.Row | None:
         return self._conn.execute(
@@ -100,7 +99,6 @@ class ReflectionStore:
              transcript, what_was_done, decisions, lessons_learnt,
              good_patterns, user_profile, discoveries),
         )
-        self._conn.commit()
 
     def upsert_sessions_bulk(self, rows: list[tuple]) -> None:
         """Insert/update multiple sessions in a single transaction.
@@ -110,7 +108,6 @@ class ReflectionStore:
                      lessons_learnt, good_patterns, user_profile, discoveries)
         """
         self._conn.executemany(_SESSION_UPSERT_SQL, rows)
-        self._conn.commit()
 
     def all_processed_session_ids(self) -> set[str]:
         """Return all session IDs marked processed. Used by loop skill scripts."""

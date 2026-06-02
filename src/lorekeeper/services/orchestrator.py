@@ -80,6 +80,8 @@ class MemoryService:
         self._kw = keyword_index
         self.settings = settings
         self._namespace: str = settings.namespace
+        # Orchestrator owns commit control — all stores share this connection
+        self._conn = memories._conn
         # Namespace filter for all read/write operations: None = no filter (shared sees all).
         self._ns_filter: list[str] | None = (
             None if self._namespace == "shared" else [self._namespace, "shared"]
@@ -101,6 +103,7 @@ class MemoryService:
     def _increment_metric(self, tool_name: str) -> None:
         try:
             self.metrics.increment_metric(tool_name)
+            self._conn.commit()
         except sqlite3.Error:
             # Metrics must never break a real call, but the failure should be
             # observable. Log at WARNING (not ERROR) — metric write is degraded,
@@ -143,6 +146,7 @@ class MemoryService:
         # Increment usage on returned memories
         for r in results:
             self.memories.update_memory_fields(r.memory.id, usage_count=r.memory.usage_count + 1)
+        self._conn.commit()
 
         return results
 
@@ -185,6 +189,7 @@ class MemoryService:
 
         # Increment usage_count on all returned memories in one transaction
         self.memories.bulk_increment_usage_count([r.memory.id for r in ordered])
+        self._conn.commit()
 
         return ordered
 
@@ -289,6 +294,9 @@ class MemoryService:
             except Exception as e:
                 errors.append({"input": str(lnk), "error": str(e)})
 
+        if inserted_memories or inserted_links:
+            self._conn.commit()
+
         return {
             "inserted_memories": inserted_memories,
             "inserted_links": inserted_links,
@@ -326,6 +334,7 @@ class MemoryService:
         self._rebuild_kw()
 
         linked_to = self._auto_link(thought, lore_id)
+        self._conn.commit()
         return {"id": lore_id, "title": title, "linked_to": linked_to}
 
     def _auto_link(self, text: str, lore_id: str, source: str = "remember") -> dict | None:
@@ -558,6 +567,7 @@ class MemoryService:
 
         if not dry_run and memories_inserted:
             self._rebuild_kw()
+            self._conn.commit()
 
         existing_link_ids: set[str] = {lnk.id for lnk in self.links.all_links()}
 
@@ -601,6 +611,9 @@ class MemoryService:
                     errors.append(f"link {lid}: {e}")
                     continue
             links_inserted += 1
+
+        if not dry_run and links_inserted:
+            self._conn.commit()
 
         return {
             "memories_inserted": memories_inserted,
@@ -687,6 +700,9 @@ class MemoryService:
             except Exception as e:
                 errors.append({"id": fb.get("id", "?"), "error": str(e)})
 
+        if updated_memories or updated_links:
+            self._conn.commit()
+
         return {
             "updated_memories": updated_memories,
             "updated_links": updated_links,
@@ -767,6 +783,7 @@ class MemoryService:
         )
 
         log.info("reflection_submitted", reflection_id=reflection_id, session_id=session_id)
+        self._conn.commit()  # commit reflection + session rows before auto-insert
 
         # Auto-insert factual_discoveries and lessons_learnt as memories (best-effort)
         memories_created: list[dict] = []
@@ -817,6 +834,7 @@ class MemoryService:
                 )
             if new_inserts:
                 self._rebuild_kw()
+                self._conn.commit()
 
         return {
             "reflection_id": reflection_id,
