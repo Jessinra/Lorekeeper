@@ -209,7 +209,8 @@ async def lore_reflect(
         lessons_learnt: List of lessons to propagate to future sessions.
         good_patterns: Patterns that worked well and should be repeated.
         user_profile_updates: Updates about the user's preferences or context.
-        factual_discoveries: New facts to record — stored as bullets in the reflection.
+        factual_discoveries: New facts to record — stored as bullet text in the
+            reflection. Not inserted as standalone searchable memories.
         memory_ids: IDs of existing memories this reflection relates to.
     """
     try:
