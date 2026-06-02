@@ -131,9 +131,20 @@ Quick scan before dispatching the reviewer:
 - [ ] No commented-out code
 - [ ] New code has tests (if test suite exists)
 
-## Step 5 — Independent reviewer subagent
+### Lorekeeper pre-flight (run before `gh pr create`)
 
-Call `delegate_task` directly — it is NOT available inside execute_code or scripts.
+These categories are recurring Copilot review comments — catch them in self-review so the PR opens comment-free:
+
+- [ ] **Hardcoded numeric limits** — any `len(x) > 200` or `len(x) > 50` in handler/service code? Move to `Settings` with a `LORE_*` env var, reference as `svc.settings.<field>`
+- [ ] **Parameter forwarding** — for every new param accepted by `handle_search` (or any handler), trace all code paths: is it forwarded to every sub-call (`svc.*`) and every serializer call (`serialize_*(r, param=param)`)? Missing one silently ignores the caller's preference
+- [ ] **N+1 transaction loops** — any `for item in items: store.update_something(item.id, ...)` where the store method calls `commit()` per call? Replace with a bulk SQL method (single `UPDATE WHERE id IN (...)` + one `commit()`)
+- [ ] **Doc/code field name consistency** — do docstrings, README, and sprint plan docs use the exact field names the code returns? (e.g. `id` vs `lore_id`)
+- [ ] **Configurable defaults in docs** — when a cap is configurable via Settings, docs must say `(configurable, default N via LORE_X)` not just `(max N)`
+- [ ] **Test dead code** — any `links=[{...None IDs...}]` passed to `svc.insert()` when the real link is created separately? Remove it
+- [ ] **Git author** — `git config --local user.name` = correct agent identity (Diana, not Akane)
+- [ ] **Branch base** — `git log --oneline origin/main..HEAD` shows only this PR's commits, no unrelated merged commits
+
+## Step 5 — Independent reviewer subagent
 
 The reviewer gets ONLY the diff and static scan results. No shared context with
 the implementer. Fail-closed: unparseable response = fail.
