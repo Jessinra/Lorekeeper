@@ -217,6 +217,12 @@ async def lore_reflect(
             ``factual_discoveries`` (score 7.0) and ``lessons_learnt`` (score 8.0)
             as standalone memories. Duplicate-guarded. Returns created IDs in
             ``memories_created``.
+
+    If this ``session_id`` was already processed, returns immediately with
+    ``already_processed=True`` and ``memories_created=[]``. The ``[]`` reflects
+    the current call only — the original call's auto-inserts are not
+    reconstructed. Check ``already_processed`` to distinguish a retry from a
+    first-time call.
     """
     try:
         return get_service().submit_reflection(
