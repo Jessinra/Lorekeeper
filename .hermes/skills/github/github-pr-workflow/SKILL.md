@@ -325,6 +325,24 @@ When asked to auto-fix CI, follow this loop:
 
 After a PR is opened and reviewed (either by Copilot, another reviewer, or Jason), the reviewer may leave **inline comments** visible under the PR's "Files changed" tab. Use this workflow to find, understand, and address them.
 
+### ⚠️ Normal commits for review fixes — never amend+force-push after the PR is open
+
+Once a PR is open and being reviewed:
+- **Each fix = a new plain commit** (`git commit -m "fix: ..."` + `git push`)
+- Amend + force-push rewrites history, blows away reviewer inline comment anchors (they go "Outdated" in GitHub), and makes it impossible for the reviewer to see what specifically changed between rounds
+- **Amend + force-push is only appropriate BEFORE the PR is open**: squashing WIP commits into one clean feat commit, or rebasing onto main to drop already-merged commits
+
+```bash
+# ✅ Correct — PR is open, addressing a review comment:
+git add <files>
+git commit -m "[LKPR-N] fix: address reviewer comment — guard empty ids list"
+git push
+
+# ❌ Wrong — blows away comment anchors:
+git commit --amend --no-edit
+git push --force-with-lease
+```
+
 ### Step 1: Find Inline Comments
 
 `gh pr view` does NOT show inline comments. Use the GitHub API directly:
