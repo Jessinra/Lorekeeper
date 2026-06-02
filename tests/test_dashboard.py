@@ -70,7 +70,7 @@ def fresh_client(tmp_path):
 
     with (
         patch("lorekeeper.dashboard.app.init_service", return_value=svc_obj),
-        patch("lorekeeper.dashboard.app.get_service", return_value=svc_obj),
+        patch("lorekeeper.server.get_service", return_value=svc_obj),
     ):
         with TestClient(dash_app.app) as client:
             yield client, svc_obj, _engine
@@ -95,7 +95,7 @@ def seeded_client(tmp_path):
 
     with (
         patch("lorekeeper.dashboard.app.init_service", return_value=svc_obj),
-        patch("lorekeeper.dashboard.app.get_service", return_value=svc_obj),
+        patch("lorekeeper.server.get_service", return_value=svc_obj),
     ):
         with TestClient(dash_app.app) as client:
             yield client, svc_obj, engine
