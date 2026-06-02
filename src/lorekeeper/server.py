@@ -154,6 +154,15 @@ async def lore_update(
     memory_feedback: list[dict] | None = None,
     link_feedback: list[dict] | None = None,
 ) -> dict:
+    """Rate memories and links after using them. Drives the quality signal loop.
+
+    Each memory_feedback dict: {id (str), useful (bool), confidence (int 1-10)}.
+    Each link_feedback dict: {id (str), useful (bool), confidence (int 1-10)}.
+
+    ``useful=True`` bumps score; ``useful=False`` deducts. Confidence scales the delta.
+    Repeated ``useful=False`` with low confidence triggers soft-delete.
+    Call after every ``lore_search`` to keep scores calibrated.
+    """
     try:
         return get_service().update(memory_feedback or [], link_feedback or [])
     except Exception:
@@ -186,7 +195,24 @@ async def lore_reflect(
     factual_discoveries: list[str] | None = None,
     memory_ids: list[str] | None = None,
 ) -> dict:
-    """Call once per session — reflect on one session, submit, then move to the next."""
+    """Call once per session — reflect on one session, submit, then move to the next.
+
+    Args:
+        session_id: Unique session identifier (required).
+        summary: Short summary of what happened in the session (required).
+        session_date: ISO date string (e.g. ``"2026-06-02"``). Defaults to today.
+        topic: Domain or topic area (e.g. ``"lore_search refactor"``).
+        task_type: Optional category for the session (e.g. ``"build"``,
+            ``"debug"``, ``"review"``, ``"design"``).
+        what_was_done: Longer narrative of the work completed.
+        decisions: Key decisions made, with rationale.
+        lessons_learnt: List of lessons to propagate to future sessions.
+        good_patterns: Patterns that worked well and should be repeated.
+        user_profile_updates: Updates about the user's preferences or context.
+        factual_discoveries: New facts to record — stored as bullet text in the
+            reflection. Not inserted as standalone searchable memories.
+        memory_ids: IDs of existing memories this reflection relates to.
+    """
     try:
         return get_service().submit_reflection(
             session_id=session_id,

@@ -109,6 +109,9 @@ All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 |---|---|---|
 | `LORE_DATA_DIR` | `~/.lorekeeper` | Where SQLite + vector DB live |
 | `LORE_NAMESPACE` | `shared` | Agent write namespace. Writes tagged with this value; reads return union of `[namespace, "shared"]`. Set automatically by `setup.sh` for Hermes profiles. |
+| `LORE_SEARCH_LIMIT` | `5` | Default number of results returned by `lore_search` |
+| `LORE_MAX_SEARCH_IDS` | `50` | Max IDs in `lore_search(ids=[...])` bulk lookup — enforced at handler layer (bypassing the handler bypasses this cap) |
+| `LORE_MAX_REFINE_FROM_IDS` | `200` | Max IDs in `lore_search(refine_from=[...])` — enforced at handler layer (bypassing the handler bypasses this cap) |
 
 ### First-Time Setup
 
