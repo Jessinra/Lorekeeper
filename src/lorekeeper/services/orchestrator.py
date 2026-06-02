@@ -711,6 +711,7 @@ class MemoryService:
         factual_discoveries: list[str],
         summary: str,
         memory_ids: list[str],
+        auto_insert: bool = True,
     ) -> dict:
         self._increment_metric("lore_reflect")
 
@@ -729,6 +730,7 @@ class MemoryService:
                 "session_id": session_id,
                 "created_at": existing_session["reviewed_at"],
                 "already_processed": True,
+                "memories_created": [],
             }
 
         reflection_id = str(uuid.uuid4())
@@ -765,10 +767,62 @@ class MemoryService:
         )
 
         log.info("reflection_submitted", reflection_id=reflection_id, session_id=session_id)
+
+        # Auto-insert factual_discoveries and lessons_learnt as memories (best-effort)
+        memories_created: list[dict] = []
+        if auto_insert:
+            _auto_items: list[tuple[list[str], str, float]] = [
+                (factual_discoveries, "discovered_in", 7.0),
+                (lessons_learnt, "learned_in", 8.0),
+            ]
+            new_inserts = 0
+            skipped = 0
+            for items_list, relation, score in _auto_items:
+                for text in items_list:
+                    try:
+                        title = self._extract_title(text)
+                        result = self._insert_one_memory(
+                            {"title": title, "description": title, "content": text, "score": score},
+                            force=False,
+                        )
+                        if "duplicate" in result:
+                            mem_id = result["duplicate"]["existing_memory"]["id"]
+                            status = "duplicate"
+                        elif "inserted" in result:
+                            mem_id = result["inserted"]["id"]
+                            status = "inserted"
+                            new_inserts += 1
+                        else:
+                            raise ValueError(
+                                f"unexpected _insert_one_memory result shape: {result!r}"
+                            )
+                        memories_created.append(
+                            {"id": mem_id, "title": title, "relation": relation, "status": status}
+                        )
+                    except Exception:
+                        skipped += 1
+                        log.warning(
+                            "reflect_auto_insert_failed",
+                            text=str(text)[:80],
+                            relation=relation,
+                            exc_info=True,
+                        )
+
+            if skipped:
+                log.info(
+                    "reflect_auto_insert_partial",
+                    skipped=skipped,
+                    inserted=new_inserts,
+                    session_id=session_id,
+                )
+            if new_inserts:
+                self._rebuild_kw()
+
         return {
             "reflection_id": reflection_id,
             "session_id": session_id,
             "created_at": now,
+            "memories_created": memories_created,
         }
 
     def get_processed_session_ids(self) -> list[str]:

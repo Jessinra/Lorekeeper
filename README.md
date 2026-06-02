@@ -169,11 +169,30 @@ Drives the quality signal loop. Call this after every `lore_search` to keep scor
   "decisions": "- Used single-session submit for context efficiency",
   "lessons_learnt": ["Don't skip dedup check before inserting"],
   "good_patterns": ["Parallelise independent API calls"],
-  "memory_ids": ["uuid-a", "uuid-b"]
+  "factual_discoveries": ["BM25 rebuild costs ~10ms at 5k memories"],
+  "memory_ids": ["uuid-a", "uuid-b"],
+  "auto_insert": true
 }
 ```
 
-Marks one session as processed and stores its content in the dashboard Sessions tab. Call once per session — reflect, submit, then move to the next. Returns `{ reflection_id, session_id, created_at }`.
+Marks one session as processed and stores its content in the dashboard Sessions tab. Call once per session — reflect, submit, then move to the next.
+
+**Auto-insert (default `auto_insert=true`):** Each item in `factual_discoveries` and `lessons_learnt` is automatically inserted as a standalone searchable memory. Discoveries get score 7.0, lessons get score 8.0. Duplicate-guarded — items already in the store return the existing ID with `"status": "duplicate"`; newly inserted items have `"status": "inserted"`. Pass `auto_insert=false` to store only in the reflection record without creating memories.
+
+**Idempotency:** If `session_id` was already processed, returns immediately with `"already_processed": true` and `"memories_created": []`. The `[]` reflects the current call only — the original call's auto-inserts are not reconstructed. Check `already_processed` to detect retries.
+
+Returns:
+```json
+{
+  "reflection_id": "...",
+  "session_id": "...",
+  "created_at": "...",
+  "memories_created": [
+    {"id": "m-1", "title": "BM25 rebuild costs ~10ms...", "relation": "discovered_in", "status": "inserted"},
+    {"id": "m-2", "title": "Don't skip dedup check...", "relation": "learned_in", "status": "inserted"}
+  ]
+}
+```
 
 ---
 

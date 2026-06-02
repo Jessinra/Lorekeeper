@@ -194,6 +194,7 @@ async def lore_reflect(
     user_profile_updates: list[str] | None = None,
     factual_discoveries: list[str] | None = None,
     memory_ids: list[str] | None = None,
+    auto_insert: bool = True,
 ) -> dict:
     """Call once per session — reflect on one session, submit, then move to the next.
 
@@ -210,8 +211,18 @@ async def lore_reflect(
         good_patterns: Patterns that worked well and should be repeated.
         user_profile_updates: Updates about the user's preferences or context.
         factual_discoveries: New facts to record — stored as bullet text in the
-            reflection. Not inserted as standalone searchable memories.
+            reflection. Also auto-inserted as memories when ``auto_insert=True``.
         memory_ids: IDs of existing memories this reflection relates to.
+        auto_insert: When True (default), automatically inserts each item in
+            ``factual_discoveries`` (score 7.0) and ``lessons_learnt`` (score 8.0)
+            as standalone memories. Duplicate-guarded. Returns created IDs in
+            ``memories_created``.
+
+    If this ``session_id`` was already processed, returns immediately with
+    ``already_processed=True`` and ``memories_created=[]``. The ``[]`` reflects
+    the current call only — the original call's auto-inserts are not
+    reconstructed. Check ``already_processed`` to distinguish a retry from a
+    first-time call.
     """
     try:
         return get_service().submit_reflection(
@@ -227,6 +238,7 @@ async def lore_reflect(
             factual_discoveries=factual_discoveries or [],
             summary=summary,
             memory_ids=memory_ids or [],
+            auto_insert=auto_insert,
         )
     except Exception:
         log.exception("lore_reflect_failed", session_id=session_id)
