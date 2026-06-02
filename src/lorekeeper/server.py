@@ -156,8 +156,8 @@ async def lore_update(
 ) -> dict:
     """Rate memories and links after using them. Drives the quality signal loop.
 
-    Each memory_feedback dict: {memory_id (str), useful (bool), confidence (int 1-10)}.
-    Each link_feedback dict: {link_id (str), useful (bool), confidence (int 1-10)}.
+    Each memory_feedback dict: {id (str), useful (bool), confidence (int 1-10)}.
+    Each link_feedback dict: {id (str), useful (bool), confidence (int 1-10)}.
 
     ``useful=True`` bumps score; ``useful=False`` deducts. Confidence scales the delta.
     Repeated ``useful=False`` with low confidence triggers soft-delete.
@@ -202,13 +202,14 @@ async def lore_reflect(
         summary: Short summary of what happened in the session (required).
         session_date: ISO date string (e.g. ``"2026-06-02"``). Defaults to today.
         topic: Domain or topic area (e.g. ``"lore_search refactor"``).
-        task_type: One of ``build``, ``debug``, ``review``, ``design``.
+        task_type: Optional category for the session (e.g. ``"build"``,
+            ``"debug"``, ``"review"``, ``"design"``).
         what_was_done: Longer narrative of the work completed.
         decisions: Key decisions made, with rationale.
         lessons_learnt: List of lessons to propagate to future sessions.
         good_patterns: Patterns that worked well and should be repeated.
         user_profile_updates: Updates about the user's preferences or context.
-        factual_discoveries: New facts worth persisting (will be auto-inserted as memories).
+        factual_discoveries: New facts to record — stored as bullets in the reflection.
         memory_ids: IDs of existing memories this reflection relates to.
     """
     try:
