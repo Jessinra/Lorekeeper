@@ -8,14 +8,13 @@
 
 ## Goal
 
-When `lore_reflect` is called with `factual_discoveries` or `lessons_learnt`, auto-insert each item as a memory and link it back to the reflection. Default opt-in (`auto_insert=True`).
+When `lore_reflect` is called with `factual_discoveries` or `lessons_learnt`, auto-insert each item as a standalone searchable memory. Default opt-in (`auto_insert=True`). Each entry in `memories_created` includes a `relation` label (`discovered_in` / `learned_in`) and a `status` field (`inserted` or `duplicate`). No link records are created — the relation label is informational only.
 
 ---
 
 ## Files to Read Before Touching Anything
 
-- [x] `src/lorekeeper/models.py` — need to add `discovered_in`, `learned_in` to `RelationType`
-- [x] `src/lorekeeper/services/orchestrator.py` — `submit_reflection`, `_insert_one_memory`, `_insert_one_link`, `remember`
+- [x] `src/lorekeeper/services/orchestrator.py` — `submit_reflection`, `_insert_one_memory`, `remember`
 - [x] `src/lorekeeper/server.py` — `lore_reflect` signature
 - [x] `tests/test_orchestrator.py` — existing reflect tests
 
@@ -23,11 +22,12 @@ When `lore_reflect` is called with `factual_discoveries` or `lessons_learnt`, au
 
 ## Affected Files
 
-1. **`src/lorekeeper/models.py`** — extend `RelationType` with `"discovered_in"` and `"learned_in"`
-2. **`src/lorekeeper/services/orchestrator.py`** — `submit_reflection` gets `auto_insert` param; auto-insert loop after reflection is stored
-3. **`src/lorekeeper/server.py`** — add `auto_insert: bool = True` param to `lore_reflect`, pass through; update docstring
-4. **`tests/test_orchestrator.py`** — new tests for auto-insert behavior
-5. **`README.md`** — document `auto_insert` on `lore_reflect`
+1. **`src/lorekeeper/services/orchestrator.py`** — `submit_reflection` gets `auto_insert` param; auto-insert loop after reflection is stored
+2. **`src/lorekeeper/server.py`** — add `auto_insert: bool = True` param to `lore_reflect`, pass through; update docstring
+3. **`tests/test_orchestrator.py`** — new tests for auto-insert behavior
+4. **`README.md`** — document `auto_insert` on `lore_reflect`
+
+> **Note:** `models.py` / `RelationType` was not modified. The `relation` field in `memories_created` is a plain string label in the return dict — no actual link records are created and no `RelationType` enum changes were needed.
 
 ---
 

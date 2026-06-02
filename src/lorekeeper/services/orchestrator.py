@@ -787,21 +787,23 @@ class MemoryService:
                         )
                         if "duplicate" in result:
                             mem_id = result["duplicate"]["existing_memory"]["id"]
+                            status = "duplicate"
                         elif "inserted" in result:
                             mem_id = result["inserted"]["id"]
+                            status = "inserted"
                             new_inserts += 1
                         else:
                             raise ValueError(
                                 f"unexpected _insert_one_memory result shape: {result!r}"
                             )
                         memories_created.append(
-                            {"id": mem_id, "title": title, "relation": relation}
+                            {"id": mem_id, "title": title, "relation": relation, "status": status}
                         )
                     except Exception:
                         skipped += 1
                         log.warning(
                             "reflect_auto_insert_failed",
-                            text=text[:80],
+                            text=str(text)[:80],
                             relation=relation,
                             exc_info=True,
                         )

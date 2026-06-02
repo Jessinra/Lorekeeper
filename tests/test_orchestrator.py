@@ -954,7 +954,7 @@ def test_reflect_auto_insert_empty_lists_returns_empty(svc):
 
 
 def test_reflect_auto_insert_return_has_id_title_relation(svc):
-    """Each entry in memories_created must have id, title, relation keys."""
+    """Each entry in memories_created must have id, title, relation, status keys."""
     service, _ = svc
     result = _reflect(service, session_id="s-shape", discoveries=["Python GIL released on I/O"])
     assert len(result["memories_created"]) == 1
@@ -962,18 +962,21 @@ def test_reflect_auto_insert_return_has_id_title_relation(svc):
     assert "id" in entry
     assert "title" in entry
     assert entry["relation"] == "discovered_in"
+    assert entry["status"] == "inserted"
 
 
 def test_reflect_auto_insert_dedup_blocked_returns_existing_id(svc):
-    """Duplicate discovery returns existing memory id (not a new one)."""
+    """Duplicate discovery returns existing memory id with status='duplicate'."""
     service, _ = svc
     # First reflection creates the memory
     r1 = _reflect(service, session_id="s-dup-1", discoveries=["Unique fact about dedup"])
     first_id = r1["memories_created"][0]["id"]
+    assert r1["memories_created"][0]["status"] == "inserted"
 
     # Second reflection with same text — dedup should block re-insert
     r2 = _reflect(service, session_id="s-dup-2", discoveries=["Unique fact about dedup"])
     second_id = r2["memories_created"][0]["id"]
+    assert r2["memories_created"][0]["status"] == "duplicate"
 
     assert first_id == second_id, "Duplicate discovery should return existing memory id"
 
