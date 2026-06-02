@@ -730,6 +730,7 @@ class MemoryService:
                 "session_id": session_id,
                 "created_at": existing_session["reviewed_at"],
                 "already_processed": True,
+                "memories_created": [],
             }
 
         reflection_id = str(uuid.uuid4())

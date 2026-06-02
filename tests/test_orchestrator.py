@@ -1008,12 +1008,14 @@ def test_reflect_auto_insert_partial_failure_continues(svc):
         return original_extract(text)
 
     service._extract_title = patched_extract
-
-    result = _reflect(
-        service,
-        session_id="s-partial",
-        discoveries=["this one fails", "this one succeeds"],
-    )
-    # One failed, one succeeded → only one entry in memories_created
-    assert len(result["memories_created"]) == 1
-    assert result["memories_created"][0]["relation"] == "discovered_in"
+    try:
+        result = _reflect(
+            service,
+            session_id="s-partial",
+            discoveries=["this one fails", "this one succeeds"],
+        )
+        # One failed, one succeeded → only one entry in memories_created
+        assert len(result["memories_created"]) == 1
+        assert result["memories_created"][0]["relation"] == "discovered_in"
+    finally:
+        service._extract_title = original_extract
