@@ -1,3 +1,4 @@
+import types
 from typing import Any, Union, get_args, get_origin
 
 from fastapi import APIRouter, HTTPException
@@ -11,9 +12,9 @@ _READONLY_KEYS = {"data_dir", "embedding_model"}
 
 
 def _unwrap_optional(tp: Any) -> Any:
-    """Unwrap Optional[T] / Union[T, None] to T."""
+    """Unwrap Optional[T] / Union[T, None] | T | None to T."""
     origin = get_origin(tp)
-    if origin is Union:
+    if origin is Union or origin is types.UnionType:
         args = get_args(tp)
         non_none = [a for a in args if a is not type(None)]
         return non_none[0] if len(non_none) == 1 else tp
@@ -36,7 +37,7 @@ def get_config() -> dict[str, Any]:
         "score_bump_down":                 s.score_bump_down,
         "score_min":                       s.score_min,
         "score_max":                       s.score_max,
-        "soft_delete_confidence_threshold":s.soft_delete_confidence_threshold,
+        "soft_delete_confidence_threshold": s.soft_delete_confidence_threshold,
         "confidence_window_size":          s.confidence_window_size,
         "search_limit":                    s.search_limit,
         "max_links_per_memory":            s.max_links_per_memory,

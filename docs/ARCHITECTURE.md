@@ -8,7 +8,7 @@ Lorekeeper follows a strict 4-layer architecture. Every file belongs to exactly 
 │                                                         │
 │  MCP transport          │  HTTP transport               │
 │  server.py              │  dashboard/app.py             │
-│  handlers.py            │  dashboard/routes/            │
+│  (_handle_* helpers)    │  dashboard/routes/            │
 │                         │                               │
 │  Input validation, output formatting, transport         │
 │  concerns (MCP tool signatures, HTTP status codes).     │
@@ -65,6 +65,6 @@ Both transports live in one file per transport entry point. MCP input sanitizati
 ## Key invariants
 
 - **Stores never commit.** `conn.commit()` lives only in `orchestrator.py` and `dashboard/routes/` (via `svc.commit()`).
-- **Handlers never touch stores directly.** All writes go through `orchestrator`.
+- **Dashboard handlers may access store methods through `svc` public attributes** (e.g. `svc.memories.update_memory_fields`). They must call `svc.commit()` after writes. MCP handlers go through `orchestrator` methods exclusively.
 - **Modules are stateless.** `serializers.py`, `search.py`, `dedup.py`, `feedback.py` are pure functions — no DB, no service references.
 - **One shared SQLite connection.** All stores share `database.conn`. Orchestrator grabs it as `self._conn = memories._conn`.

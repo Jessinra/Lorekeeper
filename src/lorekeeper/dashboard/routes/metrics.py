@@ -17,8 +17,8 @@ def get_metrics(hours: int = 24) -> dict[str, Any]:
     data: dict[str, dict[str, int]] = {}
     for row in rows:
         bucket = row["minute_bucket"]
-        tool   = row["tool_name"]
-        count  = row["count"]
+        tool = row["tool_name"]
+        count = row["count"]
         tools.add(tool)
         if bucket not in data:
             data[bucket] = {}
