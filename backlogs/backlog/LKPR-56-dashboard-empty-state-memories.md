@@ -3,6 +3,7 @@ id: LKPR-56
 title: Dashboard empty state for Memories tab — guide new users
 type: feature
 status: S:proposal
+github_issue: 123
 priority: P1:high
 sprint: ~
 rice_score: 30.0  # R:2 I:9 C:90% E:0.5d
