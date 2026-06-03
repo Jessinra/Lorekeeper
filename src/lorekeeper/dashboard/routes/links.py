@@ -54,7 +54,7 @@ def create_link(body: LinkCreate) -> dict[str, Any]:
         reason=body.reason,
         score=body.score,
     )
-    svc._conn.commit()
+    svc.commit()
     return serialize_memory_link(link)
 
 
@@ -64,5 +64,5 @@ def delete_link(link_id: str) -> dict[str, bool]:
     if svc.links.get_link(link_id) is None:
         raise HTTPException(status_code=404, detail="Link not found")
     svc.links.delete_link(link_id)
-    svc._conn.commit()
+    svc.commit()
     return {"ok": True}

@@ -56,7 +56,7 @@ def update_memory(memory_id: str, body: MemoryUpdate) -> dict[str, bool]:
     if "soft_deleted" in fields:
         fields["soft_deleted"] = int(fields["soft_deleted"])
     svc.memories.update_memory_fields(memory_id, **fields)
-    svc._conn.commit()
+    svc.commit()
     return {"ok": True}
 
 
@@ -66,5 +66,5 @@ def delete_memory(memory_id: str) -> dict[str, bool]:
     if svc.memories.get_memory_row(memory_id) is None:
         raise HTTPException(status_code=404, detail="Memory not found")
     svc.memories.delete_memory_row(memory_id)
-    svc._conn.commit()
+    svc.commit()
     return {"ok": True}

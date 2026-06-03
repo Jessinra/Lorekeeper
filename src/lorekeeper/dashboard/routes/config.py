@@ -92,5 +92,5 @@ def update_config(body: ConfigUpdate) -> dict[str, bool]:
             )
         setattr(s, key, value)
         svc.config.set_override(key, value)
-    svc._conn.commit()
+    svc.commit()
     return {"ok": True}

@@ -87,6 +87,13 @@ class MemoryService:
             None if self._namespace == "shared" else [self._namespace, "shared"]
         )
 
+    def commit(self) -> None:
+        """Flush all pending writes to disk.
+
+        Dashboard routes use this instead of accessing _conn directly.
+        """
+        self._conn.commit()
+
     def _all_memories(self, include_deleted: bool = False) -> dict[str, Memory]:
         # None → no filter → reads all rows (backward-compat for the default "shared" agent).
         # Non-shared agents scope reads to their own namespace + the shared pool.
