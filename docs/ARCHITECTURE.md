@@ -58,10 +58,9 @@ MCP and HTTP are different transports into the same service. They follow the sam
 
 | | MCP | HTTP |
 |---|---|---|
-| Registration | `server.py` (`@mcp.tool`) | `dashboard/app.py` (`router.include_router`) |
-| Input/output | `handlers.py` | `dashboard/routes/*.py` |
+| Registration + input/output | `server.py` | `dashboard/app.py` + `dashboard/routes/*.py` |
 
-`handlers.py` exists because MCP tool registration (`server.py`) and input sanitization are kept separate — `server.py` would otherwise become a fat file mixing FastMCP wiring with 70+ lines of search path logic.
+Both transports live in one file per transport entry point. MCP input sanitization lives as private `_handle_*` helpers inside `server.py` — same file, clearly separated by a comment block.
 
 ## Key invariants
 

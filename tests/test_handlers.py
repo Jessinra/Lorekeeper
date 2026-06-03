@@ -5,7 +5,7 @@ Validates that input validation happens early — before reaching the orchestrat
 import pytest
 
 from lorekeeper.config import Settings
-from lorekeeper.handlers import handle_insert, handle_search
+from lorekeeper.server import _handle_insert, _handle_search
 from lorekeeper.services.keyword_index import KeywordIndex
 from tests._helpers import build_service, build_stores
 
@@ -46,12 +46,12 @@ def svc(tmp_path):
 
 def test_handle_insert_missing_title_raises_at_handler_layer(svc):
     with pytest.raises(ValueError, match="missing required field: 'title'"):
-        handle_insert(svc, memories=[{"content": "no title here"}], links=[])
+        _handle_insert(svc, memories=[{"content": "no title here"}], links=[])
 
 
 def test_handle_insert_missing_title_includes_index_in_message(svc):
     with pytest.raises(ValueError, match="memory at index 1"):
-        handle_insert(
+        _handle_insert(
             svc,
             memories=[
                 {"title": "valid memory", "content": "ok"},
@@ -62,7 +62,7 @@ def test_handle_insert_missing_title_includes_index_in_message(svc):
 
 
 def test_handle_insert_valid_memory_succeeds(svc):
-    result = handle_insert(
+    result = _handle_insert(
         svc,
         memories=[{"title": "test", "content": "some content"}],
         links=[],
@@ -76,14 +76,14 @@ def test_handle_insert_valid_memory_succeeds(svc):
 
 def test_handle_insert_no_memories(svc):
     """Empty memories list should succeed with no inserted items."""
-    result = handle_insert(svc, memories=[], links=[])
+    result = _handle_insert(svc, memories=[], links=[])
     assert result["inserted_memories"] == []
     assert result["errors"] == []
 
 
 def test_handle_insert_invalid_inline_link_format(svc):
     """Inline links as a string (not list) should be caught and returned as error."""
-    result = handle_insert(
+    result = _handle_insert(
         svc,
         memories=[{"title": "test", "links": "not-a-list"}],
         links=[],
@@ -96,7 +96,7 @@ def test_search_refine_from_exceeds_cap(svc):
     """refine_from with >200 IDs should raise ValueError at handler layer."""
     oversize = [str(i) for i in range(201)]
     with pytest.raises(ValueError, match="refine_from exceeds cap of 200 IDs"):
-        handle_search(svc, "test", refine_from=oversize)
+        _handle_search(svc, "test", refine_from=oversize)
 
 
 def test_search_refine_from_empty_is_noop(svc):
@@ -105,7 +105,7 @@ def test_search_refine_from_empty_is_noop(svc):
         memories=[{"title": "m1", "content": "one"}],
         links=[],
     )
-    result = handle_search(svc, "test", refine_from=[])
+    result = _handle_search(svc, "test", refine_from=[])
     assert result["total_matched"] >= 0
 
 
@@ -122,7 +122,7 @@ def test_search_title_format_returns_compact_results(svc):
     # Configure fake engine to return memory IDs
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": r["id"], "score": 0.9} for r in all_rows]
-    result = handle_search(svc, "alpha", format="title")
+    result = _handle_search(svc, "alpha", format="title")
     assert "results" in result
     assert len(result["results"]) >= 1
     for item in result["results"]:
@@ -143,7 +143,7 @@ def test_search_title_format_backward_compatible(svc):
     )
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": r["id"], "score": 0.9} for r in all_rows]
-    result = handle_search(svc, "gamma")
+    result = _handle_search(svc, "gamma")
     assert "results" in result
     for item in result["results"]:
         assert "memory" in item  # full serialization
@@ -152,7 +152,7 @@ def test_search_title_format_backward_compatible(svc):
 
 def test_search_title_format_with_empty_results(svc):
     """format='title' with no matches returns empty results."""
-    result = handle_search(svc, "nonexistent_zzz", format="title")
+    result = _handle_search(svc, "nonexistent_zzz", format="title")
     assert result["results"] == []
 
 
@@ -171,7 +171,7 @@ def test_search_by_ids_returns_matching_memories(svc):
     # Pick first two
     target_ids = ids[:2]
 
-    result = handle_search(svc, "", ids=target_ids)
+    result = _handle_search(svc, "", ids=target_ids)
     assert len(result["results"]) == 2
     returned_ids = {item["memory"]["id"] for item in result["results"]}
     assert set(target_ids) == returned_ids
@@ -179,13 +179,13 @@ def test_search_by_ids_returns_matching_memories(svc):
 
 def test_search_by_ids_empty_list_returns_empty(svc):
     """Empty ids list returns no results."""
-    result = handle_search(svc, "", ids=[])
+    result = _handle_search(svc, "", ids=[])
     assert result["results"] == []
 
 
 def test_search_by_ids_nonexistent_silently_ignored(svc):
     """Non-existent IDs in ids list are silently skipped."""
-    result = handle_search(svc, "", ids=["nonexistent-id"])
+    result = _handle_search(svc, "", ids=["nonexistent-id"])
     assert result["results"] == []
 
 
@@ -199,7 +199,7 @@ def test_search_by_ids_with_title_format(svc):
     ids = [m["id"] for m in r["inserted_memories"]]
     target_id = ids[0]
 
-    result = handle_search(svc, "", ids=[target_id], format="title")
+    result = _handle_search(svc, "", ids=[target_id], format="title")
     assert len(result["results"]) == 1
     item = result["results"][0]
     assert item["id"] == target_id
@@ -217,7 +217,7 @@ def test_search_invalid_format_raises():
 
     fake_svc = MagicMock()
     with pytest.raises(ValueError, match="Unknown format"):
-        handle_search(fake_svc, "query", format="xml")
+        _handle_search(fake_svc, "query", format="xml")
 
 
 # ── ids cap ───────────────────────────────────────────────────────────────────
@@ -227,7 +227,7 @@ def test_search_by_ids_exceeds_cap_raises(svc):
     """ids with >50 IDs raises ValueError at handler layer."""
     oversize = [str(i) for i in range(51)]
     with pytest.raises(ValueError, match="ids exceeds cap of 50 IDs"):
-        handle_search(svc, "query", ids=oversize)
+        _handle_search(svc, "query", ids=oversize)
 
 
 # ── empty query guard ─────────────────────────────────────────────────────────
@@ -236,18 +236,18 @@ def test_search_by_ids_exceeds_cap_raises(svc):
 def test_search_empty_query_without_ids_raises(svc):
     """Empty query with no ids raises ValueError."""
     with pytest.raises(ValueError, match="query is required"):
-        handle_search(svc, "")
+        _handle_search(svc, "")
 
 
 def test_search_blank_query_without_ids_raises(svc):
     """Whitespace-only query with no ids raises ValueError."""
     with pytest.raises(ValueError, match="query is required"):
-        handle_search(svc, "   ")
+        _handle_search(svc, "   ")
 
 
 def test_search_empty_query_with_ids_succeeds(svc):
     """Empty query with ids is fine — ids path doesn't need a query."""
-    result = handle_search(svc, "", ids=[])
+    result = _handle_search(svc, "", ids=[])
     assert result["results"] == []
 
 
@@ -264,7 +264,7 @@ def test_search_by_ids_include_links_fetches_actual_links(svc):
     ids = [m["id"] for m in r["inserted_memories"]]
     svc.links.insert_link(ids[0], ids[1], "related_to", "test link")
 
-    result = handle_search(svc, "", ids=[ids[0]], include_links=True)
+    result = _handle_search(svc, "", ids=[ids[0]], include_links=True)
     assert len(result["results"]) == 1
     item = result["results"][0]
     assert "links" in item
@@ -286,7 +286,7 @@ def test_search_by_ids_increments_usage_count(svc):
     before_row = svc.memories.get_memory_row(mem_id)
     before_count = before_row["usage_count"]
 
-    handle_search(svc, "", ids=[mem_id])
+    _handle_search(svc, "", ids=[mem_id])
 
     after_row = svc.memories.get_memory_row(mem_id)
     assert after_row["usage_count"] == before_count + 1
@@ -306,7 +306,7 @@ def test_search_by_ids_dedup_with_usage_count(svc):
     before_row = svc.memories.get_memory_row(mem_id)
     before_count = before_row["usage_count"]
 
-    result = handle_search(svc, "", ids=[mem_id, mem_id, mem_id])
+    result = _handle_search(svc, "", ids=[mem_id, mem_id, mem_id])
 
     assert len(result["results"]) == 1  # no duplicates
 

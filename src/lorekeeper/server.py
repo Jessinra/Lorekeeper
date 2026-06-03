@@ -3,7 +3,7 @@ from fastmcp import FastMCP
 from pydantic import ValidationError
 
 from lorekeeper.config import Settings
-from lorekeeper.handlers import handle_insert, handle_remember, handle_search
+from lorekeeper.serializers import serialize_search_result, serialize_search_result_title
 from lorekeeper.services.config_store import ConfigStore
 from lorekeeper.services.database import Database
 from lorekeeper.services.engine_factory import build_engine
@@ -69,6 +69,88 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     return svc
 
 
+# ---------------------------------------------------------------------------
+# MCP handler helpers — input sanitization and output formatting for MCP tools
+# ---------------------------------------------------------------------------
+
+_VALID_SEARCH_FORMATS = {"full", "title"}
+
+
+def _handle_search(
+    svc: MemoryService,
+    query: str = "",
+    limit: int | None = None,
+    min_score: float = 0.1,
+    include_links: bool = True,
+    include_deleted: bool = False,
+    refine_from: list[str] | None = None,
+    format: str = "full",
+    ids: list[str] | None = None,
+) -> dict:
+    if format not in _VALID_SEARCH_FORMATS:
+        raise ValueError(
+            f"Unknown format {format!r}. Must be one of: {sorted(_VALID_SEARCH_FORMATS)}"
+        )
+
+    # When ids provided — skip search pipeline, bulk SQL lookup
+    if ids is not None:
+        if not ids:
+            return {"results": [], "total_matched": 0, "query": query}
+        if len(ids) > svc.settings.max_search_ids:
+            raise ValueError(
+                f"ids exceeds cap of {svc.settings.max_search_ids} IDs "
+                f"(got {len(ids)})"
+            )
+        results = svc.search_by_ids(
+            ids,
+            include_deleted=include_deleted,
+            include_links=include_links and format != "title",
+        )
+        if format == "title":
+            serialized = [serialize_search_result_title(r) for r in results]
+        else:
+            serialized = [serialize_search_result(r, include_links=include_links) for r in results]
+        return {"results": serialized, "total_matched": len(serialized), "query": query}
+
+    # Guard against empty query when ids is not provided
+    if not query or not query.strip():
+        raise ValueError("query is required when ids is not provided")
+
+    if refine_from is not None and len(refine_from) > svc.settings.max_refine_from_ids:
+        raise ValueError(
+            f"refine_from exceeds cap of {svc.settings.max_refine_from_ids} IDs "
+            f"(got {len(refine_from)})"
+        )
+    results = svc.search(
+        query, limit, min_score, include_links, include_deleted,
+        refine_from=refine_from,
+        search_format=format,
+    )
+    if format == "title":
+        serialized = [serialize_search_result_title(r) for r in results]
+    else:
+        serialized = [serialize_search_result(r, include_links=include_links) for r in results]
+    return {"results": serialized, "total_matched": len(serialized), "query": query}
+
+
+def _handle_insert(
+    svc: MemoryService,
+    memories: list[dict] | None = None,
+    links: list[dict] | None = None,
+    force: bool = False,
+) -> dict:
+    memories = memories or []
+    links = links or []
+    for i, m in enumerate(memories):
+        if "title" not in m:
+            raise ValueError(f"memory at index {i} is missing required field: 'title'")
+    return svc.insert(memories, links, force)
+
+
+# ---------------------------------------------------------------------------
+# MCP tool registration
+# ---------------------------------------------------------------------------
+
 @mcp.tool(name="lore_search")
 async def lore_search(
     query: str = "",
@@ -103,7 +185,7 @@ async def lore_search(
             Max 50 IDs (configurable via ``max_search_ids``).
     """
     try:
-        return handle_search(
+        return _handle_search(
             get_service(), query, limit, min_score, include_links, include_deleted,
             refine_from=refine_from, format=format, ids=ids,
         )
@@ -133,7 +215,7 @@ async def lore_insert(
     relation_type, and reason.
     """
     try:
-        return handle_insert(get_service(), memories or [], links or [], force)
+        return _handle_insert(get_service(), memories or [], links or [], force)
     except Exception:
         log.exception("lore_insert_failed", memory_count=len(memories or []))
         raise
@@ -143,7 +225,7 @@ async def lore_insert(
 async def lore_remember(thought: str) -> dict:
     """Fast one-shot memory insert. Pass a thought, get a memory with auto-title."""
     try:
-        return handle_remember(get_service(), thought)
+        return get_service().remember(thought)
     except Exception:
         log.exception("lore_remember_failed", thought=thought[:80])
         raise
