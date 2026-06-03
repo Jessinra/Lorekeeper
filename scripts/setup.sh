@@ -487,6 +487,30 @@ if [ "${#SUMMARY_NAMES[@]}" -gt 0 ]; then
     echo "Restart each agent to activate Lorekeeper."
 fi
 
+# ══════════════════════════════════════════════════
+# ── Seed prompt ───────────────────────────────────
+# ══════════════════════════════════════════════════
+
+if [ "${#SUMMARY_NAMES[@]}" -gt 0 ]; then
+    echo ""
+    echo -e "${BOLD}─────────────────────────────────────────${NC}"
+    echo -e "${BOLD}  Seed your first memories!${NC}"
+    echo -e "${BOLD}─────────────────────────────────────────${NC}"
+    echo ""
+    echo "  Paste this into any connected agent:"
+    echo ""
+    echo "    Read your prompt/config files (soul.md,"
+    echo "    CLAUDE.md, .cursorrules, AGENTS.md) and"
+    echo "    save key facts about yourself to Lorekeeper"
+    echo "    using lore_remember or lore_insert — who you"
+    echo "    are, what you do, your constraints and"
+    echo "    preferences. Be thorough."
+    echo ""
+    echo "  Then open the dashboard to see what it learned!"
+    echo ""
+    echo -e "${BOLD}─────────────────────────────────────────${NC}"
+fi
+
 # ── 8. Optional: migrate from v1 ──────────────────────────────────────────────
 if [ -n "${V1_JSON:-}" ] && [ -f "$V1_JSON" ]; then
     title "Migrating from v1..."
