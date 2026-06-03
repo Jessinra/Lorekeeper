@@ -74,7 +74,6 @@ class LinkStore:
                  link.created_at, link.updated_at,
                  link.usage_count, link.confidence, link.confidence_count),
             )
-            self._conn.commit()
         except sqlite3.IntegrityError as exc:
             # Re-raise FK violations — only swallow the expected unique-pair
             # duplicate case (same source + target + relation_type already exists).
@@ -124,7 +123,6 @@ class LinkStore:
             f"UPDATE memory_links SET {set_clause} WHERE id = ?",
             (*cols.values(), link_id),
         )
-        self._conn.commit()
 
     def all_links(self) -> list[MemoryLink]:
         rows = self._conn.execute(
@@ -136,7 +134,6 @@ class LinkStore:
         self._conn.execute(
             "DELETE FROM memory_links WHERE id = ?", (link_id,)
         )
-        self._conn.commit()
 
 
 def _row_to_link(row: sqlite3.Row) -> MemoryLink:

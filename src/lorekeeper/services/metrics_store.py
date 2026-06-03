@@ -25,7 +25,6 @@ class MetricsStore:
             """,
             (bucket, tool_name),
         )
-        self._conn.commit()
 
     @staticmethod
     def _normalize_bucket(bucket: str) -> str:
