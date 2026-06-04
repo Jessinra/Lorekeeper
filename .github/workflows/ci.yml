@@ -56,8 +56,4 @@ jobs:
         run: uv run pytest --tb=short -q
 
       - name: Mypy type check
-        # Non-blocking: 67 pre-existing errors on main (tracked separately).
-        # Once the backlog ticket to fix strict-mode violations is done,
-        # remove continue-on-error to make this a hard gate.
-        continue-on-error: true
         run: uv run mypy src
