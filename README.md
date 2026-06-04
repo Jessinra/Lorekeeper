@@ -2,7 +2,7 @@
 
 Personal AI memory MCP server. Stores facts, decisions, and domain knowledge so AI agents can recall them across sessions.
 
-Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB (or LanceDB). Exposes six MCP tools over stdio: `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_reflect`, `lore_processed_sessions`.
+Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB (or LanceDB). Exposes seven MCP tools over stdio: `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_forget`, `lore_reflect`, `lore_processed_sessions`.
 
 **Features**
 
@@ -156,6 +156,21 @@ Use this for quick capture. Use `lore_insert` when you need explicit titles, des
 
 Drives the quality signal loop. Call this after every `lore_search` to keep scores calibrated.
 
+### `lore_forget`
+
+```json
+{
+  "memory_ids": ["uuid1", "uuid2"],
+  "reason": "hallucinated"
+}
+```
+
+Immediately soft-deletes one or more memories. Use when a memory is wrong, duplicated, or outdated and you don't want it polluting future searches. The memory is excluded from `lore_search` results after this call.
+
+`reason` must be one of: `duplicate`, `hallucinated`, `outdated`, `expired`, `unspecified`. Logged for auditability. Soft-delete is reversible at the DB level, but no undelete tool is exposed.
+
+Returns `{ "forgotten": [...], "not_found": [...], "errors": [...] }`.
+
 ### `lore_reflect`
 
 ```json
@@ -193,6 +208,21 @@ Returns:
   ]
 }
 ```
+
+### `lore_processed_sessions`
+
+No parameters. Returns all session IDs already marked as processed by `lore_reflect`.
+
+```json
+{}
+```
+
+Returns:
+```json
+{ "processed_session_ids": ["session-uuid-1", "session-uuid-2"] }
+```
+
+Use this to avoid re-processing sessions — check the list before calling `lore_reflect`.
 
 ---
 

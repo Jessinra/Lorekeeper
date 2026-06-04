@@ -10,7 +10,7 @@ build/
 .eggs/
 
 # uv
-uv.lock
+# uv.lock is intentionally committed so CI can use it for reproducible builds
 
 # Data (stored externally at ~/.lorekeeper)
 data/

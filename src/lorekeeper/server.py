@@ -325,3 +325,38 @@ async def lore_reflect(
     except Exception:
         log.exception("lore_reflect_failed", session_id=session_id)
         raise
+
+
+@mcp.tool()
+async def lore_forget(
+    memory_ids: list[str],
+    reason: str = "unspecified",
+) -> dict:
+    """Soft-delete one or more memories by ID.
+
+    Memories are marked soft_deleted=1 and excluded from future search results.
+    This is reversible at the DB level but no undelete tool is exposed in v1.
+
+    Args:
+        memory_ids: List of lore_ids to forget. Must not be empty.
+        reason: Why this memory is being forgotten. One of:
+            ``"duplicate"``, ``"hallucinated"``, ``"outdated"``,
+            ``"expired"``, ``"unspecified"``.
+
+    Returns:
+        {
+          "forgotten": [str],   # lore_ids successfully soft-deleted
+          "not_found": [str],   # lore_ids that were not found
+          "errors": [dict]      # any unexpected failures
+        }
+    """
+    if not memory_ids:
+        raise ValueError("memory_ids must not be empty")
+    _VALID_REASONS = {"duplicate", "hallucinated", "outdated", "expired", "unspecified"}
+    if reason not in _VALID_REASONS:
+        raise ValueError(f"Unknown reason {reason!r}. Must be one of: {sorted(_VALID_REASONS)}")
+    try:
+        return get_service().forget(memory_ids, reason)
+    except Exception:
+        log.exception("lore_forget_failed", memory_ids=memory_ids, reason=reason)
+        raise
