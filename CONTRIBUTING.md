@@ -22,7 +22,7 @@ That's it. The pre-commit hook blocks commits that fail lint, mypy, or tests —
 ```bash
 uv run ruff check src tests scripts/   # lint
 uv run mypy src                         # types
-uv run pytest tests/ -q                 # tests (217 must pass)
+uv run pytest tests/ -q                 # tests
 ```
 
 All three also run in CI. If CI fails, the PR doesn't merge.
