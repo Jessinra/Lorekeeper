@@ -10,10 +10,15 @@ Adding a new field to Memory/MemoryLink/SearchResult now requires
 touching only this file — not handlers.py AND dashboard/app.py.
 """
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from lorekeeper.models import Memory, MemoryLink
 from lorekeeper.services.search import SearchResult
+
+if TYPE_CHECKING:
+    from lorekeeper.services.link_candidate import LinkCandidate
 
 
 def serialize_memory(
@@ -163,3 +168,46 @@ def serialize_search_result(
         output["links"] = [serialize_memory_link(lnk) for lnk in result.links]
 
     return output
+
+
+def serialize_link_candidate(candidate: LinkCandidate | dict[str, Any]) -> dict[str, Any]:
+    """Serialize a LinkCandidate for MCP response."""
+    if isinstance(candidate, dict):
+        cand = candidate
+    else:
+        cand = {
+            "source_lore_id": candidate.source_lore_id,
+            "target_lore_id": candidate.target_lore_id,
+            "weighted_score": candidate.weighted_score,
+            "cosine_score": candidate.cosine_score,
+            "bm25_score": candidate.bm25_score,
+            "entity_score": candidate.entity_score,
+            "temporal_score": candidate.temporal_score,
+            "proposed_relation": candidate.proposed_relation,
+            "classifier_confidence": candidate.classifier_confidence,
+            "classifier_reasoning": candidate.classifier_reasoning,
+        }
+
+    result: dict[str, Any] = {
+        "source_lore_id": cand["source_lore_id"],
+        "target_lore_id": cand["target_lore_id"],
+        "proposed_relation": cand["proposed_relation"],
+        "weighted_score": round(cand["weighted_score"], 4),
+        "scores": {
+            "cosine": round(cand["cosine_score"], 4),
+            "bm25": round(cand["bm25_score"], 4),
+            "entity": round(cand["entity_score"], 4),
+            "temporal": round(cand["temporal_score"], 4),
+        },
+    }
+
+    confidence = cand.get("classifier_confidence", 0.0)
+    if confidence > 0:
+        result["classifier"] = {
+            "confidence": round(confidence, 4),
+            "reasoning": cand.get("classifier_reasoning", ""),
+        }
+    else:
+        result["classifier"] = None
+
+    return result

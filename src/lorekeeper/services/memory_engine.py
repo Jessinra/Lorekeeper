@@ -3,6 +3,8 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+import numpy as np
+
 
 class MemoryEngine(ABC):
     """Abstract base for vector store backends (ChromaDB, LanceDB, etc.)."""
@@ -42,4 +44,12 @@ class MemoryEngine(ABC):
         may silently return None if its mem0 record falls outside the
         queried range. The LanceDB engine scans the full table and has no
         such limit.
+        """
+
+    @abstractmethod
+    def get_embeddings_batch(self, lore_ids: list[str]) -> dict[str, np.ndarray]:
+        """Return embedding vectors keyed by lore_id.
+
+        Implementations may read stored vectors (LanceDB) or re-encode on the fly (ChromaDB).
+        Missing lore_ids are silently omitted from the result dict.
         """

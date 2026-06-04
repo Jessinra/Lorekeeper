@@ -44,6 +44,29 @@ class Settings(BaseSettings):
     auto_link_k: int = 5
     auto_link_threshold: float = 0.85
 
+    # Link candidate pipeline (LKPR-58)
+    link_top_k: int = Field(default=50, description="Cosine pre-filter: top-K before scoring")  # noqa: E501
+    link_top_m: int = Field(default=10, description="Post-scorer: top-M sent to LLM classifier")  # noqa: E501
+    link_score_threshold: float = Field(default=0.3, description="Min Stage 1 weighted score to pass")  # noqa: E501
+
+    # Stage 1 scorer weights
+    link_weight_cosine: float = Field(default=0.5)
+    link_weight_bm25: float = Field(default=0.3)
+    link_weight_entity: float = Field(default=0.1)
+    link_weight_temporal: float = Field(default=0.1)
+
+    # Temporal scorer
+    link_temporal_tau_days: float = Field(default=30.0, description="Decay half-life in days for temporal scorer")
+
+    # spaCy entity overlap scorer
+    link_spacy_model: str = Field(default="en_core_web_sm", description="spaCy model for entity overlap")
+
+    # LLM relation classifier config (Stage 2)
+    link_classifier_base_url: str = Field(default="", description="OpenAI-compat base URL. Empty = skip classifier")
+    link_classifier_model: str = Field(default="gpt-4o-mini", description="Model for relation classifier")
+    link_classifier_timeout: float = Field(default=30.0, description="HTTP timeout (s) for classifier calls")
+    link_classifier_api_key: str = Field(default="", description="Bearer token. Empty = no auth header.")
+
     @property
     def chroma_path(self) -> Path:
         return self.data_dir / "chroma"

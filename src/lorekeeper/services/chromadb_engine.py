@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import structlog
 
 from lorekeeper.services.memory_engine import MemoryEngine
@@ -162,3 +163,37 @@ class ChromaDBEngine(MemoryEngine):
 
     def delete_by_mem0_id(self, mem0_id: str) -> None:
         self._mem0.delete(mem0_id)
+
+    def get_embeddings_batch(self, lore_ids: list[str]) -> dict[str, np.ndarray]:
+        """Re-encode memory texts via Chroma's embedding model (no stored vector access).
+
+        Chroma's Python API does not expose stored vectors — we fetch the stored document
+        texts and re-encode them on the fly using mem0's embedding model.
+        """
+        if not lore_ids:
+            return {}
+        try:
+            where_clause = self._mem0.vector_store._generate_where_clause({"user_id": LORE_USER_ID})
+            raw = self._mem0.vector_store.collection.get(
+                where=where_clause,
+                include=["documents", "metadatas"],
+            )
+        except Exception:
+            log.error("chromadb_get_embeddings_batch_failed", exc_info=True)
+            return {}
+
+        id_set = set(lore_ids)
+        id_to_doc: dict[str, str] = {}
+        for doc, meta in zip(raw.get("documents", []), raw.get("metadatas", []), strict=False):
+            lore_id = (meta or {}).get("lore_id")
+            if lore_id and lore_id in id_set:
+                id_to_doc[lore_id] = doc or ""
+
+        out: dict[str, np.ndarray] = {}
+        for lore_id, text in id_to_doc.items():
+            try:
+                vec = self._mem0.embedding_model.embed(text, "add")
+                out[lore_id] = np.array(vec, dtype=np.float32)
+            except Exception:
+                log.warning("chromadb_embed_failed", lore_id=lore_id)
+        return out

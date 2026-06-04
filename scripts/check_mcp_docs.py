@@ -18,34 +18,49 @@ README = ROOT / "README.md"
 def extract_tool_names(server_text: str) -> list[str]:
     """Return all MCP tool names registered via @mcp.tool()."""
     names = []
-    for line in server_text.splitlines():
-        # @mcp.tool(name="lore_foo") — explicit name
-        m = re.search(r'@mcp\.tool\(name=["\'](\w+)["\']', line)
+    lines = server_text.splitlines()
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+
+        # @mcp.tool(name="lore_foo") — single-line explicit name
+        m = re.search(r'@mcp\.tool\(name=[\"\'](\w+)[\"\']', stripped)
         if m:
             names.append(m.group(1))
             continue
-        # @mcp.tool() — name inferred from next function def
-        if re.search(r"@mcp\.tool\(\s*\)", line):
-            names.append(None)  # sentinel: resolve from next def line
 
-    # Second pass: resolve sentinels
-    resolved = []
-    lines = server_text.splitlines()
-    sentinel_indices = [
-        i for i, line in enumerate(lines) if re.search(r"@mcp\.tool\(\s*\)", line)
-    ]
-    for idx in sentinel_indices:
-        for j in range(idx + 1, min(idx + 5, len(lines))):
-            m = re.match(r"\s*async def (\w+)\(", lines[j])
-            if not m:
-                m = re.match(r"\s*def (\w+)\(", lines[j])
-            if m:
-                resolved.append(m.group(1))
-                break
+        # @mcp.tool(\n  name="lore_foo", ...) — multi-line, name on next lines
+        if stripped.startswith("@mcp.tool(") and "name=" not in stripped:
+            for j in range(i + 1, min(i + 5, len(lines))):
+                m = re.search(r'name=[\"\'](\w+)[\"\']', lines[j])
+                if m:
+                    names.append(m.group(1))
+                    break
+            else:
+                # Fallback: resolve from following function def
+                for j in range(i + 1, min(i + 5, len(lines))):
+                    m = re.match(r"\s*(?:async )?def (\w+)\(", lines[j])
+                    if m:
+                        names.append(m.group(1))
+                        break
+            continue
 
-    # Explicit names (non-sentinel)
-    explicit = [n for n in names if n is not None]
-    return explicit + resolved
+        # @mcp.tool() — no name, resolve from following function def
+        if re.search(r"@mcp\.tool\(\s*\)", stripped):
+            for j in range(i + 1, min(i + 5, len(lines))):
+                m = re.match(r"\s*(?:async )?def (\w+)\(", lines[j])
+                if m:
+                    names.append(m.group(1))
+                    break
+
+    # Deduplicate while preserving order
+    seen = set()
+    unique = []
+    for n in names:
+        if n and n not in seen:
+            seen.add(n)
+            unique.append(n)
+    return unique
 
 
 def extract_documented_tools(readme_text: str) -> set[str]:

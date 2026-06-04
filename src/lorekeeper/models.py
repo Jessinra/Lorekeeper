@@ -3,7 +3,17 @@ from typing import Literal, get_args
 from pydantic import BaseModel
 
 # Literal type for valid link relation types.
-RelationType = Literal["related_to", "used_in", "used_for", "used_by", "used_as"]
+# NOTE: "none" is intentionally excluded — it's a classifier discard signal only (LKPR-58).
+RelationType = Literal[
+    "related_to",
+    "used_in",
+    "used_for",
+    "used_by",
+    "used_as",
+    "contradicts",   # content conflicts with another memory
+    "supersedes",    # newer/updated memory that replaces another
+    "depends_on",    # requires or builds upon another memory
+]
 
 # Immutable set of all valid relation type strings — single source of truth.
 RELATION_TYPES: frozenset[str] = frozenset(get_args(RelationType))
