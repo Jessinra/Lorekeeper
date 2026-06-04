@@ -857,6 +857,40 @@ class MemoryService:
             discoveries=_bullets(factual_discoveries),
         )
 
+        memories_created: list[dict[str, str]] = []
+        if auto_insert:
+            for item in factual_discoveries:
+                remember_result = self._remember_with_score(item, score=7.0)
+                if not remember_result["created"]:
+                    continue
+                self.links.insert_link(
+                    source_memory_id=remember_result["id"],
+                    target_memory_id=reflection_id,
+                    relation_type="discovered_in",
+                    reason=f"Auto-created from reflection factual_discoveries ({session_id})",
+                )
+                memories_created.append({
+                    "id": remember_result["id"],
+                    "title": remember_result["title"],
+                    "relation": "discovered_in",
+                })
+
+            for item in lessons_learnt:
+                remember_result = self._remember_with_score(item, score=8.0)
+                if not remember_result["created"]:
+                    continue
+                self.links.insert_link(
+                    source_memory_id=remember_result["id"],
+                    target_memory_id=reflection_id,
+                    relation_type="learned_in",
+                    reason=f"Auto-created from reflection lessons_learnt ({session_id})",
+                )
+                memories_created.append({
+                    "id": remember_result["id"],
+                    "title": remember_result["title"],
+                    "relation": "learned_in",
+                })
+
         log.info("reflection_submitted", reflection_id=reflection_id, session_id=session_id)
         self._conn.commit()  # commit reflection + session rows before auto-insert
 
