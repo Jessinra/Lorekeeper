@@ -252,29 +252,6 @@ async def lore_update(
         raise
 
 
-@mcp.tool(name="lore_forget")
-async def lore_forget(
-    memory_ids: list[str],
-    reason: str = "unspecified",
-) -> dict:
-    """Immediately soft-delete one or more memories by ID.
-
-    Use this to clean up hallucinated facts, duplicates, outdated references,
-    or expired time-bounded memories. Faster and more explicit than score decay.
-
-    Args:
-        memory_ids: List of lore_id UUIDs to soft-delete.
-        reason: One of 'duplicate', 'hallucinated', 'outdated', 'expired', 'unspecified'.
-    """
-    try:
-        return handle_forget(get_service(), memory_ids, reason)
-    except ValueError:
-        raise
-    except Exception:
-        log.exception("lore_forget_failed")
-        raise
-
-
 @mcp.tool(name="lore_processed_sessions")
 async def lore_processed_sessions() -> dict:
     """Return all session IDs that have been marked as processed via lore_reflect."""
