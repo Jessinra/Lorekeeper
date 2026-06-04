@@ -1,4 +1,5 @@
 import uuid
+from typing import Any, cast
 
 import numpy as np
 import structlog
@@ -40,7 +41,7 @@ class LanceDBEngine(MemoryEngine):
                 mode="overwrite",
             )
 
-    def _get_model(self):
+    def _get_model(self) -> Any:
         if self._model is None:
             from sentence_transformers import SentenceTransformer
 
@@ -55,7 +56,7 @@ class LanceDBEngine(MemoryEngine):
         """Convert LanceDB cosine distance to similarity (higher=better)."""
         return max(0.0, min(1.0, 1.0 - raw))
 
-    def add(self, text: str, lore_id: str, extra_metadata: dict | None = None) -> str:
+    def add(self, text: str, lore_id: str, extra_metadata: dict[str, Any] | None = None) -> str:
         """Embed text, store in LanceDB. Returns internal mem0_id."""
         mem0_id = str(uuid.uuid4())
         vector = self._get_model().encode(text).astype(np.float32)
@@ -71,7 +72,7 @@ class LanceDBEngine(MemoryEngine):
         )
         return mem0_id
 
-    def search(self, query: str, limit: int = 200) -> list[dict]:
+    def search(self, query: str, limit: int = 200) -> list[dict[str, Any]]:
         """Returns list of {lore_id, mem0_id, score (normalized)}.
 
         Embeds the query and searches LanceDB with cosine distance.
@@ -95,7 +96,7 @@ class LanceDBEngine(MemoryEngine):
             out.append({"lore_id": lore_id, "mem0_id": mem0_id, "score": similarity})
         return out
 
-    def get_all(self) -> list[dict]:
+    def get_all(self) -> list[dict[str, Any]]:
         """Returns all entries as {lore_id, mem0_id}. Used for BM25 rebuild."""
         try:
             tbl = self._table.to_arrow()
@@ -123,7 +124,7 @@ class LanceDBEngine(MemoryEngine):
         mem0_ids = tbl.column("mem0_id")
         for i in range(tbl.num_rows):
             if ids[i].as_py() == lore_id:
-                return mem0_ids[i].as_py()
+                return cast(str, mem0_ids[i].as_py())
         return None
 
     def delete_by_mem0_id(self, mem0_id: str) -> None:

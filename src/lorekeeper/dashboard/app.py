@@ -1,4 +1,5 @@
 import subprocess
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -39,7 +40,7 @@ def _resolve_version() -> str:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     global _APP_VERSION
     log.info("dashboard_startup")
     _APP_VERSION = _resolve_version()

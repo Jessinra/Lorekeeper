@@ -33,8 +33,18 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
+      - name: Pre-warm embedding model
+        env:
+          HF_HOME: ~/.cache/huggingface
+        run: |
+          uv run python - << 'EOF'
+          from sentence_transformers import SentenceTransformer
+          SentenceTransformer("all-MiniLM-L6-v2")
+          print("Model ready.")
+          EOF
+
       - name: Ruff lint
-        run: uv run ruff check src tests
+        run: uv run ruff check src tests scripts/
 
       - name: MCP tool documentation check
         run: uv run python scripts/check_mcp_docs.py
@@ -46,8 +56,4 @@ jobs:
         run: uv run pytest --tb=short -q
 
       - name: Mypy type check
-        # Non-blocking: 67 pre-existing errors on main (tracked separately).
-        # Once the backlog ticket to fix strict-mode violations is done,
-        # remove continue-on-error to make this a hard gate.
-        continue-on-error: true
         run: uv run mypy src

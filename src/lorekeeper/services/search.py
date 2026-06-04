@@ -1,6 +1,7 @@
 import math
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Any
 
 from lorekeeper.config import Settings
 from lorekeeper.models import Memory, MemoryLink
@@ -57,7 +58,7 @@ REFINE_FROM_CAP = 200
 
 
 def rank_results(
-    semantic_hits: list[dict],   # [{lore_id, score}]
+    semantic_hits: list[dict[str, Any]],   # [{lore_id, score}]
     keyword_hits: dict[str, float],  # {lore_id: score}
     memories_by_id: dict[str, Memory],
     links_by_id: dict[str, list[MemoryLink]],

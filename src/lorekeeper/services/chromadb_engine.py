@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import structlog
 
@@ -9,7 +10,7 @@ log = structlog.get_logger()
 LORE_USER_ID = "lorekeeper"
 
 
-def build_mem0(chroma_path: Path, embedding_model: str):
+def build_mem0(chroma_path: Path, embedding_model: str) -> Any:
     from mem0 import Memory as Mem0Memory
 
     chroma_path.mkdir(parents=True, exist_ok=True)
@@ -39,7 +40,7 @@ def build_mem0(chroma_path: Path, embedding_model: str):
 class ChromaDBEngine(MemoryEngine):
     """Mem0 + Chroma backend. Single-process only (Chroma file locks)."""
 
-    def __init__(self, mem0) -> None:
+    def __init__(self, mem0: Any) -> None:
         self._mem0 = mem0
         self._score_is_distance = False  # updated by probe_score_scale()
 
@@ -85,7 +86,7 @@ class ChromaDBEngine(MemoryEngine):
             return max(0.0, 1.0 - raw)
         return max(0.0, min(1.0, raw))
 
-    def add(self, text: str, lore_id: str, extra_metadata: dict | None = None) -> str:
+    def add(self, text: str, lore_id: str, extra_metadata: dict[str, Any] | None = None) -> str:
         """Insert verbatim (infer=False). Returns Mem0's internal id."""
         metadata = {"lore_id": lore_id, **(extra_metadata or {})}
         result = self._mem0.add(
@@ -96,10 +97,10 @@ class ChromaDBEngine(MemoryEngine):
         )
         items = result.get("results") if isinstance(result, dict) else result
         if items:
-            return items[0]["id"]
+            return str(items[0]["id"])
         return ""
 
-    def search(self, query: str, limit: int = 200) -> list[dict]:
+    def search(self, query: str, limit: int = 200) -> list[dict[str, Any]]:
         """Returns list of {lore_id, mem0_id, score (normalized)}.
 
         Uses Chroma directly to avoid mem0 v2's broken scoring pipeline:
@@ -137,7 +138,7 @@ class ChromaDBEngine(MemoryEngine):
         out.sort(key=lambda x: x["score"], reverse=True)
         return out
 
-    def get_all(self) -> list[dict]:
+    def get_all(self) -> list[dict[str, Any]]:
         """Returns all entries as {lore_id, mem0_id}. Used for BM25 rebuild."""
         results = self._mem0.get_all(filters={"user_id": LORE_USER_ID}, top_k=5000)
         items = results.get("results") if isinstance(results, dict) else results
@@ -146,7 +147,7 @@ class ChromaDBEngine(MemoryEngine):
             meta = item.get("metadata") or {}
             lore_id = meta.get("lore_id")
             if lore_id:
-                out.append({"lore_id": lore_id, "mem0_id": item["id"]})
+                out.append({"lore_id": lore_id, "mem0_id": str(item["id"])})
         return out
 
     def find_mem0_id(self, lore_id: str) -> str | None:
@@ -156,7 +157,7 @@ class ChromaDBEngine(MemoryEngine):
         for item in (items or []):
             meta = item.get("metadata") or {}
             if meta.get("lore_id") == lore_id:
-                return item["id"]
+                return str(item["id"])
         return None
 
     def delete_by_mem0_id(self, mem0_id: str) -> None:

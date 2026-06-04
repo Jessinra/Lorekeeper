@@ -1,3 +1,5 @@
+from typing import Any
+
 import structlog
 from fastmcp import FastMCP
 from pydantic import ValidationError
@@ -86,7 +88,7 @@ def _handle_search(
     refine_from: list[str] | None = None,
     format: str = "full",
     ids: list[str] | None = None,
-) -> dict:
+) -> dict[str, Any]:
     if format not in _VALID_SEARCH_FORMATS:
         raise ValueError(
             f"Unknown format {format!r}. Must be one of: {sorted(_VALID_SEARCH_FORMATS)}"
@@ -135,10 +137,10 @@ def _handle_search(
 
 def _handle_insert(
     svc: MemoryService,
-    memories: list[dict] | None = None,
-    links: list[dict] | None = None,
+    memories: list[dict[str, Any]] | None = None,
+    links: list[dict[str, Any]] | None = None,
     force: bool = False,
-) -> dict:
+) -> dict[str, Any]:
     memories = memories or []
     links = links or []
     for i, m in enumerate(memories):
@@ -161,7 +163,7 @@ async def lore_search(
     refine_from: list[str] | None = None,
     format: str = "full",
     ids: list[str] | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Search memories by semantic + keyword query, or bulk-fetch by ID.
 
     When ``ids`` is provided, skips the vector/BM25 pipeline entirely and does
@@ -196,10 +198,10 @@ async def lore_search(
 
 @mcp.tool(name="lore_insert")
 async def lore_insert(
-    memories: list[dict] | None = None,
-    links: list[dict] | None = None,
+    memories: list[dict[str, Any]] | None = None,
+    links: list[dict[str, Any]] | None = None,
     force: bool = False,
-) -> dict:
+) -> dict[str, Any]:
     """Insert memories and/or links into the store.
 
     Each memory dict must include:
@@ -207,7 +209,7 @@ async def lore_insert(
       - content (str, optional): the full text to store
       - description (str, optional): brief summary
       - score (float, optional, default 5.0): initial quality score 0-10
-      - links (list[dict], optional): inline links to create after insert.
+      - links (list[dict[str, Any]], optional): inline links to create after insert.
         Each link dict: {target_memory_id (str, required), relation_type (str, required),
         reason? (str)}
 
@@ -222,7 +224,7 @@ async def lore_insert(
 
 
 @mcp.tool(name="lore_remember")
-async def lore_remember(thought: str) -> dict:
+async def lore_remember(thought: str) -> dict[str, Any]:
     """Fast one-shot memory insert. Pass a thought, get a memory with auto-title."""
     try:
         return get_service().remember(thought)
@@ -233,9 +235,9 @@ async def lore_remember(thought: str) -> dict:
 
 @mcp.tool(name="lore_update")
 async def lore_update(
-    memory_feedback: list[dict] | None = None,
-    link_feedback: list[dict] | None = None,
-) -> dict:
+    memory_feedback: list[dict[str, Any]] | None = None,
+    link_feedback: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     """Rate memories and links after using them. Drives the quality signal loop.
 
     Each memory_feedback dict: {id (str), useful (bool), confidence (int 1-10)}.
@@ -253,7 +255,7 @@ async def lore_update(
 
 
 @mcp.tool(name="lore_processed_sessions")
-async def lore_processed_sessions() -> dict:
+async def lore_processed_sessions() -> dict[str, Any]:
     """Return all session IDs that have been marked as processed via lore_reflect."""
     try:
         return {"session_ids": get_service().get_processed_session_ids()}
@@ -277,7 +279,7 @@ async def lore_reflect(
     factual_discoveries: list[str] | None = None,
     memory_ids: list[str] | None = None,
     auto_insert: bool = True,
-) -> dict:
+) -> dict[str, Any]:
     """Call once per session — reflect on one session, submit, then move to the next.
 
     Args:
@@ -331,7 +333,7 @@ async def lore_reflect(
 async def lore_forget(
     memory_ids: list[str],
     reason: str = "unspecified",
-) -> dict:
+) -> dict[str, Any]:
     """Soft-delete one or more memories by ID.
 
     Memories are marked soft_deleted=1 and excluded from future search results.
