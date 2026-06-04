@@ -83,12 +83,14 @@ Frontmatter:
 id: LKPR-N
 title: Short descriptive title
 type: bug | feature | chore | research
-status: S:proposal | S:ready | S:in-progress | S:review | S:done | S:deferred | S:cancelled
-priority: P0:critical | P1:high | P2:medium | P3:low
+sprint: ~ # 1 | 2 | 3 | unplanned | deferred
+rice_score: ~ # omit if not scored
 filed_by: Akane | Dev | Jason
 filed_date: YYYY-MM-DD
 ---
 ```
+
+**Status and priority live in GitHub labels only.** Do not add `status:` or `priority:` to ticket frontmatter — they drift. GH labels are the source of truth.
 
 Sections: Problem, Solution, Acceptance Criteria, Affected Files (Backend + Dashboard), Dependencies, Open Questions, Notes.
 
