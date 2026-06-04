@@ -2,8 +2,6 @@
 id: LKPR-16
 title: lore_insert false dedup — unrelated memories matched at similarity 1.0
 type: bug
-status: S:done
-priority: P1:high
 sprint: 1
 rice_score: 42.0 # R:7 I:6 C:100% E:1d
 filed_by: Hermes

@@ -2,8 +2,6 @@
 id: LKPR-N
 title: Short descriptive title
 type: feature # feature | bug | enhancement | research | chore
-status: S:ready # S:proposal | S:ready | S:in-progress | S:review | S:done | S:deferred | S:cancelled
-priority: P2:medium # P0:critical | P1:high | P2:medium | P3:low
 sprint: ~ # 1 | 2 | 3 | unplanned | deferred
 rice_score: ~ # XX.X  (R:X I:X C:XX% E:Xw)  — omit if not scored
 filed_by: ~ # Jason | Akane | Diana

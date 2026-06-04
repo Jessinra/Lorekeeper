@@ -2,8 +2,6 @@
 id: LKPR-13
 title: Implement lore_find_nearest_pairs for agent-driven memory consolidation
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: 3
 rice_score: 11.7 # R:5 I:9 C:30% E:4w
 filed_by: Hermes

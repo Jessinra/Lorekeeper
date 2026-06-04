@@ -2,9 +2,7 @@
 id: LKPR-29
 title: Add lore_remember for one-shot fast memory insert (friction-killer)
 type: feature
-status: S:done
 resolved_date: 2026-05-24
-priority: P0:critical
 sprint: 1
 rice_score: 180 # R:10 I:10 C:90% E:0.5w
 filed_by: Akane (PM)

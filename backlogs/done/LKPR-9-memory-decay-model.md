@@ -2,8 +2,6 @@
 id: LKPR-9
 title: Add time-decay multiplier to hybrid scoring formula
 type: feature
-status: S:done
-priority: P1:high
 sprint: 1
 rice_score: 44.8 # R:8 I:7 C:80% E:1w
 filed_by: Hermes

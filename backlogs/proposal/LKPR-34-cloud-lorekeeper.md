@@ -2,8 +2,6 @@
 id: LKPR-34
 title: Cloud Lorekeeper — shared memory across agent machines
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: ~
 rice_score: ~
 filed_by: Hermes

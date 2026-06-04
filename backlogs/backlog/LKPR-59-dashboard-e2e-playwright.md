@@ -2,8 +2,6 @@
 id: LKPR-59
 title: E2E test suite for dashboard UI (Playwright)
 type: chore
-status: S:ready
-priority: P2:medium
 sprint: ~
 rice_score: ~
 filed_by: Diana

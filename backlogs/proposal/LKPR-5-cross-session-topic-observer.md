@@ -2,8 +2,6 @@
 id: LKPR-5
 title: Add lore_get_topic_reflections for cross-session topic memory
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: 3
 rice_score: 12.1 # R:6 I:8 C:35% E:3w
 filed_by: Hermes

@@ -2,8 +2,6 @@
 id: LKPR-35
 title: Memory quality spec testing (lore_spec)
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: unplanned
 rice_score: ~
 filed_by: Hermes (daily brainstorm)

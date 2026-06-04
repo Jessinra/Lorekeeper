@@ -2,8 +2,6 @@
 id: LKPR-37
 title: Show git version badge in dashboard header
 type: feature
-status: S:done
-priority: P3:low
 sprint: unplanned
 rice_score: ~
 filed_by: Jason

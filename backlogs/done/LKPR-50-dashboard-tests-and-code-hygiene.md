@@ -2,8 +2,6 @@
 id: LKPR-50
 title: Dashboard tests, serialization unification, engine ABC cleanup, and quality gate hardening
 type: chore
-status: S:done
-priority: P1:high
 sprint: 2
 rice_score: ~
 filed_by: Diana

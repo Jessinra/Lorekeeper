@@ -2,8 +2,6 @@
 id: LKPR-40
 title: Organization / team namespaces with multi-namespace RBAC
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: ~
 rice_score: ~
 filed_by: Akane

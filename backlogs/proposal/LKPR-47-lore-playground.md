@@ -2,8 +2,6 @@
 id: LKPR-47
 title: lore playground — first-run interactive exploration mode
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: ~
 rice_score: ~
 filed_by: Akane

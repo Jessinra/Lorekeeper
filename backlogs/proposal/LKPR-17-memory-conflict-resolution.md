@@ -2,8 +2,6 @@
 id: LKPR-17
 title: Memory Conflict Resolution (lore_reconcile)
 type: feature
-status: S:proposal
-priority: P2:medium
 sprint: ~
 rice_score: ~
 filed_by: Hermes

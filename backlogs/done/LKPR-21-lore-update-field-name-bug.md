@@ -2,9 +2,7 @@
 id: LKPR-21
 title: lore_update memory_feedback expects "id" not "memory_id" — API inconsistency
 type: bug
-status: S:done
 reason: not reproducible
-priority: P1:high
 sprint: unplanned
 rice_score: ~
 filed_by: Hermes (Akane)

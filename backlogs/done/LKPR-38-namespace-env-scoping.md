@@ -2,8 +2,6 @@
 id: LKPR-38
 title: Namespace env var + auto-scoping (foundation)
 type: feature
-status: S:done
-priority: P1:high
 sprint: ~
 rice_score: ~
 filed_by: Akane

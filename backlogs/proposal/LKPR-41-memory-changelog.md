@@ -2,8 +2,6 @@
 id: LKPR-41
 title: Memory Changelog / Version History (lore_diff / lore_history / lore_rollback)
 type: feature
-status: S:proposal
-priority: P2:medium
 sprint: ~
 rice_score: ~
 filed_by: Akane

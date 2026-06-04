@@ -2,8 +2,6 @@
 id: LKPR-10
 title: Multi-agent tenancy with namespace isolation
 type: feature
-status: S:deferred
-priority: P3:low
 sprint: deferred
 rice_score: 8.4 # R:4 I:7 C:30% E:4w
 filed_by: Hermes

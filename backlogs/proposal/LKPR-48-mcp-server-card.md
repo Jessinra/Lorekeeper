@@ -2,8 +2,6 @@
 id: LKPR-48
 title: MCP Server Card / Capability Discovery
 type: feature
-status: S:proposal
-priority: P1:high
 sprint: unplanned
 rice_score: ~
 filed_by: Akane

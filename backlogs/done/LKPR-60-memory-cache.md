@@ -2,8 +2,6 @@
 id: LKPR-60
 title: In-process cache for _all_memories() to eliminate redundant DB reads
 type: enhancement
-status: S:done
-priority: P2:medium
 sprint: ~
 rice_score: ~
 filed_by: Akane

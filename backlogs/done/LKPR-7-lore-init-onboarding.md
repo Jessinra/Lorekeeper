@@ -2,8 +2,6 @@
 id: LKPR-7
 title: Extend setup.sh for one-shot lorekeeper onboarding
 type: feature
-status: S:cancelled
-priority: P2:medium
 sprint: 2
 rice_score: 216.0 # Revised: R:9 I:8 C:90% E:0.3w — extended setup.sh only, no new MCP tool
 filed_by: Hermes

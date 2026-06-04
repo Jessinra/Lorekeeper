@@ -2,8 +2,6 @@
 id: LKPR-12
 title: Implement session end hook for automatic capture (lore_extract_session)
 type: feature
-status: S:proposal
-priority: P1:high
 sprint: 2
 rice_score: 36.0 # R:9 I:8 C:50% E:2w
 filed_by: Hermes

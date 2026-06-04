@@ -17,7 +17,7 @@ VALID_STATUSES="S:proposal|S:ready|S:in-progress|S:review|S:done|S:deferred|S:ca
 VALID_PRIORITIES="P0:critical|P1:high|P2:medium|P3:low"
 
 # Required frontmatter fields
-REQUIRED_FIELDS="id|title|type|status|priority|sprint|rice_score|filed_by|filed_date"
+REQUIRED_FIELDS="id|title|type|sprint|rice_score|filed_by|filed_date"
 
 # Required sections (in order) — use array to handle spaces
 REQUIRED_SECTIONS=("Problem" "Solution" "Acceptance Criteria" "Required Updates")
@@ -79,20 +79,6 @@ for file in "${files[@]}"; do
   type_val=$(get_field "$frontmatter" "type")
   if [ -n "$type_val" ] && ! echo "$VALID_TYPES" | tr '|' '\n' | grep -qx "$type_val"; then
     echo "  ✗ $file: invalid type '$type_val' (valid: $VALID_TYPES)"
-    errors_file=$((errors_file + 1))
-  fi
-
-  # Validate status value
-  status_val=$(get_field "$frontmatter" "status")
-  if [ -n "$status_val" ] && ! echo "$VALID_STATUSES" | tr '|' '\n' | grep -qx "$status_val"; then
-    echo "  ✗ $file: invalid status '$status_val' (valid: $VALID_STATUSES)"
-    errors_file=$((errors_file + 1))
-  fi
-
-  # Validate priority value
-  prio_val=$(get_field "$frontmatter" "priority")
-  if [ -n "$prio_val" ] && ! echo "$VALID_PRIORITIES" | tr '|' '\n' | grep -qx "$prio_val"; then
-    echo "  ✗ $file: invalid priority '$prio_val' (valid: $VALID_PRIORITIES)"
     errors_file=$((errors_file + 1))
   fi
 

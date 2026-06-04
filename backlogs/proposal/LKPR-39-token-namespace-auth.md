@@ -2,8 +2,6 @@
 id: LKPR-39
 title: Token-based namespace auth (secure namespace control)
 type: feature
-status: S:proposal
-priority: P2:medium
 sprint: ~
 rice_score: ~
 filed_by: Akane
