@@ -7,6 +7,7 @@ priority: P3:low
 sprint: ~
 rice_score: ~
 filed_by: Hermes
+github_issue: 67
 filed_date: 2026-05-27
 ---
 

@@ -7,6 +7,7 @@ priority: P2:medium
 sprint: 2
 rice_score: 24.0 # R:8 I:6 C:50% E:2w
 filed_by: Hermes
+github_issue: 57
 filed_date: 2026-05-22
 ---
 

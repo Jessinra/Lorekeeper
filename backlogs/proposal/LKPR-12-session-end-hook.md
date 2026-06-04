@@ -7,6 +7,7 @@ priority: P1:high
 sprint: 2
 rice_score: 36.0 # R:9 I:8 C:50% E:2w
 filed_by: Hermes
+github_issue: 58
 filed_date: 2026-05-22
 ---
 

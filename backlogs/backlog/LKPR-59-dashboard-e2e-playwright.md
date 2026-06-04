@@ -7,6 +7,7 @@ priority: P2:medium
 sprint: ~
 rice_score: ~
 filed_by: Diana
+github_issue: 128
 filed_date: 2026-06-03
 ---
 

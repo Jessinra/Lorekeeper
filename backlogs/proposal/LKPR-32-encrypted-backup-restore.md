@@ -7,6 +7,7 @@ priority: P2:medium
 sprint: ~
 rice_score: 10.0 # R:5 I:8 C:50% E:2w
 filed_by: Jason
+github_issue: 66
 filed_date: 2026-05-25
 ---
 

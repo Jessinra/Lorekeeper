@@ -1,5 +1,5 @@
 ---
-id: LKPR-109
+id: LKPR-61
 title: Add created_after / updated_after recency filters to lore_search
 type: feature
 status: S:proposal
@@ -7,10 +7,11 @@ priority: P2:medium
 sprint: ~
 rice_score: ~
 filed_by: Akane
+github_issue: 132
 filed_date: 2026-06-04
 ---
 
-# [LKPR-109] Add created_after / updated_after recency filters to lore_search
+# [LKPR-61] Add created_after / updated_after recency filters to lore_search
 
 ## Problem
 

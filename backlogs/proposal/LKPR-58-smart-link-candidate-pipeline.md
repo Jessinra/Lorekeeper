@@ -7,6 +7,7 @@ priority: P1:high
 sprint: ~
 rice_score: ~
 filed_by: Akane
+github_issue: 127
 filed_date: 2026-06-03
 ---
 
