@@ -1,5 +1,6 @@
 ---
 id: LKPR-26
+github_issue: 24
 title: lore_insert returns unhelpful "'title'" error when memory dict is missing required title field
 type: chore
 sprint: ~

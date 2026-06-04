@@ -1,5 +1,6 @@
 ---
 id: LKPR-54
+github_issue: 106
 title: lore_forget — explicit memory lifecycle control
 type: enhancement
 sprint: ~

@@ -1,5 +1,6 @@
 ---
 id: LKPR-31
+github_issue: 28
 title: Switch vector store from Chroma to LanceDB for concurrent multi-process access
 type: enhancement
 resolution: merged_via_pr7

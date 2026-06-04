@@ -1,5 +1,6 @@
 ---
 id: LKPR-21
+github_issue: 22
 title: lore_update memory_feedback expects "id" not "memory_id" — API inconsistency
 type: bug
 reason: not reproducible

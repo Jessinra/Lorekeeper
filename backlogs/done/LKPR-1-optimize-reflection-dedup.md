@@ -1,5 +1,6 @@
 ---
 id: LKPR-1
+github_issue: 19
 title: Prevent duplicate reflection on already-processed sessions
 type: bug
 sprint: unplanned

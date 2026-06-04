@@ -1,5 +1,6 @@
 ---
 id: LKPR-45
+github_issue: 83
 title: Dashboard JS — replace fragile cross-module wiring with an event-based tab registry
 type: enhancement
 sprint: 2

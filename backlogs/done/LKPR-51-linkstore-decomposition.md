@@ -1,5 +1,6 @@
 ---
 id: LKPR-51
+github_issue: 100
 title: LinkStore decomposition — split god object into focused data stores
 type: enhancement
 sprint: ~

@@ -1,5 +1,6 @@
 ---
 id: LKPR-44
+github_issue: 82
 title: Validate config overrides before applying on restart
 type: bug
 sprint: 2

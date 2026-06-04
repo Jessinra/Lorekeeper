@@ -1,5 +1,6 @@
 ---
 id: LKPR-10
+github_issue: 56
 title: Multi-agent tenancy with namespace isolation
 type: feature
 sprint: deferred

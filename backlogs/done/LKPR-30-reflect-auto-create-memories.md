@@ -1,5 +1,6 @@
 ---
 id: LKPR-30
+github_issue: 17
 title: lore_reflect auto-creates memories from factual_discoveries and lessons_learnt
 type: feature
 sprint: 1

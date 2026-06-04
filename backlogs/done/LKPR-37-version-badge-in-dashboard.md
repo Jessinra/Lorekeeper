@@ -1,5 +1,6 @@
 ---
 id: LKPR-37
+github_issue: 30
 title: Show git version badge in dashboard header
 type: feature
 sprint: unplanned

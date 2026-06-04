@@ -1,5 +1,6 @@
 ---
 id: LKPR-7
+github_issue: 32
 title: Extend setup.sh for one-shot lorekeeper onboarding
 type: feature
 sprint: 2

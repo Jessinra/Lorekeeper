@@ -1,5 +1,6 @@
 ---
 id: LKPR-25
+github_issue: 23
 title: Setup linter config, pre-commit hook, and update dev docs
 type: chore
 resolved_date: 2026-05-23

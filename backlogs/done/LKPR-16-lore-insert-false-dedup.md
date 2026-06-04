@@ -1,5 +1,6 @@
 ---
 id: LKPR-16
+github_issue: 20
 title: lore_insert false dedup — unrelated memories matched at similarity 1.0
 type: bug
 sprint: 1

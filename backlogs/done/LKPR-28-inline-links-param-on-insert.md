@@ -1,5 +1,6 @@
 ---
 id: LKPR-28
+github_issue: 25
 title: Add inline links param to lore_insert for one-call insert + link
 type: feature
 sprint: ~

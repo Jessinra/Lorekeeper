@@ -1,5 +1,6 @@
 ---
 id: LKPR-33
+github_issue: 29
 title: Smart setup — auto-detect agents, inject prompt/skills/MCP in one run
 type: feature
 sprint: ~

@@ -1,5 +1,6 @@
 ---
 id: LKPR-38
+github_issue: 70
 title: Namespace env var + auto-scoping (foundation)
 type: feature
 sprint: ~

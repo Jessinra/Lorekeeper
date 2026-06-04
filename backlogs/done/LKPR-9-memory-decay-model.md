@@ -1,5 +1,6 @@
 ---
 id: LKPR-9
+github_issue: 33
 title: Add time-decay multiplier to hybrid scoring formula
 type: feature
 sprint: 1

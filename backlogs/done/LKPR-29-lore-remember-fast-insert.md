@@ -1,5 +1,6 @@
 ---
 id: LKPR-29
+github_issue: 26
 title: Add lore_remember for one-shot fast memory insert (friction-killer)
 type: feature
 resolved_date: 2026-05-24

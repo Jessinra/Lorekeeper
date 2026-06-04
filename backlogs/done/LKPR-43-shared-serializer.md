@@ -1,5 +1,6 @@
 ---
 id: LKPR-43
+github_issue: 81
 title: Shared serializer for MCP + dashboard responses
 type: enhancement
 sprint: 2
