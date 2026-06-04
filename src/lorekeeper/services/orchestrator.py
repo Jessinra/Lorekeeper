@@ -86,6 +86,14 @@ class MemoryService:
         self._ns_filter: list[str] | None = (
             None if self._namespace == "shared" else [self._namespace, "shared"]
         )
+        # LKPR-60: in-process cache for all_memories(include_deleted=True).
+        # None means dirty — must reload from SQLite. Cache always holds the full
+        # (include_deleted=True) dataset; include_deleted=False is filtered in Python.
+        self._memory_cache: dict[str, Memory] | None = None
+
+    def _invalidate_cache(self) -> None:
+        """Mark the memory cache dirty. Call at every write that adds/removes memories."""
+        self._memory_cache = None
 
     def commit(self) -> None:
         """Flush all pending writes to disk.
@@ -98,10 +106,15 @@ class MemoryService:
         # None → no filter → reads all rows (backward-compat for the default "shared" agent).
         # Non-shared agents scope reads to their own namespace + the shared pool.
         namespaces = self._ns_filter
-        rows = self.memories.all_memory_rows(include_deleted=include_deleted, namespaces=namespaces)
-        return {r["id"]: _row_to_memory(r) for r in rows}
+        if self._memory_cache is None:
+            rows = self.memories.all_memory_rows(include_deleted=True, namespaces=namespaces)
+            self._memory_cache = {r["id"]: _row_to_memory(r) for r in rows}
+        if include_deleted:
+            return self._memory_cache
+        return {mid: m for mid, m in self._memory_cache.items() if not m.soft_deleted}
 
     def _rebuild_kw(self) -> None:
+        self._invalidate_cache()
         mems = list(self._all_memories(include_deleted=True).values())
         self._kw.rebuild(mems)
 
@@ -316,9 +329,21 @@ class MemoryService:
     def remember(self, thought: str) -> dict:
         """Fast one-shot insert with auto-extracted fields and auto-linking."""
         self._increment_metric("lore_remember")
+        result = self._remember_with_score(thought, score=self.settings.new_memory_default_score)
+        return {
+            "id": result["id"],
+            "title": result["title"],
+            "linked_to": result["linked_to"],
+        }
+
+    def _remember_with_score(self, thought: str, score: float) -> dict:
+        """Internal helper for remember-like insert with explicit score override.
+
+        Returns a stable payload with created flag so callers (e.g. lore_reflect)
+        can distinguish new inserts from dedup hits.
+        """
         title = self._extract_title(thought)
         description = title
-        score = self.settings.new_memory_default_score
 
         result = self._insert_one_memory({
             "title": title,
@@ -333,6 +358,7 @@ class MemoryService:
                 "id": dup["existing_memory"]["id"],
                 "title": title,
                 "linked_to": None,
+                "created": False,
             }
 
         lore_id = result["inserted"]["id"]
@@ -709,6 +735,8 @@ class MemoryService:
 
         if updated_memories or updated_links:
             self._conn.commit()
+        if soft_deleted:
+            self._invalidate_cache()
 
         return {
             "updated_memories": updated_memories,
@@ -717,6 +745,45 @@ class MemoryService:
             "errors": errors,
         }
 
+
+    # ── Forget ────────────────────────────────────────────────────────────────
+
+    def forget(self, memory_ids: list[str], reason: str = "unspecified") -> dict:
+        """Immediately soft-delete one or more memories by ID.
+
+        Reuses the existing soft-delete field — no new schema. Reason is logged
+        for auditability but not persisted to the DB (soft_deleted=1 is the signal).
+        """
+        if not memory_ids:
+            raise ValueError("memory_ids must not be empty")
+        _VALID_REASONS = {"duplicate", "hallucinated", "outdated", "expired", "unspecified"}
+        if reason not in _VALID_REASONS:
+            raise ValueError(f"Unknown reason {reason!r}. Must be one of: {sorted(_VALID_REASONS)}")
+        self._increment_metric("lore_forget")
+        forgotten: list[str] = []
+        not_found: list[str] = []
+        errors: list[dict] = []
+
+        for mid in memory_ids:
+            try:
+                row = self.memories.get_memory_row(mid, namespaces=self._ns_filter)
+                if row is None:
+                    not_found.append(mid)
+                    continue
+                self.memories.update_memory_fields(mid, soft_deleted=1)
+                forgotten.append(mid)
+                log.info("lore_forget", memory_id=mid, reason=reason)
+            except Exception as e:
+                errors.append({"id": mid, "error": str(e)})
+
+        if forgotten:
+            self._rebuild_kw()
+
+        return {
+            "forgotten": forgotten,
+            "not_found": not_found,
+            "errors": errors,
+        }
 
     # ── Reflect ───────────────────────────────────────────────────────────────
 
@@ -788,6 +855,40 @@ class MemoryService:
             user_profile=_bullets(user_profile_updates),
             discoveries=_bullets(factual_discoveries),
         )
+
+        memories_created: list[dict[str, str]] = []
+        if auto_insert:
+            for item in factual_discoveries:
+                remember_result = self._remember_with_score(item, score=7.0)
+                if not remember_result["created"]:
+                    continue
+                self.links.insert_link(
+                    source_memory_id=remember_result["id"],
+                    target_memory_id=reflection_id,
+                    relation_type="discovered_in",
+                    reason=f"Auto-created from reflection factual_discoveries ({session_id})",
+                )
+                memories_created.append({
+                    "id": remember_result["id"],
+                    "title": remember_result["title"],
+                    "relation": "discovered_in",
+                })
+
+            for item in lessons_learnt:
+                remember_result = self._remember_with_score(item, score=8.0)
+                if not remember_result["created"]:
+                    continue
+                self.links.insert_link(
+                    source_memory_id=remember_result["id"],
+                    target_memory_id=reflection_id,
+                    relation_type="learned_in",
+                    reason=f"Auto-created from reflection lessons_learnt ({session_id})",
+                )
+                memories_created.append({
+                    "id": remember_result["id"],
+                    "title": remember_result["title"],
+                    "relation": "learned_in",
+                })
 
         log.info("reflection_submitted", reflection_id=reflection_id, session_id=session_id)
         self._conn.commit()  # commit reflection + session rows before auto-insert

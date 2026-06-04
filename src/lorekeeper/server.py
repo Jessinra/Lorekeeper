@@ -252,6 +252,29 @@ async def lore_update(
         raise
 
 
+@mcp.tool(name="lore_forget")
+async def lore_forget(
+    memory_ids: list[str],
+    reason: str = "unspecified",
+) -> dict:
+    """Immediately soft-delete one or more memories by ID.
+
+    Use this to clean up hallucinated facts, duplicates, outdated references,
+    or expired time-bounded memories. Faster and more explicit than score decay.
+
+    Args:
+        memory_ids: List of lore_id UUIDs to soft-delete.
+        reason: One of 'duplicate', 'hallucinated', 'outdated', 'expired', 'unspecified'.
+    """
+    try:
+        return handle_forget(get_service(), memory_ids, reason)
+    except ValueError:
+        raise
+    except Exception:
+        log.exception("lore_forget_failed")
+        raise
+
+
 @mcp.tool(name="lore_processed_sessions")
 async def lore_processed_sessions() -> dict:
     """Return all session IDs that have been marked as processed via lore_reflect."""
@@ -324,4 +347,36 @@ async def lore_reflect(
         )
     except Exception:
         log.exception("lore_reflect_failed", session_id=session_id)
+        raise
+
+
+@mcp.tool()
+async def lore_forget(
+    memory_ids: list[str],
+    reason: str = "unspecified",
+) -> dict:
+    """Permanently soft-delete one or more memories by ID.
+
+    Args:
+        memory_ids: List of lore_ids to forget. Must not be empty.
+        reason: Why this memory is being forgotten. One of:
+            ``"duplicate"``, ``"hallucinated"``, ``"outdated"``,
+            ``"expired"``, ``"unspecified"``.
+
+    Returns:
+        {
+          "forgotten": [str],   # lore_ids successfully soft-deleted
+          "not_found": [str],   # lore_ids that were not found
+          "errors": [dict]      # any unexpected failures
+        }
+    """
+    if not memory_ids:
+        raise ValueError("memory_ids must not be empty")
+    _VALID_REASONS = {"duplicate", "hallucinated", "outdated", "expired", "unspecified"}
+    if reason not in _VALID_REASONS:
+        raise ValueError(f"Unknown reason {reason!r}. Must be one of: {sorted(_VALID_REASONS)}")
+    try:
+        return get_service().forget(memory_ids, reason)
+    except Exception:
+        log.exception("lore_forget_failed", memory_ids=memory_ids, reason=reason)
         raise
