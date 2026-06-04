@@ -33,6 +33,16 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
+      - name: Pre-warm embedding model
+        env:
+          HF_HOME: ~/.cache/huggingface
+        run: |
+          uv run python - << 'EOF'
+          from sentence_transformers import SentenceTransformer
+          SentenceTransformer("all-MiniLM-L6-v2")
+          print("Model ready.")
+          EOF
+
       - name: Ruff lint
         run: uv run ruff check src tests
 
