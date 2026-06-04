@@ -927,19 +927,15 @@ class MemoryService:
         self,
         lore_id: str,
         top_k: int | None = None,
-        run_classifier: bool = False,
     ) -> list[LinkCandidate]:
-        """Return Stage 1 (+ optional Stage 2) link candidates. Never writes.
+        """Return link candidates for a source memory. Never writes.
 
         Args:
             lore_id: Source memory to find candidates for.
             top_k: Override max candidates (default: settings.link_top_m).
-            run_classifier: If True, calls LLM to classify relations
-                (requires LORE_LINK_CLASSIFIER_BASE_URL to be set).
         """
         self._increment_metric("lore_recommend_links")
         from lorekeeper.services.link_candidate import LinkCandidateGenerator
-        from lorekeeper.services.relation_classifier import LLMRelationClassifier
 
         effective = self.settings
         if top_k is not None:
@@ -953,22 +949,6 @@ class MemoryService:
             settings=effective,
         )
         candidates = generator.generate(lore_id)
-
-        if run_classifier and candidates:
-            target_ids = [c.target_lore_id for c in candidates]
-            target_texts = {
-                m["id"]: m["content"]
-                for m in self.memories.get_batch(target_ids)
-                if m
-            }
-            source_mem = self.memories.get_memory_row(lore_id)
-            source_text = source_mem["content"] if source_mem else ""
-
-            classifier = LLMRelationClassifier(effective)
-            classifier.classify_batch(source_text, candidates, target_texts)
-
-            # Filter out "none" candidates
-            candidates = [c for c in candidates if c.weighted_score >= 0]
 
         return candidates
 

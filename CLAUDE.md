@@ -120,11 +120,7 @@ All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 | `LORE_LINK_WEIGHT_ENTITY` | `0.1` | Entity overlap (spaCy NER) weight |
 | `LORE_LINK_WEIGHT_TEMPORAL` | `0.1` | Temporal proximity weight |
 | `LORE_LINK_TEMPORAL_TAU_DAYS` | `30` | Decay half-life for temporal scorer (days) |
-| `LORE_LINK_SPACY_MODEL` | `en_core_web_sm` | spaCy model for entity overlap scorer |
-| `LORE_LINK_CLASSIFIER_BASE_URL` | `""` | OpenAI-compatible base URL for LLM relation classifier; empty = classifier skipped even if `run_classifier=True` |
-| `LORE_LINK_CLASSIFIER_MODEL` | `gpt-4o-mini` | Model for LLM relation classifier |
-| `LORE_LINK_CLASSIFIER_TIMEOUT` | `30` | HTTP timeout (s) for classifier calls |
-| `LORE_LINK_CLASSIFIER_API_KEY` | `""` | Bearer token for classifier API; empty = no auth header |
+|| `LORE_LINK_SPACY_MODEL` | `en_core_web_sm` | spaCy model for entity overlap scorer |
 
 ### First-Time Setup
 

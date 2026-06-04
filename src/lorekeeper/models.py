@@ -3,7 +3,6 @@ from typing import Literal, get_args
 from pydantic import BaseModel
 
 # Literal type for valid link relation types.
-# NOTE: "none" is intentionally excluded — it's a classifier discard signal only (LKPR-58).
 RelationType = Literal[
     "related_to",
     "used_in",

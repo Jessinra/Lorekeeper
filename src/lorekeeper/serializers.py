@@ -170,44 +170,17 @@ def serialize_search_result(
     return output
 
 
-def serialize_link_candidate(candidate: LinkCandidate | dict[str, Any]) -> dict[str, Any]:
+def serialize_link_candidate(candidate: LinkCandidate) -> dict[str, Any]:
     """Serialize a LinkCandidate for MCP response."""
-    if isinstance(candidate, dict):
-        cand = candidate
-    else:
-        cand = {
-            "source_lore_id": candidate.source_lore_id,
-            "target_lore_id": candidate.target_lore_id,
-            "weighted_score": candidate.weighted_score,
-            "cosine_score": candidate.cosine_score,
-            "bm25_score": candidate.bm25_score,
-            "entity_score": candidate.entity_score,
-            "temporal_score": candidate.temporal_score,
-            "proposed_relation": candidate.proposed_relation,
-            "classifier_confidence": candidate.classifier_confidence,
-            "classifier_reasoning": candidate.classifier_reasoning,
-        }
-
     result: dict[str, Any] = {
-        "source_lore_id": cand["source_lore_id"],
-        "target_lore_id": cand["target_lore_id"],
-        "proposed_relation": cand["proposed_relation"],
-        "weighted_score": round(cand["weighted_score"], 4),
+        "source_lore_id": candidate.source_lore_id,
+        "target_lore_id": candidate.target_lore_id,
+        "weighted_score": round(candidate.weighted_score, 4),
         "scores": {
-            "cosine": round(cand["cosine_score"], 4),
-            "bm25": round(cand["bm25_score"], 4),
-            "entity": round(cand["entity_score"], 4),
-            "temporal": round(cand["temporal_score"], 4),
+            "cosine": round(candidate.cosine_score, 4),
+            "bm25": round(candidate.bm25_score, 4),
+            "entity": round(candidate.entity_score, 4),
+            "temporal": round(candidate.temporal_score, 4),
         },
     }
-
-    confidence = cand.get("classifier_confidence", 0.0)
-    if confidence > 0:
-        result["classifier"] = {
-            "confidence": round(confidence, 4),
-            "reasoning": cand.get("classifier_reasoning", ""),
-        }
-    else:
-        result["classifier"] = None
-
     return result

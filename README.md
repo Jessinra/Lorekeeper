@@ -241,33 +241,30 @@ Suggests link candidates between a memory and the related memories in the store.
 Parameters:
 
 - `lore_id` (required): source memory to find candidates for
-- `top_k` (optional, default from `LORE_LINK_TOP_M`): max candidates to return
-- `run_classifier` (optional, default `false`): if `true`, calls LLM to classify relation types (requires `LORE_LINK_CLASSIFIER_BASE_URL` to be set). `"none"` results are filtered out
+|- `top_k` (optional, default from `LORE_LINK_TOP_M`): max candidates to return, overriding the default limit
 
 Returns:
 ```json
 {
   "candidates": [
     {
+      "source_lore_id": "<uuid>",
       "target_lore_id": "<uuid>",
-      "target_title": "Memory title",
-      "semantic_score": 0.82,
-      "keyword_score": 0.45,
-      "entity_overlap_score": 0.0,
-      "temporal_score": 0.0,
       "weighted_score": 0.65,
-      "proposed_relation": "related_to",
-      "classifier_reason": null
+      "scores": {
+        "cosine": 0.82,
+        "bm25": 0.45,
+        "entity": 0.0,
+        "temporal": 0.0
+      }
     }
   ],
-  "count": 5,
+  "count": 10,
   "source_lore_id": "<uuid>"
 }
 ```
 
-When `run_classifier=True` is set and the classifier runs, `proposed_relation` reflects the LLM's judgment and `classifier_reason` captures the reasoning. When `run_classifier=False` (default), every candidate gets `proposed_relation: "related_to"`.
-
-Supported relation types: `related_to`, `used_in`, `used_for`, `used_by`, `used_as`, `contradicts`, `supersedes`, `depends_on`.
+Per-signal `scores` lets the agent make its own judgment about which candidates are worth linking — no LLM call inside Lorekeeper.
 
 ---
 
@@ -348,13 +345,9 @@ All settings use the `LORE_` prefix and can be set via environment variables:
 | `LORE_LINK_WEIGHT_ENTITY`             | `0.1`                                    | Entity overlap weight in Stage 1 scoring                                                                  |
 | `LORE_LINK_WEIGHT_TEMPORAL`           | `0.1`                                    | Temporal proximity weight in Stage 1 scoring                                                              |
 | `LORE_LINK_TEMPORAL_TAU_DAYS`          | `30.0`                                   | Decay half-life (days) for temporal proximity scorer                                                      |
-| `LORE_LINK_SPACY_MODEL`                | `en_core_web_sm`                         | spaCy model for entity overlap scoring (pip install spacy if used)                                        |
-| `LORE_LINK_CLASSIFIER_BASE_URL`         | `""`                                     | OpenAI-compatible base URL; empty = classifier skipped even if `run_classifier=True`                        |
-| `LORE_LINK_CLASSIFIER_MODEL`           | `gpt-4o-mini`                            | Model name for LLM relation classifier                                                                     |
-| `LORE_LINK_CLASSIFIER_API_KEY`         | `""`                                     | Bearer token for classifier API; empty = no auth header                                                     |
-| `LORE_LINK_CLASSIFIER_TIMEOUT`         | `30.0`                                   | HTTP timeout (seconds) for classifier calls                                                               |
+|| `LORE_LINK_SPACY_MODEL`                | `en_core_web_sm`                         | spaCy model for entity overlap scoring (pip install spacy if used)                                        |
 
----
+---|
 
 ## Claude Code integration
 

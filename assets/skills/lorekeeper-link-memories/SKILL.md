@@ -12,20 +12,18 @@ Use `lore_recommend_links` to find high-confidence link candidates between memor
 ## How to Use
 
 ```python
-# Stage 1 only (fast, no LLM cost)
-candidates = mcp_lore_recommend_links(lore_id="<memory-id>", run_classifier=False)
-
-# Stage 1 + Stage 2 (LLM classifies relation types)
-candidates = mcp_lore_recommend_links(lore_id="<memory-id>", run_classifier=True)
+candidates = mcp_lore_recommend_links(lore_id="<memory-id>")
 ```
+
+Optional `top_k` parameter overrides the max candidates returned.
 
 ## Reading the Output
 
 Each candidate has:
 - `weighted_score` (0.0–1.0): combined score from all 4 signals (cosine, BM25, entity overlap, temporal proximity)
 - `scores`: per-signal breakdown for transparency
-- `proposed_relation`: Stage 2 classification result (only when `run_classifier=True`)
-- `classifier.confidence`: how confident the LLM is about the relation (only when populated)
+
+The agent evaluates candidates itself — it already has an LLM. `lore_recommend_links` only surfaces the data.
 
 ## What Makes a Good Link
 
@@ -37,7 +35,6 @@ Each candidate has:
 ## What to Skip
 
 - **Low weighted_score** (< 0.3): weak signals, likely spurious
-- **Stage 2 classifier says "none"**: the LLM determined no meaningful relation exists
 - **Temporal-only matches**: memories created close in time but about completely different topics
 
 ## Confirming Links

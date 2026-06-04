@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
@@ -29,10 +29,6 @@ class LinkCandidate:
     entity_score: float = 0.0
     temporal_score: float = 0.0
     weighted_score: float = 0.0
-    # Filled by Stage 2 (LLM classifier):
-    proposed_relation: str = field(default="related_to")
-    classifier_confidence: float = 0.0
-    classifier_reasoning: str = ""
 
 
 class CosineScorer:
