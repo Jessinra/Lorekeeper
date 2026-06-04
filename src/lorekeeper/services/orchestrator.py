@@ -110,7 +110,7 @@ class MemoryService:
             rows = self.memories.all_memory_rows(include_deleted=True, namespaces=namespaces)
             self._memory_cache = {r["id"]: _row_to_memory(r) for r in rows}
         if include_deleted:
-            return self._memory_cache
+            return dict(self._memory_cache)
         return {mid: m for mid, m in self._memory_cache.items() if not m.soft_deleted}
 
     def _rebuild_kw(self) -> None:
