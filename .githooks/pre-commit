@@ -3,7 +3,7 @@
 # 1. Blocks commits on main (branch guard)
 # 2. Runs lint and tests before every commit. Blocks on failure.
 #
-# Install: scripts/lorekeeper-setup.sh  (run once per clone)
+# Install: scripts/setup.sh  (run once per clone)
 
 set -euo pipefail
 
@@ -21,12 +21,13 @@ echo "✅  tickets valid"
 
 echo ""
 echo "🔍  ruff check..."
-uv run ruff check src tests
+uv run ruff check src tests scripts/
 echo "✅  ruff passed"
 
 echo ""
-echo "🔍  mypy (advisory — failures don't block)..."
-uv run mypy src || echo "⚠️  mypy found issues — review before push"
+echo "🔍  mypy..."
+uv run mypy src
+echo "✅  mypy passed"
 
 echo ""
 echo "🔍  biome check (JS)..."

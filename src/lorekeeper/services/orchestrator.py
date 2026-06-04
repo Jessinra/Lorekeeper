@@ -217,15 +217,15 @@ class MemoryService:
 
     def insert(
         self,
-        memories: list[dict],
-        links: list[dict],
+        memories: list[dict[str, Any]],
+        links: list[dict[str, Any]],
         force: bool = False,
-    ) -> dict:
+    ) -> dict[str, Any]:
         self._increment_metric("lore_insert")
-        inserted_memories: list[dict] = []
-        inserted_links: list[dict] = []
-        duplicates: list[dict] = []
-        errors: list[dict] = []
+        inserted_memories: list[dict[str, Any]] = []
+        inserted_links: list[dict[str, Any]] = []
+        duplicates: list[dict[str, Any]] = []
+        errors: list[dict[str, Any]] = []
 
         for m in memories:
             try:
@@ -326,7 +326,7 @@ class MemoryService:
 
     # ── Remember (fast one-shot insert) ────────────────────────────────────────
 
-    def remember(self, thought: str) -> dict:
+    def remember(self, thought: str) -> dict[str, Any]:
         """Fast one-shot insert with auto-extracted fields and auto-linking."""
         self._increment_metric("lore_remember")
         result = self._remember_with_score(thought, score=self.settings.new_memory_default_score)
@@ -336,7 +336,7 @@ class MemoryService:
             "linked_to": result["linked_to"],
         }
 
-    def _remember_with_score(self, thought: str, score: float) -> dict:
+    def _remember_with_score(self, thought: str, score: float) -> dict[str, Any]:
         """Internal helper for remember-like insert with explicit score override.
 
         Returns a stable payload with created flag so callers (e.g. lore_reflect)
@@ -370,7 +370,9 @@ class MemoryService:
         self._conn.commit()
         return {"id": lore_id, "title": title, "linked_to": linked_to, "created": True}
 
-    def _auto_link(self, text: str, lore_id: str, source: str = "remember") -> dict | None:
+    def _auto_link(
+        self, text: str, lore_id: str, source: str = "remember"
+    ) -> dict[str, Any] | None:
         """Auto-link a new memory to its nearest neighbor above threshold.
 
         Uses settings for k (candidate count) and threshold. Checks link_store
@@ -461,7 +463,7 @@ class MemoryService:
             return {"id": hit["lore_id"], "score": raw_score}
         return None
 
-    def _insert_one_memory(self, m: dict, force: bool) -> dict:
+    def _insert_one_memory(self, m: dict[str, Any], force: bool) -> dict[str, Any]:
         if "title" not in m:
             raise ValueError("memory dict missing required field: 'title'")
         title = m["title"]
@@ -509,7 +511,7 @@ class MemoryService:
         log.info("memory_inserted", lore_id=lore_id, title=title)
         return {"inserted": {"id": lore_id, "title": title}}
 
-    def _insert_one_link(self, lnk: dict) -> dict:
+    def _insert_one_link(self, lnk: dict[str, Any]) -> dict[str, Any]:
         self._validate_relation_type(lnk.get("relation_type", ""))
         link = self.links.insert_link(
             source_memory_id=lnk["source_memory_id"],
@@ -542,18 +544,18 @@ class MemoryService:
 
     def import_dump(
         self,
-        memories: list[dict],
-        links: list[dict],
+        memories: list[dict[str, Any]],
+        links: list[dict[str, Any]],
         dry_run: bool = False,
-    ) -> dict:
+    ) -> dict[str, Any]:
         memories_inserted = 0
         memories_skipped = 0
         links_inserted = 0
         links_skipped = 0
         links_error = 0
         errors: list[str] = []
-        preview_memories: list[dict] = []
-        preview_links: list[dict] = []
+        preview_memories: list[dict[str, Any]] = []
+        preview_links: list[dict[str, Any]] = []
 
         # Track IDs that exist or were just inserted (for FK validation)
         valid_ids: set[str] = {r["id"] for r in self.memories.all_memory_rows(include_deleted=True)}
@@ -663,14 +665,14 @@ class MemoryService:
 
     def update(
         self,
-        memory_feedback: list[dict],
-        link_feedback: list[dict],
-    ) -> dict:
+        memory_feedback: list[dict[str, Any]],
+        link_feedback: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         self._increment_metric("lore_update")
         updated_memories = 0
         updated_links = 0
         soft_deleted = 0
-        errors: list[dict] = []
+        errors: list[dict[str, Any]] = []
 
         for fb in memory_feedback:
             try:
@@ -685,7 +687,7 @@ class MemoryService:
                 new_score = apply_score_delta(
                     row["score"], useful, confidence, self.settings
                 )
-                fields: dict = {"score": new_score, "usage_count": row["usage_count"] + 1}
+                fields: dict[str, Any] = {"score": new_score, "usage_count": row["usage_count"] + 1}
 
                 if confidence is not None:
                     new_conf = compute_running_confidence(
@@ -748,7 +750,7 @@ class MemoryService:
 
     # ── Forget ────────────────────────────────────────────────────────────────
 
-    def forget(self, memory_ids: list[str], reason: str = "unspecified") -> dict:
+    def forget(self, memory_ids: list[str], reason: str = "unspecified") -> dict[str, Any]:
         """Immediately soft-delete one or more memories by ID.
 
         Reuses the existing soft-delete field — no new schema. Reason is logged
@@ -762,7 +764,7 @@ class MemoryService:
         self._increment_metric("lore_forget")
         forgotten: list[str] = []
         not_found: list[str] = []
-        errors: list[dict] = []
+        errors: list[dict[str, Any]] = []
 
         for mid in memory_ids:
             try:
@@ -803,7 +805,7 @@ class MemoryService:
         summary: str,
         memory_ids: list[str],
         auto_insert: bool = True,
-    ) -> dict:
+    ) -> dict[str, Any]:
         self._increment_metric("lore_reflect")
 
         # Guard: if this session has already been processed, return idempotent no-op.
@@ -861,7 +863,7 @@ class MemoryService:
         self._conn.commit()  # commit reflection + session rows before auto-insert
 
         # Auto-insert factual_discoveries and lessons_learnt as memories (best-effort)
-        memories_created: list[dict] = []
+        memories_created: list[dict[str, Any]] = []
         if auto_insert:
             _auto_items: list[tuple[list[str], str, float]] = [
                 (factual_discoveries, "discovered_in", 7.0),
