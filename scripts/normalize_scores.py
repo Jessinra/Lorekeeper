@@ -37,8 +37,10 @@ def main() -> None:
     after  = [u[0] for u in updates]
 
     print(f"Memories to update : {len(rows)}")
-    print(f"Score range before : {min(before):.2f} – {max(before):.2f}  (avg {sum(before)/len(before):.2f})")
-    print(f"Score range after  : {min(after):.2f} – {max(after):.2f}  (avg {sum(after)/len(after):.2f})")
+    avg_before = sum(before) / len(before)
+    print(f"Score range before : {min(before):.2f} - {max(before):.2f}  (avg {avg_before:.2f})")
+    avg_after = sum(after) / len(after)
+    print(f"Score range after  : {min(after):.2f} - {max(after):.2f}  (avg {avg_after:.2f})")
     print(f"Shift applied      : +{SHIFT}  (capped at {SCORE_MAX})")
     capped = sum(1 for a in after if a >= SCORE_MAX)
     if capped:

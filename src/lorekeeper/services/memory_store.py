@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import UTC, datetime
+from typing import cast
 
 from lorekeeper.services.database import Database
 
@@ -71,7 +72,7 @@ class MemoryStore:
             placeholders = ",".join("?" * len(namespaces))
             sql += f" AND namespace IN ({placeholders})"
             params.extend(namespaces)
-        return self._conn.execute(sql, params).fetchone()
+        return cast(sqlite3.Row | None, self._conn.execute(sql, params).fetchone())
 
     def get_memory_rows(
         self, ids: list[str], namespaces: list[str] | None = None
@@ -114,7 +115,7 @@ class MemoryStore:
             sql += f" AND namespace IN ({placeholders})"
             params.extend(namespaces)
         sql += " ORDER BY score DESC LIMIT 1"
-        return self._conn.execute(sql, params).fetchone()
+        return cast(sqlite3.Row | None, self._conn.execute(sql, params).fetchone())
 
     def all_memory_rows(
         self,

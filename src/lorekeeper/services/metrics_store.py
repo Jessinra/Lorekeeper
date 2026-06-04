@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from lorekeeper.services.database import Database
 
@@ -41,7 +42,7 @@ class MetricsStore:
                 continue
         return bucket  # already normalized or unknown — return as-is
 
-    def get_metrics(self, hours: int = 24) -> list[dict]:
+    def get_metrics(self, hours: int = 24) -> list[dict[str, Any]]:
         """Return all metric rows within the last `hours` hours, oldest first.
 
         Buckets are normalized to `YYYY-MM-DD HH:00` before filtering and

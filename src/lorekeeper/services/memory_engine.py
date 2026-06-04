@@ -1,6 +1,7 @@
 """MemoryEngine — abstract base class for vector store backends."""
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class MemoryEngine(ABC):
@@ -19,13 +20,13 @@ class MemoryEngine(ABC):
         """
 
     @abstractmethod
-    def add(self, text: str, lore_id: str, extra_metadata: dict | None = None) -> str: ...
+    def add(self, text: str, lore_id: str, extra_metadata: dict[str, Any] | None = None) -> str: ...
 
     @abstractmethod
-    def search(self, query: str, limit: int = 200) -> list[dict]: ...
+    def search(self, query: str, limit: int = 200) -> list[dict[str, Any]]: ...
 
     @abstractmethod
-    def get_all(self) -> list[dict]: ...
+    def get_all(self) -> list[dict[str, Any]]: ...
 
     @abstractmethod
     def find_mem0_id(self, lore_id: str) -> str | None:

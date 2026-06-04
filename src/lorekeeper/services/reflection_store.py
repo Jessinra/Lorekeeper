@@ -8,6 +8,7 @@ to preserve transactional locality.
 from __future__ import annotations
 
 import sqlite3
+from typing import cast
 
 from lorekeeper.services.database import Database
 
@@ -66,9 +67,9 @@ class ReflectionStore:
         )
 
     def get_reflection(self, reflection_id: str) -> sqlite3.Row | None:
-        return self._conn.execute(
+        return cast(sqlite3.Row | None, self._conn.execute(
             "SELECT * FROM reflections WHERE id = ?", (reflection_id,)
-        ).fetchone()
+        ).fetchone())
 
     def all_reflections(self) -> list[sqlite3.Row]:
         return self._conn.execute(
@@ -100,7 +101,7 @@ class ReflectionStore:
              good_patterns, user_profile, discoveries),
         )
 
-    def upsert_sessions_bulk(self, rows: list[tuple]) -> None:
+    def upsert_sessions_bulk(self, rows: list[tuple[str | None, ...]]) -> None:
         """Insert/update multiple sessions in a single transaction.
 
         Each tuple: (session_id, session_date, topic, task_type, reviewed_at,
@@ -127,9 +128,9 @@ class ReflectionStore:
         ).fetchall()
 
     def get_session(self, session_id: str) -> sqlite3.Row | None:
-        return self._conn.execute(
+        return cast(sqlite3.Row | None, self._conn.execute(
             "SELECT * FROM sessions WHERE session_id = ?", (session_id,)
-        ).fetchone()
+        ).fetchone())
 
     def sessions_for_reflection(self, reflection_id: str) -> list[sqlite3.Row]:
         return self._conn.execute(

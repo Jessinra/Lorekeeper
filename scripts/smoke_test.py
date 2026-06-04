@@ -12,13 +12,25 @@ REPO = Path(__file__).parent.parent
 
 REQUESTS = [
     # 1. search for something that should be in the migrated store
-    {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
-     "params": {"name": "lore_search", "arguments": {"query": "checkout payment flow", "limit": 3}}},
+    {
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {
+            "name": "lore_search",
+            "arguments": {"query": "checkout payment flow", "limit": 3},
+        },
+    },
     # 2. insert a test memory
-    {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
-     "params": {"name": "lore_insert", "arguments": {
-         "memories": [{"title": "smoke test memory", "description": "test", "content": "smoke test"}]
-     }}},
+    {
+        "jsonrpc": "2.0", "id": 2, "method": "tools/call",
+        "params": {
+            "name": "lore_insert",
+            "arguments": {
+                "memories": [
+                    {"title": "smoke test memory", "description": "test", "content": "smoke test"}
+                ]
+            },
+        },
+    },
     # 3. search again to confirm insert
     {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
      "params": {"name": "lore_search", "arguments": {"query": "smoke test memory", "limit": 3}}},

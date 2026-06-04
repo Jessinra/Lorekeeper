@@ -89,7 +89,10 @@ def parse_session_log(path: Path) -> dict | None:
         "lessons":       extract_bullets("Lessons learnt"),
         "good_patterns": extract_bullets("Good patterns observed"),
         "user_profile":  extract_bullets("What I learned about the user"),
-        "discoveries":   extract_bullets("Corrections / discoveries") + extract_bullets("Decisions made"),
+        "discoveries":   (
+            extract_bullets("Corrections / discoveries")
+            + extract_bullets("Decisions made")
+        ),
         # Raw text fields for the sessions content columns
         "what_was_done": extract_text("What was done"),
         "decisions_text":extract_text("Decisions made"),
@@ -235,14 +238,17 @@ def main() -> None:
                 ),
             )
             reflections_inserted += 1
-            print(f"  INSERT {reflection_id[:8]}… ({completed_at}, {session_count} sessions, {len(matched_sessions)} substantive logs)")
+            f"{completed_at}, {session_count} sessions, {len(matched_sessions)} substantive logs)"
 
         # Link substantive session records
         for info in matched_sessions:
             sid = info["session_id"]
             if not is_valid_uuid(sid):
                 continue
-            row = conn.execute("SELECT session_id FROM sessions WHERE session_id = ?", (sid,)).fetchone()
+            row = conn.execute(
+                "SELECT session_id FROM sessions WHERE session_id = ?",
+                (sid,),
+            ).fetchone()
             if row:
                 conn.execute(
                     """UPDATE sessions SET
@@ -270,7 +276,8 @@ def main() -> None:
                           transcript, what_was_done, decisions, lessons_learnt,
                           good_patterns, user_profile, discoveries)
                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                    (sid, info["date"], info["topic"], info["task_type"], completed_at, reflection_id,
+                    (sid, info["date"], info["topic"], info["task_type"],
+                     completed_at, reflection_id,
                      info["transcript"], info["what_was_done"], info["decisions_text"],
                      info["lessons_text"], info["patterns_text"], info["profile_text"],
                      info["discover_text"]),
@@ -285,7 +292,10 @@ def main() -> None:
     print("Assigning stub sessions…")
     for info in stub_sessions:
         sid = info["session_id"]
-        row = conn.execute("SELECT session_id, reflection_id FROM sessions WHERE session_id = ?", (sid,)).fetchone()
+        row = conn.execute(
+            "SELECT session_id, reflection_id FROM sessions WHERE session_id = ?",
+            (sid,),
+        ).fetchone()
         if row and row["reflection_id"]:
             continue  # already linked
 
@@ -301,7 +311,8 @@ def main() -> None:
                      task_type     = COALESCE(task_type, ?),
                      reflection_id = COALESCE(reflection_id, ?)
                    WHERE session_id = ?""",
-                (info["date"], info["topic"] or "short-session", info["task_type"] or "build", ref_id, sid),
+                (info["date"], info["topic"] or "short-session",
+                 info["task_type"] or "build", ref_id, sid),
             )
         else:
             conn.execute(
@@ -321,7 +332,10 @@ def main() -> None:
     for sid, info in all_by_uuid.items():
         if info["is_stub"]:
             continue
-        row = conn.execute("SELECT session_id, topic FROM sessions WHERE session_id = ?", (sid,)).fetchone()
+        row = conn.execute(
+            "SELECT session_id, topic FROM sessions WHERE session_id = ?",
+            (sid,),
+        ).fetchone()
         content_args = (
             info["transcript"], info["what_was_done"], info["decisions_text"],
             info["lessons_text"], info["patterns_text"], info["profile_text"],
@@ -362,7 +376,10 @@ def main() -> None:
     conn.close()
 
     print()
-    print(f"Done: {reflections_inserted} reflections inserted, {sessions_enriched} sessions enriched")
+    print(
+        f"Done: {reflections_inserted} reflections inserted,"
+        f" {sessions_enriched} sessions enriched"
+    )
 
 
 if __name__ == "__main__":

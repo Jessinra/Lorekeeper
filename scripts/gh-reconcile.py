@@ -63,11 +63,11 @@ def extract_lkpr(title: str) -> str | None:
 
 
 def label_names(issue: dict) -> list[str]:
-    return [l.get("name", "") for l in issue.get("labels", [])]
+    return [lbl.get("name", "") for lbl in issue.get("labels", [])]
 
 
 def has_label(labels: list[str], prefix: str) -> bool:
-    return any(l.startswith(prefix) for l in labels)
+    return any(lbl.startswith(prefix) for lbl in labels)
 
 
 # ── data loading ─────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ def load_issues(state: str = "open") -> list[dict]:
 
 
 def load_prs() -> list[dict]:
-    print(f"  Fetching merged PRs...", end=" ", flush=True)
+    print("  Fetching merged PRs...", end=" ", flush=True)
     data = gh("pr", "list", "--repo", REPO, "--state", "merged",
               "--limit", "50", "--json", "number,title,headRefName,mergedAt,labels,body")
     print(f"{len(data)} PRs")
@@ -106,13 +106,15 @@ def load_markdown_backlog() -> dict[str, dict]:
                 elif line.startswith("title:"):
                     title = line.split(":", 1)[1].strip()
             if lkpr:
-                result[lkpr] = {"status": status, "path": str(f), "title": title, "section": section}
+                result[lkpr] = {
+                    "status": status, "path": str(f), "title": title, "section": section,
+                }
     return result
 
 
 def get_branches() -> list[str]:
     """Get all remote branches excluding main/backlog."""
-    print(f"  Fetching remote branches...", end=" ", flush=True)
+    print("  Fetching remote branches...", end=" ", flush=True)
     try:
         result = subprocess.run(
             ["git", "branch", "-r"],
@@ -178,7 +180,10 @@ def check_merged_not_done(open_issues: list[dict], merged_prs: list[dict]) -> li
                 })
                 count += 1
                 pr_list = ", ".join(f"PR#{n}" for n in merged_pr_num)
-                print(f"  ✗ #{issue['number']} [{lkpr}] has merged {pr_list} but labels: {', '.join(lbls)}")
+                print(
+                    f"  ✗ #{issue['number']} [{lkpr}] has merged "
+                    f"{pr_list} but labels: {', '.join(lbls)}"
+                )
 
     if count == 0:
         print("  ✓ All merged PRs have corresponding S:Done issues.")
@@ -255,7 +260,11 @@ def check_duplicates(all_issues: list[dict]) -> list:
     return findings
 
 
-def check_markdown_vs_github(open_issues: list[dict], closed_issues: list[dict], markdown: dict[str, dict]) -> list:
+def check_markdown_vs_github(
+    open_issues: list[dict],
+    closed_issues: list[dict],
+    markdown: dict[str, dict],
+) -> list:
     """Compare markdown status field vs GitHub issue label."""
     print("\n── Check 4: Markdown status vs GitHub label ──")
     count = 0
@@ -278,17 +287,20 @@ def check_markdown_vs_github(open_issues: list[dict], closed_issues: list[dict],
             continue
 
         gh_labels = label_names(issue)
-        gh_status = next((l for l in gh_labels if l.startswith("S:")), "S:unknown")
+        gh_status = next((lbl for lbl in gh_labels if lbl.startswith("S:")), "S:unknown")
 
         # Normalize: "S:ready" ↔ "S:Ready"
         if md_status.lower() != gh_status.lower():
-            print(f"  ✗ #{issue['number']} [{lkpr}] markdown: {md_status} vs GitHub: {gh_status} ({issue['state']})")
+            print(
+                f"  ✗ #{issue['number']} [{lkpr}] markdown: "
+                f"{md_status} vs GitHub: {gh_status} ({issue['state']})",
+            )
             count += 1
 
     # Show unreferenced markdown files (S:Done ones are expected — keep the spec)
     done_unreferenced = [u for u in unchecked if u[1]["status"] == "S:done"]
     if done_unreferenced:
-        for lkpr, md in done_unreferenced:
+        for lkpr, _md in done_unreferenced:
             print(f"  ✓ [{lkpr}] S:done markdown file — no open issue needed (spec archive)")
 
     if count == len(done_unreferenced):
@@ -387,13 +399,13 @@ def main():
     if total == 0:
         print("  ✓ All clean!")
     else:
-        print(f"\n  Fix suggestions:")
+        print("\n  Fix suggestions:")
         if f1:
             print(f"    → {len(f1)} issues have merged PRs but aren't S:Done")
-            print(f"       Run with --fix-done to auto-close")
+            print("       Run with --fix-done to auto-close")
         if f2:
             print(f"    → {len(f2)} S:Done issues still open")
-            print(f"       Run with --fix-done to auto-close")
+            print("       Run with --fix-done to auto-close")
         if f3:
             dup_count = sum(f["open_count"] for f in f3)
             print(f"    → {dup_count} duplicate open issues to resolve")

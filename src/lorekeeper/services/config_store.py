@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from typing import Any
 
 from lorekeeper.services.database import Database
 
@@ -22,7 +23,7 @@ class ConfigStore:
         self._db = db
         self._conn = db.conn
 
-    def get_overrides(self) -> dict:
+    def get_overrides(self) -> dict[str, Any]:
         """Return all persisted config overrides as a {key: value} dict."""
         rows = self._conn.execute(
             "SELECT key, value FROM config_overrides"
