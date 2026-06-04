@@ -937,6 +937,7 @@ class MemoryService:
             run_classifier: If True, calls LLM to classify relations
                 (requires LORE_LINK_CLASSIFIER_BASE_URL to be set).
         """
+        self._increment_metric("lore_recommend_links")
         from lorekeeper.services.link_candidate import LinkCandidateGenerator
         from lorekeeper.services.relation_classifier import LLMRelationClassifier
 
