@@ -2,11 +2,10 @@
 id: LKPR-36
 title: Knowledge debt ratio (lore_debt)
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: unplanned
 rice_score: ~
 filed_by: Hermes (daily brainstorm)
+github_issue: 69
 filed_date: 2026-05-25
 ---
 

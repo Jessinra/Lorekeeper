@@ -2,11 +2,10 @@
 id: LKPR-46
 title: Daily Memory Digest — a human pull loop
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: ~
 rice_score: ~
 filed_by: Akane
+github_issue: 88
 filed_date: 2026-05-28
 ---
 

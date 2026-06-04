@@ -1,9 +1,8 @@
 ---
 id: LKPR-51
+github_issue: 100
 title: LinkStore decomposition — split god object into focused data stores
 type: enhancement
-status: S:done
-priority: P2:medium
 sprint: ~
 rice_score: ~
 filed_by: Diana

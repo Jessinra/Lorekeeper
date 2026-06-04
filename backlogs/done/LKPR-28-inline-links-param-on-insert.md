@@ -1,9 +1,8 @@
 ---
 id: LKPR-28
+github_issue: 25
 title: Add inline links param to lore_insert for one-call insert + link
 type: feature
-status: S:done
-priority: P1:high
 sprint: ~
 rice_score: ~
 filed_by: Akane (PM)

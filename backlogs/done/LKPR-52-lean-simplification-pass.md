@@ -2,11 +2,10 @@
 id: LKPR-52
 title: Lean simplification pass — transactions, dashboard split, validation
 type: chore
-status: S:ready
-priority: P2:medium
 sprint: 3
 rice_score: ~
 filed_by: Diana
+github_issue: 102
 filed_date: 2026-06-02
 ---
 

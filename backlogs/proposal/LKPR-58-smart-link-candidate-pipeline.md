@@ -2,11 +2,10 @@
 id: LKPR-58
 title: Smart link candidate pipeline — lore_recommend_links MCP tool + agent skill
 type: feature
-status: S:proposal
-priority: P1:high
 sprint: ~
 rice_score: ~
 filed_by: Akane
+github_issue: 127
 filed_date: 2026-06-03
 ---
 

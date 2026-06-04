@@ -2,11 +2,10 @@
 id: LKPR-57
 title: PyPI publish — pip install lorekeeper for zero-clone onboarding
 type: feature
-status: S:proposal
-priority: P1:high
 sprint: ~
 rice_score: 72.0  # R:9 I:9 C:70% E:2d
 filed_by: Jason → Akane
+github_issue: 124
 filed_date: 2026-06-03
 ---
 

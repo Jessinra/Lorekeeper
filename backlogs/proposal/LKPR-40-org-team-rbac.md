@@ -2,11 +2,10 @@
 id: LKPR-40
 title: Organization / team namespaces with multi-namespace RBAC
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: ~
 rice_score: ~
 filed_by: Akane
+github_issue: 73
 filed_date: 2026-05-27
 depends_on: LKPR-39
 ---

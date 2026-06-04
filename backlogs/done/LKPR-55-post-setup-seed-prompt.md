@@ -2,8 +2,6 @@
 id: LKPR-55
 title: Post-setup seed prompt — agent auto-populates first memories
 type: feature
-status: S:done
-priority: P2:medium
 sprint: ~
 rice_score: 45.0  # R:6 I:9 C:90% E:0.5d
 filed_by: Jason

@@ -1,9 +1,8 @@
 ---
 id: LKPR-6
+github_issue: 31
 title: Extend lore_search with refine_from for iterative narrowing
 type: feature
-status: S:done
-priority: P1:high
 sprint: 1
 rice_score: 42.5 # R:7 I:8 C:85% E:0.5w
 filed_by: Hermes

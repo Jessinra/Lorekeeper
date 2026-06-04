@@ -2,11 +2,10 @@
 id: LKPR-4
 title: Context budgeting and novelty ranking in lore_search
 type: feature
-status: S:proposal
-priority: P2:medium
 sprint: 2
 rice_score: 31.5 # R:7 I:6 C:75% E:1.5w
 filed_by: Hermes
+github_issue: 72
 filed_date: 2026-05-22
 ---
 

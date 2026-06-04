@@ -1,9 +1,8 @@
 ---
 id: LKPR-49
+github_issue: 114
 title: Token-Efficient lore_search — title mode + ids bulk retrieval
 type: feature
-status: S:ready
-priority: P1:high
 sprint: unplanned
 rice_score: ~
 filed_by: Akane

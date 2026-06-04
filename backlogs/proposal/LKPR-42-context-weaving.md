@@ -2,11 +2,10 @@
 id: LKPR-42
 title: Context Weaving (lore_weave) — Synthesized Knowledge Briefs from Search Results
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: ~
 rice_score: ~
 filed_by: Akane
+github_issue: 77
 filed_date: 2026-05-27
 ---
 

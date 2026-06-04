@@ -1,9 +1,8 @@
 ---
 id: LKPR-19
+github_issue: 21
 title: FK constraint not enforced in link_store — test_fk_rejects_missing_memory failing
 type: bug
-status: S:done
-priority: P3:low
 sprint: unplanned
 rice_score: ~
 filed_by: Akane

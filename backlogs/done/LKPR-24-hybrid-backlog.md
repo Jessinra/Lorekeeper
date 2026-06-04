@@ -2,8 +2,6 @@
 id: LKPR-24
 title: Hybrid backlog — GitHub Issues for status, markdown files for specs
 type: chore
-status: S:done
-priority: P1:high
 sprint: 1
 rice_score: ~
 filed_by: Akane (PM)

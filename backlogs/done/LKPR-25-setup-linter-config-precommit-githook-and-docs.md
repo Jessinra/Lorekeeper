@@ -1,10 +1,9 @@
 ---
 id: LKPR-25
+github_issue: 23
 title: Setup linter config, pre-commit hook, and update dev docs
 type: chore
-status: S:done
 resolved_date: 2026-05-23
-priority: P1:high
 sprint: ~
 rice_score: ~
 filed_by: Jason

@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-dev
 description: Engineering practices for developing the Lorekeeper codebase. Load this skill when working on Lorekeeper source code, fixing bugs, adding features, writing tests, or reviewing PRs. Covers architecture conventions, SQLite/LanceDB/Chroma quirks, testing patterns, and the verification standard for shipped changes. For backlog/ticket workflow, see backlog-management skill.
-version: v2.4.0
+version: v2.5.0
 tags: []
 related_skills: [backlog-management, after-changes]
 ---
@@ -202,6 +202,17 @@ Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`.
 3. Change `status` to `in-progress`
 
 **Submitting work:** 3. Self-review: full test suite (`uv run pytest`) + lint (`uv run ruff check src tests`) + mypy (`uv run mypy src`) 4. Move ticket to `status: review` 5. Push branch + open PR via `gh pr create --reviewer @copilot` (load `github-pr` skill for details) 6. Ping Jason on Telegram to review and merge
+
+## Coding Standards
+
+| Rule | Limit |
+|------|-------|
+| File length | 200–400 lines typical, **800 max** — split if larger |
+| Function length | **50 lines max** — extract helpers if longer |
+| Nesting depth | **4 levels max** — use early returns to flatten |
+| Mutation | **Avoid** — prefer returning new objects; no in-place mutation of args |
+
+These aren't style preferences — they're enforced during PM review. PRs violating the 800-line or 4-nesting limits will be sent back.
 
 ## Verification Standard
 

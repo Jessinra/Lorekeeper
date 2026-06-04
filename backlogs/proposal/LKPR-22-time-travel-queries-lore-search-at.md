@@ -2,11 +2,10 @@
 id: LKPR-22
 title: Time-Travel Queries (lore_search_at for Memory Audit Trail)
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: unplanned
 rice_score: ~
 filed_by: Hermes
+github_issue: 64
 filed_date: 2026-05-23
 ---
 

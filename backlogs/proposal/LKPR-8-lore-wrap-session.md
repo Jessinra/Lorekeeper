@@ -2,11 +2,10 @@
 id: LKPR-8
 title: Add lore_wrap_session compound tool to reduce session-end friction
 type: feature
-status: S:proposal
-priority: P1:high
 sprint: 2
 rice_score: 38.0 # R:9 I:7 C:85% E:0.5w
 filed_by: Hermes
+github_issue: 55
 filed_date: 2026-05-22
 ---
 

@@ -1,9 +1,8 @@
 ---
 id: LKPR-50
+github_issue: 98
 title: Dashboard tests, serialization unification, engine ABC cleanup, and quality gate hardening
 type: chore
-status: S:proposal
-priority: P1:high
 sprint: 2
 rice_score: ~
 filed_by: Diana

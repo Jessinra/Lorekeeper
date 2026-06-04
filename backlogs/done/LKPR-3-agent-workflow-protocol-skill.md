@@ -1,9 +1,8 @@
 ---
 id: LKPR-3
+github_issue: 27
 title: Ship lorekeeper-protocol skill file for plug & play agent onboarding
 type: feature
-status: S:done
-priority: P0:critical
 sprint: 1
 rice_score: 45.0 # R:9 I:9 C:80% E:1w
 filed_by: Hermes

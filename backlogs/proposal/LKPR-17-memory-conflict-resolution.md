@@ -2,11 +2,10 @@
 id: LKPR-17
 title: Memory Conflict Resolution (lore_reconcile)
 type: feature
-status: S:proposal
-priority: P2:medium
 sprint: ~
 rice_score: ~
 filed_by: Hermes
+github_issue: 60
 filed_date: 2026-05-22
 ---
 

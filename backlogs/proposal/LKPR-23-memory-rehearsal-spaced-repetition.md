@@ -2,11 +2,10 @@
 id: LKPR-23
 title: Memory Rehearsal (Spaced Repetition for Agent Memory)
 type: feature
-status: S:proposal
-priority: P3:low
 sprint: unplanned
 rice_score: ~
 filed_by: Hermes
+github_issue: 65
 filed_date: 2026-05-23
 ---
 

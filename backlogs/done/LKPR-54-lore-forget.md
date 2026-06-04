@@ -1,9 +1,8 @@
 ---
 id: LKPR-54
+github_issue: 106
 title: lore_forget — explicit memory lifecycle control
 type: enhancement
-status: S:ready
-priority: P2:medium
 sprint: ~
 rice_score: ~
 filed_by: Akane
