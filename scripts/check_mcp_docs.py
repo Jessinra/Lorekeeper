@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+"""
+CI guard: every @mcp.tool() in server.py must have a ### `lore_<name>` section in README.md.
+
+Exit 0 — all tools documented.
+Exit 1 — one or more tools missing from README; prints actionable diff.
+"""
+
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).parent.parent
+SERVER = ROOT / "src" / "lorekeeper" / "server.py"
+README = ROOT / "README.md"
+
+
+def extract_tool_names(server_text: str) -> list[str]:
+    """Return all MCP tool names registered via @mcp.tool()."""
+    names = []
+    for line in server_text.splitlines():
+        # @mcp.tool(name="lore_foo") — explicit name
+        m = re.search(r'@mcp\.tool\(name=["\'](\w+)["\']', line)
+        if m:
+            names.append(m.group(1))
+            continue
+        # @mcp.tool() — name inferred from next function def
+        if re.search(r"@mcp\.tool\(\s*\)", line):
+            names.append(None)  # sentinel: resolve from next def line
+
+    # Second pass: resolve sentinels
+    resolved = []
+    lines = server_text.splitlines()
+    sentinel_indices = [
+        i for i, line in enumerate(lines) if re.search(r"@mcp\.tool\(\s*\)", line)
+    ]
+    for idx in sentinel_indices:
+        for j in range(idx + 1, min(idx + 5, len(lines))):
+            m = re.match(r"\s*async def (\w+)\(", lines[j])
+            if not m:
+                m = re.match(r"\s*def (\w+)\(", lines[j])
+            if m:
+                resolved.append(m.group(1))
+                break
+
+    # Explicit names (non-sentinel)
+    explicit = [n for n in names if n is not None]
+    return explicit + resolved
+
+
+def extract_documented_tools(readme_text: str) -> set[str]:
+    """Return all tool names that have a ### `lore_<name>` heading in README."""
+    return set(re.findall(r"###\s+`(lore_\w+)`", readme_text))
+
+
+def main() -> int:
+    server_text = SERVER.read_text()
+    readme_text = README.read_text()
+
+    registered = extract_tool_names(server_text)
+    documented = extract_documented_tools(readme_text)
+
+    missing = [t for t in registered if t not in documented]
+
+    if missing:
+        print("❌  MCP tool documentation check FAILED")
+        print("   The following tools are registered in server.py but missing from README.md:\n")
+        for t in missing:
+            print(f"   - {t}  →  add a '### `{t}`' section to README.md")
+        print(
+            "\n   See the PR checklist (.github/pull_request_template.md) "
+            "for the full doc requirements."
+        )
+        return 1
+
+    print(f"✅  All {len(registered)} MCP tools documented: {', '.join(sorted(registered))}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

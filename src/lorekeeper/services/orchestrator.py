@@ -368,7 +368,7 @@ class MemoryService:
 
         linked_to = self._auto_link(thought, lore_id)
         self._conn.commit()
-        return {"id": lore_id, "title": title, "linked_to": linked_to}
+        return {"id": lore_id, "title": title, "linked_to": linked_to, "created": True}
 
     def _auto_link(self, text: str, lore_id: str, source: str = "remember") -> dict | None:
         """Auto-link a new memory to its nearest neighbor above threshold.
@@ -735,7 +735,7 @@ class MemoryService:
 
         if updated_memories or updated_links:
             self._conn.commit()
-        if soft_deleted:
+        if updated_memories:
             self._invalidate_cache()
 
         return {
@@ -777,6 +777,7 @@ class MemoryService:
                 errors.append({"id": mid, "error": str(e)})
 
         if forgotten:
+            self._conn.commit()
             self._rebuild_kw()
 
         return {
@@ -855,40 +856,6 @@ class MemoryService:
             user_profile=_bullets(user_profile_updates),
             discoveries=_bullets(factual_discoveries),
         )
-
-        memories_created: list[dict[str, str]] = []
-        if auto_insert:
-            for item in factual_discoveries:
-                remember_result = self._remember_with_score(item, score=7.0)
-                if not remember_result["created"]:
-                    continue
-                self.links.insert_link(
-                    source_memory_id=remember_result["id"],
-                    target_memory_id=reflection_id,
-                    relation_type="discovered_in",
-                    reason=f"Auto-created from reflection factual_discoveries ({session_id})",
-                )
-                memories_created.append({
-                    "id": remember_result["id"],
-                    "title": remember_result["title"],
-                    "relation": "discovered_in",
-                })
-
-            for item in lessons_learnt:
-                remember_result = self._remember_with_score(item, score=8.0)
-                if not remember_result["created"]:
-                    continue
-                self.links.insert_link(
-                    source_memory_id=remember_result["id"],
-                    target_memory_id=reflection_id,
-                    relation_type="learned_in",
-                    reason=f"Auto-created from reflection lessons_learnt ({session_id})",
-                )
-                memories_created.append({
-                    "id": remember_result["id"],
-                    "title": remember_result["title"],
-                    "relation": "learned_in",
-                })
 
         log.info("reflection_submitted", reflection_id=reflection_id, session_id=session_id)
         self._conn.commit()  # commit reflection + session rows before auto-insert

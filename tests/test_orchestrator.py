@@ -211,7 +211,7 @@ def test_search_excludes_soft_deleted(svc):
         links=[],
     )
     mid = r["inserted_memories"][0]["id"]
-    service.memories.update_memory_fields(mid, soft_deleted=1)
+    service.forget(memory_ids=[mid], reason="outdated")
 
     engine._search_results = [{"lore_id": mid, "score": 0.9}]
     results = service.search("deleted", include_deleted=False)

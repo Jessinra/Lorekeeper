@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    name: Lint & Test (Python 3.11)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Cache HuggingFace models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-models-all-MiniLM-L6-v2
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Ruff lint
+        run: uv run ruff check src tests
+
+      - name: MCP tool documentation check
+        run: uv run python scripts/check_mcp_docs.py
+
+      - name: Run tests
+        env:
+          TOKENIZERS_PARALLELISM: "false"
+          HF_HOME: ~/.cache/huggingface
+        run: uv run pytest --tb=short -q
+
+      - name: Mypy type check
+        # Non-blocking: 67 pre-existing errors on main (tracked separately).
+        # Once the backlog ticket to fix strict-mode violations is done,
+        # remove continue-on-error to make this a hard gate.
+        continue-on-error: true
+        run: uv run mypy src

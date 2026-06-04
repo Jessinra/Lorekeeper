@@ -332,7 +332,10 @@ async def lore_forget(
     memory_ids: list[str],
     reason: str = "unspecified",
 ) -> dict:
-    """Permanently soft-delete one or more memories by ID.
+    """Soft-delete one or more memories by ID.
+
+    Memories are marked soft_deleted=1 and excluded from future search results.
+    This is reversible at the DB level but no undelete tool is exposed in v1.
 
     Args:
         memory_ids: List of lore_ids to forget. Must not be empty.
