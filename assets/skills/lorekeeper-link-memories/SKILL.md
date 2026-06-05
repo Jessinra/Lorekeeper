@@ -1,4 +1,10 @@
-# Link Memories (lorekeeper-link-memories)
+---
+name: lorekeeper-link-memories
+description: Discover and create typed relationships between memories using lore_recommend_links. Use after inserting new memories, after a session reflection, or during periodic maintenance to connect orphaned memories. Surfaces high-confidence link candidates scored by cosine similarity, BM25 keyword overlap, entity overlap, and temporal proximity. The agent decides which candidates to confirm — lore_recommend_links never writes.
+version: v1.1.0
+---
+
+# Link Memories
 
 Use `lore_recommend_links` to find high-confidence link candidates between memories, then confirm them via `lore_insert`.
 
@@ -27,9 +33,9 @@ The agent evaluates candidates itself — it already has an LLM. `lore_recommend
 ## What Makes a Good Link
 
 - **Shared topic/entities**: memories about the same person, project, concept, or codebase
-- **Causal or structural**: "depends_on" for dependencies, "used_in" for implementation details
-- **Chronological**: "supersedes" for newer versions replacing older ones
-- **Conflict**: "contradicts" when two memories make conflicting claims about the same thing
+- **Causal or structural**: `depends_on` for dependencies, `used_in` for implementation details
+- **Chronological**: `supersedes` for newer versions replacing older ones
+- **Conflict**: `contradicts` when two memories make conflicting claims about the same thing
 
 ## What to Skip
 

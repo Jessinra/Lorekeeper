@@ -12,13 +12,13 @@ Verify stored memories against authoritative sources to identify incorrect, outd
 
 Choose whichever method(s) suit the memory being verified. Combine multiple methods when a single one is insufficient.
 
-| Method                  | Tools                           | Use When                                                |
-| ----------------------- | ------------------------------- | ------------------------------------------------------- |
-| Source verification     | `extract_confluence`, Read tool | User provided PRDs/TDs/files to check against           |
-| Documentation cross-ref | `search_docs`, `scan_docs`      | Corroborating against existing docs                     |
-| Codebase verification   | SemanticSearch, Grep            | Technical facts (APIs, error codes, service flows)      |
-| Internal consistency    | `lore_search`                   | Checking for contradictions/divergence between memories |
-| Inference               | Agent reasoning                 | No authoritative source available                       |
+| Method                  | Tools                            | Use When                                                |
+| ----------------------- | -------------------------------- | ------------------------------------------------------- |
+| Source verification     | web_extract, read_file           | User provided URLs/files/docs to check against          |
+| Documentation cross-ref | web_search, read_file            | Corroborating against existing documentation            |
+| Codebase verification   | search_files, terminal           | Technical facts (APIs, error codes, service flows)      |
+| Internal consistency    | `lore_search`                    | Checking for contradictions/divergence between memories |
+| Inference               | Agent reasoning                  | No authoritative source available                       |
 
 ## Workflow
 
@@ -26,8 +26,8 @@ Choose whichever method(s) suit the memory being verified. Combine multiple meth
 
 | Input Type           | Action                                                           |
 | -------------------- | ---------------------------------------------------------------- |
-| Confluence URL(s)    | `extract_confluence` → save to `.docs-cache/reconcile-{slug}.md` |
-| Local files          | Read directly                                                    |
+| URL(s)               | `web_extract` → save content to `.docs-cache/reconcile-{slug}.md` |
+| Local files          | Read directly via read_file                                      |
 | Topic/domain request | Skip to Step 2                                                   |
 
 ### Step 2: Search Lorekeeper
@@ -123,11 +123,11 @@ Present a reconciliation report to the user:
 
 ## Example
 
-**User**: "Verify Lorekeeper facts about the subscription feature against this PRD: <https://your-docs/prd-url>"
+**User**: "Verify Lorekeeper facts about the authentication module against this doc: <https://docs.example.com/auth>"
 
-1. Extract PRD via `extract_confluence` (or read the local file), save to `.docs-cache/reconcile-subscriptions.md`.
-2. Identify topics: subscription models, pricing, billing rules, suspend state.
-3. Search: `lore_search({ query: "subscription models and pricing" })`, etc.
-4. Compare each memory against PRD; for technical claims, also verify via codebase.
+1. Extract doc via `web_extract`, save to `.docs-cache/reconcile-auth.md`.
+2. Identify topics: token expiry, refresh flow, session handling.
+3. Search: `lore_search({ query: "authentication token expiry and refresh" })`, etc.
+4. Compare each memory against the doc; for technical claims, also verify via codebase.
 5. `lore_update` with confidence ratings; insert corrections for wrong facts and new memories for uncovered topics.
 6. Present reconciliation report.

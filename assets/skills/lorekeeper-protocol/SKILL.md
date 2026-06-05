@@ -1,6 +1,6 @@
 ---
 name: lorekeeper-protocol
-description: Full session protocol for using Lorekeeper MCP tools correctly. Load at the start of any session that uses Lorekeeper. Covers when and how to call lore_search, lore_insert, lore_update, lore_reflect, and lore_processed_sessions across all five phases — session start, mid-session topic shift, health maintenance, topic consolidation, and session end.
+description: Full session protocol for using Lorekeeper MCP tools correctly. Load at the start of any session that uses Lorekeeper. Covers when and how to call lore_search, lore_insert, lore_update, lore_reflect, and lore_processed_sessions across all three phases — session start, mid-session topic shift, and session end.
 version: v1.1.0
 ---
 
@@ -182,3 +182,24 @@ Fast one-shot insert — zero friction. Auto-extracts title (first ~80 chars at 
 ```
 
 Returns array of session IDs already reflected.
+
+### `lore_forget`
+
+```json
+{
+  "memory_ids": ["<uuid>"]
+}
+```
+
+Soft-deletes memories by ID. Use when a fact is confirmed wrong or permanently outdated.
+
+### `lore_recommend_links`
+
+```json
+{
+  "lore_id": "<uuid>",
+  "top_k": 10
+}
+```
+
+Returns scored link candidates for a source memory. Never writes — call `lore_insert` with `links=[]` to confirm. See `lorekeeper-link-memories` skill for full workflow.

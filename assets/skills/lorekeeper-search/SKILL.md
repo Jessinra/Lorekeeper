@@ -1,6 +1,6 @@
 ---
 name: lorekeeper-search
-description: Search the Lorekeeper knowledge base and provide relevance feedback with confidence ratings. Use when the agent needs to recall domain knowledge, look up facts about OPC/Checkout, or query the memory store. Ensures every search ends with a lore_update feedback call (including confidence) to improve knowledge quality over time.
+description: Search the Lorekeeper knowledge base and provide relevance feedback with confidence ratings. Use when the agent needs to recall domain knowledge, look up facts, or query the memory store. Ensures every search ends with a lore_update feedback call (including confidence) to improve knowledge quality over time.
 version: v2.0.0
 ---
 
@@ -86,11 +86,11 @@ If search returns zero results, there is nothing to provide feedback on — proc
 
 ## Example
 
-1. `lore_search({ query: "OPC payment channel integration" })`
+1. `lore_search({ query: "Python async patterns in service layer" })`
 2. Results:
-   - Memory `aaa-111` (payment channels) — relevant, verified correct. Has link `lnk-001` → `bbb-222` (`related_to`, reason: "voucher flow depends on payment channel"). Relationship is valid.
-   - Memory `bbb-222` (voucher flow) — irrelevant to this task, content looks correct. Has link `lnk-002` → `ccc-333` (`used_in`, reason: "old API used in voucher flow"). Old API was removed — link is stale.
-   - Memory `ccc-333` (old API endpoint) — outdated info.
+   - Memory `aaa-111` (async patterns) — relevant, verified correct. Has link `lnk-001` → `bbb-222` (`related_to`, reason: "retry logic depends on async context"). Relationship is valid.
+   - Memory `bbb-222` (retry logic) — irrelevant to this task, content looks correct. Has link `lnk-002` → `ccc-333` (`used_in`, reason: "old sync API used in retry flow"). Old API was removed — link is stale.
+   - Memory `ccc-333` (old sync API) — outdated info.
 
 3. ```
    lore_update({
