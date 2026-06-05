@@ -31,7 +31,8 @@ class FakeVectorEngine:
         self._store: dict[str, str] = {}
 
     def get_embeddings_batch(self, lore_ids: list[str]) -> dict[str, np.ndarray]:
-        return {lid: self._vectors.get(lid, np.zeros(384, dtype=np.float32)) for lid in lore_ids}
+        # Honour real contract: missing IDs are silently omitted
+        return {lid: self._vectors[lid] for lid in lore_ids if lid in self._vectors}
 
     def search(self, query: str, limit: int = 200) -> list[dict]:
         return self._search_results[:limit]
@@ -512,4 +513,126 @@ def test_recommend_links_does_not_surface_foreign_namespace_candidates(tmp_path)
         "Foreign namespace candidate leaked through ns_filter"
     )
 
-    db.close()
+
+def test_generator_excludes_soft_deleted_candidates(tmp_path):
+    """Soft-deleted memories must never appear as link candidates."""
+    import uuid
+    from datetime import UTC, datetime
+
+    from lorekeeper.services.database import Database
+    from lorekeeper.services.link_store import LinkStore
+    from lorekeeper.services.memory_store import MemoryStore
+
+    db = Database(tmp_path / "sd.db")
+    db.migrate()
+    mem_store = MemoryStore(db)
+    link_store = LinkStore(db)
+    kw = KeywordIndex()
+    eng = FakeVectorEngine()
+    settings = Settings()
+    settings.link_score_threshold = 0.0
+
+    ts = datetime.now(UTC).isoformat()
+    src_id = str(uuid.uuid4())
+    live_id = str(uuid.uuid4())
+    deleted_id = str(uuid.uuid4())
+
+    mem_store.upsert_memory_row(
+        id=src_id, title="source", description="", content="python async patterns",
+        created_at=ts, updated_at=ts, score=5.0, namespace="shared",
+    )
+    mem_store.upsert_memory_row(
+        id=live_id, title="live", description="", content="asyncio event loop",
+        created_at=ts, updated_at=ts, score=5.0, namespace="shared",
+    )
+    mem_store.upsert_memory_row(
+        id=deleted_id, title="deleted", description="", content="async def coroutine",
+        created_at=ts, updated_at=ts, score=5.0, namespace="shared",
+        soft_deleted=True,
+    )
+    db.conn.commit()
+
+    # Both live and deleted get similar vectors — cosine would return both
+    for mid in (src_id, live_id, deleted_id):
+        eng._vectors[mid] = np.full(384, 0.8, dtype=np.float32)
+    eng._search_results = [
+        {"lore_id": live_id, "score": 0.9},
+        {"lore_id": deleted_id, "score": 0.9},
+    ]
+
+    generator = LinkCandidateGenerator(
+        engine=eng,
+        memory_store=mem_store,
+        link_store=link_store,
+        keyword_index=kw,
+        settings=settings,
+        ns_filter=None,
+    )
+
+    candidates = generator.generate(src_id)
+    candidate_ids = {c.target_lore_id for c in candidates}
+    assert deleted_id not in candidate_ids, "Soft-deleted memory surfaced as link candidate"
+    assert live_id in candidate_ids, "Live memory unexpectedly missing from candidates"
+
+
+def test_generator_candidates_sorted_by_score_descending(tmp_path):
+    """generate() must return candidates sorted by weighted_score descending."""
+    import uuid
+    from datetime import UTC, datetime
+
+    from lorekeeper.services.database import Database
+    from lorekeeper.services.link_store import LinkStore
+    from lorekeeper.services.memory_store import MemoryStore
+
+    db = Database(tmp_path / "sort.db")
+    db.migrate()
+    mem_store = MemoryStore(db)
+    link_store = LinkStore(db)
+    kw = KeywordIndex()
+    eng = FakeVectorEngine()
+    settings = Settings()
+    settings.link_score_threshold = 0.0
+    settings.link_top_m = 10
+
+    ts = datetime.now(UTC).isoformat()
+    src_id = str(uuid.uuid4())
+    mem_store.upsert_memory_row(
+        id=src_id, title="source", description="", content="source memory",
+        created_at=ts, updated_at=ts, score=5.0, namespace="shared",
+    )
+
+    # Insert 3 candidates with distinct content hashes → distinct cosine scores
+    ids = []
+    for i, content in enumerate(["aaa bbb ccc", "ddd eee fff", "ggg hhh iii"]):
+        mid = str(uuid.uuid4())
+        ids.append(mid)
+        mem_store.upsert_memory_row(
+            id=mid, title=f"cand-{i}", description="", content=content,
+            created_at=ts, updated_at=ts, score=5.0, namespace="shared",
+        )
+    db.conn.commit()
+
+    # Assign different magnitudes so cosine differs
+    eng._vectors[src_id] = np.array([1.0] * 384, dtype=np.float32)
+    eng._vectors[ids[0]] = np.array([0.9] * 384, dtype=np.float32)
+    eng._vectors[ids[1]] = np.array([0.5] * 384, dtype=np.float32)
+    eng._vectors[ids[2]] = np.array([0.1] * 384, dtype=np.float32)
+    eng._search_results = [{"lore_id": mid, "score": 0.9} for mid in ids]
+
+    generator = LinkCandidateGenerator(
+        engine=eng,
+        memory_store=mem_store,
+        link_store=link_store,
+        keyword_index=kw,
+        settings=settings,
+        ns_filter=None,
+    )
+
+    candidates = generator.generate(src_id)
+    assert len(candidates) >= 2, "Need at least 2 candidates to test sort order"
+    for i in range(len(candidates) - 1):
+        assert candidates[i].weighted_score >= candidates[i + 1].weighted_score, (
+            f"Candidates not sorted: [{i}]={candidates[i].weighted_score:.3f} "
+            f"< [{i+1}]={candidates[i+1].weighted_score:.3f}"
+        )
+

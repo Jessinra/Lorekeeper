@@ -92,7 +92,7 @@ class MemoryStore:
         for i in range(0, len(ids), _CHUNK_SIZE):
             chunk = ids[i : i + _CHUNK_SIZE]
             placeholders = ",".join("?" * len(chunk))
-            sql = f"SELECT * FROM memories WHERE id IN ({placeholders})"
+            sql = f"SELECT * FROM memories WHERE id IN ({placeholders}) AND soft_deleted = 0"
             params: list[object] = list(chunk)
             if namespaces is not None:
                 if not namespaces:
