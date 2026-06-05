@@ -49,6 +49,9 @@ jobs:
       - name: MCP tool documentation check
         run: uv run python scripts/check_mcp_docs.py
 
+      - name: Skill format check
+        run: uv run python scripts/check_skills.py
+
       - name: Run tests
         env:
           TOKENIZERS_PARALLELISM: "false"
