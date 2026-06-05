@@ -174,6 +174,7 @@ class LinkCandidateGenerator:
         link_store: LinkStore,
         keyword_index: KeywordIndex,
         settings: Settings,
+        ns_filter: list[str] | None = None,
     ) -> None:
         self._engine = engine
         self._memory_store = memory_store
@@ -183,6 +184,7 @@ class LinkCandidateGenerator:
         self._entity = EntityOverlapScorer(settings.link_spacy_model)
         self._temporal = TemporalProximityScorer(settings.link_temporal_tau_days)
         self._settings = settings
+        self._ns_filter = ns_filter
 
     def _existing_linked_ids(self, lore_id: str) -> set[str]:
         """Return set of memory IDs already linked to this memory (both directions)."""
@@ -198,7 +200,7 @@ class LinkCandidateGenerator:
         s = self._settings
 
         # 1. Load source memory
-        source = self._memory_store.get_memory_row(source_lore_id)
+        source = self._memory_store.get_memory_row(source_lore_id, namespaces=self._ns_filter)
         if source is None:
             log.warning("link_candidate_source_not_found", lore_id=source_lore_id)
             return []
@@ -220,9 +222,14 @@ class LinkCandidateGenerator:
         if not candidate_ids:
             return []
 
-        # 4. Load candidate content from SQLite
-        rows = self._memory_store.get_memory_rows(candidate_ids)
+        # 4. Load candidate content from SQLite (namespace-scoped)
+        rows = self._memory_store.get_memory_rows(candidate_ids, namespaces=self._ns_filter)
         candidates_map = {r["id"]: r for r in rows}
+
+        # Drop candidates not found in this namespace (vector index can return cross-ns hits)
+        candidate_ids = [cid for cid in candidate_ids if cid in candidates_map]
+        if not candidate_ids:
+            return []
 
         # 5. Parse timestamps — SQLite stores ISO strings
         def _parse_dt(val: str | None) -> datetime | None:

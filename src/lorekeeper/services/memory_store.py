@@ -175,7 +175,3 @@ class MemoryStore:
 
     def delete_memory_row(self, id: str) -> None:
         self._conn.execute("DELETE FROM memories WHERE id = ?", (id,))
-
-    def get_batch(self, lore_ids: list[str]) -> list[sqlite3.Row]:
-        """Fetch multiple memories by ID. Thin wrapper around get_memory_rows."""
-        return self.get_memory_rows(lore_ids)

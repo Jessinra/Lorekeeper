@@ -444,3 +444,72 @@ def test_recommend_links_returns_top_k_override(tmp_path):
 
     candidates = svc.recommend_links(src, top_k=2)
     assert len(candidates) <= 2
+
+
+# ── Namespace isolation ────────────────────────────────────────────────────────
+
+
+def test_recommend_links_does_not_surface_foreign_namespace_candidates(tmp_path):
+    """A namespace-scoped service must not return candidates from a foreign namespace.
+
+    Setup: insert one memory as 'agent-a', one as 'agent-b'. Build a service
+    scoped to 'agent-a'. recommend_links on the agent-a memory must return no
+    candidates because the only other memory is owned by 'agent-b'.
+    """
+    from lorekeeper.services.database import Database
+    from lorekeeper.services.link_store import LinkStore
+    from lorekeeper.services.memory_store import MemoryStore
+
+    db = Database(tmp_path / "ns.db")
+    db.migrate()
+    mem_store = MemoryStore(db)
+    link_store = LinkStore(db)
+    kw = KeywordIndex()
+    eng = FakeVectorEngine()
+    settings = Settings()
+    settings.link_score_threshold = 0.0  # accept everything that passes
+
+    # Insert source memory under namespace 'agent-a'
+    import uuid
+    from datetime import UTC, datetime
+
+    ts = datetime.now(UTC).isoformat()
+    src_id = str(uuid.uuid4())
+    mem_store.upsert_memory_row(
+        id=src_id, title="src-a", description="", content="project planning memory",
+        created_at=ts, updated_at=ts, score=5.0, namespace="agent-a",
+    )
+    # Insert candidate under foreign namespace 'agent-b'
+    foreign_id = str(uuid.uuid4())
+    mem_store.upsert_memory_row(
+        id=foreign_id, title="foreign-b", description="", content="project planning memory",
+        created_at=ts, updated_at=ts, score=5.0, namespace="agent-b",
+    )
+    db.conn.commit()
+
+    # Seed vectors — both get nearly identical vectors so cosine would return both
+    eng._vectors[src_id] = np.full(384, 0.9, dtype=np.float32)
+    eng._vectors[foreign_id] = np.full(384, 0.9, dtype=np.float32)
+    eng._search_results = [
+        {"lore_id": foreign_id, "score": 0.95},
+    ]
+
+    # Build a generator scoped to agent-a only
+    generator = LinkCandidateGenerator(
+        engine=eng,
+        memory_store=mem_store,
+        link_store=link_store,
+        keyword_index=kw,
+        settings=settings,
+        ns_filter=["agent-a", "shared"],
+    )
+
+    # Source is in agent-a — should load fine
+    # Candidate foreign_id is in agent-b — must be excluded by ns_filter
+    candidates = generator.generate(src_id)
+    candidate_ids = {c.target_lore_id for c in candidates}
+    assert foreign_id not in candidate_ids, (
+        "Foreign namespace candidate leaked through ns_filter"
+    )
+
+    db.close()

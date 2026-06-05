@@ -95,7 +95,7 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 
 - Python 3.11, managed by `uv`
 - Run tests: `uv run pytest`
-- Lint (Python): `uv run ruff check src tests`
+- Lint (Python): `uv run ruff check src tests scripts/`
 - Lint (JS): `npx @biomejs/biome check src/lorekeeper/dashboard/static/js/`
 - Type check: `uv run mypy src` (run before push; not in pre-commit — too slow)
 - Entrypoint: `uv run lorekeeper` (or `python -m lorekeeper`)
@@ -120,7 +120,7 @@ All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 | `LORE_LINK_WEIGHT_ENTITY` | `0.1` | Entity overlap (spaCy NER) weight |
 | `LORE_LINK_WEIGHT_TEMPORAL` | `0.1` | Temporal proximity weight |
 | `LORE_LINK_TEMPORAL_TAU_DAYS` | `30` | Decay half-life for temporal scorer (days) |
-|| `LORE_LINK_SPACY_MODEL` | `en_core_web_sm` | spaCy model for entity overlap scorer |
+| `LORE_LINK_SPACY_MODEL` | `en_core_web_sm` | spaCy model for entity overlap scorer |
 
 ### First-Time Setup
 

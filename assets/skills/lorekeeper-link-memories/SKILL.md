@@ -7,7 +7,6 @@ Use `lore_recommend_links` to find high-confidence link candidates between memor
 - **After inserting a batch of memories** — new memories have few or zero links
 - **After a session** — `lore_reflect` + `lore_insert` creates new facts; follow up with `lore_recommend_links` on key new memories
 - **Periodic maintenance** — run `lore_recommend_links` on orphaned memories (those with `links: []` in search results)
-- **Before using `lore_related`** — `lore_related` only returns memories with explicit links; run `lore_recommend_links` first if the graph is sparse
 
 ## How to Use
 

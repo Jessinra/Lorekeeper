@@ -93,6 +93,16 @@ class MemoryService:
         # None means dirty — must reload from SQLite. Cache always holds the full
         # (include_deleted=True) dataset; include_deleted=False is filtered in Python.
         self._memory_cache: dict[str, Memory] | None = None
+        # LKPR-58: instantiate LinkCandidateGenerator once so spaCy model is only loaded once.
+        from lorekeeper.services.link_candidate import LinkCandidateGenerator
+        self._link_candidate_generator = LinkCandidateGenerator(
+            engine=self._engine,
+            memory_store=self.memories,
+            link_store=self.links,
+            keyword_index=self._kw,
+            settings=self.settings,
+            ns_filter=self._ns_filter,
+        )
 
     def _invalidate_cache(self) -> None:
         """Mark the memory cache dirty. Call at every write that adds/removes memories."""
@@ -940,14 +950,16 @@ class MemoryService:
         effective = self.settings
         if top_k is not None:
             effective = effective.model_copy(update={"link_top_m": top_k})
-
-        generator = LinkCandidateGenerator(
-            engine=self._engine,
-            memory_store=self.memories,
-            link_store=self.links,
-            keyword_index=self._kw,
-            settings=effective,
-        )
+            generator = LinkCandidateGenerator(
+                engine=self._engine,
+                memory_store=self.memories,
+                link_store=self.links,
+                keyword_index=self._kw,
+                settings=effective,
+                ns_filter=self._ns_filter,
+            )
+        else:
+            generator = self._link_candidate_generator
         candidates = generator.generate(lore_id)
 
         return candidates

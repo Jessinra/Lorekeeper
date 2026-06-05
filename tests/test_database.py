@@ -6,6 +6,7 @@ from lorekeeper.services.database import (
     MIGRATIONS,
     Database,
     _migration_1_bootstrap,
+    _migration_2_extend_relation_types,
 )
 
 
@@ -162,6 +163,71 @@ def test_bootstrap_dedups_duplicate_memory_titles_on_legacy_db(tmp_path):
     assert len(rows) == 1
     assert rows[0][0] == "b"  # highest score wins
     assert rows[0][1] == 7.0
+    conn.close()
+
+
+def test_migration_2_extends_relation_types_on_populated_db(tmp_path):
+    """Migration 2 must survive being applied to a DB with existing link rows.
+
+    Simulates the real-world upgrade: apply only migration 1 manually, seed a
+    link row using the old schema's relation types, then apply migration 2 and
+    verify the row survived and the new types are now accepted.
+    """
+    db_path = tmp_path / "m2.db"
+    conn = sqlite3.connect(str(db_path))
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+
+    # Apply migration 1 only (bootstrap)
+    _migration_1_bootstrap(conn)
+    conn.commit()
+
+    ts = "2026-01-01T00:00:00+00:00"
+    # Insert a memory to satisfy FK constraints
+    conn.execute(
+        "INSERT INTO memories (id,title,description,content,created_at,updated_at,"
+        "usage_count,score,soft_deleted,confidence,confidence_count,namespace) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        ("mem-a", "A", "", "content a", ts, ts, 0, 5.0, 0, None, 0, "shared"),
+    )
+    conn.execute(
+        "INSERT INTO memories (id,title,description,content,created_at,updated_at,"
+        "usage_count,score,soft_deleted,confidence,confidence_count,namespace) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        ("mem-b", "B", "", "content b", ts, ts, 0, 5.0, 0, None, 0, "shared"),
+    )
+    # Insert a link with a relation type that must survive migration 2
+    conn.execute(
+        "INSERT INTO memory_links (id,source_memory_id,target_memory_id,relation_type,"
+        "reason,score,created_at,updated_at,usage_count,confidence,confidence_count) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        ("lnk-1", "mem-a", "mem-b", "related_to", "test", 1.0, ts, ts, 0, None, 0),
+    )
+    conn.commit()
+
+    # Apply migration 2
+    _migration_2_extend_relation_types(conn)
+    conn.commit()
+
+    # Existing row must still be there
+    row = conn.execute("SELECT * FROM memory_links WHERE id='lnk-1'").fetchone()
+    assert row is not None
+    assert row["relation_type"] == "related_to"
+
+    # New relation types must now be accepted by the CHECK constraint
+    for new_type in ("contradicts", "supersedes", "depends_on"):
+        conn.execute(
+            "INSERT INTO memory_links (id,source_memory_id,target_memory_id,relation_type,"
+            "reason,score,created_at,updated_at,usage_count,confidence,confidence_count) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (f"lnk-{new_type}", "mem-a", "mem-b", new_type, "test", 1.0, ts, ts, 0, None, 0),
+        )
+    conn.commit()
+
+    count = conn.execute("SELECT COUNT(*) FROM memory_links").fetchone()[0]
+    assert count == 4  # original + 3 new types
+
     conn.close()
 
 

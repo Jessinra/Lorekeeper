@@ -229,12 +229,11 @@ Use this to avoid re-processing sessions — check the list before calling `lore
 ```json
 {
   "lore_id": "<uuid>",
-  "top_k": 10,
-  "run_classifier": false
+  "top_k": 10
 }
 ```
 
-Suggests link candidates between a memory and the related memories in the store. Two-stage pipeline — scorers first (semantic cosine, BM25, entity overlap, temporal proximity), optionally followed by an LLM relation classifier.
+Suggests link candidates between a memory and related memories in the store. Single-stage scoring pipeline — semantic cosine, BM25, entity overlap, and temporal proximity combined into a weighted score. The agent evaluates the candidates and decides which links to create.
 
 **Does NOT write any links.** Returns candidates for review — confirm by calling `lore_insert` with `links=[]`.
 
@@ -339,15 +338,15 @@ All settings use the `LORE_` prefix and can be set via environment variables:
 | `LORE_DASH_RELOAD`                      | `1`                                      | Dashboard hot-reload (`0` to disable)                                                                   |
 | `LORE_LINK_TOP_K`                      | `50`                                     | Cosine pre-filter: top-K ANN candidates per memory before scoring                                          |
 | `LORE_LINK_TOP_M`                      | `10`                                     | Max candidates returned by `lore_recommend_links`                                                         |
-| `LORE_LINK_MIN_SCORE`                  | `0.3`                                    | Minimum weighted score threshold for link candidates                                                      |
+| `LORE_LINK_SCORE_THRESHOLD`                  | `0.3`                                    | Minimum weighted score threshold for link candidates                                                      |
 | `LORE_LINK_WEIGHT_COSINE`              | `0.5`                                    | Cosine similarity weight in Stage 1 scoring                                                               |
 | `LORE_LINK_WEIGHT_BM25`               | `0.3`                                    | BM25 keyword weight in Stage 1 scoring                                                                    |
 | `LORE_LINK_WEIGHT_ENTITY`             | `0.1`                                    | Entity overlap weight in Stage 1 scoring                                                                  |
 | `LORE_LINK_WEIGHT_TEMPORAL`           | `0.1`                                    | Temporal proximity weight in Stage 1 scoring                                                              |
 | `LORE_LINK_TEMPORAL_TAU_DAYS`          | `30.0`                                   | Decay half-life (days) for temporal proximity scorer                                                      |
-|| `LORE_LINK_SPACY_MODEL`                | `en_core_web_sm`                         | spaCy model for entity overlap scoring (pip install spacy if used)                                        |
+| `LORE_LINK_SPACY_MODEL`                | `en_core_web_sm`                         | spaCy model for entity overlap scoring (pip install spacy if used)                                        |
 
----|
+---
 
 ## Claude Code integration
 

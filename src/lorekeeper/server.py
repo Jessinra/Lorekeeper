@@ -265,7 +265,7 @@ async def lore_recommend_links(
         )
     except Exception:
         log.exception("lore_recommend_links_failed", lore_id=lore_id)
-        return {"error": "Failed to generate link candidates", "candidates": []}
+        raise
 
 
 @mcp.tool(name="lore_remember")
