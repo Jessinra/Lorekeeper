@@ -43,7 +43,7 @@ class CosineScorer:
         Returns dict of {candidate_id: score}. Missing or zero-vector candidates
         get 0.0.
         """
-        all_ids = [source_id] + candidate_ids
+        all_ids = [source_id, *candidate_ids]
         vecs = self._engine.get_embeddings_batch(all_ids)
         src = vecs.get(source_id)
         if src is None or np.linalg.norm(src) == 0:

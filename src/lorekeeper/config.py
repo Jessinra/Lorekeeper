@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     auto_link_threshold: float = 0.85
 
     # Link candidate pipeline (LKPR-58)
-    link_top_k: int = Field(default=50, description="Cosine pre-filter: top-K before scoring")  # noqa: E501
+    link_top_k: int = Field(default=50, description="Cosine pre-filter: top-K before scoring")
     link_top_m: int = Field(default=10, description="Max candidates returned by lore_recommend_links")  # noqa: E501
     link_score_threshold: float = Field(default=0.3, description="Min Stage 1 weighted score to pass")  # noqa: E501
 
@@ -56,10 +56,14 @@ class Settings(BaseSettings):
     link_weight_temporal: float = Field(default=0.1)
 
     # Temporal scorer
-    link_temporal_tau_days: float = Field(default=30.0, description="Decay half-life in days for temporal scorer")
+    link_temporal_tau_days: float = Field(
+        default=30.0, description="Decay half-life in days for temporal scorer"
+    )
 
     # spaCy entity overlap scorer
-    link_spacy_model: str = Field(default="en_core_web_sm", description="spaCy model for entity overlap")
+    link_spacy_model: str = Field(
+        default="en_core_web_sm", description="spaCy model for entity overlap"
+    )
 
     @property
     def chroma_path(self) -> Path:

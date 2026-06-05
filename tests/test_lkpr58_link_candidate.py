@@ -19,7 +19,6 @@ from lorekeeper.services.link_candidate import (
 )
 from tests._helpers import build_service, build_stores
 
-
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 
@@ -214,13 +213,6 @@ def test_entity_overlap_empty_union_is_zero() -> None:
     assert scores["m1"] == 0.0
 
 
-def test_entity_overlap_empty_union_is_zero() -> None:
-    scorer = EntityOverlapScorer()
-    with patch.object(scorer, "_entities", side_effect=[set(), set()]):
-        scores = scorer.score_batch("src", [("m1", "tgt")])
-    assert scores["m1"] == 0.0
-
-
 # ── TemporalProximityScorer ────────────────────────────────────────────────────
 
 
@@ -397,7 +389,7 @@ def test_recommend_links_returns_link_candidates(tmp_path):
     eng = FakeVectorEngine()
     svc = build_service(stores, eng, kw, settings)
     src = _insert_memory(svc, "src", "important project concept")
-    tgt = _insert_memory(svc, "tgt", "related project concept")
+    _insert_memory(svc, "tgt", "related project concept")
     _rebuild_kw(svc)
     _seed_vectors_from_content(eng, svc)
 
