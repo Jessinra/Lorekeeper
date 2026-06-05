@@ -8,6 +8,12 @@ from lorekeeper.services.memory_engine import MemoryEngine
 
 log = structlog.get_logger()
 
+# ---------------------------------------------------------------------------
+# DEPRECATED: ChromaDB engine is no longer maintained.
+# LanceDB (lancedb_engine.py) is the supported vector store going forward.
+# This file will be removed once all users have migrated.
+# See: backlogs/LKPR-31-switch-to-lancedb-vector-store.md
+# ---------------------------------------------------------------------------
 LORE_USER_ID = "lorekeeper"
 
 

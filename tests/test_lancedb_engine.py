@@ -73,3 +73,36 @@ class TestLanceDBSearch:
                 f"Finance ({by_id['id-finance']:.3f}) should beat sky "
                 f"({by_id['id-sky']:.3f}) for financial query"
             )
+
+
+class TestLanceDBGetEmbeddingsBatch:
+    """Tests for get_embeddings_batch — used by CosineScorer in link_candidate pipeline."""
+
+    def test_returns_vectors_for_known_ids(self, lancedb_engine):
+        """Known lore_ids must return non-zero vectors of correct dimension."""
+        result = lancedb_engine.get_embeddings_batch(["id-python", "id-finance"])
+        assert "id-python" in result
+        assert "id-finance" in result
+        assert result["id-python"].shape == (384,)
+        assert result["id-finance"].shape == (384,)
+
+    def test_unknown_id_not_in_result(self, lancedb_engine):
+        """IDs not in the store must be absent from the result (not zero-padded)."""
+        result = lancedb_engine.get_embeddings_batch(["id-python", "does-not-exist"])
+        assert "id-python" in result
+        assert "does-not-exist" not in result
+
+    def test_empty_input_returns_empty(self, lancedb_engine):
+        """Empty input must return empty dict without error."""
+        assert lancedb_engine.get_embeddings_batch([]) == {}
+
+    def test_vectors_differ_across_memories(self, lancedb_engine):
+        """Two semantically different memories must have different vectors."""
+        import numpy as np
+        result = lancedb_engine.get_embeddings_batch(["id-python", "id-sky"])
+        assert "id-python" in result and "id-sky" in result
+        cosine = float(
+            np.dot(result["id-python"], result["id-sky"])
+            / (np.linalg.norm(result["id-python"]) * np.linalg.norm(result["id-sky"]))
+        )
+        assert cosine < 0.99, f"Vectors are suspiciously identical: cosine={cosine:.4f}"

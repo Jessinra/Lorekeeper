@@ -158,6 +158,12 @@ def _handle_recommend_links(
     lore_id: str,
     top_k: int | None = None,
 ) -> dict[str, Any]:
+    if not lore_id or not lore_id.strip():
+        raise ValueError("lore_id is required")
+    if top_k is not None:
+        if not isinstance(top_k, int) or top_k < 1:
+            raise ValueError("top_k must be a positive integer")
+        top_k = min(top_k, 50)  # hard cap
     candidates = svc.recommend_links(
         lore_id=lore_id, top_k=top_k
     )
