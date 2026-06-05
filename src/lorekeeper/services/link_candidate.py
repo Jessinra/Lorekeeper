@@ -133,7 +133,6 @@ class TemporalProximityScorer:
     """Exponential decay by time delta. score = exp(-|Δdays| / tau)."""
 
     def __init__(self, tau_days: float = 30.0) -> None:
-        self._tau = tau_days
         self._td = tau_days if tau_days > 0 else 1.0  # prevent div-by-zero
 
     def score_batch(

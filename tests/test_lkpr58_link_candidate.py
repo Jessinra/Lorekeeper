@@ -255,7 +255,7 @@ def test_temporal_naive_timezone_handling() -> None:
 def test_temporal_tau_default() -> None:
     """Default tau_days is 30.0."""
     scorer = TemporalProximityScorer()
-    assert scorer._tau == 30.0
+    assert scorer._td == 30.0
 
 
 def test_temporal_zero_tau_does_not_crash() -> None:
