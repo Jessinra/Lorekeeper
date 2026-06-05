@@ -9,6 +9,11 @@ implementation applies a single bootstrap migration (version 1) that captures
 all schema and idempotent fixups previously embedded in `LinkStore.__init__`.
 Future schema changes should be added as new entries in `MIGRATIONS` with
 incrementing version numbers.
+
+TODO: After all in-flight migrations (v1 bootstrap, v2 extend_relation_types)
+are stable, fold their DDL into BASE_SCHEMA so new installations start with
+the final schema directly. Existing DBs should only run migrations that
+actually upgrade legacy data — not recreate what BASE_SCHEMA already has.
 """
 
 from __future__ import annotations
