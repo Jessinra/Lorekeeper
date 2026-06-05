@@ -4,7 +4,7 @@
 
 The repo serves two purposes:
 
-1. **The product**: MCP server providing `lore_search`, `lore_remember`, `lore_insert`, `lore_update`. Replaces the Node.js v1 with Python + Mem0.
+1. **The product**: MCP server providing `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_forget`, `lore_recommend_links`. Replaces the Node.js v1 with Python + Mem0.
 2. **The demonstration**: The development process itself is looped. Session learnings are captured → consolidated → applied back to agent config. This repo is the proof of concept.
 
 **Data dir**: `~/.lorekeeper` (Chroma or LanceDB + SQLite; controlled by `LORE_DATA_DIR`; set `LORE_VECTOR_STORE=lancedb` to switch)
@@ -95,7 +95,7 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 
 - Python 3.11, managed by `uv`
 - Run tests: `uv run pytest`
-- Lint (Python): `uv run ruff check src tests`
+- Lint (Python): `uv run ruff check src tests scripts/`
 - Lint (JS): `npx @biomejs/biome check src/lorekeeper/dashboard/static/js/`
 - Type check: `uv run mypy src` (run before push; not in pre-commit — too slow)
 - Entrypoint: `uv run lorekeeper` (or `python -m lorekeeper`)
@@ -112,6 +112,15 @@ All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 | `LORE_SEARCH_LIMIT` | `5` | Default number of results returned by `lore_search` |
 | `LORE_MAX_SEARCH_IDS` | `50` | Max IDs in `lore_search(ids=[...])` bulk lookup — enforced at handler layer (bypassing the handler bypasses this cap) |
 | `LORE_MAX_REFINE_FROM_IDS` | `200` | Max IDs in `lore_search(refine_from=[...])` — enforced at handler layer (bypassing the handler bypasses this cap) |
+| `LORE_LINK_TOP_K` | `50` | Cosine pre-filter: top-K candidates per memory before scoring |
+| `LORE_LINK_TOP_M` | `10` | Max candidates returned by `lore_recommend_links` |
+| `LORE_LINK_SCORE_THRESHOLD` | `0.3` | Minimum Stage 1 weighted score to pass |
+| `LORE_LINK_WEIGHT_COSINE` | `0.5` | Cosine similarity weight in combined score |
+| `LORE_LINK_WEIGHT_BM25` | `0.3` | BM25 keyword overlap weight |
+| `LORE_LINK_WEIGHT_ENTITY` | `0.1` | Entity overlap (spaCy NER) weight |
+| `LORE_LINK_WEIGHT_TEMPORAL` | `0.1` | Temporal proximity weight |
+| `LORE_LINK_TEMPORAL_TAU_DAYS` | `30` | Decay half-life for temporal scorer (days) |
+| `LORE_LINK_SPACY_MODEL` | `en_core_web_sm` | spaCy model for entity overlap scorer |
 
 ### First-Time Setup
 

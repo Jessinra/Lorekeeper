@@ -35,6 +35,16 @@ npx --yes @biomejs/biome check src/lorekeeper/dashboard/static/js/
 echo "✅  biome passed"
 
 echo ""
+echo "🔍  MCP tool documentation check..."
+uv run python scripts/check_mcp_docs.py
+echo "✅  mcp docs ok"
+
+echo ""
+echo "🔍  Skill format check..."
+uv run python scripts/check_skills.py
+echo "✅  skills ok"
+
+echo ""
 echo "🧪  pytest..."
 uv run pytest tests/ -q -x --tb=short
 echo "✅  tests passed"

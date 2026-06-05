@@ -4,7 +4,7 @@ import json
 import sqlite3
 import uuid
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -24,6 +24,9 @@ from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.reflection_store import ReflectionStore
 from lorekeeper.services.search import SearchResult, rank_results
+
+if TYPE_CHECKING:
+    from lorekeeper.services.link_candidate import LinkCandidate
 
 log = structlog.get_logger()
 
@@ -90,6 +93,16 @@ class MemoryService:
         # None means dirty — must reload from SQLite. Cache always holds the full
         # (include_deleted=True) dataset; include_deleted=False is filtered in Python.
         self._memory_cache: dict[str, Memory] | None = None
+        # LKPR-58: instantiate LinkCandidateGenerator once so spaCy model is only loaded once.
+        from lorekeeper.services.link_candidate import LinkCandidateGenerator
+        self._link_candidate_generator = LinkCandidateGenerator(
+            engine=self._engine,
+            memory_store=self.memories,
+            link_store=self.links,
+            keyword_index=self._kw,
+            settings=self.settings,
+            ns_filter=self._ns_filter,
+        )
 
     def _invalidate_cache(self) -> None:
         """Mark the memory cache dirty. Call at every write that adds/removes memories."""
@@ -919,6 +932,37 @@ class MemoryService:
             "created_at": now,
             "memories_created": memories_created,
         }
+
+    def recommend_links(
+        self,
+        lore_id: str,
+        top_k: int | None = None,
+    ) -> list[LinkCandidate]:
+        """Return link candidates for a source memory. Never writes.
+
+        Args:
+            lore_id: Source memory to find candidates for.
+            top_k: Override max candidates (default: settings.link_top_m).
+        """
+        self._increment_metric("lore_recommend_links")
+        from lorekeeper.services.link_candidate import LinkCandidateGenerator
+
+        effective = self.settings
+        if top_k is not None:
+            effective = effective.model_copy(update={"link_top_m": top_k})
+            generator = LinkCandidateGenerator(
+                engine=self._engine,
+                memory_store=self.memories,
+                link_store=self.links,
+                keyword_index=self._kw,
+                settings=effective,
+                ns_filter=self._ns_filter,
+            )
+        else:
+            generator = self._link_candidate_generator
+        candidates = generator.generate(lore_id)
+
+        return candidates
 
     def get_processed_session_ids(self) -> list[str]:
         self._increment_metric("lore_processed_sessions")

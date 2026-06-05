@@ -2,7 +2,7 @@
 
 Personal AI memory MCP server. Stores facts, decisions, and domain knowledge so AI agents can recall them across sessions.
 
-Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB (or LanceDB). Exposes seven MCP tools over stdio: `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_forget`, `lore_reflect`, `lore_processed_sessions`.
+Built with Python + [Mem0](https://github.com/mem0ai/mem0) + ChromaDB (or LanceDB). Exposes eight MCP tools over stdio: `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_forget`, `lore_reflect`, `lore_processed_sessions`, `lore_recommend_links`.
 
 **Features**
 
@@ -224,6 +224,47 @@ Returns:
 
 Use this to avoid re-processing sessions — check the list before calling `lore_reflect`.
 
+### `lore_recommend_links`
+
+```json
+{
+  "lore_id": "<uuid>",
+  "top_k": 10
+}
+```
+
+Suggests link candidates between a memory and related memories in the store. Single-stage scoring pipeline — semantic cosine, BM25, entity overlap, and temporal proximity combined into a weighted score. The agent evaluates the candidates and decides which links to create.
+
+**Does NOT write any links.** Returns candidates for review — confirm by calling `lore_insert` with `links=[]`.
+
+Parameters:
+
+- `lore_id` (required): source memory to find candidates for
+|- `top_k` (optional, default from `LORE_LINK_TOP_M`): max candidates to return, overriding the default limit
+
+Returns:
+```json
+{
+  "candidates": [
+    {
+      "source_lore_id": "<uuid>",
+      "target_lore_id": "<uuid>",
+      "weighted_score": 0.65,
+      "scores": {
+        "cosine": 0.82,
+        "bm25": 0.45,
+        "entity": 0.0,
+        "temporal": 0.0
+      }
+    }
+  ],
+  "count": 10,
+  "source_lore_id": "<uuid>"
+}
+```
+
+Per-signal `scores` lets the agent make its own judgment about which candidates are worth linking — no LLM call inside Lorekeeper.
+
 ---
 
 ## Setup
@@ -295,6 +336,15 @@ All settings use the `LORE_` prefix and can be set via environment variables:
 | `LORE_AUTO_LINK_THRESHOLD`              | `0.85`                                   | Minimum cosine similarity to auto-link; 0.85–0.95 = strong same-topic, 0.75–0.85 = related but distinct |
 | `LORE_DASH_PORT`                        | `7777`                                   | Dashboard HTTP port                                                                                     |
 | `LORE_DASH_RELOAD`                      | `1`                                      | Dashboard hot-reload (`0` to disable)                                                                   |
+| `LORE_LINK_TOP_K`                      | `50`                                     | Cosine pre-filter: top-K ANN candidates per memory before scoring                                          |
+| `LORE_LINK_TOP_M`                      | `10`                                     | Max candidates returned by `lore_recommend_links`                                                         |
+| `LORE_LINK_SCORE_THRESHOLD`                  | `0.3`                                    | Minimum weighted score threshold for link candidates                                                      |
+| `LORE_LINK_WEIGHT_COSINE`              | `0.5`                                    | Cosine similarity weight in Stage 1 scoring                                                               |
+| `LORE_LINK_WEIGHT_BM25`               | `0.3`                                    | BM25 keyword weight in Stage 1 scoring                                                                    |
+| `LORE_LINK_WEIGHT_ENTITY`             | `0.1`                                    | Entity overlap weight in Stage 1 scoring                                                                  |
+| `LORE_LINK_WEIGHT_TEMPORAL`           | `0.1`                                    | Temporal proximity weight in Stage 1 scoring                                                              |
+| `LORE_LINK_TEMPORAL_TAU_DAYS`          | `30.0`                                   | Decay half-life (days) for temporal proximity scorer                                                      |
+| `LORE_LINK_SPACY_MODEL`                | `en_core_web_sm`                         | spaCy model for entity overlap scoring (pip install spacy if used)                                        |
 
 ---
 
@@ -408,7 +458,7 @@ The single source of truth for the prompt content and version is `assets/prompts
 
 ## Skills
 
-Four skills ship in `assets/skills/` and are installed by `setup.sh` to all detected agents (Hermes, Claude Code, Cursor):
+Five skills ship in `assets/skills/` and are installed by `setup.sh` to all detected agents (Hermes, Claude Code, Cursor):
 
 | Skill                  | Purpose                                                                              |
 | ---------------------- | ------------------------------------------------------------------------------------ |
@@ -416,6 +466,7 @@ Four skills ship in `assets/skills/` and are installed by `setup.sh` to all dete
 | `lorekeeper-search`    | Search memories with mandatory relevance feedback after every result set             |
 | `lorekeeper-memorize`  | Proactively capture facts, search for related memories, insert, and link             |
 | `lorekeeper-reconcile` | Verify memories against source materials, update scores, soft-delete incorrect facts |
+| `lorekeeper-link-memories` | Discover typed relationships between memories via `lore_recommend_links`         |
 
 Skills are installed to `~/.hermes/skills/`, `~/.claude/skills/`, or `~/.cursor/skills/` depending on which agents are detected. Version-stamped — `setup.sh` skips re-install when already up to date.
 
@@ -556,8 +607,7 @@ loop/
 └── sessions/                # Agentic loop session logs (one per session)
 src/lorekeeper/
 ├── __main__.py              # Entrypoint — init_service() + mcp.run(stdio)
-├── server.py                # FastMCP tool definitions (lore_search/insert/update/reflect/processed_sessions)
-├── handlers.py              # Request handling + response serialisation
+├── server.py                # FastMCP tool definitions (8 tools)
 ├── config.py                # Settings (pydantic-settings, LORE_ prefix)
 ├── models.py                # Memory, MemoryLink, Reflection, SessionRecord Pydantic models
 ├── dashboard/               # Optional web UI (FastAPI + uvicorn)
@@ -571,7 +621,9 @@ src/lorekeeper/
     ├── keyword_index.py     # BM25 index (rank-bm25)
     ├── search.py            # Hybrid ranking, SearchResult type
     ├── dedup.py             # Duplicate detection
-    └── feedback.py          # Score delta, confidence EMA, soft-delete logic
+    ├── feedback.py          # Score delta, confidence EMA, soft-delete logic
+    ├── link_candidate.py    # Link candidate pipeline — scorers + generator (LKPR-58)
+    └── relation_classifier.py  # LLM-based relation type classifier (LKPR-58)
 scripts/
 ├── lorekeeper-setup.sh      # Symlink repo skills → ~/.hermes/skills/
 ├── lorekeeper-backlog.sh    # Backlog viewer: group tickets by status, detect duplicates

@@ -10,10 +10,15 @@ Adding a new field to Memory/MemoryLink/SearchResult now requires
 touching only this file — not handlers.py AND dashboard/app.py.
 """
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from lorekeeper.models import Memory, MemoryLink
 from lorekeeper.services.search import SearchResult
+
+if TYPE_CHECKING:
+    from lorekeeper.services.link_candidate import LinkCandidate
 
 
 def serialize_memory(
@@ -163,3 +168,19 @@ def serialize_search_result(
         output["links"] = [serialize_memory_link(lnk) for lnk in result.links]
 
     return output
+
+
+def serialize_link_candidate(candidate: LinkCandidate) -> dict[str, Any]:
+    """Serialize a LinkCandidate for MCP response."""
+    result: dict[str, Any] = {
+        "source_lore_id": candidate.source_lore_id,
+        "target_lore_id": candidate.target_lore_id,
+        "weighted_score": round(candidate.weighted_score, 4),
+        "scores": {
+            "cosine": round(candidate.cosine_score, 4),
+            "bm25": round(candidate.bm25_score, 4),
+            "entity": round(candidate.entity_score, 4),
+            "temporal": round(candidate.temporal_score, 4),
+        },
+    }
+    return result

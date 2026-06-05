@@ -9,6 +9,11 @@ implementation applies a single bootstrap migration (version 1) that captures
 all schema and idempotent fixups previously embedded in `LinkStore.__init__`.
 Future schema changes should be added as new entries in `MIGRATIONS` with
 incrementing version numbers.
+
+TODO: After all in-flight migrations (v1 bootstrap, v2 extend_relation_types)
+are stable, fold their DDL into BASE_SCHEMA so new installations start with
+the final schema directly. Existing DBs should only run migrations that
+actually upgrade legacy data — not recreate what BASE_SCHEMA already has.
 """
 
 from __future__ import annotations
@@ -246,10 +251,66 @@ def _migration_1_bootstrap(conn: sqlite3.Connection) -> None:
     _ensure_namespace_scoped_unique_title(conn)
 
 
+def _migration_2_extend_relation_types(conn: sqlite3.Connection) -> None:
+    """Extend memory_links CHECK constraint to include all 8 relation types.
+
+    models.py already defines 8 types (added contradicts, supersedes, depends_on)
+    but the DB CHECK constraint only allowed 5. SQLite can't ALTER CONSTRAINT,
+    so we rebuild the table:
+      - Rename old table
+      - Create new table with updated CHECK
+      - Copy data
+      - Drop old table
+
+    Idempotency: if memory_links_old already exists (crash mid-migration on a
+    previous run), we skip the RENAME and proceed from the CREATE step so that
+    a restart recovers cleanly rather than crashing on "table already exists".
+    """
+    # Idempotency guard: detect a half-applied previous run
+    old_exists = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='memory_links_old'"
+    ).fetchone()
+
+    if not old_exists:
+        # Normal path — rename first
+        conn.execute("ALTER TABLE memory_links RENAME TO memory_links_old")
+
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS memory_links (
+          id                TEXT PRIMARY KEY,
+          source_memory_id  TEXT NOT NULL,
+          target_memory_id  TEXT NOT NULL,
+          relation_type     TEXT NOT NULL CHECK (relation_type IN
+                            ('related_to','used_in','used_for','used_by','used_as',
+                             'contradicts','supersedes','depends_on')),
+          reason            TEXT NOT NULL,
+          score             REAL    NOT NULL DEFAULT 1.0,
+          created_at        TEXT    NOT NULL,
+          updated_at        TEXT    NOT NULL,
+          usage_count       INTEGER NOT NULL DEFAULT 0,
+          confidence        REAL,
+          confidence_count  INTEGER NOT NULL DEFAULT 0,
+          FOREIGN KEY (source_memory_id) REFERENCES memories(id) ON DELETE CASCADE,
+          FOREIGN KEY (target_memory_id) REFERENCES memories(id) ON DELETE CASCADE
+        );
+
+        INSERT OR IGNORE INTO memory_links SELECT * FROM memory_links_old;
+
+        DROP TABLE memory_links_old;
+
+        CREATE INDEX IF NOT EXISTS idx_links_source ON memory_links(source_memory_id);
+        CREATE INDEX IF NOT EXISTS idx_links_target ON memory_links(target_memory_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_links_unique_pair
+            ON memory_links(source_memory_id, target_memory_id, relation_type);
+    """)
+    log.info("link_relation_types_extended", count=8)
+
+
 # Each entry: (version, name, callable taking sqlite3.Connection).
 # Append new migrations here with incrementing version numbers.
 MIGRATIONS: list[tuple[int, str, Callable[[sqlite3.Connection], None]]] = [
     (1, "bootstrap_schema_and_fixups", _migration_1_bootstrap),
+    (2, "extend_relation_types", _migration_2_extend_relation_types),
 ]
 
 

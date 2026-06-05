@@ -106,3 +106,43 @@ class TestSearchScoring:
                 f"Finance memory ({by_id['id-finance']:.3f}) should outscore "
                 f"sky memory ({by_id['id-sky']:.3f}) for a financial query"
             )
+
+
+class TestChromaDBGetEmbeddingsBatch:
+    """Tests for get_embeddings_batch — used by CosineScorer in link_candidate pipeline.
+
+    NOTE: ChromaDB engine is deprecated (LanceDB is preferred). These tests
+    cover the re-encoding path since Chroma does not expose stored vectors directly.
+    """
+
+    def test_returns_vectors_for_known_ids(self, engine_with_memories):
+        """Known lore_ids must return vectors of correct dimension."""
+        result = engine_with_memories.get_embeddings_batch(["id-python", "id-finance"])
+        assert "id-python" in result
+        assert "id-finance" in result
+        assert result["id-python"].shape == (384,)
+        assert result["id-finance"].shape == (384,)
+
+    def test_unknown_id_not_in_result(self, engine_with_memories):
+        """IDs not in the store must be absent from the result."""
+        result = engine_with_memories.get_embeddings_batch(["id-python", "does-not-exist"])
+        assert "id-python" in result
+        assert "does-not-exist" not in result
+
+    def test_empty_input_returns_empty(self, engine_with_memories):
+        """Empty input must return empty dict without error."""
+        assert engine_with_memories.get_embeddings_batch([]) == {}
+
+    def test_vectors_differ_across_memories(self, engine_with_memories):
+        """Two memories must return non-zero vectors that are numpy arrays.
+
+        NOTE: ChromaDB re-encodes from stored text on the fly (no stored vector
+        access). Semantic distinctness is tested in LanceDB which has direct
+        vector access. This just verifies the re-encoding path returns usable arrays.
+        """
+        import numpy as np
+        result = engine_with_memories.get_embeddings_batch(["id-python", "id-sky"])
+        assert "id-python" in result and "id-sky" in result
+        # Both must be non-zero float32 arrays
+        assert np.linalg.norm(result["id-python"]) > 0
+        assert np.linalg.norm(result["id-sky"]) > 0

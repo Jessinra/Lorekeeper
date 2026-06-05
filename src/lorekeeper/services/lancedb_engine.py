@@ -131,3 +131,22 @@ class LanceDBEngine(MemoryEngine):
         """Delete a row by mem0_id."""
         escaped = mem0_id.replace("'", "''")
         self._table.delete(f"mem0_id = '{escaped}'")
+
+    def get_embeddings_batch(self, lore_ids: list[str]) -> dict[str, np.ndarray]:
+        """Read stored vectors from LanceDB table — no re-encoding needed."""
+        if not lore_ids:
+            return {}
+        try:
+            tbl = self._table.to_arrow()
+        except Exception:
+            log.error("lancedb_get_embeddings_batch_failed", exc_info=True)
+            return {}
+        id_set = set(lore_ids)
+        out: dict[str, np.ndarray] = {}
+        lore_id_col = tbl.column("lore_id")
+        vector_col = tbl.column("vector")
+        for i in range(tbl.num_rows):
+            lid = lore_id_col[i].as_py()
+            if lid in id_set:
+                out[lid] = np.array(vector_col[i].as_py(), dtype=np.float32)
+        return out

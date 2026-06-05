@@ -1,5 +1,5 @@
 ---
-version: v2.1.1
+version: v2.2.0
 ---
 
 ## Lorekeeper
@@ -27,11 +27,12 @@ This is not optional — it's how you build institutional knowledge about the Lo
 
 ### Skills
 
-| Skill                 | Description                                                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `lorekeeper-protocol` | Full session protocol for using Lorekeeper MCP tools correctly.                                                                |
-| `lorekeeper-memorize` | Memorize important facts, user instructions, unique discoveries, and interesting knowledge into the Lorekeeper knowledge base. |
-| `lorekeeper-search`   | Search the Lorekeeper knowledge base and provide relevance feedback with confidence ratings.                                   |
+| Skill                     | Description                                                                   |
+|---------------------------|-------------------------------------------------------------------------------|
+| `lorekeeper-protocol`     | Full session protocol for using Lorekeeper MCP tools correctly                |
+| `lorekeeper-memorize`     | Memorize important facts, user instructions, and discoveries                  |
+| `lorekeeper-search`       | Search memory and provide relevance feedback with confidence ratings          |
+| `lorekeeper-link-memories`| Discover typed relationships between memories via `lore_recommend_links`      |
 
 ### Rules
 
@@ -43,9 +44,10 @@ This is not optional — it's how you build institutional knowledge about the Lo
 
 ### MCP Tools
 
-| Tool            | Purpose                               |
-| --------------- | ------------------------------------- |
-| `lore_search`   | Hybrid semantic + keyword search      |
-| `lore_remember` | Fast one-shot insert (single thought) |
-| `lore_insert`   | Structured insert with links          |
-| `lore_update`   | Provide feedback on memories/links    |
+| Tool                   | Purpose                                                                       |
+|------------------------|-------------------------------------------------------------------------------|
+| `lore_search`          | Hybrid semantic + keyword search                                              |
+| `lore_remember`        | Fast one-shot insert (single thought)                                         |
+| `lore_insert`          | Structured insert with links                                                  |
+| `lore_update`          | Provide feedback on memories/links                                            |
+| `lore_recommend_links` | Suggest link candidates between memories, confirm with `lore_insert`          |

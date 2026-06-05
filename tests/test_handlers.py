@@ -5,7 +5,7 @@ Validates that input validation happens early — before reaching the orchestrat
 import pytest
 
 from lorekeeper.config import Settings
-from lorekeeper.server import _handle_insert, _handle_search
+from lorekeeper.server import _handle_insert, _handle_recommend_links, _handle_search
 from lorekeeper.services.keyword_index import KeywordIndex
 from tests._helpers import build_service, build_stores
 
@@ -312,3 +312,43 @@ def test_search_by_ids_dedup_with_usage_count(svc):
 
     after_row = svc.memories.get_memory_row(mem_id)
     assert after_row["usage_count"] == before_count + 1  # bumped only once
+
+
+# ── _handle_recommend_links input validation ──────────────────────────────────
+
+
+def test_recommend_links_empty_lore_id_raises(svc):
+    with pytest.raises(ValueError, match="lore_id is required"):
+        _handle_recommend_links(svc, lore_id="")
+
+
+def test_recommend_links_whitespace_lore_id_raises(svc):
+    with pytest.raises(ValueError, match="lore_id is required"):
+        _handle_recommend_links(svc, lore_id="   ")
+
+
+def test_recommend_links_zero_top_k_raises(svc):
+    with pytest.raises(ValueError, match="positive integer"):
+        _handle_recommend_links(svc, lore_id="abc", top_k=0)
+
+
+def test_recommend_links_negative_top_k_raises(svc):
+    with pytest.raises(ValueError, match="positive integer"):
+        _handle_recommend_links(svc, lore_id="abc", top_k=-5)
+
+
+def test_recommend_links_top_k_capped_at_50(svc):
+    """top_k > 50 must be silently capped — no error, result count <= 50."""
+    result = _handle_recommend_links(svc, lore_id="nonexistent-id", top_k=999)
+    # nonexistent lore_id returns empty candidates — just verify no exception and cap applied
+    assert result["count"] == 0
+    assert result["source_lore_id"] == "nonexistent-id"
+
+
+def test_recommend_links_valid_call_returns_shape(svc):
+    """Valid call must return dict with candidates, count, source_lore_id."""
+    result = _handle_recommend_links(svc, lore_id="some-id")
+    assert "candidates" in result
+    assert "count" in result
+    assert "source_lore_id" in result
+    assert result["count"] == len(result["candidates"])

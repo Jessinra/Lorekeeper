@@ -5,7 +5,11 @@ from fastmcp import FastMCP
 from pydantic import ValidationError
 
 from lorekeeper.config import Settings
-from lorekeeper.serializers import serialize_search_result, serialize_search_result_title
+from lorekeeper.serializers import (
+    serialize_link_candidate,
+    serialize_search_result,
+    serialize_search_result_title,
+)
 from lorekeeper.services.config_store import ConfigStore
 from lorekeeper.services.database import Database
 from lorekeeper.services.engine_factory import build_engine
@@ -149,6 +153,27 @@ def _handle_insert(
     return svc.insert(memories, links, force)
 
 
+def _handle_recommend_links(
+    svc: MemoryService,
+    lore_id: str,
+    top_k: int | None = None,
+) -> dict[str, Any]:
+    if not lore_id or not lore_id.strip():
+        raise ValueError("lore_id is required")
+    if top_k is not None:
+        if not isinstance(top_k, int) or top_k < 1:
+            raise ValueError("top_k must be a positive integer")
+        top_k = min(top_k, 50)  # hard cap
+    candidates = svc.recommend_links(
+        lore_id=lore_id, top_k=top_k
+    )
+    return {
+        "candidates": [serialize_link_candidate(c) for c in candidates],
+        "count": len(candidates),
+        "source_lore_id": lore_id,
+    }
+
+
 # ---------------------------------------------------------------------------
 # MCP tool registration
 # ---------------------------------------------------------------------------
@@ -220,6 +245,32 @@ async def lore_insert(
         return _handle_insert(get_service(), memories or [], links or [], force)
     except Exception:
         log.exception("lore_insert_failed", memory_count=len(memories or []))
+        raise
+
+
+@mcp.tool(
+    name="lore_recommend_links",
+    description=(
+        "Suggest link candidates between a memory and related memories. "
+        "Returns ranked candidates with per-signal scores. "
+        "Does NOT write any links — call lore_insert with links=[] to confirm."
+    ),
+)
+async def lore_recommend_links(
+    lore_id: str,
+    top_k: int | None = None,
+) -> dict[str, Any]:
+    """
+    lore_id: The source memory to find link candidates for.
+    top_k: Max candidates to return (default: LORE_LINK_TOP_M from settings).
+    """
+    try:
+        svc = get_service()
+        return _handle_recommend_links(
+            svc, lore_id=lore_id, top_k=top_k
+        )
+    except Exception:
+        log.exception("lore_recommend_links_failed", lore_id=lore_id)
         raise
 
 
