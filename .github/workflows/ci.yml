@@ -58,11 +58,45 @@ jobs:
       - name: Skill format check
         run: uv run python scripts/check_skills.py
 
-      - name: Run tests
+      - name: Run tests with coverage
         env:
           TOKENIZERS_PARALLELISM: "false"
           HF_HOME: ~/.cache/huggingface
-        run: uv run pytest --tb=short -q
+        run: |
+          set -o pipefail
+          uv run --with pytest-cov pytest \
+            --cov=src/lorekeeper \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-report=html \
+            --tb=short -q | tee pytest-cov.log
+
+      - name: Summarize coverage in the job summary
+        if: always()
+        run: |
+          {
+            echo "## Coverage"
+            echo
+            if [ -f .coverage ]; then
+              uv run coverage report --skip-covered --show-missing | tee coverage-report.txt
+              echo '```'
+              cat coverage-report.txt
+              echo '```'
+              echo
+              echo "HTML report: uploaded as an artifact named \`coverage-html\`."
+            else
+              echo "Coverage data not found."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Mypy type check
         run: uv run mypy src

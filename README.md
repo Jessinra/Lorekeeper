@@ -547,6 +547,7 @@ bash scripts/setup.sh
 # Tests
 uv run pytest
 uv run pytest tests/ -x -q    # fail-fast
+bash scripts/test-coverage.sh   # optional: coverage report (guideline only)
 
 # Lint — Python (also runs in pre-commit hook)
 uv run ruff check src tests

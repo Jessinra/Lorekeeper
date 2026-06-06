@@ -95,6 +95,7 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 
 - Python 3.11, managed by `uv`
 - Run tests: `uv run pytest`
+- Coverage report (optional): `bash scripts/test-coverage.sh`
 - Lint (Python): `uv run ruff check src tests scripts/`
 - Lint (JS): `npx @biomejs/biome check src/lorekeeper/dashboard/static/js/`
 - Lint (Markdown): `while IFS= read -r -d '' f; do [ -f "$f" ] && printf '%s\0' "$f"; done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve`

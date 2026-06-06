@@ -24,9 +24,10 @@ uv run ruff check src tests scripts/   # lint
 while IFS= read -r -d '' f; do [ -f "$f" ] && printf '%s\0' "$f"; done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve
 uv run mypy src                         # types
 uv run pytest tests/ -q                 # tests
+bash scripts/test-coverage.sh            # optional coverage report
 ```
 
-All three also run in CI. If CI fails, the PR doesn't merge.
+Those checks also run in CI. If CI fails, the PR doesn't merge. Coverage is a guide, not a gate.
 
 ---
 
