@@ -45,7 +45,7 @@ jobs:
           uv run python - << 'EOF'
           from sentence_transformers import SentenceTransformer
           SentenceTransformer("all-MiniLM-L6-v2")
-          echo "Model ready."
+          print("Model ready.")
           EOF
 
       - name: Ruff lint
