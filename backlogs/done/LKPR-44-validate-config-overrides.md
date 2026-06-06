@@ -4,7 +4,7 @@ github_issue: 82
 title: Validate config overrides before applying on restart
 type: bug
 sprint: 2
-rice_score: ~  # TBD: R:5 I:6 C:95% E:0.1w
+rice_score: ~ # TBD: R:5 I:6 C:95% E:0.1w
 filed_by: Diana
 filed_date: 2026-05-27
 ---
@@ -62,7 +62,7 @@ None
 
 ## Open Questions
 
-- Should we delete the bad override from the table so it doesn't block *every* future restart? Yes — but that's a nice-to-have. Minimum is skip + log.
+- Should we delete the bad override from the table so it doesn't block _every_ future restart? Yes — but that's a nice-to-have. Minimum is skip + log.
 
 ## Notes
 

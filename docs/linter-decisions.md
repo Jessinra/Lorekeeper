@@ -83,6 +83,29 @@ The dashboard JS is plain browser-side JavaScript (no TypeScript, no build step)
 
 ---
 
+## Markdown — Prettier
+
+**Tool**: Prettier (`while IFS= read -r -d '' f; do [ -f "$f" ] && printf '%s\0' "$f"; done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve`)  
+**Config**: `.prettierrc.json`
+
+### Why Prettier over markdownlint-cli2
+
+| Criteria           | Prettier                                          | markdownlint-cli2                                               |
+| ------------------ | ------------------------------------------------- | --------------------------------------------------------------- |
+| Table formatting   | ✅ Normalizes pipe tables                         | ❌ Lints tables, but does not reflow them well                  |
+| Paragraph wrapping | ✅ `proseWrap: preserve` avoids aggressive reflow | ✅ Configurable, but no full formatter                          |
+| Zero runtime drift | ✅ One pinned `npx` invocation                    | ✅ One pinned `npx` invocation                                  |
+| Developer friction | ✅ One formatter for all markdown                 | ⚠️ Rules-first, but still needs separate formatting conventions |
+
+The repo's markdown pain is mostly mechanical formatting drift: tables, list spacing, trailing whitespace, and inconsistent code fence layout. Prettier is the simplest tool that actually rewrites the content into a consistent shape without introducing a separate lint-vs-format split. `proseWrap: preserve` keeps intentional hard-wrapped docs readable.
+
+### Settings
+
+- `printWidth: 100` — matches the repo's existing readability target
+- `proseWrap: preserve` — avoids reflowing prose paragraphs in docs like `CLAUDE.md`
+
+---
+
 ## Pre-commit Hook
 
 **File**: `.githooks/pre-commit`  
@@ -92,7 +115,8 @@ The hook runs:
 
 1. `uv run ruff check src tests` — Python lint
 2. `npx --yes @biomejs/biome check src/lorekeeper/dashboard/static/js/` — JS lint
-3. `uv run pytest tests/ -q --tb=short` — test suite
+3. `while IFS= read -r -d '' f; do [ -f "$f" ] && printf '%s\0' "$f"; done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve` — Markdown formatting check
+4. `uv run pytest tests/ -q --tb=short` — test suite
 
 **mypy is not in the hook** (see note above). Run it manually before pushing: `uv run mypy src`.
 

@@ -22,7 +22,7 @@ Automated bulk-linking is not the goal — bad links are worse than no links. Th
 
 A single-stage pipeline exposed via `lore_recommend_links`. Agent calls the tool, reviews the scored candidates (each has a per-signal score breakdown), and confirms links it trusts via `lore_insert`.
 
-No LLM classifier inside the MCP server — the *agent* is the LLM. Lorekeeper just surfaces the data.
+No LLM classifier inside the MCP server — the _agent_ is the LLM. Lorekeeper just surfaces the data.
 
 **Scorers (all env-configurable, no LLM):**
 
@@ -32,6 +32,7 @@ No LLM classifier inside the MCP server — the *agent* is the LLM. Lorekeeper j
 - **Temporal decay** — `exp(-Δt / τ)`, τ=30d default. Soft bonus (weight 0.10).
 
 Combined score (all weights env-configurable via `LORE_LINK_WEIGHT_*`):
+
 ```
 score = 0.50·cosine + 0.30·bm25 + 0.10·entity + 0.10·temporal
 ```
@@ -73,11 +74,13 @@ Distributed via `assets/skills/`. Defines when to run, how to evaluate candidate
 ## Affected Files
 
 **Backend:**
+
 - `src/lorekeeper/services/link_candidate.py` — new
 - `src/lorekeeper/config.py` — add `LORE_LINK_*` env vars
 - `src/lorekeeper/server.py` — register MCP tool
 
 **Skills:**
+
 - `assets/skills/lorekeeper-link-memories/SKILL.md` — new
 
 ## Dependencies

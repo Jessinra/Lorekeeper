@@ -15,6 +15,7 @@
 **Objective:** Two functions that serialize `Memory` and `MemoryLink` Pydantic models into dicts, with overrides for truncation and field exclusion.
 
 **Files:**
+
 - Create: `src/lorekeeper/serializers.py`
 
 **Implementation:**
@@ -88,6 +89,7 @@ uv run python -c "from lorekeeper.serializers import serialize_memory, serialize
 Expected: `OK`
 
 **Commit:**
+
 ```bash
 git add src/lorekeeper/serializers.py
 git commit -m "refactor(lkpr-43): add shared serializers for Memory and MemoryLink"
@@ -100,6 +102,7 @@ git commit -m "refactor(lkpr-43): add shared serializers for Memory and MemoryLi
 **Objective:** Compose `serialize_memory()` + `serialize_memory_link()` into a single `serialize_search_result()` with relevance scoring fields, supporting all the overrides the dashboard needs.
 
 **Files:**
+
 - Modify: `src/lorekeeper/serializers.py`
 
 **Add to the end of `serializers.py`:**
@@ -190,6 +193,7 @@ print('All assertions passed')
 Expected: `All assertions passed`
 
 **Commit:**
+
 ```bash
 git add src/lorekeeper/serializers.py
 git commit -m "refactor(lkpr-43): add serialize_search_result composable serializer"
@@ -202,6 +206,7 @@ git commit -m "refactor(lkpr-43): add serialize_search_result composable seriali
 **Objective:** Replace inline `_result_to_dict()` with a call to `serialize_search_result()`.
 
 **Files:**
+
 - Modify: `src/lorekeeper/handlers.py`
 
 **Changes:**
@@ -271,6 +276,7 @@ uv run pytest tests/test_handlers.py -v
 Expected: 3 passed
 
 **Commit:**
+
 ```bash
 git add src/lorekeeper/handlers.py
 git commit -m "refactor(lkpr-43): replace inline _result_to_dict with shared serialize_search_result"
@@ -283,11 +289,13 @@ git commit -m "refactor(lkpr-43): replace inline _result_to_dict with shared ser
 **Objective:** Replace inline dict construction in `dashboard/app.py:304-322` with a call to `serialize_search_result()` with the dashboard-specific overrides.
 
 **Files:**
+
 - Modify: `src/lorekeeper/dashboard/app.py`
 
 **Changes:**
 
 1. Add import at top of `app.py`:
+
    ```python
    from lorekeeper.serializers import serialize_search_result
    ```
@@ -337,6 +345,7 @@ print('Dashboard shape verified')
 ```
 
 **Commit:**
+
 ```bash
 git add src/lorekeeper/dashboard/app.py
 git commit -m "refactor(lkpr-43): dashboard search uses shared serializer with endpoint overrides"
@@ -359,6 +368,7 @@ uv run ruff check src tests
 Expected: 87/87 tests passing, ruff clean
 
 **Commit:**
+
 ```bash
 git add -A
 git commit -m "refactor(lkpr-43): post-refactor cleanup — lint + test pass"
@@ -369,6 +379,7 @@ git commit -m "refactor(lkpr-43): post-refactor cleanup — lint + test pass"
 ### Rollback Plan
 
 If any test fails or output shape changes:
+
 1. `git checkout -- src/lorekeeper/serializers.py src/lorekeeper/handlers.py src/lorekeeper/dashboard/app.py` to revert all files
 2. Re-run tests to confirm they pass on original code
 3. Debug the serializer override mismatch, fix, and retry from Task 3

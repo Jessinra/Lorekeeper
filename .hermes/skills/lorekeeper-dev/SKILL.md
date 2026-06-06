@@ -205,12 +205,12 @@ Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`.
 
 ## Coding Standards
 
-| Rule | Limit |
-|------|-------|
-| File length | 200–400 lines typical, **800 max** — split if larger |
-| Function length | **50 lines max** — extract helpers if longer |
-| Nesting depth | **4 levels max** — use early returns to flatten |
-| Mutation | **Avoid** — prefer returning new objects; no in-place mutation of args |
+| Rule            | Limit                                                                  |
+| --------------- | ---------------------------------------------------------------------- |
+| File length     | 200–400 lines typical, **800 max** — split if larger                   |
+| Function length | **50 lines max** — extract helpers if longer                           |
+| Nesting depth   | **4 levels max** — use early returns to flatten                        |
+| Mutation        | **Avoid** — prefer returning new objects; no in-place mutation of args |
 
 These aren't style preferences — they're enforced during PM review. PRs violating the 800-line or 4-nesting limits will be sent back.
 

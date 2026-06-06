@@ -26,13 +26,13 @@ Group all four under one ticket with a strict ordering: **tests first**, then cl
 
 ### Execution order
 
-| Step | What | Verifies |
-|------|------|----------|
-| 1 | Dashboard route integration tests + `serializers.py` tests + MCP server tests | Test suite covers all untested paths |
-| 2 | Dashboard → use `serializers.py`, remove `window.*` JS globals from `api.js` | Existing tests pass, no behavioral change |
-| 3 | Config override type validation at `PATCH /api/config` | Invalid types return 422 instead of crashing on next search |
-| 4 | Clean up `MemoryEngine` ABC — remove unused methods, add `find_mem0_id` | Interface matches usage, tests conform |
-| 5 | Run `mypy src` as non-blocking pre-commit advisory, fix existing issues | Type issues surfaced, pre-commit is future-compatible |
+| Step | What                                                                          | Verifies                                                    |
+| ---- | ----------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 1    | Dashboard route integration tests + `serializers.py` tests + MCP server tests | Test suite covers all untested paths                        |
+| 2    | Dashboard → use `serializers.py`, remove `window.*` JS globals from `api.js`  | Existing tests pass, no behavioral change                   |
+| 3    | Config override type validation at `PATCH /api/config`                        | Invalid types return 422 instead of crashing on next search |
+| 4    | Clean up `MemoryEngine` ABC — remove unused methods, add `find_mem0_id`       | Interface matches usage, tests conform                      |
+| 5    | Run `mypy src` as non-blocking pre-commit advisory, fix existing issues       | Type issues surfaced, pre-commit is future-compatible       |
 
 Steps 2–4 each touch different files — no merge conflicts.
 
@@ -47,6 +47,7 @@ Steps 2–4 each touch different files — no merge conflicts.
 ## Affected Files
 
 ### Backend
+
 - `src/lorekeeper/services/memory_engine.py` — update ABC (step 4)
 - `src/lorekeeper/services/lancedb_engine.py` — implement `find_mem0_id`, audit `normalize_score` usage (step 4)
 - `src/lorekeeper/services/chromadb_engine.py` — implement `find_mem0_id`, fix inline normalization (step 4)
@@ -54,14 +55,17 @@ Steps 2–4 each touch different files — no merge conflicts.
 - `src/lorekeeper/server.py` — add error-path tests (step 1)
 
 ### Dashboard
+
 - `src/lorekeeper/dashboard/app.py` — use serializers module, validate config types (steps 2–3)
 - `src/lorekeeper/dashboard/static/js/api.js` — remove `window.*` assignments (step 2)
 
 ### Tests
+
 - `tests/test_serializers.py` — new file or extend existing (step 1)
 - `tests/test_dashboard.py` — new file for FastAPI TestClient integration tests (step 1)
 
 ### Config / CI
+
 - `.githooks/pre-commit` — add mypy advisory (step 5)
 - `pyproject.toml` — minor config adjustments if needed (step 5)
 
@@ -74,7 +78,7 @@ Steps 2–4 each touch different files — no merge conflicts.
 - **CLAUDE.md**: [ ] Update if mypy advisory is added to pre-commit workflow section
 - **README.md**: [ ] N/A
 - **Skills**: [ ] Update `lorekeeper-dev` skill with new pre-commit behavior
-- **Backlog**: [ ] Move LKPR-45 to `S:done` once its window.* cleanup is included here
+- **Backlog**: [ ] Move LKPR-45 to `S:done` once its window.\* cleanup is included here
 
 ## Open Questions
 

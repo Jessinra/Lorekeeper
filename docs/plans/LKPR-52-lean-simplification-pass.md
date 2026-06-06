@@ -18,6 +18,7 @@
 **Scope:** Remove `self._conn.commit()` from all store methods. Add a single `self._db.conn.commit()` (or `conn.commit()`) call in `orchestrator.py` at the end of each logical operation.
 
 **Files touched:**
+
 - `src/lorekeeper/services/memory_store.py` — 4 commits at lines 62, 163, 176, 180
 - `src/lorekeeper/services/link_store.py` — 3 commits at lines 77, 127, 139
 - `src/lorekeeper/services/reflection_store.py` — 3 commits at lines 67, 103, 113
@@ -27,6 +28,7 @@
 - `src/lorekeeper/services/orchestrator.py` — add commits here
 
 **Rules:**
+
 - `database.py` PRAGMA commits and migration commits stay — those are lifecycle, not store writes
 - `link_store.py`'s `insert_link` IntegrityError path does NOT commit (it's in error handling) — leave that alone
 - Dashboard `app.py` routes call stores directly for some operations (e.g. `store.update_memory_fields`, `store.delete_memory_row`, `store.delete_link`) — these routes need explicit commits added after those calls (since stores lose their auto-commit)
@@ -42,17 +44,20 @@
 **Step 1: Remove commits**
 
 Remove `self._conn.commit()` from:
+
 - `upsert_memory_row` (line 62)
 - `update_memory_fields` (line 163)
 - `bulk_increment_usage_count` (line 176)
 - `delete_memory_row` (line 180)
 
 **Step 2: Verify lint passes**
+
 ```bash
 cd /Users/jessinra/Code/lorekeeper && uv run ruff check src/lorekeeper/services/memory_store.py
 ```
 
 **Step 3: Commit**
+
 ```bash
 git add src/lorekeeper/services/memory_store.py
 git commit -m "[LKPR-52] refactor: remove auto-commit from MemoryStore"
@@ -69,11 +74,13 @@ git commit -m "[LKPR-52] refactor: remove auto-commit from MemoryStore"
 **Step 1: Remove commits**
 
 Remove `self._conn.commit()` from:
+
 - `insert_link` happy path (after the INSERT, line 77) — **keep** the error handling path as-is (no commit there anyway)
 - `update_link_fields` (line 127)
 - `delete_link` (line 139)
 
 **Step 2: Lint + commit**
+
 ```bash
 uv run ruff check src/lorekeeper/services/link_store.py
 git add src/lorekeeper/services/link_store.py
@@ -91,6 +98,7 @@ git commit -m "[LKPR-52] refactor: remove auto-commit from LinkStore"
 **Step 1:** Remove `self._conn.commit()` from `insert_reflection` and `upsert_session` (both write methods).
 
 **Step 2: Lint + commit**
+
 ```bash
 uv run ruff check src/lorekeeper/services/reflection_store.py
 git add src/lorekeeper/services/reflection_store.py
@@ -108,6 +116,7 @@ git commit -m "[LKPR-52] refactor: remove auto-commit from ReflectionStore"
 **Step 1:** Remove `self._conn.commit()` from the write methods in each file.
 
 **Step 2: Lint + commit**
+
 ```bash
 uv run ruff check src/lorekeeper/services/metrics_store.py src/lorekeeper/services/config_store.py
 git add src/lorekeeper/services/metrics_store.py src/lorekeeper/services/config_store.py
@@ -125,6 +134,7 @@ git commit -m "[LKPR-52] refactor: remove auto-commit from MetricsStore and Conf
 **Step 1: Add a commit helper**
 
 At the top of `MemoryService`, add:
+
 ```python
 def _commit(self) -> None:
     """Commit the shared SQLite connection. Called after each logical operation."""
@@ -144,19 +154,23 @@ def _commit(self) -> None:
 **Step 3: Add commits to dashboard routes that write directly to stores**
 
 In `src/lorekeeper/dashboard/app.py`, the following routes call store methods directly (bypassing orchestrator):
+
 - `update_memory` → `store.update_memory_fields(...)` → add `svc.memories._conn.commit()` after
-- `delete_memory` → `store.delete_memory_row(...)` → add `svc.memories._conn.commit()` after  
+- `delete_memory` → `store.delete_memory_row(...)` → add `svc.memories._conn.commit()` after
 - `create_link` → `svc.links.insert_link(...)` → add `svc.links._conn.commit()` after
 - `delete_link` → `store.delete_link(...)` → add `svc.links._conn.commit()` after
 - `update_config` → `svc.config.set_override(...)` → add `svc.config._conn.commit()` after the loop
 
 **Step 4: Run tests**
+
 ```bash
 cd /Users/jessinra/Code/lorekeeper && uv run pytest
 ```
+
 Expected: all green.
 
 **Step 5: Lint + commit**
+
 ```bash
 uv run ruff check src/
 git add src/lorekeeper/services/orchestrator.py src/lorekeeper/dashboard/app.py
@@ -170,6 +184,7 @@ git commit -m "[LKPR-52] refactor: centralize commit ownership in orchestrator"
 **Why:** `app.py` is 423 lines mixing FastAPI setup, Pydantic schemas, and route handlers for 7 domains. Each domain file is independently readable and testable. The mount + lifespan stay in `app.py` (≤80 lines after split).
 
 **Target file structure:**
+
 ```
 src/lorekeeper/dashboard/
   app.py          # FastAPI init, mounts, lifespan only (≤80 lines)
@@ -261,6 +276,7 @@ def unwrap_optional(tp: Any) -> Any:
 ```
 
 **Step 2: Lint + commit**
+
 ```bash
 uv run ruff check src/lorekeeper/dashboard/schemas.py
 git add src/lorekeeper/dashboard/schemas.py
@@ -276,6 +292,7 @@ git commit -m "[LKPR-52] refactor: extract dashboard Pydantic schemas to schemas
 **Create:** `src/lorekeeper/dashboard/routes/__init__.py` (empty)
 
 **Create:** `src/lorekeeper/dashboard/routes/memories.py`
+
 ```python
 """Memory CRUD routes."""
 from __future__ import annotations
@@ -346,6 +363,7 @@ def delete_memory(memory_id: str) -> dict[str, bool]:
 ```
 
 **Create:** `src/lorekeeper/dashboard/routes/links.py`
+
 ```python
 """Link CRUD routes."""
 from __future__ import annotations
@@ -412,6 +430,7 @@ def delete_link(link_id: str) -> dict[str, bool]:
 ```
 
 **Create:** `src/lorekeeper/dashboard/routes/search.py`
+
 ```python
 """Search route."""
 from __future__ import annotations
@@ -445,6 +464,7 @@ def search(body: SearchRequest) -> list[dict[str, Any]]:
 ```
 
 **Create:** `src/lorekeeper/dashboard/routes/config.py`
+
 ```python
 """Config read/write routes."""
 from __future__ import annotations
@@ -509,6 +529,7 @@ def update_config(body: ConfigUpdate) -> dict[str, bool]:
 ```
 
 **Create:** `src/lorekeeper/dashboard/routes/reflections.py`
+
 ```python
 """Reflections and sessions read routes."""
 from __future__ import annotations
@@ -567,6 +588,7 @@ def get_session_detail(session_id: str) -> dict[str, Any]:
 ```
 
 **Create:** `src/lorekeeper/dashboard/routes/backup.py`
+
 ```python
 """Export and import routes."""
 from __future__ import annotations
@@ -630,6 +652,7 @@ async def import_confirm(file: UploadFile = File(...)) -> dict[str, Any]:
 ```
 
 **Create:** `src/lorekeeper/dashboard/routes/metrics.py`
+
 ```python
 """Metrics route."""
 from __future__ import annotations
@@ -667,11 +690,13 @@ def get_metrics(hours: int = 24) -> dict[str, Any]:
 ```
 
 **Step 2: Lint all new files**
+
 ```bash
 uv run ruff check src/lorekeeper/dashboard/routes/ src/lorekeeper/dashboard/schemas.py
 ```
 
 **Step 3: Commit**
+
 ```bash
 git add src/lorekeeper/dashboard/routes/ src/lorekeeper/dashboard/schemas.py
 git commit -m "[LKPR-52] refactor: split dashboard routes into per-domain modules"
@@ -684,6 +709,7 @@ git commit -m "[LKPR-52] refactor: split dashboard routes into per-domain module
 **Objective:** Strip `app.py` down to FastAPI init + mounts + router includes. Target ≤80 lines.
 
 **Rewrite** `src/lorekeeper/dashboard/app.py`:
+
 ```python
 """Lorekeeper Dashboard — FastAPI application entry point."""
 from __future__ import annotations
@@ -752,11 +778,13 @@ for _router in [memories.router, links.router, search.router, config.router,
 ```
 
 **Step 2: Run tests**
+
 ```bash
 cd /Users/jessinra/Code/lorekeeper && uv run pytest
 ```
 
 **Step 3: Lint + commit**
+
 ```bash
 uv run ruff check src/lorekeeper/dashboard/app.py
 git add src/lorekeeper/dashboard/app.py

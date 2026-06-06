@@ -62,6 +62,7 @@ Dashboard output shape preserved exactly: content truncated to 300, no `decay_fa
 ### Task 4: Update `server.py` `init_service()`
 
 Current code (lines 36-42):
+
 ```python
 for key, value in overrides.items():
     try:
@@ -71,6 +72,7 @@ for key, value in overrides.items():
 ```
 
 Replace with:
+
 ```python
 for key, value in overrides.items():
     try:
@@ -81,6 +83,7 @@ for key, value in overrides.items():
 ```
 
 Changes:
+
 - `except Exception` → `except (ValueError, TypeError, AttributeError)` — catches only real type/attribute errors, not `KeyboardInterrupt` etc.
 - `getattr(s, key)` read-back — confirms the value actually applies (catches Pydantic coercion failures where `setattr` succeeds but stores a wrong type)
 - `error=str(e)` — logs the actual error message so operators can diagnose
@@ -89,13 +92,13 @@ Changes:
 
 ## Full Commit Sequence
 
-| # | Commit | Files |
-|---|--------|-------|
-| 1 | `[LKPR-43] feat: add shared serializers for Memory, MemoryLink, SearchResult` | `serializers.py` |
-| 2 | `[LKPR-43] refactor: replace inline _result_to_dict with shared serialize_search_result` | `handlers.py` |
-| 3 | `[LKPR-43] refactor: dashboard search uses shared serializer with endpoint overrides` | `dashboard/app.py` |
-| 4 | `[LKPR-44] fix: validate config overrides at startup — narrow exceptions, read-back, log error` | `server.py` |
-| 5 | `[LKPR-0] chore: full test suite + lint pass` | — |
+| #   | Commit                                                                                          | Files              |
+| --- | ----------------------------------------------------------------------------------------------- | ------------------ |
+| 1   | `[LKPR-43] feat: add shared serializers for Memory, MemoryLink, SearchResult`                   | `serializers.py`   |
+| 2   | `[LKPR-43] refactor: replace inline _result_to_dict with shared serialize_search_result`        | `handlers.py`      |
+| 3   | `[LKPR-43] refactor: dashboard search uses shared serializer with endpoint overrides`           | `dashboard/app.py` |
+| 4   | `[LKPR-44] fix: validate config overrides at startup — narrow exceptions, read-back, log error` | `server.py`        |
+| 5   | `[LKPR-0] chore: full test suite + lint pass`                                                   | —                  |
 
 ## Verification
 

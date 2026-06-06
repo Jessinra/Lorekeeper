@@ -88,6 +88,7 @@ If search returns zero results, there is nothing to provide feedback on — proc
 
 1. `lore_search({ query: "Python async patterns in service layer" })`
 2. Results:
+
    - Memory `aaa-111` (async patterns) — relevant, verified correct. Has link `lnk-001` → `bbb-222` (`related_to`, reason: "retry logic depends on async context"). Relationship is valid.
    - Memory `bbb-222` (retry logic) — irrelevant to this task, content looks correct. Has link `lnk-002` → `ccc-333` (`used_in`, reason: "old sync API used in retry flow"). Old API was removed — link is stale.
    - Memory `ccc-333` (old sync API) — outdated info.

@@ -17,21 +17,21 @@ Ship `lore_recommend_links` — a two-stage candidate pipeline that surfaces hig
 
 Backend plumbing is **already implemented** but hasn't been on a feature branch:
 
-| Area | Status |
-|---|---|
-| `services/link_candidate.py` | ✅ Complete — 4 scorers + generator |
-| `services/relation_classifier.py` | ✅ Complete — batched LLM classifier |
-| `services/orchestrator.py` | ✅ `recommend_links()` method |
-| `server.py` | ✅ MCP tool + handler registered |
-| `serializers.py` | ✅ `serialize_link_candidate()` |
-| `config.py` | ✅ All `LORE_LINK_*` env vars (syntax bug fixed) |
-| `models.py` | ✅ RelationType literal extended to 8 types |
-| **`database.py`** | ❌ **CHECK constraint out of sync** — only has 5 original types, models.py has 8 |
-| Test `test_lkpr58_link_candidate.py` | ⚠️ Partial — 2 tests failing, needs cleanup |
-| `test_lkpr58_relation_classifier.py` | ❌ Missing |
-| `assets/skills/lorekeeper-link-memories/SKILL.md` | ❌ Missing |
-| CLAUDE.md update | ❌ Missing |
-| README.md update | ❌ Missing |
+| Area                                              | Status                                                                           |
+| ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `services/link_candidate.py`                      | ✅ Complete — 4 scorers + generator                                              |
+| `services/relation_classifier.py`                 | ✅ Complete — batched LLM classifier                                             |
+| `services/orchestrator.py`                        | ✅ `recommend_links()` method                                                    |
+| `server.py`                                       | ✅ MCP tool + handler registered                                                 |
+| `serializers.py`                                  | ✅ `serialize_link_candidate()`                                                  |
+| `config.py`                                       | ✅ All `LORE_LINK_*` env vars (syntax bug fixed)                                 |
+| `models.py`                                       | ✅ RelationType literal extended to 8 types                                      |
+| **`database.py`**                                 | ❌ **CHECK constraint out of sync** — only has 5 original types, models.py has 8 |
+| Test `test_lkpr58_link_candidate.py`              | ⚠️ Partial — 2 tests failing, needs cleanup                                      |
+| `test_lkpr58_relation_classifier.py`              | ❌ Missing                                                                       |
+| `assets/skills/lorekeeper-link-memories/SKILL.md` | ❌ Missing                                                                       |
+| CLAUDE.md update                                  | ❌ Missing                                                                       |
+| README.md update                                  | ❌ Missing                                                                       |
 
 ---
 
@@ -40,6 +40,7 @@ Backend plumbing is **already implemented** but hasn't been on a feature branch:
 ### Step 0 — Branch
 
 Create feature branch from current state:
+
 ```bash
 git checkout -b feature/LKPR-58-smart-link-candidate-pipeline
 ```
@@ -47,11 +48,13 @@ git checkout -b feature/LKPR-58-smart-link-candidate-pipeline
 ### Step 1 — Fix DB CHECK constraint (schema migration)
 
 The `memory_links` table's CHECK constraint (`relation_type IN ('related_to','used_in','used_for','used_by','used_as')`) needs to include the 3 new types added to `models.py`:
+
 - `contradicts`
 - `supersedes`
 - `depends_on`
 
 **Approach:** Add migration v2 in `database.py` that drops and re-creates the CHECK constraint. SQLite doesn't support `ALTER TABLE ... ALTER CONSTRAINT`, so this needs:
+
 1. `ALTER TABLE memory_links RENAME TO memory_links_old`
 2. `CREATE TABLE memory_links ...` with updated CHECK
 3. `INSERT INTO memory_links SELECT ... FROM memory_links_old`
@@ -76,6 +79,7 @@ This is an in-place schema migration — wrapped in a `MIGRATIONS` entry.
 ### Step 4 — Create `assets/skills/lorekeeper-link-memories/SKILL.md`
 
 Agent skill distributed via `setup.sh`. Covers:
+
 - When to call `lore_recommend_links` (post-session, after inserting a batch, manually)
 - How to read the candidate output (scorer_breakdown, proposed_relation)
 - What makes a good link (thematic connection, shared entities, temporal proximity)
@@ -103,14 +107,14 @@ uv run ruff check src/lorekeeper/services/link_candidate.py src/lorekeeper/servi
 
 ## Files to Change
 
-| File | Action |
-|---|---|
-| `src/lorekeeper/services/database.py` | **UPDATE** — migration v2 for CHECK constraint |
-| `tests/test_lkpr58_link_candidate.py` | **FIX** — 2 failing tests |
-| `tests/test_lkpr58_relation_classifier.py` | **CREATE** — relation classifier tests |
-| `assets/skills/lorekeeper-link-memories/SKILL.md` | **CREATE** — agent skill |
-| `CLAUDE.md` | **UPDATE** — doc `lore_recommend_links` + env vars |
-| `README.md` | **UPDATE** — doc `lore_recommend_links` tool |
+| File                                              | Action                                             |
+| ------------------------------------------------- | -------------------------------------------------- |
+| `src/lorekeeper/services/database.py`             | **UPDATE** — migration v2 for CHECK constraint     |
+| `tests/test_lkpr58_link_candidate.py`             | **FIX** — 2 failing tests                          |
+| `tests/test_lkpr58_relation_classifier.py`        | **CREATE** — relation classifier tests             |
+| `assets/skills/lorekeeper-link-memories/SKILL.md` | **CREATE** — agent skill                           |
+| `CLAUDE.md`                                       | **UPDATE** — doc `lore_recommend_links` + env vars |
+| `README.md`                                       | **UPDATE** — doc `lore_recommend_links` tool       |
 
 ---
 

@@ -33,11 +33,13 @@ Create `tests/test_dashboard.py` using FastAPI's `TestClient` to exercise every 
 - `GET /api/metrics` — get metrics
 
 Extend `tests/test_handlers.py` with error-path tests for `server.py`:
+
 - `lore_insert` with no memories (should succeed with empty result)
 - `lore_insert` with invalid inline link format (string not list)
 - `lore_search` with `refine_from` > cap (200)
 
 Add `tests/test_serializers.py`:
+
 - `serialize_memory` — basic, with truncation, with field exclusion
 - `serialize_memory_link` — stable shape
 - `serialize_search_result` — basic, with exclude/round/links toggle
@@ -48,12 +50,14 @@ Add `tests/test_serializers.py`:
 ### Step 2 — Dashboard serialization unification
 
 In `dashboard/app.py`:
+
 - Replace `dict(row)` in `list_memories()` with a helper that preserves `link_count` augmentation but uses the shared serialization path
 - Replace `dict(row)` in `get_memory()` and `dict(row)` in `update_memory()`
 - Replace `lnk.model_dump()` with `serialize_memory_link()` in `get_memory()`, `list_all_links()`, `create_link()`
 - Replace `dict(r)` with the serializer in `list_reflections()`, `get_reflection_detail()`, `list_sessions()`, `get_session_detail()`
 
 In `api.js`:
+
 - Remove `window.showToast = showToast` (line 25)
 - Remove `window.api = api` (line 26)
 - Verify no other module references `window.api` or `window.showToast` (all should use imports from LKPR-45's tab-registry)
@@ -63,6 +67,7 @@ In `api.js`:
 ### Step 3 — Config override type validation
 
 In `dashboard/app.py` `update_config()`:
+
 - Instead of blanket `setattr(s, key, value)`, type-check the value before applying
 - Build a type map from the ConfigUpdate model annotations: `{field_name: field_type}`
 - For each override, validate `isinstance(value, expected_type)` — int for int fields, float for float, bool for bool
@@ -74,21 +79,26 @@ In `dashboard/app.py` `update_config()`:
 ### Step 4 — MemoryEngine ABC cleanup
 
 In `memory_engine.py`:
+
 - Add `find_mem0_id(lore_id: str) -> str | None` to the ABC — orchestrator's `_auto_link` path needs this (currently FakeEngine-only)
 - Remove `delete_by_mem0_id` if orchestrator never calls it (grep to confirm)
 - Add docstring to `normalize_score` clarifying that each engine handles this internally but the method exists for direct callers
 
 In `lancedb_engine.py`:
+
 - Implement `find_mem0_id` (iterate `get_all()`, return first match)
 
 In `chromadb_engine.py`:
+
 - Implement `find_mem0_id` (iterate `get_all()`)
 - Fix `normalize_score` being unused — audit if caller actually calls it on the ABC path
 
 In `tests/test_orchestrator.py` (FakeEngine):
+
 - Ensure `FakeEngine` matches the updated ABC (remove/bridge methods as needed)
 
-**Modified files:** 
+**Modified files:**
+
 - `src/lorekeeper/services/memory_engine.py`
 - `src/lorekeeper/services/lancedb_engine.py`
 - `src/lorekeeper/services/chromadb_engine.py`
@@ -97,6 +107,7 @@ In `tests/test_orchestrator.py` (FakeEngine):
 ### Step 5 — mypy in pre-commit (non-blocking advisory)
 
 In `.githooks/pre-commit`:
+
 - Add `uv run mypy src` after ruff check, but wrap it so failures don't block the commit:
   ```bash
   echo "Running mypy (advisory — failures don't block)..."
@@ -104,6 +115,7 @@ In `.githooks/pre-commit`:
   ```
 
 In `pyproject.toml`:
+
 - Relax specific `# type: ignore` exemptions that are known, add `warn_unused_ignores = true` to surface stale `type: ignore` comments
 
 Fix existing `# type: ignore[union-attr]` in `orchestrator.py` `_row_to_memory` — the `row.keys()` pattern can be replaced with a cleaner guard.

@@ -60,6 +60,7 @@ Mark `useful: true` if relevant to this session. `useful: false` for noise. Skip
 **Trigger**: End of every session.
 
 1. **Insert new memories** for anything discovered:
+
    - Decisions (with rationale), bugs fixed (root cause), architecture insights
    - User corrections — strongest learning signal
    - Patterns that generalize

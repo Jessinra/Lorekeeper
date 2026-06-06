@@ -26,18 +26,21 @@ Three maintainability friction points that slow down every change:
 Three mechanical refactors, zero behavior change, in a single PR:
 
 **Phase 1 — Transaction boundaries**
+
 - Remove `self._conn.commit()` from individual store methods
 - Add explicit `BEGIN` / `COMMIT` / `ROLLBACK` at the orchestrator level for multi-step flows (insert + links + reflection)
 - Keep single-store operations auto-committing via a context manager or explicit wrapper — no abstraction theater, just move the responsibility one level up
 - Files: `services/database.py`, `services/memory_store.py`, `services/link_store.py`, `services/reflection_store.py`, `services/config_store.py`, `services/metrics_store.py`, `services/orchestrator.py`
 
 **Phase 2 — Dashboard route split (mechanical)**
+
 - Create `dashboard/routes/__init__.py` + individual route modules per domain
 - Keep `app.py` as a thin startup file that mounts routers (< 100 lines)
 - No functional change to any endpoint
 - Files: `dashboard/app.py`, new `dashboard/routes/{memories,links,search,config,reflections,sessions,backup,metrics}.py`
 
 **Phase 3 — Validation consolidation**
+
 - Extract shared Pydantic request/response schemas into a `schemas/` module
 - Make `handlers.py` and `dashboard/routes/` import from the same source
 - No schema changes — just relocate and deduplicate
@@ -91,6 +94,7 @@ _None._
 ## Notes
 
 Filed after discussion with Jason — lean refactor philosophy:
+
 - No new abstraction layers unless they remove clear repeated pain
 - Prefer small internal extractions, clear transaction boundaries, mechanical module splits
 - Zero API behavior change

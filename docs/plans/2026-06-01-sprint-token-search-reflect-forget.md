@@ -6,12 +6,12 @@
 
 ## Sprint Items
 
-| # | Issue | Pri | Effort | What |
-|---|---|---|---|---|
-| 1 | LKPR-49 — Token-efficient search | P1 | S | `format='title'` mode + `ids` bulk retrieval. No deps. |
-| 2 | LKPR-30 — Reflect auto-create memories | P2 | S | Auto-insert discoveries/lessons as memories during reflection. Depends on LKPR-29 (done). |
-| 3 | LKPR-54 — lore_forget | P2 | S | Soft-delete MCP tool + reason logging. Mostly plumbing. |
-| 4 | LKPR-48 — MCP Server Card | P1 | S | Static metadata resource for agent self-configuration. |
+| #   | Issue                                  | Pri | Effort | What                                                                                      |
+| --- | -------------------------------------- | --- | ------ | ----------------------------------------------------------------------------------------- |
+| 1   | LKPR-49 — Token-efficient search       | P1  | S      | `format='title'` mode + `ids` bulk retrieval. No deps.                                    |
+| 2   | LKPR-30 — Reflect auto-create memories | P2  | S      | Auto-insert discoveries/lessons as memories during reflection. Depends on LKPR-29 (done). |
+| 3   | LKPR-54 — lore_forget                  | P2  | S      | Soft-delete MCP tool + reason logging. Mostly plumbing.                                   |
+| 4   | LKPR-48 — MCP Server Card              | P1  | S      | Static metadata resource for agent self-configuration.                                    |
 
 **Buffer:** ~20% for production fixes discovered while touching handlers/server.
 
@@ -26,6 +26,7 @@ Part A — `format` param: `lore_search` accepts `format='title' | 'full'` (defa
 Part B — `ids` param: When `ids=[uuid, ...]` provided, skip vector/BM25, SQL lookup only.
 
 **Files:**
+
 - `src/lorekeeper/schemas.py` — add `format` and `ids` to `LoreSearchInput`
 - `src/lorekeeper/services/search.py` — branch on format; add SQL ids-lookup path
 - `src/lorekeeper/services/orchestrator.py` — pass params through
@@ -36,6 +37,7 @@ Part B — `ids` param: When `ids=[uuid, ...]` provided, skip vector/BM25, SQL l
 When `lore_reflect(auto_insert=True, default)` is called, each `factual_discoveries` and `lessons_learnt` item gets auto-inserted as a memory via `lore_remember` logic and linked back to the reflection.
 
 **Files:**
+
 - `src/lorekeeper/schemas.py` — add `auto_insert: bool` param
 - `src/lorekeeper/services/orchestrator.py` — auto-insert loop + link creation
 - `src/lorekeeper/handlers.py` — extend return with `memories_created`
@@ -46,6 +48,7 @@ When `lore_reflect(auto_insert=True, default)` is called, each `factual_discover
 New MCP tool: `lore_forget(memory_ids=[...], reason)` — soft-delete with audit logging.
 
 **Files:**
+
 - `src/lorekeeper/handlers.py` — new handler
 - `src/lorekeeper/schemas.py` — `LoreForgetParams`
 - `src/lorekeeper/services/memory_engine.py` — thin wrapper for soft-delete by ID
@@ -56,6 +59,7 @@ New MCP tool: `lore_forget(memory_ids=[...], reason)` — soft-delete with audit
 Static capabilities resource accessible via MCP `resources/list` — embedding model, vector store, tools, usage hints.
 
 **Files:**
+
 - `src/lorekeeper/server.py` — add resources/list handler
 - `src/lorekeeper/capabilities.py` — capabilities dict builder
 

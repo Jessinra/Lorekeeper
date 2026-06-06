@@ -192,10 +192,12 @@ class Database:
 ```
 
 **Key decisions:**
+
 - Migration SQL is inline in the `MIGRATIONS` list, not separate files. Each migration entry includes the full DDL or DML. Simpler at this scale — no migration-directory scaffolding needed.
 - Each migration runs in its own transaction (via `executescript` + explicit `commit`). If one fails mid-chain, earlier migrations are already committed. Acceptable for a local-first DB — manual recovery is straightforward.
 
 **Tests:**
+
 - `tests/test_database.py` — verify migration 1 creates all tables, migration chain is idempotent, rolling forward from any version works
 - Existing `test_link_store.py` tests still pass because `Database` returns the same `sqlite3.Row`-factory connection
 
@@ -255,6 +257,7 @@ LinkStore.delete_config_override     → ConfigStore.delete_override
 **`LinkStore` after extraction:** ~150 lines (link-only CRUD + `_row_to_link`). File keeps its name but loses 75% of its content.
 
 **Tests:**
+
 - `tests/test_link_store.py` — adapt fixtures to pass `Database` instead of `Path`, but all existing test cases stay the same
   - **Fixture split**: Current fixture seeds via `store.upsert_memory_row()` (a LinkStore method before extraction). After decomposition, the fixture pattern becomes:
     ```python
@@ -335,6 +338,7 @@ class MemoryService:
 ```
 
 All internal references:
+
 - `self._store.upsert_memory_row(...)` → `self._memories.upsert_memory_row(...)`
 - `self._store.insert_link(...)` → `self._links.insert_link(...)`
 - `self._store.increment_metric(...)` → `self._metrics.increment_metric(...)`
@@ -375,19 +379,19 @@ This also fixes the dashboard's private-attribute access — it was using `_stor
 
 ## Per-File Change Summary
 
-| File | Before | After | Delta |
-|---|---|---|---|
-| `services/link_store.py` | 637 lines | ~150 lines | -487 |
-| `services/database.py` | — | ~100 lines | +100 |
-| `services/memory_store.py` | — | ~120 lines | +120 |
-| `services/reflection_store.py` | — | ~100 lines | +100 |
-| `services/metrics_store.py` | — | ~60 lines | +60 |
-| `services/config_store.py` | — | ~40 lines | +40 |
-| `services/orchestrator.py` | 730 lines | ~740 lines | +10 (imports + type hints) |
-| `server.py` | 171 lines | ~190 lines | +20 (wiring) |
-| `dashboard/app.py` | 389 lines | ~389 lines | ±0 (rewrite lines, no line count change) |
-| `tests/test_link_store.py` | 162 lines | ~162 lines | ±0 (fixture changes, same test count) |
-| `tests/test_database.py` | — | ~60 lines | +60 |
-| _Total_ | | | _~2,089 → ~2,111_ |
+| File                           | Before    | After      | Delta                                    |
+| ------------------------------ | --------- | ---------- | ---------------------------------------- |
+| `services/link_store.py`       | 637 lines | ~150 lines | -487                                     |
+| `services/database.py`         | —         | ~100 lines | +100                                     |
+| `services/memory_store.py`     | —         | ~120 lines | +120                                     |
+| `services/reflection_store.py` | —         | ~100 lines | +100                                     |
+| `services/metrics_store.py`    | —         | ~60 lines  | +60                                      |
+| `services/config_store.py`     | —         | ~40 lines  | +40                                      |
+| `services/orchestrator.py`     | 730 lines | ~740 lines | +10 (imports + type hints)               |
+| `server.py`                    | 171 lines | ~190 lines | +20 (wiring)                             |
+| `dashboard/app.py`             | 389 lines | ~389 lines | ±0 (rewrite lines, no line count change) |
+| `tests/test_link_store.py`     | 162 lines | ~162 lines | ±0 (fixture changes, same test count)    |
+| `tests/test_database.py`       | —         | ~60 lines  | +60                                      |
+| _Total_                        |           |            | _~2,089 → ~2,111_                        |
 
 The diff looks bigger than it is — most of the `+` is extracted code from `link_store.py` that's being moved, not new logic.

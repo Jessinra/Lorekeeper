@@ -15,27 +15,32 @@
 **Objective:** A shared registry where tab modules self-register on import, exposing `{ name, load, init }` to `tab.js`.
 
 **Files:**
+
 - Create: `src/lorekeeper/dashboard/static/js/tab-registry.js`
 
 **Implementation:**
+
 ```js
 // ── Tab registry — tab modules self-register on import ──
 
 const TABS = [];
 export function registerTab(config) {
-    TABS.push(config);
+  TABS.push(config);
 }
 export { TABS };
 ```
 
 **Verification:** Just confirm the module loads:
+
 ```bash
 cd ~/.hermes/profiles/diana/projects/lorekeeper
 node -e "import('./src/lorekeeper/dashboard/static/js/tab-registry.js').then(m => { console.log('OK:', Object.keys(m)) })"
 ```
+
 (May need `--experimental-vm-modules` — this is a guide; don't block if `node` can't resolve relative paths.)
 
 **Commit:**
+
 ```bash
 git add src/lorekeeper/dashboard/static/js/tab-registry.js
 git commit -m "refactor(lkpr-45): create tab-registry.js for self-registering tabs"
@@ -48,6 +53,7 @@ git commit -m "refactor(lkpr-45): create tab-registry.js for self-registering ta
 **Objective:** Remove hardcoded `TAB_ORDER`, `registerTabCallbacks`, and `window.switchTab`. Replace with registry-driven tab switching and a click delegation on `.tab-bar`.
 
 **Files:**
+
 - Modify: `src/lorekeeper/dashboard/static/js/tab.js`
 
 **Implementation — replace entire file:**
@@ -59,34 +65,35 @@ import { TABS } from "./tab-registry.js";
 
 // Event delegation: one listener on tab-bar replaces all onclick= in HTML
 document.querySelector(".tab-bar")?.addEventListener("click", (e) => {
-    const btn = e.target.closest(".tab");
-    if (btn) switchTab(btn.dataset.tab);
+  const btn = e.target.closest(".tab");
+  if (btn) switchTab(btn.dataset.tab);
 });
 
 export function switchTab(name) {
-    // Hide all tab-panes
-    document.querySelectorAll(".tab-pane").forEach((p) => {
-        p.classList.remove("active");
-    });
-    // Deactivate all tab buttons
-    document.querySelectorAll(".tab").forEach((t) => {
-        t.classList.toggle("active", t.dataset.tab === name);
-    });
-    // Show the target pane
-    const pane = document.getElementById(`tab-${name}`);
-    if (pane) pane.classList.add("active");
+  // Hide all tab-panes
+  document.querySelectorAll(".tab-pane").forEach((p) => {
+    p.classList.remove("active");
+  });
+  // Deactivate all tab buttons
+  document.querySelectorAll(".tab").forEach((t) => {
+    t.classList.toggle("active", t.dataset.tab === name);
+  });
+  // Show the target pane
+  const pane = document.getElementById(`tab-${name}`);
+  if (pane) pane.classList.add("active");
 
-    // Find registered tab and call its load() if needed
-    const tab = TABS.find((t) => t.name === name);
-    if (tab && tab.load) {
-        tab.load();
-    }
+  // Find registered tab and call its load() if needed
+  const tab = TABS.find((t) => t.name === name);
+  if (tab && tab.load) {
+    tab.load();
+  }
 }
 ```
 
 **Verification:** Load the dashboard in a browser. Tab buttons should work without `onclick=` attributes. No errors in console. Don't worry about individual tab content yet — that's wired in later tasks.
 
 **Commit:**
+
 ```bash
 git add src/lorekeeper/dashboard/static/js/tab.js
 git commit -m "refactor(lkpr-45): tab.js uses registry and event delegation"
@@ -99,6 +106,7 @@ git commit -m "refactor(lkpr-45): tab.js uses registry and event delegation"
 **Objective:** Replace `onclick=` on every tab button and interactive element with `data-tab` attributes for the tab bar, and data attributes for other controls. Interactive elements that need click handlers will be wired via event delegation in their respective tab modules.
 
 **Files:**
+
 - Modify: `src/lorekeeper/dashboard/static/index.html`
 
 **Changes:**
@@ -132,7 +140,9 @@ git commit -m "refactor(lkpr-45): tab.js uses registry and event delegation"
 
 <!-- Sort headers (lines 65-70) — use data-sort attribute -->
 <th class="sortable" data-sort="title" id="th-title">Title <span class="sort-arrow"></span></th>
-<th class="sortable col-score" data-sort="score" id="th-score">Score <span class="sort-arrow">↓</span></th>
+<th class="sortable col-score" data-sort="score" id="th-score">
+  Score <span class="sort-arrow">↓</span>
+</th>
 <!-- ... repeat for all sort headers ... -->
 
 <!-- Other controls -->
@@ -143,28 +153,34 @@ git commit -m "refactor(lkpr-45): tab.js uses registry and event delegation"
 ```
 
 3. **Detail tab:**
+
 - Replace `onclick=` on "← Memories" button with `data-action="back-to-memories"`
 - Replace `onclick=` on edit/cancel/delete buttons with `data-action="edit-memory"` etc.
 
 4. **Links tab:** Replace relation filter `onchange=` with `data-action="filter-links"`
 
 5. **Query tab:**
+
 - The query input has `onkeydown` — replace with `data-action="query-on-keydown"`
 - The search button — replace with `data-action="run-query"`
 
 6. **Config tab:**
+
 - `onchange=` on checkboxes → wire via event delegation in config.js
 - `oninput=` on number inputs → wire in config.js
 - `saveConfig` button → `data-action="save-config"` in its container
 
 7. **Backup tab:**
+
 - All `onclick=` → `data-action=` attributes
 - The file input `onchange=` → wire via element ID listener in backup.js
 
 8. **Metrics tab:**
+
 - The refresh button `onclick="loadMetricsFromGlobal()"` → no longer needed, metrics tab's `load()` is driven by the registry.
 
 9. **Remove all `window.*` references from HTML.** The script tag at line 331 stays the same:
+
 ```html
 <script type="module" src="js/app.js"></script>
 ```
@@ -174,6 +190,7 @@ git commit -m "refactor(lkpr-45): tab.js uses registry and event delegation"
 **Verification:** The dashboard loads without JS errors. Tab bar navigation works (via event delegation from tab.js). Clicking buttons won't do anything yet (the event handlers haven't been ported to the new pattern) — but no 404s or JS errors.
 
 **Commit:**
+
 ```bash
 git add src/lorekeeper/dashboard/static/index.html
 git commit -m "refactor(lkpr-45): remove all onclick= from index.html, use data- attributes"
@@ -186,6 +203,7 @@ git commit -m "refactor(lkpr-45): remove all onclick= from index.html, use data-
 **Objective:** Remove the cross-module callback registration (`registerTabCallbacks`, `registerDetailCallbacks`, etc.) from `app.js`. Tabs now self-register. Cross-module calls use events.
 
 **Files:**
+
 - Modify: `src/lorekeeper/dashboard/static/js/app.js`
 
 **Implementation — replace entire file:**
@@ -219,79 +237,78 @@ const AUTO_REFRESH_MS = 30_000;
 let _autoRefreshTimer = null;
 
 async function triggerRefresh() {
-    const btn = document.getElementById("btn-refresh-memories");
-    const icon = btn?.querySelector(".refresh-icon");
-    if (icon) icon.classList.add("spinning");
-    btn?.setAttribute("disabled", "");
-    try {
-        // Find the active tab and call its load()
-        const active = document.querySelector(".tab.active");
-        if (active) {
-            const name = active.dataset.tab;
-            const tab = TABS.find((t) => t.name === name);
-            if (tab && tab.load) await tab.load();
-        }
-    } finally {
-        if (icon) icon.classList.remove("spinning");
-        btn?.removeAttribute("disabled");
-        scheduleAutoRefresh();
+  const btn = document.getElementById("btn-refresh-memories");
+  const icon = btn?.querySelector(".refresh-icon");
+  if (icon) icon.classList.add("spinning");
+  btn?.setAttribute("disabled", "");
+  try {
+    // Find the active tab and call its load()
+    const active = document.querySelector(".tab.active");
+    if (active) {
+      const name = active.dataset.tab;
+      const tab = TABS.find((t) => t.name === name);
+      if (tab && tab.load) await tab.load();
     }
+  } finally {
+    if (icon) icon.classList.remove("spinning");
+    btn?.removeAttribute("disabled");
+    scheduleAutoRefresh();
+  }
 }
 
 function scheduleAutoRefresh() {
-    clearTimeout(_autoRefreshTimer);
-    _autoRefreshTimer = setTimeout(triggerRefresh, AUTO_REFRESH_MS);
+  clearTimeout(_autoRefreshTimer);
+  _autoRefreshTimer = setTimeout(triggerRefresh, AUTO_REFRESH_MS);
 }
 
 // ── Init ──
 
 function init() {
-    // Keyboard shortcuts
-    document.getElementById("q-text")?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runQuery();
-    });
+  // Keyboard shortcuts
+  document.getElementById("q-text")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runQuery();
+  });
 
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-            const ev = new CustomEvent("clear-filter");
-            document.dispatchEvent(ev);
-        }
-        if (
-            e.key === "/" &&
-            !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
-        ) {
-            const activeTab = document.querySelector(".tab.active");
-            if (activeTab && activeTab.dataset.tab === "memories") {
-                e.preventDefault();
-                document.getElementById("mem-filter")?.focus();
-            }
-        }
-    });
-
-    // Init backup (file input listener)
-    const backup = TABS.find((t) => t.name === "backup");
-    if (backup && backup.init) backup.init();
-
-    // Bootstrap the active tab
-    const active = document.querySelector(".tab.active");
-    if (active) {
-        const name = active.dataset.tab;
-        const tab = TABS.find((t) => t.name === name);
-        if (tab && tab.load) tab.load();
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const ev = new CustomEvent("clear-filter");
+      document.dispatchEvent(ev);
     }
-
-    // For memories tab: also load links in parallel for link count
-    const memTab = TABS.find((t) => t.name === "memories");
-    const linksTab = TABS.find((t) => t.name === "links");
-    if (memTab && memTab.load && linksTab && linksTab.load) {
-        Promise.all([memTab.load(), linksTab.load()]).then(scheduleAutoRefresh);
+    if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+      const activeTab = document.querySelector(".tab.active");
+      if (activeTab && activeTab.dataset.tab === "memories") {
+        e.preventDefault();
+        document.getElementById("mem-filter")?.focus();
+      }
     }
+  });
+
+  // Init backup (file input listener)
+  const backup = TABS.find((t) => t.name === "backup");
+  if (backup && backup.init) backup.init();
+
+  // Bootstrap the active tab
+  const active = document.querySelector(".tab.active");
+  if (active) {
+    const name = active.dataset.tab;
+    const tab = TABS.find((t) => t.name === name);
+    if (tab && tab.load) tab.load();
+  }
+
+  // For memories tab: also load links in parallel for link count
+  const memTab = TABS.find((t) => t.name === "memories");
+  const linksTab = TABS.find((t) => t.name === "links");
+  if (memTab && memTab.load && linksTab && linksTab.load) {
+    Promise.all([memTab.load(), linksTab.load()]).then(scheduleAutoRefresh);
+  }
 }
 
 // Export for use by query module (which needs it for keyboard shortcut)
 // but NOT exposed on window — kept as a module-level reference
 let runQuery = () => {};
-export function setRunQuery(fn) { runQuery = fn; }
+export function setRunQuery(fn) {
+  runQuery = fn;
+}
 
 init();
 ```
@@ -302,36 +319,35 @@ Revised `init()`:
 
 ```js
 function init() {
-    // Keyboard shortcuts — use events instead of direct function reference
-    document.getElementById("q-text")?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-            document.dispatchEvent(new CustomEvent("run-query"));
-        }
-    });
-
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-            document.dispatchEvent(new CustomEvent("clear-filter"));
-        }
-        if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
-            const activeTab = document.querySelector(".tab.active");
-            if (activeTab && activeTab.dataset.tab === "memories") {
-                e.preventDefault();
-                document.getElementById("mem-filter")?.focus();
-            }
-        }
-    });
-
-    // Init each tab
-    for (const tab of TABS) {
-        if (tab.init) tab.init();
+  // Keyboard shortcuts — use events instead of direct function reference
+  document.getElementById("q-text")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      document.dispatchEvent(new CustomEvent("run-query"));
     }
+  });
 
-    // Bootstrap: load memories + links eagerly for link count in header
-    Promise.all(
-        TABS.filter((t) => ["memories", "links"].includes(t.name))
-            .map((t) => t.load?.())
-    ).then(scheduleAutoRefresh);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      document.dispatchEvent(new CustomEvent("clear-filter"));
+    }
+    if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+      const activeTab = document.querySelector(".tab.active");
+      if (activeTab && activeTab.dataset.tab === "memories") {
+        e.preventDefault();
+        document.getElementById("mem-filter")?.focus();
+      }
+    }
+  });
+
+  // Init each tab
+  for (const tab of TABS) {
+    if (tab.init) tab.init();
+  }
+
+  // Bootstrap: load memories + links eagerly for link count in header
+  Promise.all(
+    TABS.filter((t) => ["memories", "links"].includes(t.name)).map((t) => t.load?.()),
+  ).then(scheduleAutoRefresh);
 }
 ```
 
@@ -340,6 +356,7 @@ Much cleaner. Each tab's `init()` sets up its own event listeners, tab bar deleg
 **Verification:** Dashboard loads without errors. No `window.*` pollution. Auto-refresh timer fires. Keyboard shortcuts still work (Escape, /, Cmd+Enter for query).
 
 **Commit:**
+
 ```bash
 git add src/lorekeeper/dashboard/static/js/app.js
 git commit -m "refactor(lkpr-45): simplify app.js — tabs self-register, no callback wiring"
@@ -352,11 +369,13 @@ git commit -m "refactor(lkpr-45): simplify app.js — tabs self-register, no cal
 **Objective:** Replace callbacks (`registerSelectMemory`) and `window.*` assignments with self-registration via `registerTab` and event emission.
 
 **Files:**
+
 - Modify: `src/lorekeeper/dashboard/static/js/memories.js`
 
 **Implementation changes:**
 
 1. Add imports and self-registration at the top:
+
 ```js
 import { registerTab } from "./tab-registry.js";
 
@@ -368,43 +387,47 @@ import { registerTab } from "./tab-registry.js";
 2. Replace `export function registerSelectMemory(fn)` — delete this entirely.
 
 3. Replace calls to `_selectMemory(id)` with:
+
 ```js
 document.dispatchEvent(new CustomEvent("memory-selected", { detail: { id } }));
 ```
 
 4. Replace `window.*` assignments with event delegation:
+
 ```js
 // Instead of window.onFilterInput = onFilterInput, use delegation:
 document.getElementById("mem-filter")?.addEventListener("input", onFilterInput);
 ```
 
 5. Register the tab:
+
 ```js
 registerTab({
-    name: "memories",
-    load: loadMemories,
-    init: () => {
-        // Wire filter input
-        document.getElementById("mem-filter")?.addEventListener("input", onFilterInput);
-        // Wire filter clear
-        document.getElementById("mem-filter-clear")?.addEventListener("click", clearFilter);
-        // Wire time filter buttons (delegation from container)
-        document.querySelector(".time-filter-group")?.addEventListener("click", (e) => {
-            const btn = e.target.closest(".time-filter-btn");
-            if (btn) setTimeFilter(btn, btn.dataset.days);
-        });
-        // Wire sort headers (delegation from table)
-        document.querySelector(".table-wrap")?.addEventListener("click", (e) => {
-            const th = e.target.closest("th.sortable");
-            if (th) setMemSort(th.dataset.sort);
-        });
-        // Wire show-deleted button
-        document.getElementById("btn-show-deleted")?.addEventListener("click", toggleShowDeleted);
-    },
+  name: "memories",
+  load: loadMemories,
+  init: () => {
+    // Wire filter input
+    document.getElementById("mem-filter")?.addEventListener("input", onFilterInput);
+    // Wire filter clear
+    document.getElementById("mem-filter-clear")?.addEventListener("click", clearFilter);
+    // Wire time filter buttons (delegation from container)
+    document.querySelector(".time-filter-group")?.addEventListener("click", (e) => {
+      const btn = e.target.closest(".time-filter-btn");
+      if (btn) setTimeFilter(btn, btn.dataset.days);
+    });
+    // Wire sort headers (delegation from table)
+    document.querySelector(".table-wrap")?.addEventListener("click", (e) => {
+      const th = e.target.closest("th.sortable");
+      if (th) setMemSort(th.dataset.sort);
+    });
+    // Wire show-deleted button
+    document.getElementById("btn-show-deleted")?.addEventListener("click", toggleShowDeleted);
+  },
 });
 ```
 
 6. Replace `window.renderList = renderList` with:
+
 ```js
 // Listen for events that require re-rendering
 document.addEventListener("memory-selected", () => renderList());
@@ -417,6 +440,7 @@ document.addEventListener("memory-selected", () => renderList());
 **Verification:** Memories tab loads data. Clicking a memory row navigates to Detail tab. Filter, sort, time buttons all work. Deleted toggle works. Column headers still sort.
 
 **Commit:**
+
 ```bash
 git add src/lorekeeper/dashboard/static/js/memories.js
 git commit -m "refactor(lkpr-45): memories.js self-registers, uses events, no window.*"
@@ -429,6 +453,7 @@ git commit -m "refactor(lkpr-45): memories.js self-registers, uses events, no wi
 **Objective:** Remove `registerDetailCallbacks` and `window.*`, listen for events instead.
 
 **Files:**
+
 - Modify: `src/lorekeeper/dashboard/static/js/detail.js`
 
 **Implementation changes:**
@@ -436,35 +461,38 @@ git commit -m "refactor(lkpr-45): memories.js self-registers, uses events, no wi
 1. Delete `registerDetailCallbacks()` entirely.
 
 2. Replace the callback pattern with direct imports + event listener:
+
 ```js
 import { loadMemories } from "./memories.js";
 import { loadLinks } from "./links.js";
 ```
 
 3. Listen for memory-selected event:
+
 ```js
 document.addEventListener("memory-selected", async (e) => {
-    const id = e.detail.id;
-    state.setSelectedId(id);
-    state.setDetailEditMode(false);
-    switchTab("detail");
-    // Re-render memory list highlight
-    // ... existing selectMemory logic
+  const id = e.detail.id;
+  state.setSelectedId(id);
+  state.setDetailEditMode(false);
+  switchTab("detail");
+  // Re-render memory list highlight
+  // ... existing selectMemory logic
 });
 ```
 
 4. Replace `_renderDetail` calls — it's already a module-local function.
 
 5. Wire edit/cancel/delete buttons via event delegation in `init()`:
+
 ```js
 export function init() {
-    document.getElementById("detail-page")?.addEventListener("click", (e) => {
-        const action = e.target.closest("[data-action]")?.dataset.action;
-        if (action === "edit-memory") enterEditMode();
-        if (action === "cancel-edit") cancelEditMode();
-        if (action === "save-memory") saveMemory();
-        if (action === "delete-memory") deleteMemory();
-    });
+  document.getElementById("detail-page")?.addEventListener("click", (e) => {
+    const action = e.target.closest("[data-action]")?.dataset.action;
+    if (action === "edit-memory") enterEditMode();
+    if (action === "cancel-edit") cancelEditMode();
+    if (action === "save-memory") saveMemory();
+    if (action === "delete-memory") deleteMemory();
+  });
 }
 ```
 
@@ -475,6 +503,7 @@ export function init() {
 **Verification:** Clicking a memory in the Memories tab opens it in Detail tab. Edit/cancel/save/delete buttons work. The "← Memories" button navigates back.
 
 **Commit:**
+
 ```bash
 git add src/lorekeeper/dashboard/static/js/detail.js
 git commit -m "refactor(lkpr-45): detail.js listens for memory-selected event, no callbacks"
@@ -495,12 +524,14 @@ import { registerTab } from "./tab-registry.js";
 // ... existing imports and functions ...
 
 registerTab({
-    name: "TAB_NAME",
-    load: async () => { /* called when tab is activated */ },
-    init: () => {
-        // Wire module-specific event listeners via delegation
-        // Wire data-action handlers
-    },
+  name: "TAB_NAME",
+  load: async () => {
+    /* called when tab is activated */
+  },
+  init: () => {
+    // Wire module-specific event listeners via delegation
+    // Wire data-action handlers
+  },
 });
 
 // Remove: all register*Callbacks() functions
@@ -521,6 +552,7 @@ registerTab({
 **Verification per tab:** Switch to each tab. Confirm data loads. Confirm all interactive elements work (buttons, checkboxes, inputs, selects, keyboard shortcuts).
 
 **Commit (per file — 7 commits):**
+
 ```bash
 git add src/lorekeeper/dashboard/static/js/links.js
 git commit -m "refactor(lkpr-45): links.js self-registers, uses events"
@@ -534,6 +566,7 @@ git commit -m "refactor(lkpr-45): links.js self-registers, uses events"
 **Objective:** Full manual QA of the dashboard — confirm zero regressions.
 
 **Verification checklist:**
+
 1. Memories tab: list loads, sort by each column, filter text, time filter buttons, show/hide deleted, refresh
 2. Detail tab: click a memory → opens detail, edit fields, cancel, save, delete
 3. Links tab: list loads, relation filter, pagination (if any), click link navigates to memory
@@ -548,11 +581,13 @@ git commit -m "refactor(lkpr-45): links.js self-registers, uses events"
 12. No console errors: open DevTools console, confirm zero errors
 
 **If any interaction doesn't work:**
+
 1. Check if the element still has an `onclick=` (missed during porting)
 2. Check if the data-action or event listener is correctly wired
 3. Check if the event name matches between dispatcher and listener
 
 **Commit:**
+
 ```bash
 git add -A
 git commit -m "refactor(lkpr-45): post-refactor cleanup — all tabs verified"
@@ -563,9 +598,11 @@ git commit -m "refactor(lkpr-45): post-refactor cleanup — all tabs verified"
 ### Rollback Plan
 
 If a tab breaks and can't be fixed in 5 minutes:
+
 ```bash
 git checkout -- src/lorekeeper/dashboard/static/
 ```
+
 This reverts all dashboard JS/HTML changes. Re-run to confirm original dashboard works, then re-apply with the fix.
 
 The modular structure means each tab is isolated — a bug in `config.js` won't affect `memories.js`. The event-based communication is the only shared dependency, and it's a single 15-line file backed by the browser's built-in `CustomEvent` API.

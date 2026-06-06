@@ -10,7 +10,7 @@ github_issue: 130
 resolved_date: 2026-06-04
 ---
 
-# [LKPR-60] In-process cache for _all_memories() to eliminate redundant DB reads
+# [LKPR-60] In-process cache for \_all_memories() to eliminate redundant DB reads
 
 ## Problem
 

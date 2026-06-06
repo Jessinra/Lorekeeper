@@ -22,6 +22,7 @@ This becomes urgent before a planned UI revamp — tests written now act as a be
 Playwright E2E suite that spins up a real FastAPI server against a seeded temp SQLite DB and runs a real browser through the core user flows. Tests are anchored on `data-testid` attributes (not CSS selectors), so they survive HTML restructuring during the revamp.
 
 **Scope — only stable, behavioral flows:**
+
 - Data loading (memories tab renders rows from seeded data)
 - Search (filter input narrows results)
 - Delete (row disappears, confirmed via API)
@@ -29,6 +30,7 @@ Playwright E2E suite that spins up a real FastAPI server against a seeded temp S
 - Config toggle (saves to API, toast appears)
 
 **Out of scope for this ticket:**
+
 - Visual regression / screenshot comparison — add after revamp is settled
 - JS unit tests (`api.js`, `state.js`) — separate ticket if needed
 
@@ -46,10 +48,12 @@ Playwright E2E suite that spins up a real FastAPI server against a seeded temp S
 ## Affected Files
 
 **Backend:**
+
 - `tests/e2e/conftest.py` — uvicorn server fixture + temp data dir + seeded memories
 - `tests/e2e/test_dashboard_e2e.py` — Playwright test cases
 
 **Dashboard:**
+
 - `src/lorekeeper/dashboard/templates/index.html` — add `data-testid` attributes
 - JS render functions (if rows are built dynamically) — add `data-testid` in rendered HTML
 

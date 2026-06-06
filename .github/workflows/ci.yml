@@ -49,6 +49,12 @@ jobs:
       - name: MCP tool documentation check
         run: uv run python scripts/check_mcp_docs.py
 
+      - name: Prettier markdown check
+        run: |
+          while IFS= read -r -d '' f; do
+            [ -f "$f" ] && printf '%s\0' "$f"
+          done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve
+
       - name: Skill format check
         run: uv run python scripts/check_skills.py
 

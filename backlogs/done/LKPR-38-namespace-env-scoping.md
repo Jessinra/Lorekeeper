@@ -23,14 +23,17 @@ All agents see every memory — Bella, Diana, Akane all query the same flat stor
 **How it works:**
 
 1. **New env var:** `LORE_NAMESPACE` (default empty = `"shared"`)
+
    - `setup.sh` auto-injects per agent: Bella gets `LORE_NAMESPACE=bella`, Diana gets `LORE_NAMESPACE=diana`, etc.
    - Agent never configures or touches it within conversation — setup only
 
 2. **Schema:** Add `namespace TEXT` column to SQLite memory table
+
    - Default value `"shared"` for backward compat
    - Existing memories get re-indexed as `"shared"` on migration
 
 3. **Auto-scope all operations (server-side):**
+
    - **Insert** (`lore_insert`, `lore_remember`): auto-tags with agent's `LORE_NAMESPACE`
    - **Search** (`lore_search`): automatically queries union of **agent's namespace + `"shared"`**
    - Agent never passes a namespace parameter — invisible, no control

@@ -3,7 +3,7 @@ id: LKPR-55
 title: Post-setup seed prompt — agent auto-populates first memories
 type: feature
 sprint: ~
-rice_score: 45.0  # R:6 I:9 C:90% E:0.5d
+rice_score: 45.0 # R:6 I:9 C:90% E:0.5d
 filed_by: Jason
 filed_date: 2026-06-03
 resolved_date: 2026-06-03
@@ -22,6 +22,7 @@ The first experience after setup should demonstrate value immediately — show t
 Add a post-setup block to `scripts/setup.sh` that prints a ready-to-paste prompt. The user copies it into any connected agent, and the agent auto-seeds its own identity.
 
 **Why this works:**
+
 - **Zero effort** — user just pastes one block of text
 - **Zero assumptions** — works with any agent (Hermes, Claude Code, Cursor, Claude Desktop, etc.)
 - **Immediate value** — after running it, the dashboard shows real memories about the agent itself

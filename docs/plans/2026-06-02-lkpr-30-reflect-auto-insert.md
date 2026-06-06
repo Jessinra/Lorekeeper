@@ -86,6 +86,7 @@ if auto_insert:
 ```
 
 Return value becomes:
+
 ```python
 return {
     "reflection_id": reflection_id,
@@ -96,6 +97,7 @@ return {
 ```
 
 **Edge cases:**
+
 - Empty lists → no inserts, `memories_created: []`
 - Duplicates → still linked back to reflection (link might already exist — `_insert_one_link` raises if link is a dup; catch and swallow)
 - `auto_insert=False` → skip loop entirely, return `memories_created: []`
