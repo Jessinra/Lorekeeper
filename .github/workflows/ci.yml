@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   lint-and-test:
     name: Lint & Test (Python 3.11)
@@ -58,11 +63,104 @@ jobs:
       - name: Skill format check
         run: uv run python scripts/check_skills.py
 
-      - name: Run tests
+      - name: Run tests with coverage
         env:
           TOKENIZERS_PARALLELISM: "false"
           HF_HOME: ~/.cache/huggingface
-        run: uv run pytest --tb=short -q
+        run: |
+          set -o pipefail
+          uv run --with pytest-cov pytest \
+            --cov=src/lorekeeper \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-report=html \
+            --tb=short -q | tee pytest-cov.log
+
+      - name: Summarize coverage in the job summary
+        if: always()
+        run: |
+          {
+            echo "## Coverage"
+            echo
+            if [ -f .coverage ]; then
+              REPORT="$(uv run coverage report --skip-covered --show-missing)"
+              printf '%s\n' "$REPORT" | tee coverage-report.txt
+              echo '```'
+              printf '%s\n' "$REPORT"
+              echo '```'
+              echo
+              echo "HTML report: uploaded as an artifact named \`coverage-html\`."
+              COVERAGE_TOTAL="$(printf '%s\n' "$REPORT" | awk '/^TOTAL[[:space:]]/ {print $NF; exit}')"
+              {
+                printf '%s\n' '<!-- coverage-summary -->'
+                printf '%s\n' '## Coverage report'
+                printf '%s\n' ''
+                printf '%s\n' "- **Total:** ${COVERAGE_TOTAL:-unknown}"
+                printf '%s\n' "- **Workflow run:** [${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
+                printf '%s\n' '- **HTML artifact:** `coverage-html`'
+                printf '%s\n' ''
+                printf '%s\n' 'The report is also available in the GitHub Actions job summary.'
+              } > coverage-comment.md
+            else
+              echo "Coverage data not found."
+              {
+                printf '%s\n' '<!-- coverage-summary -->'
+                printf '%s\n' '## Coverage report'
+                printf '%s\n' ''
+                printf '%s\n' 'Coverage data was not produced for this run.'
+              } > coverage-comment.md
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Post coverage summary to PR
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- coverage-summary -->';
+            const body = fs.readFileSync('coverage-comment.md', 'utf8');
+            if (!body.includes(marker)) {
+              core.info('Coverage comment body missing marker; skipping.');
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+              core.info(`Updated existing coverage comment ${existing.id}.`);
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+              core.info('Created coverage comment.');
+            }
 
       - name: Mypy type check
         run: uv run mypy src
