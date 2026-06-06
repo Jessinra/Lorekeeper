@@ -136,7 +136,7 @@ def main() -> int:
         print("   Create one first, then add its number to `github_issue:` in frontmatter.")
         return 1
 
-    print(f"\n✅  All proposals reference valid GitHub issues.")
+    print("\n✅  All proposals reference valid GitHub issues.")
     return 0
 
 
