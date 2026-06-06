@@ -45,7 +45,7 @@ jobs:
           uv run python - << 'EOF'
           from sentence_transformers import SentenceTransformer
           SentenceTransformer("all-MiniLM-L6-v2")
-          print("Model ready.")
+          echo "Model ready."
           EOF
 
       - name: Ruff lint
@@ -53,6 +53,11 @@ jobs:
 
       - name: MCP tool documentation check
         run: uv run python scripts/check_mcp_docs.py
+
+      - name: Proposal GitHub issue validation
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: uv run python scripts/check_issues.py
 
       - name: Prettier markdown check
         run: |

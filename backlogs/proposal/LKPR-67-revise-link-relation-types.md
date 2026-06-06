@@ -26,15 +26,15 @@ Feedback scores on existing link type usage show low confidence (most links have
 
 Replace the current 8 types with a smaller, clearer set. Each type has one obvious meaning:
 
-| Type | Meaning | Example |
-|---|---|---|
-| `references` | Mentions or cites — clean default for most links | Memo about "Prompt caching" references "Claude API docs" |
-| `depends_on` | Requires or builds upon another memory | "Auth middleware" depends_on "JWT token format" |
-| `supersedes` | Newer memory that replaces an older one | "v2 API spec" supersedes "v1 API spec" |
-| `contradicts` | Content conflicts with another memory | "Benchmark A shows X" contradicts "Benchmark B shows X" |
-| `part_of` | Hierarchical composition — child belongs to parent | "Login page" part_of "Auth module" |
+| Type           | Meaning                                                     | Example                                                      |
+| -------------- | ----------------------------------------------------------- | ------------------------------------------------------------ |
+| `references`   | Mentions or cites — clean default for most links            | Memo about "Prompt caching" references "Claude API docs"     |
+| `depends_on`   | Requires or builds upon another memory                      | "Auth middleware" depends_on "JWT token format"              |
+| `supersedes`   | Newer memory that replaces an older one                     | "v2 API spec" supersedes "v1 API spec"                       |
+| `contradicts`  | Content conflicts with another memory                       | "Benchmark A shows X" contradicts "Benchmark B shows X"      |
+| `part_of`      | Hierarchical composition — child belongs to parent          | "Login page" part_of "Auth module"                           |
 | `derived_from` | Based on, inferred from, or generalized from another memory | "User retention pattern" derived_from "Cohort analysis data" |
-| `causes` | Direct causal relationship | "Rate limit change" causes "Increased error 429 reports" |
+| `causes`       | Direct causal relationship                                  | "Rate limit change" causes "Increased error 429 reports"     |
 
 That's 8 → 7, but every type is distinct and self-evident.
 
