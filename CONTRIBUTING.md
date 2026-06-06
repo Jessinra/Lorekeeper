@@ -21,6 +21,7 @@ That's it. The pre-commit hook blocks commits that fail lint, mypy, or tests —
 
 ```bash
 uv run ruff check src tests scripts/   # lint
+while IFS= read -r -d '' f; do [ -f "$f" ] && printf '%s\0' "$f"; done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve
 uv run mypy src                         # types
 uv run pytest tests/ -q                 # tests
 ```
@@ -52,6 +53,7 @@ Optional body — what changed and why.
 Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `ci`
 
 Examples:
+
 ```
 [LKPR-60] feat: add cache and forget to lore_search
 [LKPR-0] chore: fix ruff exclude in pyproject.toml
@@ -90,6 +92,7 @@ Four layers, dependencies flow downward only: **Handler** → **Service** → **
 ## Troubleshooting
 
 **Pre-commit hook not running?**
+
 ```bash
 bash scripts/setup.sh   # re-installs the hook
 ```

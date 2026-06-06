@@ -120,15 +120,16 @@ python3 ~/.hermes/scripts/gh-reconcile.py
 
 **What it checks:**
 
-| Check | What it finds |
-|---|---|
+| Check                         | What it finds                                        |
+| ----------------------------- | ---------------------------------------------------- |
 | Merged PRs → issue not S:Done | Implementation PRs merged but ticket not marked done |
-| S:Done issues still open | Tickets labeled done but not closed |
-| Duplicate issues | Multiple issues with the same LKPR-N |
-| Markdown vs GitHub mismatch | `status:` field in .md ≠ label on GitHub issue |
-| Orphan branches | Remote branches with no associated PR |
+| S:Done issues still open      | Tickets labeled done but not closed                  |
+| Duplicate issues              | Multiple issues with the same LKPR-N                 |
+| Markdown vs GitHub mismatch   | `status:` field in .md ≠ label on GitHub issue       |
+| Orphan branches               | Remote branches with no associated PR                |
 
 **Options:**
+
 - `--markdown-only` — compare only backlog files vs labels (no GH API calls)
 - `--fix-done` — auto-close issues with merged PRs
 

@@ -4,7 +4,7 @@ github_issue: 83
 title: Dashboard JS — replace fragile cross-module wiring with an event-based tab registry
 type: enhancement
 sprint: 2
-rice_score: ~  # TBD: R:5 I:8 C:90% E:0.5w
+rice_score: ~ # TBD: R:5 I:8 C:90% E:0.5w
 filed_by: Diana
 filed_date: 2026-05-27
 ---

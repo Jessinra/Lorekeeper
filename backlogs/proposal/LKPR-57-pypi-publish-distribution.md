@@ -3,7 +3,7 @@ id: LKPR-57
 title: PyPI publish — pip install lorekeeper for zero-clone onboarding
 type: feature
 sprint: ~
-rice_score: 72.0  # R:9 I:9 C:70% E:2d
+rice_score: 72.0 # R:9 I:9 C:70% E:2d
 filed_by: Jason → Akane
 github_issue: 124
 filed_date: 2026-06-03
@@ -54,6 +54,7 @@ fi
 ```
 
 This means:
+
 - **Git clone users**: `uv run --directory /path/to/lorekeeper lorekeeper` — same as today
 - **Pip users**: `lorekeeper` — command on PATH, no --directory needed
 - **`uv tool install lorekeeper` users**: same as pip — `lorekeeper` is a global command

@@ -23,18 +23,21 @@ Replace the env var with a **token → namespace** mapping stored on a **separat
 **How it works:**
 
 1. **Auth server** (lightweight, separate from Lorekeeper MCP)
+
    - Stores: `token → namespace` mapping
    - API: `POST /auth/validate` — takes token, returns namespace (or rejects)
    - Management: `POST /auth/issue` — creates a new token for a namespace
    - Agents never talk to the auth server directly — Lorekeeper does
 
 2. **Lorekeeper server changes:**
+
    - Agent presents `LORE_TOKEN=<short_secret>` in their MCP config (replaces `LORE_NAMESPACE`)
    - On each MCP call, Lorekeeper validates the token with the auth server and resolves it to a namespace
    - Same auto-scoping as LKPR-38 — insert/search all filtered, agent never touches namespace
    - If token invalid/revoked → auth error on MCP call
 
 3. **Why a separate server:**
+
    - Agents have MCP tools — if token management was a `lore_*` tool, an agent could call it
    - Separate auth server = agents physically cannot mess with token issuance
    - Clean API boundary: auth is its own concern, manageable by a human (or Diana via a separate channel)

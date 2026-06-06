@@ -46,12 +46,12 @@ Fill in frontmatter:
 ---
 id: LKPR-N
 title: Short descriptive title
-type: feature  # feature | bug | enhancement | research | chore
+type: feature # feature | bug | enhancement | research | chore
 status: S:proposal
-priority: P2:medium  # P0:critical | P1:high | P2:medium | P3:low
+priority: P2:medium # P0:critical | P1:high | P2:medium | P3:low
 sprint: ~
 rice_score: ~
-filed_by: Diana  # whoever is filing
+filed_by: Diana # whoever is filing
 filed_date: YYYY-MM-DD
 ---
 ```

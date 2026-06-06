@@ -18,6 +18,7 @@ The daily reflect loop is agent-only. A human who isn't running Hermes agents ha
 ## Solution
 
 A scheduled cron job that generates a daily "memory digest":
+
 - Compact summary of what happened in the last 24h
 - New memories created (count + highlights)
 - Top-accessed memories

@@ -57,6 +57,7 @@ lore_split_candidates(n=20, min_length=250)
 ## Agent Skill
 
 `assets/skills/lorekeeper-memory-split/SKILL.md` covers:
+
 - Trigger: call once per dreaming cycle
 - For each candidate: read content, use LLM to decide if compound
 - If yes: segment with titles, call `lore_insert` for each segment + `lore_forget` for original

@@ -32,6 +32,7 @@ A **master dreaming cron** (`dreaming.sh`) that runs a configurable schedule (de
 ```
 
 **Graceful degradation:**
+
 - Phase 2 (split): only runs if `lore_split_candidates` tool exists in the MCP registry
 - Phase 3 (consolidation): only runs if `lore_find_nearest_pairs` tool exists
 - Phase 4 (reconcile): only runs if `lore_reconcile` tool exists
@@ -39,6 +40,7 @@ A **master dreaming cron** (`dreaming.sh`) that runs a configurable schedule (de
 - Phase 1 (reflect), Phase 6 (decay), Phase 7 (diary): always run
 
 **Decay sweep** (Phase 6):
+
 - Scan all memories for: `last_used > 90 days AND usage_count < 3 AND score > 5.0`
 - Lower score by `current_score * 0.5` per sweep (diminishing, never below 1.0)
 - If score drops below 1.0 AND unused for 180 days → soft-delete with `reason="decayed"`
@@ -46,6 +48,7 @@ A **master dreaming cron** (`dreaming.sh`) that runs a configurable schedule (de
 - Configurable via `LORE_DECAY_SWEEP_UNUSED_DAYS` (default: 90) and `LORE_DECAY_SWEEP_CULL_DAYS` (default: 180)
 
 **Dream diary** (Phase 7):
+
 - Write a structured narrative to `data_dir/dreams/YYYY-MM-DD.md`:
   - Date + duration of dreaming cycle
   - Memories reflected, split, merged, decayed, linked
@@ -55,6 +58,7 @@ A **master dreaming cron** (`dreaming.sh`) that runs a configurable schedule (de
 - If the report is empty (nothing changed), output is suppressed
 
 **Cron setup:**
+
 - Default: nightly at 2am via `hermes cron create`
 - Agent profile: `default` (uses `lore_reflect`, `lore_search`, etc.)
 - Script: `scripts/dreaming.sh` — entry point that calls `hermes sessions export` and runs each phase
@@ -81,15 +85,18 @@ A **master dreaming cron** (`dreaming.sh`) that runs a configurable schedule (de
 ## Affected Files
 
 **Scripts:**
+
 - `scripts/dreaming.sh` — new: shell entry point
 - `scripts/dream_diary.py` — new: dream diary writer
 
 **Backend:**
+
 - `src/lorekeeper/services/decay_sweep.py` — new: decay sweep logic (Phase 6)
 - `src/lorekeeper/config.py` — add `LORE_DECAY_SWEEP_*` env vars
 - `src/lorekeeper/server.py` — may need a health-check endpoint for tool discovery
 
 **CLAUDE.md / README:**
+
 - Document dreaming pipeline, schedule, and configuration
 
 ## Required Updates
@@ -101,15 +108,15 @@ A **master dreaming cron** (`dreaming.sh`) that runs a configurable schedule (de
 
 ## Dependencies
 
-| Phase | Depends On | Status |
-|-------|-----------|--------|
-| 1. Batch reflect | `lore_reflect` (done), `lore_processed_sessions` (done) | ✅ All available |
-| 2. Split compounds | LKPR-62 `lore_split_candidates` | 📄 Filed with this batch |
-| 3. Near-dupes | LKPR-13 `lore_find_nearest_pairs` | 📄 Existing proposal |
-| 4. Conflicts | LKPR-17 `lore_reconcile` | 📄 Existing proposal |
-| 5. Links | LKPR-58 `lore_recommend_links` | 📄 Existing proposal |
-| 6. Decay sweep | Built-in (this ticket) | 🆕 In scope |
-| 7. Dream diary | Built-in (this ticket) | 🆕 In scope |
+| Phase              | Depends On                                              | Status                   |
+| ------------------ | ------------------------------------------------------- | ------------------------ |
+| 1. Batch reflect   | `lore_reflect` (done), `lore_processed_sessions` (done) | ✅ All available         |
+| 2. Split compounds | LKPR-62 `lore_split_candidates`                         | 📄 Filed with this batch |
+| 3. Near-dupes      | LKPR-13 `lore_find_nearest_pairs`                       | 📄 Existing proposal     |
+| 4. Conflicts       | LKPR-17 `lore_reconcile`                                | 📄 Existing proposal     |
+| 5. Links           | LKPR-58 `lore_recommend_links`                          | 📄 Existing proposal     |
+| 6. Decay sweep     | Built-in (this ticket)                                  | 🆕 In scope              |
+| 7. Dream diary     | Built-in (this ticket)                                  | 🆕 In scope              |
 
 **This ticket can ship with only Phases 1, 6, and 7 working.** Phases 2-5 are additive — the orchestra degrades gracefully.
 
@@ -124,6 +131,7 @@ A **master dreaming cron** (`dreaming.sh`) that runs a configurable schedule (de
 **Naming:** "Dreaming" is the industry term (OpenClaw, Anthropic, OpenAI all use it). The pipeline is explicitly modeled after OpenClaw's three-phase approach (Light → sort/stage, Deep → score/promote, REM → reflect on themes), adapted to Lorekeeper's MCP architecture.
 
 **Inspiration from OpenClaw:**
+
 - **Light phase** → batch reflect (Phase 1) + decay sweep (Phase 6): sort and stage recent material, clear out what's stale
 - **Deep phase** → split compounds (Phase 2) + consolidation (Phase 3) + link candidates (Phase 5): score and promote durable structures
 - **REM phase** → conflict detection (Phase 4) + dream diary (Phase 7): reflect on themes, produce narrative
@@ -131,6 +139,7 @@ A **master dreaming cron** (`dreaming.sh`) that runs a configurable schedule (de
 **Design principle:** The orchestrator never auto-writes (except decay sweep, which is deterministic math). All LLM-driven phases return candidates for human/agent review. The dream diary is the review surface.
 
 **Not in scope:**
+
 - The individual MCP tools called by phases 2-5 are separate tickets
 - Batch session reflection (Phase 1) reuses existing `lore_reflect` + agent loop — no new platform code needed
 - Dream diary is human-readable only — no structured machine input from it

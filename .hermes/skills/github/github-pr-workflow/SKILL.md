@@ -328,6 +328,7 @@ After a PR is opened and reviewed (either by Copilot, another reviewer, or Jason
 ### ⚠️ Normal commits for review fixes — never amend+force-push after the PR is open
 
 Once a PR is open and being reviewed:
+
 - **Each fix = a new plain commit** (`git commit -m "fix: ..."` + `git push`)
 - Amend + force-push rewrites history, blows away reviewer inline comment anchors (they go "Outdated" in GitHub), and makes it impossible for the reviewer to see what specifically changed between rounds
 - **Amend + force-push is only appropriate BEFORE the PR is open**: squashing WIP commits into one clean feat commit, or rebasing onto main to drop already-merged commits

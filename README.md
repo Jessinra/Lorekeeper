@@ -197,14 +197,25 @@ Marks one session as processed and stores its content in the dashboard Sessions 
 **Idempotency:** If `session_id` was already processed, returns immediately with `"already_processed": true` and `"memories_created": []`. The `[]` reflects the current call only — the original call's auto-inserts are not reconstructed. Check `already_processed` to detect retries.
 
 Returns:
+
 ```json
 {
   "reflection_id": "...",
   "session_id": "...",
   "created_at": "...",
   "memories_created": [
-    {"id": "m-1", "title": "BM25 rebuild costs ~10ms...", "relation": "discovered_in", "status": "inserted"},
-    {"id": "m-2", "title": "Don't skip dedup check...", "relation": "learned_in", "status": "inserted"}
+    {
+      "id": "m-1",
+      "title": "BM25 rebuild costs ~10ms...",
+      "relation": "discovered_in",
+      "status": "inserted"
+    },
+    {
+      "id": "m-2",
+      "title": "Don't skip dedup check...",
+      "relation": "learned_in",
+      "status": "inserted"
+    }
   ]
 }
 ```
@@ -218,6 +229,7 @@ No parameters. Returns all session IDs already marked as processed by `lore_refl
 ```
 
 Returns:
+
 ```json
 { "processed_session_ids": ["session-uuid-1", "session-uuid-2"] }
 ```
@@ -240,9 +252,10 @@ Suggests link candidates between a memory and related memories in the store. Sin
 Parameters:
 
 - `lore_id` (required): source memory to find candidates for
-|- `top_k` (optional, default from `LORE_LINK_TOP_M`): max candidates to return, overriding the default limit
+  |- `top_k` (optional, default from `LORE_LINK_TOP_M`): max candidates to return, overriding the default limit
 
 Returns:
+
 ```json
 {
   "candidates": [
@@ -307,44 +320,44 @@ Data is stored at `~/.lorekeeper/` by default:
 
 All settings use the `LORE_` prefix and can be set via environment variables:
 
-| Variable                                | Default                                  | Description                                                                                             |
-| --------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `LORE_VECTOR_STORE`                     | `lancedb`                                | Vector store backend: `lancedb` (default) or `chroma`                                                   |
-| `LORE_DATA_DIR`                         | `~/.lorekeeper`                          | Storage directory                                                                                       |
+| Variable                                | Default                                  | Description                                                                                                                                                                                                                           |
+| --------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LORE_VECTOR_STORE`                     | `lancedb`                                | Vector store backend: `lancedb` (default) or `chroma`                                                                                                                                                                                 |
+| `LORE_DATA_DIR`                         | `~/.lorekeeper`                          | Storage directory                                                                                                                                                                                                                     |
 | `LORE_NAMESPACE`                        | `shared`                                 | Agent write namespace. Writes are tagged with this value; reads return memories in `[namespace, "shared"]`. Set automatically by `setup.sh` for all Hermes agents (`hermes_main` gets `"shared"`, profiles get their directory name). |
-| `LORE_EMBEDDING_MODEL`                  | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model                                                                                         |
-| `LORE_DUPLICATE_THRESHOLD`              | `0.85`                                   | Similarity above which inserts are blocked                                                              |
-| `LORE_W_SEMANTIC`                       | `0.45`                                   | Semantic score weight                                                                                   |
-| `LORE_W_KEYWORD`                        | `0.30`                                   | BM25 keyword score weight                                                                               |
-| `LORE_W_MEMORY`                         | `0.15`                                   | Memory score weight                                                                                     |
-| `LORE_W_USAGE`                          | `0.10`                                   | Usage frequency weight                                                                                  |
-| `LORE_SCORE_BUMP_UP`                    | `0.1`                                    | Score increase on positive feedback                                                                     |
-| `LORE_SCORE_BUMP_DOWN`                  | `0.05`                                   | Score decrease on negative feedback                                                                     |
-| `LORE_SOFT_DELETE_CONFIDENCE_THRESHOLD` | `2`                                      | Confidence ≤ this + `useful=false` triggers soft-delete                                                 |
-| `LORE_CONFIDENCE_WINDOW_SIZE`           | `20`                                     | Rolling window size for confidence EMA                                                                  |
-| `LORE_SEARCH_LIMIT`                     | `5`                                      | Default number of memories returned by `lore_search`                                                    |
-| `LORE_MAX_SEARCH_IDS`                  | `50`                                     | Max IDs in `lore_search(ids=[...])` lookup — enforced at handler layer                                  |
-| `LORE_MAX_REFINE_FROM_IDS`             | `200`                                    | Max IDs in `lore_search(refine_from=[...])` — enforced at handler layer                                 |
-| `LORE_MAX_LINKS_PER_MEMORY`             | `5`                                      | Limit links returned per memory in search results                                                       |
-| `LORE_SCORE_MIN`                        | `0.0`                                    | Minimum allowed memory score                                                                            |
-| `LORE_SCORE_MAX`                        | `10.0`                                   | Maximum allowed memory score                                                                            |
-| `LORE_NEW_MEMORY_DEFAULT_SCORE`         | `5.0`                                    | Default score for new memories                                                                          |
-| `LORE_USAGE_NORMALISATION_CAP`          | `100`                                    | Cap for log-normalising `usage_count` in hybrid scoring                                                 |
-| `LORE_DECAY_LAMBDA`                     | `0.0077`                                 | Time-decay λ for scoring (~90-day half-life; set to 0 to disable)                                       |
-| `LORE_AUTO_LINK_ENABLED`                | `true`                                   | Enable automatic linking of semantically similar memories on insert (set `false` to disable)            |
-| `LORE_AUTO_LINK_K`                      | `5`                                      | Candidate count for auto-link vector search (ε-NN + top-k hybrid)                                       |
-| `LORE_AUTO_LINK_THRESHOLD`              | `0.85`                                   | Minimum cosine similarity to auto-link; 0.85–0.95 = strong same-topic, 0.75–0.85 = related but distinct |
-| `LORE_DASH_PORT`                        | `7777`                                   | Dashboard HTTP port                                                                                     |
-| `LORE_DASH_RELOAD`                      | `1`                                      | Dashboard hot-reload (`0` to disable)                                                                   |
-| `LORE_LINK_TOP_K`                      | `50`                                     | Cosine pre-filter: top-K ANN candidates per memory before scoring                                          |
-| `LORE_LINK_TOP_M`                      | `10`                                     | Max candidates returned by `lore_recommend_links`                                                         |
-| `LORE_LINK_SCORE_THRESHOLD`                  | `0.3`                                    | Minimum weighted score threshold for link candidates                                                      |
-| `LORE_LINK_WEIGHT_COSINE`              | `0.5`                                    | Cosine similarity weight in Stage 1 scoring                                                               |
-| `LORE_LINK_WEIGHT_BM25`               | `0.3`                                    | BM25 keyword weight in Stage 1 scoring                                                                    |
-| `LORE_LINK_WEIGHT_ENTITY`             | `0.1`                                    | Entity overlap weight in Stage 1 scoring                                                                  |
-| `LORE_LINK_WEIGHT_TEMPORAL`           | `0.1`                                    | Temporal proximity weight in Stage 1 scoring                                                              |
-| `LORE_LINK_TEMPORAL_TAU_DAYS`          | `30.0`                                   | Decay half-life (days) for temporal proximity scorer                                                      |
-| `LORE_LINK_SPACY_MODEL`                | `en_core_web_sm`                         | spaCy model for entity overlap scoring (pip install spacy if used)                                        |
+| `LORE_EMBEDDING_MODEL`                  | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model                                                                                                                                                                                                                       |
+| `LORE_DUPLICATE_THRESHOLD`              | `0.85`                                   | Similarity above which inserts are blocked                                                                                                                                                                                            |
+| `LORE_W_SEMANTIC`                       | `0.45`                                   | Semantic score weight                                                                                                                                                                                                                 |
+| `LORE_W_KEYWORD`                        | `0.30`                                   | BM25 keyword score weight                                                                                                                                                                                                             |
+| `LORE_W_MEMORY`                         | `0.15`                                   | Memory score weight                                                                                                                                                                                                                   |
+| `LORE_W_USAGE`                          | `0.10`                                   | Usage frequency weight                                                                                                                                                                                                                |
+| `LORE_SCORE_BUMP_UP`                    | `0.1`                                    | Score increase on positive feedback                                                                                                                                                                                                   |
+| `LORE_SCORE_BUMP_DOWN`                  | `0.05`                                   | Score decrease on negative feedback                                                                                                                                                                                                   |
+| `LORE_SOFT_DELETE_CONFIDENCE_THRESHOLD` | `2`                                      | Confidence ≤ this + `useful=false` triggers soft-delete                                                                                                                                                                               |
+| `LORE_CONFIDENCE_WINDOW_SIZE`           | `20`                                     | Rolling window size for confidence EMA                                                                                                                                                                                                |
+| `LORE_SEARCH_LIMIT`                     | `5`                                      | Default number of memories returned by `lore_search`                                                                                                                                                                                  |
+| `LORE_MAX_SEARCH_IDS`                   | `50`                                     | Max IDs in `lore_search(ids=[...])` lookup — enforced at handler layer                                                                                                                                                                |
+| `LORE_MAX_REFINE_FROM_IDS`              | `200`                                    | Max IDs in `lore_search(refine_from=[...])` — enforced at handler layer                                                                                                                                                               |
+| `LORE_MAX_LINKS_PER_MEMORY`             | `5`                                      | Limit links returned per memory in search results                                                                                                                                                                                     |
+| `LORE_SCORE_MIN`                        | `0.0`                                    | Minimum allowed memory score                                                                                                                                                                                                          |
+| `LORE_SCORE_MAX`                        | `10.0`                                   | Maximum allowed memory score                                                                                                                                                                                                          |
+| `LORE_NEW_MEMORY_DEFAULT_SCORE`         | `5.0`                                    | Default score for new memories                                                                                                                                                                                                        |
+| `LORE_USAGE_NORMALISATION_CAP`          | `100`                                    | Cap for log-normalising `usage_count` in hybrid scoring                                                                                                                                                                               |
+| `LORE_DECAY_LAMBDA`                     | `0.0077`                                 | Time-decay λ for scoring (~90-day half-life; set to 0 to disable)                                                                                                                                                                     |
+| `LORE_AUTO_LINK_ENABLED`                | `true`                                   | Enable automatic linking of semantically similar memories on insert (set `false` to disable)                                                                                                                                          |
+| `LORE_AUTO_LINK_K`                      | `5`                                      | Candidate count for auto-link vector search (ε-NN + top-k hybrid)                                                                                                                                                                     |
+| `LORE_AUTO_LINK_THRESHOLD`              | `0.85`                                   | Minimum cosine similarity to auto-link; 0.85–0.95 = strong same-topic, 0.75–0.85 = related but distinct                                                                                                                               |
+| `LORE_DASH_PORT`                        | `7777`                                   | Dashboard HTTP port                                                                                                                                                                                                                   |
+| `LORE_DASH_RELOAD`                      | `1`                                      | Dashboard hot-reload (`0` to disable)                                                                                                                                                                                                 |
+| `LORE_LINK_TOP_K`                       | `50`                                     | Cosine pre-filter: top-K ANN candidates per memory before scoring                                                                                                                                                                     |
+| `LORE_LINK_TOP_M`                       | `10`                                     | Max candidates returned by `lore_recommend_links`                                                                                                                                                                                     |
+| `LORE_LINK_SCORE_THRESHOLD`             | `0.3`                                    | Minimum weighted score threshold for link candidates                                                                                                                                                                                  |
+| `LORE_LINK_WEIGHT_COSINE`               | `0.5`                                    | Cosine similarity weight in Stage 1 scoring                                                                                                                                                                                           |
+| `LORE_LINK_WEIGHT_BM25`                 | `0.3`                                    | BM25 keyword weight in Stage 1 scoring                                                                                                                                                                                                |
+| `LORE_LINK_WEIGHT_ENTITY`               | `0.1`                                    | Entity overlap weight in Stage 1 scoring                                                                                                                                                                                              |
+| `LORE_LINK_WEIGHT_TEMPORAL`             | `0.1`                                    | Temporal proximity weight in Stage 1 scoring                                                                                                                                                                                          |
+| `LORE_LINK_TEMPORAL_TAU_DAYS`           | `30.0`                                   | Decay half-life (days) for temporal proximity scorer                                                                                                                                                                                  |
+| `LORE_LINK_SPACY_MODEL`                 | `en_core_web_sm`                         | spaCy model for entity overlap scoring (pip install spacy if used)                                                                                                                                                                    |
 
 ---
 
@@ -460,13 +473,13 @@ The single source of truth for the prompt content and version is `assets/prompts
 
 Five skills ship in `assets/skills/` and are installed by `setup.sh` to all detected agents (Hermes, Claude Code, Cursor):
 
-| Skill                  | Purpose                                                                              |
-| ---------------------- | ------------------------------------------------------------------------------------ |
-| `lorekeeper-protocol`  | Full session protocol — when and how to call all Lorekeeper tools                    |
-| `lorekeeper-search`    | Search memories with mandatory relevance feedback after every result set             |
-| `lorekeeper-memorize`  | Proactively capture facts, search for related memories, insert, and link             |
-| `lorekeeper-reconcile` | Verify memories against source materials, update scores, soft-delete incorrect facts |
-| `lorekeeper-link-memories` | Discover typed relationships between memories via `lore_recommend_links`         |
+| Skill                      | Purpose                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `lorekeeper-protocol`      | Full session protocol — when and how to call all Lorekeeper tools                    |
+| `lorekeeper-search`        | Search memories with mandatory relevance feedback after every result set             |
+| `lorekeeper-memorize`      | Proactively capture facts, search for related memories, insert, and link             |
+| `lorekeeper-reconcile`     | Verify memories against source materials, update scores, soft-delete incorrect facts |
+| `lorekeeper-link-memories` | Discover typed relationships between memories via `lore_recommend_links`             |
 
 Skills are installed to `~/.hermes/skills/`, `~/.claude/skills/`, or `~/.cursor/skills/` depending on which agents are detected. Version-stamped — `setup.sh` skips re-install when already up to date.
 
@@ -542,6 +555,10 @@ uv run ruff check src tests --fix
 # Lint — JS dashboard (also runs in pre-commit hook)
 npx @biomejs/biome check src/lorekeeper/dashboard/static/js/
 npx @biomejs/biome check src/lorekeeper/dashboard/static/js/ --write
+
+# Lint — Markdown docs (also runs in pre-commit hook)
+while IFS= read -r -d '' f; do [ -f "$f" ] && printf '%s\0' "$f"; done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve
+while IFS= read -r -d '' f; do [ -f "$f" ] && printf '%s\0' "$f"; done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --write --prose-wrap preserve
 
 # Type check — run before pushing (not in pre-commit hook, too slow)
 uv run mypy src

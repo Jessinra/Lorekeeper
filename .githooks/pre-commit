@@ -35,6 +35,13 @@ npx --yes @biomejs/biome check src/lorekeeper/dashboard/static/js/
 echo "✅  biome passed"
 
 echo ""
+echo "🔍  prettier check (Markdown)..."
+while IFS= read -r -d '' f; do
+  [ -f "$f" ] && printf '%s\0' "$f"
+done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve
+echo "✅  prettier passed"
+
+echo ""
 echo "🔍  MCP tool documentation check..."
 uv run python scripts/check_mcp_docs.py
 echo "✅  mcp docs ok"

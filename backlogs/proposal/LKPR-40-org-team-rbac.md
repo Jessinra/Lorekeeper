@@ -21,6 +21,7 @@ LKPR-38/39 enforce 1 agent = 1 namespace. But real setups need an agent to acces
 Organization/team concept with per-namespace permissions per agent:
 
 **Organization model:**
+
 - An **organization** (or "team") is a group of agents
 - Each agent can have access to **multiple namespaces**
 - Each namespace has permissions per agent: `read`, `write`, or both
@@ -28,14 +29,15 @@ Organization/team concept with per-namespace permissions per agent:
 
 **RBAC extension to auth server (from LKPR-39):**
 
-| API | Purpose |
-|-----|---------|
-| `POST /org/create(name)` | Create an organization |
+| API                                                             | Purpose                            |
+| --------------------------------------------------------------- | ---------------------------------- |
+| `POST /org/create(name)`                                        | Create an organization             |
 | `POST /org/invite(org_id, agent_name, namespaces, permissions)` | Add agent with per-namespace perms |
-| `POST /org/grant(token, namespace, permissions)` | Modify existing permissions |
-| `POST /org/revoke(token, namespace)` | Remove namespace access |
+| `POST /org/grant(token, namespace, permissions)`                | Modify existing permissions        |
+| `POST /org/revoke(token, namespace)`                            | Remove namespace access            |
 
 **Enforcement at query time:**
+
 - `lore_search` — checks token has `read` permission on each requested namespace
 - `lore_insert` / `lore_remember` — checks token has `write` on target namespace
 - Permissions checked against auth server on each call (or cached, same as LKPR-39)

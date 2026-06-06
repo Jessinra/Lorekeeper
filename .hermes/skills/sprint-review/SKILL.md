@@ -26,6 +26,7 @@ cd ~/Code/lorekeeper
 ```
 
 For each proposal, ask:
+
 - **Is the problem still valid?** — has anything changed since this was filed?
 - **Is the solution still the right one?** — any new context that changes the approach?
 - **Is the ticket complete enough?** — clear problem statement, acceptance criteria, affected files?
@@ -46,12 +47,12 @@ If a ticket fails any check: update it, defer it (S:deferred), or cancel it (S:c
 
 ### 3. Triage actions
 
-| Verdict | Action |
-|---------|--------|
-| ✅ Ready | Promote to `S:ready`, ensure proper `P:` priority label |
-| ⏳ Needs more info | Tag as `S:deferred` with a note on what's missing |
-| ❌ Not doing | Tag as `S:cancelled` with rationale |
-| 📋 Merge into existing | Close as duplicate, link to parent ticket |
+| Verdict                | Action                                                  |
+| ---------------------- | ------------------------------------------------------- |
+| ✅ Ready               | Promote to `S:ready`, ensure proper `P:` priority label |
+| ⏳ Needs more info     | Tag as `S:deferred` with a note on what's missing       |
+| ❌ Not doing           | Tag as `S:cancelled` with rationale                     |
+| 📋 Merge into existing | Close as duplicate, link to parent ticket               |
 
 ### 4. Batch-promote to dev
 
@@ -78,6 +79,7 @@ gh issue list --label "S:Ready" --repo Jessinra/Lorekeeper  # same on GitHub
 **A ticket that's `S:ready` must be immediately actionable by dev.** If dev has to ask clarifying questions before starting, it's not ready — either update the ticket or keep it as proposal/deferred until it is.
 
 This means:
+
 - No vague ACs like "should work better" — use concrete, testable criteria
 - Affected files are real paths, not guesses
 - Dependencies are resolved or explicitly called out as blockers

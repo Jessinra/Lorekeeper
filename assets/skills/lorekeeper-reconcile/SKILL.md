@@ -12,23 +12,23 @@ Verify stored memories against authoritative sources to identify incorrect, outd
 
 Choose whichever method(s) suit the memory being verified. Combine multiple methods when a single one is insufficient.
 
-| Method                  | Tools                            | Use When                                                |
-| ----------------------- | -------------------------------- | ------------------------------------------------------- |
-| Source verification     | web_extract, read_file           | User provided URLs/files/docs to check against          |
-| Documentation cross-ref | web_search, read_file            | Corroborating against existing documentation            |
-| Codebase verification   | search_files, terminal           | Technical facts (APIs, error codes, service flows)      |
-| Internal consistency    | `lore_search`                    | Checking for contradictions/divergence between memories |
-| Inference               | Agent reasoning                  | No authoritative source available                       |
+| Method                  | Tools                  | Use When                                                |
+| ----------------------- | ---------------------- | ------------------------------------------------------- |
+| Source verification     | web_extract, read_file | User provided URLs/files/docs to check against          |
+| Documentation cross-ref | web_search, read_file  | Corroborating against existing documentation            |
+| Codebase verification   | search_files, terminal | Technical facts (APIs, error codes, service flows)      |
+| Internal consistency    | `lore_search`          | Checking for contradictions/divergence between memories |
+| Inference               | Agent reasoning        | No authoritative source available                       |
 
 ## Workflow
 
 ### Step 1: Gather and Scope
 
-| Input Type           | Action                                                           |
-| -------------------- | ---------------------------------------------------------------- |
+| Input Type           | Action                                                            |
+| -------------------- | ----------------------------------------------------------------- |
 | URL(s)               | `web_extract` → save content to `.docs-cache/reconcile-{slug}.md` |
-| Local files          | Read directly via read_file                                      |
-| Topic/domain request | Skip to Step 2                                                   |
+| Local files          | Read directly via read_file                                       |
+| Topic/domain request | Skip to Step 2                                                    |
 
 ### Step 2: Search Lorekeeper
 

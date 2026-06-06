@@ -15,18 +15,19 @@ filed_date: 2026-05-31
 
 `LinkStore` in `services/link_store.py` is a 637-line god object that owns **six distinct domains** through a single SQLite connection:
 
-| Domain | Methods | Lines |
-|---|---|---|
-| Memory rows | `upsert_memory_row`, `get_memory_row`, `get_memory_row_by_title`, `all_memory_rows`, `update_memory_fields`, `delete_memory_row` | ~100 |
-| Links | `insert_link`, `links_for_memory`, `get_link`, `update_link_fields`, `all_links`, `delete_link` | ~40 |
-| Reflections | `insert_reflection`, `get_reflection`, `all_reflections` | ~35 |
-| Sessions | `upsert_session`, `upsert_sessions_bulk`, `all_processed_session_ids`, `all_sessions`, `sessions_with_content`, `get_session`, `sessions_for_reflection` | ~80 |
-| API Metrics | `increment_metric`, `get_metrics` | ~50 |
-| Config overrides | `get_config_overrides`, `set_config_override`, `delete_config_override` | ~25 |
-| Schema + migrations | `SCHEMA`, `_migrate`, `_migrate_*` (6 migrations) | ~100 |
-| Helpers | `__init__`, `close`, `_row_to_link` | ~20 |
+| Domain              | Methods                                                                                                                                                  | Lines |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| Memory rows         | `upsert_memory_row`, `get_memory_row`, `get_memory_row_by_title`, `all_memory_rows`, `update_memory_fields`, `delete_memory_row`                         | ~100  |
+| Links               | `insert_link`, `links_for_memory`, `get_link`, `update_link_fields`, `all_links`, `delete_link`                                                          | ~40   |
+| Reflections         | `insert_reflection`, `get_reflection`, `all_reflections`                                                                                                 | ~35   |
+| Sessions            | `upsert_session`, `upsert_sessions_bulk`, `all_processed_session_ids`, `all_sessions`, `sessions_with_content`, `get_session`, `sessions_for_reflection` | ~80   |
+| API Metrics         | `increment_metric`, `get_metrics`                                                                                                                        | ~50   |
+| Config overrides    | `get_config_overrides`, `set_config_override`, `delete_config_override`                                                                                  | ~25   |
+| Schema + migrations | `SCHEMA`, `_migrate`, `_migrate_*` (6 migrations)                                                                                                        | ~100  |
+| Helpers             | `__init__`, `close`, `_row_to_link`                                                                                                                      | ~20   |
 
 **Impact:**
+
 - **Every new feature** adds methods to this file. The gravity well makes it the default place to put things, even when they don't belong together.
 - **`orchestrator.py`** (730 lines) accesses `self._store` for ALL domains — memories, links, reflections, sessions, metrics. The orchestrator knows about the SQLite schema because the store exposes raw `sqlite3.Row` objects instead of typed models.
 - **`dashboard/app.py`** accesses `get_service()._store` directly through a private attribute (17 call sites) for memory/links/sessions/reflections/metrics/config data access, plus 2 `get_service()._settings` accesses for settings data — **19 private attribute accesses** total, bypassing both the orchestrator and the type system.
@@ -58,6 +59,7 @@ services/
 ### Database class
 
 Centralizes:
+
 - SQLite connection creation (WAL mode, FKs, `row_factory = sqlite3.Row`)
 - `close()` — single method to tear down all connections
 - Versioned migrations via a `_schema_version` table and numbered migration functions
@@ -75,6 +77,7 @@ class Database:
 ### Per-store interface
 
 **`MemoryStore`:**
+
 ```python
 class MemoryStore:
     def __init__(self, db: Database): ...
@@ -85,9 +88,11 @@ class MemoryStore:
     def update_memory_fields(self, id, **fields): ...
     def delete_memory_row(self, id): ...
 ```
+
 Returns `Memory` model instances (typed), not raw `sqlite3.Row`.
 
 **`LinkStore` (trimmed):**
+
 ```python
 class LinkStore:
     def __init__(self, db: Database): ...
@@ -100,6 +105,7 @@ class LinkStore:
 ```
 
 **`ReflectionStore` (includes sessions):**
+
 ```python
 class ReflectionStore:
     def __init__(self, db: Database): ...
@@ -116,6 +122,7 @@ class ReflectionStore:
 ```
 
 **`MetricsStore`:**
+
 ```python
 class MetricsStore:
     def __init__(self, db: Database): ...
@@ -124,6 +131,7 @@ class MetricsStore:
 ```
 
 **`ConfigStore`:**
+
 ```python
 class ConfigStore:
     def __init__(self, db: Database): ...
@@ -192,6 +200,7 @@ Migration functions are named `migrate_001_add_last_used_column()`, `migrate_002
 ## Affected Files
 
 ### Backend — new
+
 - `src/lorekeeper/services/database.py` — `Database` class with versioned migration runner
 - `src/lorekeeper/services/memory_store.py` — extracted from `LinkStore`
 - `src/lorekeeper/services/reflection_store.py` — extracted from `LinkStore`
@@ -199,15 +208,18 @@ Migration functions are named `migrate_001_add_last_used_column()`, `migrate_002
 - `src/lorekeeper/services/config_store.py` — extracted from `LinkStore`
 
 ### Backend — modified
+
 - `src/lorekeeper/services/link_store.py` — trimmed to link-only CRUD + `_row_to_link`
 - `src/lorekeeper/services/orchestrator.py` — accept focused stores, update `self._store.*` references
 - `src/lorekeeper/server.py` — instantiate `Database` + stores, pass to `MemoryService`
 - `src/lorekeeper/__init__.py` — re-export if needed
 
 ### Dashboard
+
 - `src/lorekeeper/dashboard/app.py` — access stores via typed attributes, not `get_service()._store`
 
 ### Tests
+
 - `tests/test_link_store.py` — refactor fixtures, adapt to new store interfaces
 - `tests/test_orchestrator.py` — update fixture to pass focused stores
 - `tests/test_dashboard.py` (from LKPR-50) — already uses `TestClient`, will validate the new wiring

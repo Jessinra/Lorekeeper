@@ -23,6 +23,7 @@ With cheaper models (DeepSeek V4-Pro at 75% off) and the MCP stateless protocol 
 **Part A — `format` param (title probe)**
 
 Add a `format` parameter to `lore_search`:
+
 - **`full`** (default) — returns full memory bodies as today
 - **`title`** — returns just `lore_id`, `title`, `score`. No content body.
 
@@ -31,6 +32,7 @@ Add a `format` parameter to `lore_search`:
 Add an `ids` parameter to `lore_search`. When `ids=["uuid1", "uuid2"]` is provided, skip vector/BM25 entirely and do a SQL `SELECT WHERE id IN (...)` lookup. Returns the same result format as a regular search.
 
 Complete two-call workflow:
+
 1. `lore_search("deployment patterns", format="title")` → ~50 tokens, titles + lore_ids
 2. Pick top K → `lore_search(ids=["uuid1", "uuid2"])` → full content for exactly those
 

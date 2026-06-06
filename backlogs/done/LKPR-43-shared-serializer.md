@@ -4,7 +4,7 @@ github_issue: 81
 title: Shared serializer for MCP + dashboard responses
 type: enhancement
 sprint: 2
-rice_score: ~  # TBD: R:6 I:7 C:90% E:0.3w
+rice_score: ~ # TBD: R:6 I:7 C:90% E:0.3w
 filed_by: Diana
 filed_date: 2026-05-27
 ---

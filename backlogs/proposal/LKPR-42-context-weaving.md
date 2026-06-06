@@ -13,7 +13,7 @@ filed_date: 2026-05-27
 
 ## Problem
 
-`lore_search` returns a flat list of individual memories — fragments, not a coherent picture. An agent starting a session on "deployment pipeline" gets 5 separate memories about Docker config, CI script, test setup, etc. It has to mentally stitch them together, reconcile contradictions, figure out what's important. This is friction — the agent is thinking about memory *after* retrieval.
+`lore_search` returns a flat list of individual memories — fragments, not a coherent picture. An agent starting a session on "deployment pipeline" gets 5 separate memories about Docker config, CI script, test setup, etc. It has to mentally stitch them together, reconcile contradictions, figure out what's important. This is friction — the agent is thinking about memory _after_ retrieval.
 
 ## Solution (Requires Research)
 

@@ -25,6 +25,7 @@ Optional `top_k` parameter overrides the max candidates returned.
 ## Reading the Output
 
 Each candidate has:
+
 - `weighted_score` (0.0–1.0): combined score from all 4 signals (cosine, BM25, entity overlap, temporal proximity)
 - `scores`: per-signal breakdown for transparency
 
@@ -59,13 +60,13 @@ mcp_lore_insert(
 
 ## Relation Types
 
-| Type | Meaning |
-|------|---------|
-| `related_to` | General thematic connection (default) |
-| `used_in` | Source concept is used in target context |
-| `used_for` | Source is used for the purpose in target |
-| `used_by` | Source is used by entity in target |
-| `used_as` | Source serves as a role in target |
-| `contradicts` | Conflicting claims between memories |
-| `supersedes` | Source replaces/updates target |
-| `depends_on` | Source requires or builds upon target |
+| Type          | Meaning                                  |
+| ------------- | ---------------------------------------- |
+| `related_to`  | General thematic connection (default)    |
+| `used_in`     | Source concept is used in target context |
+| `used_for`    | Source is used for the purpose in target |
+| `used_by`     | Source is used by entity in target       |
+| `used_as`     | Source serves as a role in target        |
+| `contradicts` | Conflicting claims between memories      |
+| `supersedes`  | Source replaces/updates target           |
+| `depends_on`  | Source requires or builds upon target    |

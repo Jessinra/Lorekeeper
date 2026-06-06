@@ -24,14 +24,14 @@ The canonical `lore_id` UUID lives in Mem0's metadata field. All app logic uses 
 
 The SQLite layer is split into a shared `Database` class (owning the connection lifecycle + versioned migrations) and five focused stores, each handling one domain:
 
-| Store | Owns | File |
-|---|---|---|
-| `Database` | SQLite connection (WAL mode, FKs), versioned migrations (`_schema_version` table) | `services/database.py` |
-| `MemoryStore` | `memories` table CRUD | `services/memory_store.py` |
-| `LinkStore` | `memory_links` table CRUD | `services/link_store.py` |
-| `ReflectionStore` | `reflections` + `sessions` (FK-coupled) | `services/reflection_store.py` |
-| `MetricsStore` | `api_metrics` table | `services/metrics_store.py` |
-| `ConfigStore` | `config_overrides` table | `services/config_store.py` |
+| Store             | Owns                                                                              | File                           |
+| ----------------- | --------------------------------------------------------------------------------- | ------------------------------ |
+| `Database`        | SQLite connection (WAL mode, FKs), versioned migrations (`_schema_version` table) | `services/database.py`         |
+| `MemoryStore`     | `memories` table CRUD                                                             | `services/memory_store.py`     |
+| `LinkStore`       | `memory_links` table CRUD                                                         | `services/link_store.py`       |
+| `ReflectionStore` | `reflections` + `sessions` (FK-coupled)                                           | `services/reflection_store.py` |
+| `MetricsStore`    | `api_metrics` table                                                               | `services/metrics_store.py`    |
+| `ConfigStore`     | `config_overrides` table                                                          | `services/config_store.py`     |
 
 All stores share a single `Database` instance — they receive it via constructor and use its `conn` property. The `MemoryService` orchestrator exposes them as public attributes (`svc.memories`, `svc.links`, `svc.reflections`, `svc.metrics`, `svc.config`, `svc.settings`).
 
@@ -97,6 +97,7 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 - Run tests: `uv run pytest`
 - Lint (Python): `uv run ruff check src tests scripts/`
 - Lint (JS): `npx @biomejs/biome check src/lorekeeper/dashboard/static/js/`
+- Lint (Markdown): `while IFS= read -r -d '' f; do [ -f "$f" ] && printf '%s\0' "$f"; done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve`
 - Type check: `uv run mypy src` (run before push; not in pre-commit — too slow)
 - Entrypoint: `uv run lorekeeper` (or `python -m lorekeeper`)
 
@@ -105,22 +106,22 @@ See `docs/linter-decisions.md` for rule selection rationale.
 
 All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 
-| Env var | Default | Purpose |
-|---|---|---|
-| `LORE_DATA_DIR` | `~/.lorekeeper` | Where SQLite + vector DB live |
-| `LORE_NAMESPACE` | `shared` | Agent write namespace. Writes tagged with this value; reads return union of `[namespace, "shared"]`. Set automatically by `setup.sh` for Hermes profiles. |
-| `LORE_SEARCH_LIMIT` | `5` | Default number of results returned by `lore_search` |
-| `LORE_MAX_SEARCH_IDS` | `50` | Max IDs in `lore_search(ids=[...])` bulk lookup — enforced at handler layer (bypassing the handler bypasses this cap) |
-| `LORE_MAX_REFINE_FROM_IDS` | `200` | Max IDs in `lore_search(refine_from=[...])` — enforced at handler layer (bypassing the handler bypasses this cap) |
-| `LORE_LINK_TOP_K` | `50` | Cosine pre-filter: top-K candidates per memory before scoring |
-| `LORE_LINK_TOP_M` | `10` | Max candidates returned by `lore_recommend_links` |
-| `LORE_LINK_SCORE_THRESHOLD` | `0.3` | Minimum Stage 1 weighted score to pass |
-| `LORE_LINK_WEIGHT_COSINE` | `0.5` | Cosine similarity weight in combined score |
-| `LORE_LINK_WEIGHT_BM25` | `0.3` | BM25 keyword overlap weight |
-| `LORE_LINK_WEIGHT_ENTITY` | `0.1` | Entity overlap (spaCy NER) weight |
-| `LORE_LINK_WEIGHT_TEMPORAL` | `0.1` | Temporal proximity weight |
-| `LORE_LINK_TEMPORAL_TAU_DAYS` | `30` | Decay half-life for temporal scorer (days) |
-| `LORE_LINK_SPACY_MODEL` | `en_core_web_sm` | spaCy model for entity overlap scorer |
+| Env var                       | Default          | Purpose                                                                                                                                                   |
+| ----------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LORE_DATA_DIR`               | `~/.lorekeeper`  | Where SQLite + vector DB live                                                                                                                             |
+| `LORE_NAMESPACE`              | `shared`         | Agent write namespace. Writes tagged with this value; reads return union of `[namespace, "shared"]`. Set automatically by `setup.sh` for Hermes profiles. |
+| `LORE_SEARCH_LIMIT`           | `5`              | Default number of results returned by `lore_search`                                                                                                       |
+| `LORE_MAX_SEARCH_IDS`         | `50`             | Max IDs in `lore_search(ids=[...])` bulk lookup — enforced at handler layer (bypassing the handler bypasses this cap)                                     |
+| `LORE_MAX_REFINE_FROM_IDS`    | `200`            | Max IDs in `lore_search(refine_from=[...])` — enforced at handler layer (bypassing the handler bypasses this cap)                                         |
+| `LORE_LINK_TOP_K`             | `50`             | Cosine pre-filter: top-K candidates per memory before scoring                                                                                             |
+| `LORE_LINK_TOP_M`             | `10`             | Max candidates returned by `lore_recommend_links`                                                                                                         |
+| `LORE_LINK_SCORE_THRESHOLD`   | `0.3`            | Minimum Stage 1 weighted score to pass                                                                                                                    |
+| `LORE_LINK_WEIGHT_COSINE`     | `0.5`            | Cosine similarity weight in combined score                                                                                                                |
+| `LORE_LINK_WEIGHT_BM25`       | `0.3`            | BM25 keyword overlap weight                                                                                                                               |
+| `LORE_LINK_WEIGHT_ENTITY`     | `0.1`            | Entity overlap (spaCy NER) weight                                                                                                                         |
+| `LORE_LINK_WEIGHT_TEMPORAL`   | `0.1`            | Temporal proximity weight                                                                                                                                 |
+| `LORE_LINK_TEMPORAL_TAU_DAYS` | `30`             | Decay half-life for temporal scorer (days)                                                                                                                |
+| `LORE_LINK_SPACY_MODEL`       | `en_core_web_sm` | spaCy model for entity overlap scorer                                                                                                                     |
 
 ### First-Time Setup
 

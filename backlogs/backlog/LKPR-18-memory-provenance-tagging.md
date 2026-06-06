@@ -15,6 +15,7 @@ updated_date: 2026-06-01
 ## Problem
 
 Agents have no way to introspect or scope memories by origin:
+
 1. **Provenance**: no way to know where a memory came from — was it extracted, inferred, manually inserted, or synthesized? Without provenance, trust calibration is impossible.
 2. **Agent scoping**: in multi-agent environments (Akane + Bella + work agent), memories from different agents mix in the same namespace. No way to say "show me only memories from this project" or "only from the work agent." Shared memory without filtering becomes increasingly noisy.
 
@@ -23,6 +24,7 @@ Agents have no way to introspect or scope memories by origin:
 Extend memory metadata with two orthogonal fields stored in SQLite:
 
 Phase A — Provenance (`source_type`): tag every memory at write time:
+
 - `observed` — extracted from conversation
 - `inferred` — agent derived it
 - `user_stated` — user said it explicitly

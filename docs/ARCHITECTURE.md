@@ -56,8 +56,8 @@ Lorekeeper follows a strict 4-layer architecture. Every file belongs to exactly 
 
 MCP and HTTP are different transports into the same service. They follow the same pattern:
 
-| | MCP | HTTP |
-|---|---|---|
+|                             | MCP         | HTTP                                         |
+| --------------------------- | ----------- | -------------------------------------------- |
 | Registration + input/output | `server.py` | `dashboard/app.py` + `dashboard/routes/*.py` |
 
 Both transports live in one file per transport entry point. MCP input sanitization lives as private `_handle_*` helpers inside `server.py` — same file, clearly separated by a comment block.
