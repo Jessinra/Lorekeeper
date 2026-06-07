@@ -117,7 +117,7 @@ Run this to check for inconsistencies between GitHub Issues, merged PRs, and bac
 ### Standard Mode
 
 ```bash
-cd /Users/jessinra/Code/lorekeeper && python3 scripts/gh-reconcile.py
+cd /Users/jessinra/Code/lorekeeper && python3 scripts/gh_reconcile.py
 ```
 
 **Checks:**
@@ -140,7 +140,7 @@ cd /Users/jessinra/Code/lorekeeper && python3 scripts/gh-reconcile.py
 Full status reconciliation with per-ticket verdicts. Use this when doing a manual datafix sweep:
 
 ```bash
-python3 ~/.hermes/scripts/gh-reconcile.py --deep
+python3 ~/.hermes/scripts/gh_reconcile.py --deep
 ```
 
 **Additional deep checks:**
@@ -193,14 +193,14 @@ GH_TOKEN=<token> gh issue create \
 - Keep the open issue (usually the newer one with higher number)
 - If the closed duplicate should be deleted: delete the issue via GitHub UI (no API for true deletion — close + label S:Cancelled is the alternative)
 
-The script lives at `scripts/gh-reconcile.py` in the repo. Run it from the repo root:
+The script lives at `scripts/gh_reconcile.py` in the repo. Run it from the repo root:
 
 ```bash
 cd /Users/jessinra/Code/lorekeeper
-python3 scripts/gh-reconcile.py                # standard check
-python3 scripts/gh-reconcile.py --deep         # full datafix analysis
-python3 scripts/gh-reconcile.py --fix-done     # auto-close merged PR issues
-python3 scripts/gh-reconcile.py --fix-labels   # auto-add missing labels
+python3 scripts/gh_reconcile.py                # standard check
+python3 scripts/gh_reconcile.py --deep         # full datafix analysis
+python3 scripts/gh_reconcile.py --fix-done     # auto-close merged PR issues
+python3 scripts/gh_reconcile.py --fix-labels   # auto-add missing labels
 ```
 
 ## Review Workflow (Dev → PM)

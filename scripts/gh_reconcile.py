@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-gh-reconcile — Cross-reference GitHub Issues, PRs, and backlog markdown files.
+gh_reconcile — Cross-reference GitHub Issues, PRs, and backlog markdown files.
 
 Detects:
   - Issues with merged PRs but not labeled S:Done
@@ -22,10 +22,10 @@ Deep mode (--deep):
   - Full LKPR-sorted summary table with verdict per ticket
 
 Usage:
-  ./scripts/gh-reconcile.py                          # standard report
-  ./scripts/gh-reconcile.py --deep                   # full deep reconcile
-  ./scripts/gh-reconcile.py --fix-done               # auto-close issues with merged PRs
-  ./scripts/gh-reconcile.py --fix-labels             # auto-add missing S:/P: labels
+  ./scripts/gh_reconcile.py                          # standard report
+  ./scripts/gh_reconcile.py --deep                   # full deep reconcile
+  ./scripts/gh_reconcile.py --fix-done               # auto-close issues with merged PRs
+  ./scripts/gh_reconcile.py --fix-labels             # auto-add missing S:/P: labels
 """
 
 from __future__ import annotations
