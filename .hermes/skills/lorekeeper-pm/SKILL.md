@@ -145,14 +145,14 @@ python3 ~/.hermes/scripts/gh-reconcile.py --deep
 
 **Additional deep checks:**
 
-| Deep Check | What it detects | Common fix |
-|------------|----------------|------------|
-| S:Done verification | Feature PR vs proposal PR — flags pre-PR era tickets | Verify manually |
-| S:Cancelled verification | Implemented but cancelled (#32/LKPR-7 pattern) | → S:Done |
-| Closed S:Proposal categorization | Orphan vs duplicate vs not_planned | REOPEN orphans |
-| Closed S:Ready → S:Done | Merged PRs but label not updated | → S:Done |
-| File location vs GH label | File in wrong backlog directory | Move file |
-| Missing GH issues | Backlog file with no corresponding issue | Create issue |
+| Deep Check                       | What it detects                                      | Common fix      |
+| -------------------------------- | ---------------------------------------------------- | --------------- |
+| S:Done verification              | Feature PR vs proposal PR — flags pre-PR era tickets | Verify manually |
+| S:Cancelled verification         | Implemented but cancelled (#32/LKPR-7 pattern)       | → S:Done        |
+| Closed S:Proposal categorization | Orphan vs duplicate vs not_planned                   | REOPEN orphans  |
+| Closed S:Ready → S:Done          | Merged PRs but label not updated                     | → S:Done        |
+| File location vs GH label        | File in wrong backlog directory                      | Move file       |
+| Missing GH issues                | Backlog file with no corresponding issue             | Create issue    |
 
 **Output:** A full LKPR-sorted table with the `🔴→` markers showing things that need fixing, and a summary of actions at the end.
 
@@ -161,21 +161,25 @@ python3 ~/.hermes/scripts/gh-reconcile.py --deep
 After `--deep` reveals issues, here's how to apply fixes:
 
 #### 1. Change GH label
+
 ```bash
 GH_TOKEN=<token> gh issue edit <num> --add-label "S:Done" --remove-label "S:Cancelled"
 GH_TOKEN=<token> gh issue edit <num> --add-label "S:Done" --remove-label "S:Ready"
 ```
 
 #### 2. Reopen a closed issue
+
 ```bash
 GH_TOKEN=<token> gh issue reopen <num>
 GH_TOKEN=<token> gh issue edit <num> --add-label "S:Proposal"
 ```
 
 #### 3. Move backlog file between directories
+
 Edit the file on the `chore/backlog` branch, move to correct directory, PR → auto-merge.
 
 #### 4. Create missing GH issue for a backlog file
+
 ```bash
 GH_TOKEN=<token> gh issue create \
   --repo Jessinra/Lorekeeper \
@@ -185,6 +189,7 @@ GH_TOKEN=<token> gh issue create \
 ```
 
 #### 5. Duplicate resolution (manual)
+
 - Keep the open issue (usually the newer one with higher number)
 - If the closed duplicate should be deleted: delete the issue via GitHub UI (no API for true deletion — close + label S:Cancelled is the alternative)
 
