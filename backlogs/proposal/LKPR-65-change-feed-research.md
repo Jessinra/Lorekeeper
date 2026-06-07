@@ -6,7 +6,7 @@ sprint: ~
 rice_score: ~
 filed_by: Diana
 filed_date: 2026-06-05
-github_issue: 152
+github_issue: 143
 ---
 
 # [LKPR-65] Research lore_change_feed — memory change tracking for agent session resumes
