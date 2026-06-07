@@ -98,12 +98,20 @@ def gh(*args: str) -> list:
         return []
 
 
+<<<<<<< HEAD
 def extract_lkpr(title: str) -> Optional[str]:
+=======
+def extract_lkpr(title: str) -> str | None:
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
     m = re.search(r"LKPR-(\d+)", title, re.IGNORECASE)
     return f"LKPR-{m.group(1)}" if m else None
 
 
+<<<<<<< HEAD
 def extract_lkpr_num(title: str) -> Optional[int]:
+=======
+def extract_lkpr_num(title: str) -> int | None:
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
     m = re.search(r"LKPR-(\d+)", title, re.IGNORECASE)
     return int(m.group(1)) if m else None
 
@@ -125,7 +133,11 @@ def get_s_label(issue: dict) -> str:
 
 def load_all_issues() -> list[dict]:
     """Fetch ALL issues (open+closed) via paginated API."""
+<<<<<<< HEAD
     print(f"\n  Fetching all issues...", end=" ", flush=True)
+=======
+    print("\n  Fetching all issues...", end=" ", flush=True)
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
     all_issues = []
     page = 1
     while True:
@@ -147,7 +159,11 @@ def load_all_issues() -> list[dict]:
 
 def load_merged_prs() -> list[dict]:
     """Fetch merged PRs via paginated API."""
+<<<<<<< HEAD
     print(f"  Fetching merged PRs...", end=" ", flush=True)
+=======
+    print("  Fetching merged PRs...", end=" ", flush=True)
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
     all_prs = []
     page = 1
     while True:
@@ -171,7 +187,11 @@ def load_backlog_files() -> dict[str, dict]:
 
     Returns {LKPR-N: {status, title, section}}.
     """
+<<<<<<< HEAD
     print(f"  Fetching backlog files...", end=" ", flush=True)
+=======
+    print("  Fetching backlog files...", end=" ", flush=True)
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
     result = {}
     for section in ["proposal", "done", "backlog", "deferred"]:
         items = gh_api(f"https://api.github.com/repos/{REPO}/contents/backlogs/{section}")
@@ -370,8 +390,13 @@ def deep_check_cancelled(all_issues: list[dict], backlog: dict[str, dict]) -> li
         num = issue["number"]
         lkpr = extract_lkpr(issue.get("title", "")) or "?"
         file_info = backlog.get(lkpr, {})
+<<<<<<< HEAD
 
         file_section = file_info.get("section", "")
+=======
+        file_section = file_info.get("section", "")
+
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
         has_open_successor = False
         for other in all_issues:
             if other["number"] != num and lkpr in other.get("title", "") and other["state"] == "open":
@@ -379,20 +404,47 @@ def deep_check_cancelled(all_issues: list[dict], backlog: dict[str, dict]) -> li
                 break
 
         if has_open_successor:
+<<<<<<< HEAD
             verdict = "DUPLICATE (has open successor)"
         elif file_section == "done":
             verdict = "⚠ IMPLEMENTED (file in done/) — should be S:Done"
         else:
             verdict = "CANCELLED (no successor, file in proposal/)"
+=======
+            verdict = "DUPLICATE (superseded by open successor)"
+        elif file_section == "done":
+            verdict = "IMPLEMENTED (file in done/) → S:Done"
+        elif file_section == "proposal":
+            verdict = "CANCELLED (file in proposal/, no successor)"
+        else:
+            verdict = "CANCELLED"
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
 
         results.append({"num": num, "lkpr": lkpr, "verdict": verdict})
         print(f"  #{num} [{lkpr}] {verdict}")
     return results
 
 
+<<<<<<< HEAD
 def deep_check_closed_proposal(all_issues: list[dict], backlog: dict[str, dict]) -> list[dict]:
     """Categorize closed S:Proposal issues."""
     print("\n── Deep Check C: Closed S:Proposal categorization ──")
+=======
+def deep_check_closed_proposal(all_issues: list[dict], backlog: dict[str, dict], merged_prs: list[dict]) -> list[dict]:
+    """Categorize closed S:Proposal issues.
+
+    Decision tree:
+      1. File in done/, has merged PR → IMPLEMENTED WITH PR → should be S:Done
+      2. File in done/, no merged PR → PRE-PR ERA → should be S:Done
+      3. Has open duplicate (same LKPR-N) → DUPLICATE (keep duplicate, close cancelled)
+      4. File in deferred/ → DEFERRED (leave)
+      5. Closed by bot without PR, file in proposal/ → ORPHAN → REOPEN
+      6. Closed by chore PR (like #144) → ORPHAN → REOPEN
+      7. Otherwise → check manually
+    """
+    print("\n── Deep Check C: Closed S:Proposal categorization ──")
+    TICKET_CREATION_KEYWORDS = {"ticket", "proposal", "proposals", "filing", "plans", "chore"}
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
     results = []
     for issue in all_issues:
         if get_s_label(issue) != "S:Proposal" or issue["state"] != "closed":
@@ -400,12 +452,43 @@ def deep_check_closed_proposal(all_issues: list[dict], backlog: dict[str, dict])
         num = issue["number"]
         lkpr = extract_lkpr(issue.get("title", "")) or "?"
         file_info = backlog.get(lkpr, {})
+<<<<<<< HEAD
 
+=======
+        file_section = file_info.get("section", "")
+
+        # 1. Check if this is a done ticket (file in done/). Distinguish PR vs pre-PR era.
+        if file_section == "done":
+            linked_prs = []
+            for pr in merged_prs:
+                pr_title = pr.get("title", "")
+                if any(kw in pr_title.lower() for kw in TICKET_CREATION_KEYWORDS):
+                    continue
+                if lkpr.replace("LKPR-", "") in re.findall(r"LKPR-(\d+)", pr_title):
+                    linked_prs.append(pr["number"])
+            if linked_prs:
+                verdict = f"HAS MERGED PR (PR#{','.join(map(str, linked_prs))}) → S:Done"
+            else:
+                verdict = "PRE-PR ERA (implemented, file in done/) → S:Done"
+            results.append({"num": num, "lkpr": lkpr, "verdict": verdict, "action": "label_to_done"})
+            print(f"  #{num} [{lkpr}] {verdict}")
+            continue
+
+        # 2. Check if closed as deferred
+        if file_section == "deferred":
+            verdict = "DEFERRED (file in deferred/) — leave"
+            results.append({"num": num, "lkpr": lkpr, "verdict": verdict, "action": "leave"})
+            print(f"  #{num} [{lkpr}] {verdict}")
+            continue
+
+        # 3. Check for open duplicate
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
         has_open_dup = False
         for other in all_issues:
             if other["number"] != num and lkpr in other.get("title", "") and other["state"] == "open":
                 has_open_dup = True
                 break
+<<<<<<< HEAD
 
         # Check if closed by a chore PR (PR #144)
         timeline = gh_api(f"https://api.github.com/repos/{REPO}/issues/{num}/timeline")
@@ -424,6 +507,35 @@ def deep_check_closed_proposal(all_issues: list[dict], backlog: dict[str, dict])
             verdict = "ORPHAN → REOPEN"
 
         results.append({"num": num, "lkpr": lkpr, "verdict": verdict})
+=======
+        if has_open_dup:
+            verdict = "DUPLICATE (has open successor)"
+            results.append({"num": num, "lkpr": lkpr, "verdict": verdict, "action": "leave"})
+            print(f"  #{num} [{lkpr}] {verdict}")
+            continue
+
+        # 4. Check timeline for how it was closed
+        timeline = gh_api(f"https://api.github.com/repos/{REPO}/issues/{num}/timeline")
+        pr_refs = [e for e in timeline if e.get("event") == "cross-referenced"
+                   and e.get("source", {}).get("issue", {}).get("pull_request")]
+        chore_pr = any(e.get("source", {}).get("issue", {}).get("number") in (144,) for e in pr_refs) if pr_refs else False
+
+        events_text = str(timeline)
+        if chore_pr and 'not_planned' in events_text:
+            verdict = "NOT_PLANNED (closed as not_planned in PR)"
+            action = "leave"
+        elif chore_pr:
+            verdict = "ORPHAN (closed by chore PR, file in proposal/) → REOPEN"
+            action = "reopen"
+        elif not pr_refs:
+            verdict = "ORPHAN (no PR link, file in proposal/) → REOPEN"
+            action = "reopen"
+        else:
+            verdict = "ORPHAN → REOPEN"
+            action = "reopen"
+
+        results.append({"num": num, "lkpr": lkpr, "verdict": verdict, "action": action})
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
         print(f"  #{num} [{lkpr}] {verdict}")
     return results
 
@@ -460,8 +572,13 @@ def deep_check_closed_ready(all_issues: list[dict], merged_prs: list[dict]) -> l
 
 
 def deep_check_file_location(all_issues: list[dict], backlog: dict[str, dict]) -> list[dict]:
+<<<<<<< HEAD
     """Check file section vs GH S: label mismatch."""
     print("\n── Deep Check E: File location vs GH label ──")
+=======
+    """Check file section vs GH S: label mismatch and suggest fix direction."""
+    print("\n── Deep Check E: File location vs GH label (with fix direction) ──")
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
     section_to_label = {
         "done": {"S:Done", "S:Cancelled"},
         "deferred": {"S:Deferred"},
@@ -482,9 +599,33 @@ def deep_check_file_location(all_issues: list[dict], backlog: dict[str, dict]) -
             continue
         gh_s = get_s_label(issue)
         expected_sections = {k for k, v in section_to_label.items() if gh_s in v}
+<<<<<<< HEAD
         if expected_sections and file_section not in expected_sections:
             results.append({"lkpr": lkpr, "issue": issue["number"], "file_section": file_section, "gh_label": gh_s})
             print(f"  ⚠ #{issue['number']} [{lkpr}] file in '{file_section}/' but GH label '{gh_s}'")
+=======
+        if not expected_sections or file_section in expected_sections:
+            continue
+
+        # Determine fix direction
+        if file_section == "done":
+            # File says done, GH label disagrees → fix label to S:Done
+            fix = "→ fix label to S:Done (file in done/)"
+        elif gh_s == "S:Cancelled":
+            # GH says cancelled but file isn't in done/
+            fix = f"→ move file to cancelled/ (GH label is {gh_s})"
+        elif gh_s == "S:Deferred":
+            fix = f"→ move file to deferred/ (GH label is {gh_s})"
+        elif file_section == "proposal" and gh_s in ("S:Ready", "S:Review"):
+            fix = f"→ move file to backlog/ (GH label is {gh_s})"
+        elif gh_s == "S:Ready" and file_section != "backlog":
+            fix = "→ move file to backlog/ (GH label is S:Ready)"
+        else:
+            fix = f"mismatch: file={file_section}/ GH={gh_s}"
+
+        results.append({"lkpr": lkpr, "issue": issue["number"], "file_section": file_section, "gh_label": gh_s, "fix": fix})
+        print(f"  ⚠ #{issue['number']} [{lkpr}] file in '{file_section}/' but GH '{gh_s}' — {fix}")
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
 
     if not results:
         print("  ✓ All file locations match GH labels.")
@@ -526,6 +667,7 @@ def print_deep_table(all_issues: list[dict], backlog: dict[str, dict],
     verdicts: dict[int, str] = {}
     actions: dict[int, str] = {}
 
+<<<<<<< HEAD
     # Cancelled verdicts
     for r in cancelled_results:
         lkpr_num = r["num"]
@@ -570,6 +712,61 @@ def print_deep_table(all_issues: list[dict], backlog: dict[str, dict],
         actions[lkpr_num] = "⚠ CREATE"
 
     # File location mismatches
+=======
+    # File location mismatches — these use LKPR number, must NOT conflict with issue numbers
+    lkpr_to_actions: dict[str, str] = {}
+
+    # Cancelled verdicts (keyed by issue number)
+    for r in cancelled_results:
+        issue_num = r["num"]
+        v = r["verdict"]
+        if "S:Done" in v:
+            actions[issue_num] = "🔴→ S:Done"
+            verdicts[issue_num] = v
+        elif "DUPLICATE" in v:
+            actions[issue_num] = "✅ duplicate"
+            verdicts[issue_num] = v
+        else:
+            actions[issue_num] = "✅ cancelled"
+            verdicts[issue_num] = v
+
+    # Closed proposal verdicts (keyed by issue number)
+    for r in closed_proposal_results:
+        issue_num = r["num"]
+        v = r["verdict"]
+        act = r.get("action", "")
+        if act == "label_to_done":
+            verdicts[issue_num] = v
+            actions[issue_num] = "🔴→ S:Done"
+        elif act == "reopen":
+            verdicts[issue_num] = v
+            actions[issue_num] = "🔴 REOPEN"
+        elif act == "leave":
+            verdicts[issue_num] = v
+            if "DUPLICATE" in v:
+                actions[issue_num] = "✅ duplicate"
+            elif "NOT_PLANNED" in v:
+                actions[issue_num] = "✅ not_planned"
+            elif "DEFERRED" in v:
+                actions[issue_num] = "✅ deferred"
+            else:
+                actions[issue_num] = "✅ leave"
+
+    # Closed ready verdicts (keyed by issue number)
+    for r in closed_ready_results:
+        issue_num = r["num"]
+        v = r["verdict"]
+        if "S:Done" in v:
+            verdicts[issue_num] = v
+            actions[issue_num] = "🔴→ S:Done"
+
+    # Missing issues — store under the full LKPR string to avoid conflict with issue numbers
+    for r in missing_issues:
+        lkpr_str = r["lkpr"]
+        lkpr_to_actions[lkpr_str] = "⚠ CREATE"
+
+    # File location mismatches (cosmetic, not in table verdict)
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
     for r in file_loc_results:
         lkpr_str = r["lkpr"]
         lkpr_num = int(lkpr_str.replace("LKPR-", ""))
@@ -593,7 +790,11 @@ def print_deep_table(all_issues: list[dict], backlog: dict[str, dict],
         file_dir = file_info.get("section", "—")
 
         if not issues:
+<<<<<<< HEAD
             action = actions.get(lkpr_num, "⚠ CREATE")
+=======
+            action = lkpr_to_actions.get(lkpr_str, "⚠ CREATE")
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
             print(f"{lkpr_str:<10} {'—':<6} {'—':<10} {'—':<18} {file_dir:<10} {action}")
             continue
 
@@ -697,7 +898,11 @@ def main():
     if deep:
         # ── Deep mode: full datafix analysis ──
         deep_cancelled = deep_check_cancelled(all_issues, backlog)
+<<<<<<< HEAD
         deep_closed_proposal = deep_check_closed_proposal(all_issues, backlog)
+=======
+        deep_closed_proposal = deep_check_closed_proposal(all_issues, backlog, merged_prs)
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
         deep_closed_ready = deep_check_closed_ready(all_issues, merged_prs)
         deep_file_loc = deep_check_file_location(all_issues, backlog)
         deep_missing = deep_check_missing_gh_issues(backlog, all_issues)
@@ -715,6 +920,7 @@ def main():
         actions_needed = []
 
         for r in deep_cancelled:
+<<<<<<< HEAD
             if "IMPLEMENTED" in r["verdict"]:
                 actions_needed.append(f"  🔴 #{r['num']} [{r['lkpr']}] Label S:Cancelled → S:Done")
         for r in deep_closed_proposal:
@@ -727,6 +933,22 @@ def main():
             actions_needed.append(f"  ⚠️ [{r['lkpr']}] Create GH issue (file: backlogs/{r['section']}/{r['filename']})")
         for r in deep_file_loc:
             actions_needed.append(f"  📁 #{r['issue']} [{r['lkpr']}] File in '{r['file_section']}/' but GH label '{r['gh_label']}' — move file")
+=======
+            if "S:Done" in r["verdict"]:
+                actions_needed.append(f"  🔴 #{r['num']} [{r['lkpr']}] Label S:Cancelled → S:Done ({r['verdict']})")
+        for r in deep_closed_proposal:
+            if r.get("action") == "label_to_done":
+                actions_needed.append(f"  🔴 #{r['num']} [{r['lkpr']}] Label S:Proposal → S:Done (pre-PR era, implemented)")
+            elif r.get("action") == "reopen":
+                actions_needed.append(f"  🔴 #{r['num']} [{r['lkpr']}] Reopen + label S:Proposal ({r['verdict']})")
+        for r in deep_closed_ready:
+            if "S:Done" in r["verdict"]:
+                actions_needed.append(f"  🔴 #{r['num']} [{r['lkpr']}] Label S:Ready → S:Done ({r['verdict']})")
+        for r in deep_missing:
+            actions_needed.append(f"  ⚠️ [{r['lkpr']}] Create GH issue (file: backlogs/{r['section']}/{r['filename']})")
+        for r in deep_file_loc:
+            actions_needed.append(f"  📁 #{r['issue']} [{r['lkpr']}] {r['fix']}")
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
 
         if actions_needed:
             for a in actions_needed:
@@ -734,6 +956,7 @@ def main():
         else:
             print("  ✅ No actions needed — all clean!")
 
+<<<<<<< HEAD
         # Duplicate flagging
         print("\n  DUPLICATE TICKETS (manual review for deletion):")
         dupes = check_duplicates(all_issues)
@@ -744,6 +967,8 @@ def main():
         else:
             print("  ✅ No active duplicates to resolve.")
 
+=======
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
     else:
         # ── Standard mode ──
         f1 = check_merged_not_done(open_issues, merged_prs)
@@ -759,6 +984,7 @@ def main():
         if total == 0:
             print("  ✓ All clean!")
         else:
+<<<<<<< HEAD
             print(f"\n  Fix suggestions:")
             if f1:
                 print(f"    → {len(f1)} issues have merged PRs but aren't S:Done")
@@ -766,13 +992,26 @@ def main():
             if f2:
                 print(f"    → {len(f2)} S:Done issues still open")
                 print(f"       Run with --fix-done to auto-close")
+=======
+            print("\n  Fix suggestions:")
+            if f1:
+                print(f"    → {len(f1)} issues have merged PRs but aren't S:Done")
+                print("       Run with --fix-done to auto-close")
+            if f2:
+                print(f"    → {len(f2)} S:Done issues still open")
+                print("       Run with --fix-done to auto-close")
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
             if f3:
                 print(f"    → {len(f3)} duplicate LKPR sets to resolve")
             if f6:
                 missing = [f for f in f6 if f.get("problem") in ("missing_S", "missing_P")]
                 if missing:
                     print(f"    → {len(missing)} issues missing labels")
+<<<<<<< HEAD
                     print(f"       Run with --fix-labels to auto-add defaults")
+=======
+                    print("       Run with --fix-labels to auto-add defaults")
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
 
         if fix_done and (f1 or f2):
             fix_done_issues(open_issues)
@@ -827,4 +1066,8 @@ def check_missing_invalid_labels(all_issues: list[dict]) -> list:
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     main()
+=======
+    main()
+>>>>>>> 5557f1b ([LKPR-0] chore: fix --deep mode logic, pre-PR era detection, missing issue key collision)
