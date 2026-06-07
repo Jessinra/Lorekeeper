@@ -27,3 +27,9 @@ if [ "$BLOCKED" -eq 1 ]; then
 fi
 
 echo "✅  push targets ok"
+
+echo ""
+echo "🎫  Checking proposal GitHub issues..."
+cd "$(git rev-parse --show-toplevel)"
+uv run python scripts/check_issues.py
+echo "✅  all proposals reference valid issues"
