@@ -54,6 +54,11 @@ jobs:
       - name: MCP tool documentation check
         run: uv run python scripts/check_mcp_docs.py
 
+      - name: Proposal GitHub issue validation
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: uv run python scripts/check_issues.py
+
       - name: Prettier markdown check
         run: |
           while IFS= read -r -d '' f; do

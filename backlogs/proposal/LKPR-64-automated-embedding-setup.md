@@ -4,8 +4,9 @@ title: Automated model embedding installation in setup.sh
 type: research
 sprint: ~
 rice_score: ~
-filed_by: ~
+filed_by: Diana
 filed_date: 2026-06-05
+github_issue: 142
 ---
 
 # [LKPR-64] Automated model embedding installation in setup.sh

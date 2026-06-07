@@ -17,7 +17,7 @@ VALID_STATUSES="S:proposal|S:ready|S:in-progress|S:review|S:done|S:deferred|S:ca
 VALID_PRIORITIES="P0:critical|P1:high|P2:medium|P3:low"
 
 # Required frontmatter fields
-REQUIRED_FIELDS="id|title|type|sprint|rice_score|filed_by|filed_date"
+REQUIRED_FIELDS="id|title|type|sprint|rice_score|filed_by|filed_date|github_issue"
 
 # Required sections (in order) — use array to handle spaces
 REQUIRED_SECTIONS=("Problem" "Solution" "Acceptance Criteria" "Required Updates")
@@ -79,6 +79,13 @@ for file in "${files[@]}"; do
   type_val=$(get_field "$frontmatter" "type")
   if [ -n "$type_val" ] && ! echo "$VALID_TYPES" | tr '|' '\n' | grep -qx "$type_val"; then
     echo "  ✗ $file: invalid type '$type_val' (valid: $VALID_TYPES)"
+    errors_file=$((errors_file + 1))
+  fi
+
+  # Validate github_issue is a positive integer
+  gi_val=$(get_field "$frontmatter" "github_issue")
+  if [ -n "$gi_val" ] && ! echo "$gi_val" | grep -qE '^[0-9]+$'; then
+    echo "  ✗ $file: github_issue must be a number, got '$gi_val'"
     errors_file=$((errors_file + 1))
   fi
 
