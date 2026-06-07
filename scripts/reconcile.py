@@ -343,6 +343,63 @@ def main() -> int:
                 except urllib.error.HTTPError as e:
                     print(f"    -> label update failed: {e}")
 
+    # --- Check for duplicate issues (same LKPR-N in title) ---
+    lkpr_to_issues: dict[str, list[int]] = {}
+    for num, labels_for_issue in issue_labels.items():
+        if isinstance(num, int):
+            issue_data = _api(f"/repos/{GITHUB_REPO}/issues/{num}", token)
+            if isinstance(issue_data, dict) and "pull_request" not in issue_data:
+                title = issue_data.get("title", "")
+                m = re.search(r"LKPR-(\d+)", title, re.IGNORECASE)
+                if m:
+                    key = f"LKPR-{m.group(1)}"
+                    lkpr_to_issues.setdefault(key, []).append(num)
+
+    dupes = {k: v for k, v in lkpr_to_issues.items() if len(v) > 1}
+    if dupes:
+        print(f"\n── Duplicate issues ──")
+        for lkpr, nums in sorted(dupes.items()):
+            print(f"  W [{lkpr}] {len(nums)} copies: {', '.join(f'#{n}' for n in nums)}")
+            warnings += 1
+
+    # --- Check for orphan branches (remote branches with no PR) ---
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["git", "ls-remote", "--heads", "origin"],
+            capture_output=True, text=True,
+            timeout=5,
+            cwd=ROOT,
+        )
+        remote_branches = set()
+        for line in result.stdout.splitlines():
+            parts = line.strip().split()
+            if len(parts) == 2:
+                ref = parts[1].replace("refs/heads/", "")
+                if ref not in ("main",):
+                    remote_branches.add(ref)
+
+        # Collect all branch names from PRs
+        pr_branches: set[str] = set()
+        prs = _paginate(
+            f"/repos/{GITHUB_REPO}/pulls?state=all&sort=updated&direction=desc",
+            token,
+            max_pages=10,
+        )
+        for pr in prs:
+            branch = pr.get("head", {}).get("ref", "")
+            if branch:
+                pr_branches.add(branch)
+
+        orphans = remote_branches - pr_branches
+        if orphans:
+            print(f"\n── Orphan branches (no PR) ──")
+            for branch in sorted(orphans):
+                print(f"  ? {branch}")
+                warnings += 1
+    except Exception as e:
+        print(f"  ? Could not check branches: {e}")
+
     print()
     if errors:
         print(f"{errors} location mismatch(es).")
