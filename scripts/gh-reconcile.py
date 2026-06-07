@@ -45,7 +45,10 @@ HOSTS_YML = Path(os.path.expanduser("~/.config/gh/hosts.yml"))
 
 # ── helpers ──────────────────────────────────────────────────────────────
 
-VALID_S_LABELS = {"S:proposal", "S:ready", "S:in-progress", "S:review", "S:done", "S:deferred", "S:cancelled"}
+VALID_S_LABELS = {
+    "S:proposal", "S:ready", "S:in-progress", "S:review",
+    "S:done", "S:deferred", "S:cancelled",
+}
 VALID_P_LABELS = {"P0:critical", "P1:high", "P2:medium", "P3:low"}
 DEFAULT_S_LABEL = "S:proposal"
 DEFAULT_P_LABEL = "P3:low"
@@ -167,16 +170,16 @@ def build_pr_maps(merged_prs: list[dict]) -> tuple[dict[str, list[dict]], dict[s
 
 
 def label_names(issue: dict) -> list[str]:
-    return [l.get("name", "") for l in issue.get("labels", [])]
+    return [lbl.get("name", "") for lbl in issue.get("labels", [])]
 
 
 def has_label(labels: list[str], prefix: str) -> bool:
-    return any(l.startswith(prefix) for l in labels)
+    return any(lbl.startswith(prefix) for lbl in labels)
 
 
 def get_s_label(issue: dict) -> str:
     lbls = label_names(issue)
-    return next((l for l in lbls if l.startswith("S:")), "")
+    return next((lbl for lbl in lbls if lbl.startswith("S:")), "")
 
 
 # ── data loading via GH API (no local repo needed) ────────────────────────
@@ -288,8 +291,14 @@ def check_merged_not_done(open_issues: list[dict], merged_prs: list[dict]) -> li
             lbls = label_names(issue)
             if not has_label(lbls, "S:Done"):
                 merged_nums = [p["number"] for p in prs]
-                findings.append({"type": "merged_not_done", "lkpr": lkpr, "issue": issue["number"], "prs": merged_nums, "labels": lbls})
-                print(f"  ✗ #{issue['number']} [{lkpr}] has merged PR#{merged_nums[0]} but labels: {', '.join(lbls)}")
+                findings.append({
+                    "type": "merged_not_done", "lkpr": lkpr,
+                    "issue": issue["number"], "prs": merged_nums, "labels": lbls,
+                })
+                print(
+                    f"  ✗ #{issue['number']} [{lkpr}] has merged "
+                    f"PR#{merged_nums[0]} but labels: {', '.join(lbls)}"
+                )
     if not findings:
         print("  ✓ All merged PRs have corresponding S:Done issues.")
     return findings
@@ -302,7 +311,10 @@ def check_done_but_open(open_issues: list[dict]) -> list:
     for issue in open_issues:
         lbls = label_names(issue)
         if has_label(lbls, "S:Done"):
-            findings.append({"type": "done_but_open", "lkpr": extract_lkpr(issue["title"]), "issue": issue["number"]})
+            findings.append({
+                "type": "done_but_open",
+                "lkpr": extract_lkpr(issue["title"]), "issue": issue["number"],
+            })
             print(f"  ✗ #{issue['number']} labeled S:Done but still open — should be closed")
     if not findings:
         print("  ✓ No S:Done issues left open.")
@@ -328,7 +340,9 @@ def check_duplicates(all_issues: list[dict]) -> list:
         cancelled_closed = [c for c in closed if "S:Cancelled" in label_names(c)]
         deferred_closed = [c for c in closed if "S:Deferred" in label_names(c)]
         # Already reconciled: one open, rest are S:Cancelled or S:Deferred
-        if len(kept) == 1 and len(cancelled_closed) + len(deferred_closed) == len(closed) and len(closed) > 0:
+        if (len(kept) == 1
+                and len(cancelled_closed) + len(deferred_closed) == len(closed)
+                and len(closed) > 0):
             continue
         if len(kept) == 0:
             continue
@@ -364,7 +378,7 @@ def check_markdown_vs_github(all_issues: list[dict], backlog: dict[str, dict]) -
             count += 1
             continue
         gh_labels = label_names(issue)
-        gh_s = next((l for l in gh_labels if l.startswith("S:")), "")
+        gh_s = next((lbl for lbl in gh_labels if lbl.startswith("S:")), "")
         md_s = md["status"] or ""
 
         # Normalize case
@@ -424,7 +438,8 @@ def deep_check_cancelled(all_issues: list[dict], backlog: dict[str, dict]) -> li
 
         has_open_successor = False
         for other in all_issues:
-            if other["number"] != num and lkpr in other.get("title", "") and other["state"] == "open":
+            if (other["number"] != num and lkpr in other.get("title", "")
+                    and other["state"] == "open"):
                 has_open_successor = True
                 break
 
@@ -442,7 +457,9 @@ def deep_check_cancelled(all_issues: list[dict], backlog: dict[str, dict]) -> li
     return results
 
 
-def deep_check_closed_proposal(all_issues: list[dict], backlog: dict[str, dict], merged_prs: list[dict]) -> list[dict]:
+def deep_check_closed_proposal(
+    all_issues: list[dict], backlog: dict[str, dict], merged_prs: list[dict]
+) -> list[dict]:
     """Categorize closed S:Proposal issues.
 
     Decision tree:
@@ -473,7 +490,9 @@ def deep_check_closed_proposal(all_issues: list[dict], backlog: dict[str, dict],
                 verdict = f"HAS MERGED PR (PR#{','.join(map(str, linked_prs))}) → S:Done"
             else:
                 verdict = "PRE-PR ERA (implemented, file in done/) → S:Done"
-            results.append({"num": num, "lkpr": lkpr, "verdict": verdict, "action": "label_to_done"})
+            results.append({
+                "num": num, "lkpr": lkpr, "verdict": verdict, "action": "label_to_done",
+            })
             print(f"  #{num} [{lkpr}] {verdict}")
             continue
 
@@ -487,7 +506,8 @@ def deep_check_closed_proposal(all_issues: list[dict], backlog: dict[str, dict],
         # 3. Check for open duplicate
         has_open_dup = False
         for other in all_issues:
-            if other["number"] != num and lkpr in other.get("title", "") and other["state"] == "open":
+            if (other["number"] != num and lkpr in other.get("title", "")
+                    and other["state"] == "open"):
                 has_open_dup = True
                 break
         if has_open_dup:
@@ -500,7 +520,10 @@ def deep_check_closed_proposal(all_issues: list[dict], backlog: dict[str, dict],
         timeline = gh_api(f"https://api.github.com/repos/{REPO}/issues/{num}/timeline")
         pr_refs = [e for e in timeline if e.get("event") == "cross-referenced"
                    and e.get("source", {}).get("issue", {}).get("pull_request")]
-        chore_pr = any(e.get("source", {}).get("issue", {}).get("number") in (144,) for e in pr_refs) if pr_refs else False
+        chore_pr = (
+            any(e.get("source", {}).get("issue", {}).get("number") in (144,) for e in pr_refs)
+            if pr_refs else False
+        )
 
         events_text = str(timeline)
         if chore_pr and 'not_planned' in events_text:
@@ -525,7 +548,6 @@ def deep_check_closed_ready(all_issues: list[dict], merged_prs: list[dict]) -> l
     """Check closed S:Ready issues for merged PRs → should be S:Done."""
     print("\n── Deep Check D: Closed S:Ready → S:Done ──")
     results = []
-    TICKET_CREATION_KEYWORDS = {"ticket", "proposal", "proposals", "filing", "plans", "chore"}
     for issue in all_issues:
         if get_s_label(issue) != "S:Ready" or issue["state"] != "closed":
             continue
@@ -536,7 +558,8 @@ def deep_check_closed_ready(all_issues: list[dict], merged_prs: list[dict]) -> l
         timeline = gh_api(f"https://api.github.com/repos/{REPO}/issues/{num}/timeline")
         linked_prs = []
         for e in timeline:
-            if e.get("event") == "cross-referenced" and e.get("source", {}).get("issue", {}).get("pull_request"):
+            if (e.get("event") == "cross-referenced"
+                    and e.get("source", {}).get("issue", {}).get("pull_request")):
                 pr_num = e["source"]["issue"]["number"]
                 pr_data = gh_api(f"https://api.github.com/repos/{REPO}/pulls/{pr_num}")
                 if isinstance(pr_data, dict) and pr_data.get("merged"):
@@ -594,7 +617,10 @@ def deep_check_file_location(all_issues: list[dict], backlog: dict[str, dict]) -
         else:
             fix = f"mismatch: file={file_section}/ GH={gh_s}"
 
-        results.append({"lkpr": lkpr, "issue": issue["number"], "file_section": file_section, "gh_label": gh_s, "fix": fix})
+        results.append({
+            "lkpr": lkpr, "issue": issue["number"],
+            "file_section": file_section, "gh_label": gh_s, "fix": fix,
+        })
         print(f"  ⚠ #{issue['number']} [{lkpr}] file in '{file_section}/' but GH '{gh_s}' — {fix}")
 
     if not results:
@@ -630,7 +656,10 @@ def print_deep_table(all_issues: list[dict], backlog: dict[str, dict],
                      missing_issues: list) -> None:
     """Print the master LKPR-sorted table."""
     print("\n" + "=" * 130)
-    print(f"{'LKPR':<10} {'GH#':<6} {'GH State':<10} {'GH Label':<18} {'File Dir':<10} {'Verdict/Action'}")
+    print(
+        f"{'LKPR':<10} {'GH#':<6} {'GH State':<10} "
+        f"{'GH Label':<18} {'File Dir':<10} {'Verdict/Action'}"
+    )
     print("=" * 130)
 
     # Build verdict lookup
@@ -689,11 +718,6 @@ def print_deep_table(all_issues: list[dict], backlog: dict[str, dict],
         lkpr_str = r["lkpr"]
         lkpr_to_actions[lkpr_str] = "⚠ CREATE"
 
-    # File location mismatches (cosmetic, not in table verdict)
-    for r in file_loc_results:
-        lkpr_str = r["lkpr"]
-        lkpr_num = int(lkpr_str.replace("LKPR-", ""))
-
     # Build by-lkpr groups
     by_lkpr: dict[str, list] = defaultdict(list)
     for issue in all_issues:
@@ -708,7 +732,6 @@ def print_deep_table(all_issues: list[dict], backlog: dict[str, dict],
 
     for lkpr_str in sorted(by_lkpr.keys(), key=lambda x: int(x.replace("LKPR-", ""))):
         issues = by_lkpr[lkpr_str]
-        lkpr_num = int(lkpr_str.replace("LKPR-", ""))
         file_info = backlog.get(lkpr_str, {})
         file_dir = file_info.get("section", "—")
 
@@ -722,7 +745,6 @@ def print_deep_table(all_issues: list[dict], backlog: dict[str, dict],
             state = i["state"]
             gh_s = get_s_label(i)
             action = actions.get(num, "")
-            verdict = verdicts.get(num, "")
 
             # Default actions based on GH state
             if not action:
@@ -754,7 +776,10 @@ def fix_done_issues(open_issues: list[dict]) -> None:
         if has_label(lbls, "S:Done"):
             num = issue["number"]
             print(f"  Closing #{num} [{issue['title']}]... ", end="", flush=True)
-            r = subprocess.run(["gh", "issue", "close", str(num), "--repo", REPO], capture_output=True, text=True)
+            r = subprocess.run(
+                ["gh", "issue", "close", str(num), "--repo", REPO],
+                capture_output=True, text=True,
+            )
             print("✓" if r.returncode == 0 else f"FAILED: {r.stderr.strip()}")
 
 
@@ -770,27 +795,29 @@ def fix_missing_labels(open_issues: list[dict], markdown: dict[str, dict]) -> No
         num = issue["number"]
         lbls = label_names(issue)
         to_add: list[str] = []
-        s_labels = [l for l in lbls if l.startswith("S:")]
+        s_labels = [lbl for lbl in lbls if lbl.startswith("S:")]
         if len(s_labels) == 0:
             lkpr = extract_lkpr(issue.get("title", ""))
             inferred = (markdown.get(lkpr) or {}).get("status", "") if lkpr else ""
             inferred_label = inferred if inferred in VALID_S_LABELS else DEFAULT_S_LABEL
             to_add.append(inferred_label)
-        p_labels = [l for l in lbls if l.startswith("P:")]
+        p_labels = [lbl for lbl in lbls if lbl.startswith("P:")]
         if len(p_labels) == 0:
             to_add.append(DEFAULT_P_LABEL)
         if not to_add:
             continue
         for label in to_add:
             print(f"  Adding {label} to #{num} [{issue['title']}]... ", end="", flush=True)
-            r = subprocess.run(["gh", "issue", "edit", str(num), "--repo", REPO, "--add-label", label], capture_output=True, text=True)
+            r = subprocess.run(
+                ["gh", "issue", "edit", str(num), "--repo", REPO, "--add-label", label],
+                capture_output=True, text=True,
+            )
             print("✓" if r.returncode == 0 else f"FAILED: {r.stderr.strip()}")
 
 
 # ── main ──────────────────────────────────────────────────────────────────
 
 def main():
-    markdown_only = "--markdown-only" in sys.argv
     fix_done = "--fix-done" in sys.argv
     fix_labels = "--fix-labels" in sys.argv
     deep = "--deep" in sys.argv
@@ -821,7 +848,7 @@ def main():
         deep_closed_ready = deep_check_closed_ready(all_issues, merged_prs)
         deep_file_loc = deep_check_file_location(all_issues, backlog)
         deep_missing = deep_check_missing_gh_issues(backlog, all_issues)
-        deep_done = deep_check_done(all_issues, merged_prs)
+        deep_check_done(all_issues, merged_prs)
 
         # Print master table
         print_deep_table(all_issues, backlog, deep_cancelled, deep_closed_proposal,
@@ -836,17 +863,28 @@ def main():
 
         for r in deep_cancelled:
             if "S:Done" in r["verdict"]:
-                actions_needed.append(f"  🔴 #{r['num']} [{r['lkpr']}] Label S:Cancelled → S:Done ({r['verdict']})")
+                actions_needed.append(
+                    f"  🔴 #{r['num']} [{r['lkpr']}] Label S:Cancelled → S:Done ({r['verdict']})"
+                )
         for r in deep_closed_proposal:
             if r.get("action") == "label_to_done":
-                actions_needed.append(f"  🔴 #{r['num']} [{r['lkpr']}] Label S:Proposal → S:Done (pre-PR era, implemented)")
+                actions_needed.append(
+                    f"  🔴 #{r['num']} [{r['lkpr']}] Label S:Proposal → S:Done "
+                    "(pre-PR era, implemented)"
+                )
             elif r.get("action") == "reopen":
-                actions_needed.append(f"  🔴 #{r['num']} [{r['lkpr']}] Reopen + label S:Proposal ({r['verdict']})")
+                actions_needed.append(
+                    f"  🔴 #{r['num']} [{r['lkpr']}] Reopen + label S:Proposal ({r['verdict']})"
+                )
         for r in deep_closed_ready:
             if "S:Done" in r["verdict"]:
-                actions_needed.append(f"  🔴 #{r['num']} [{r['lkpr']}] Label S:Ready → S:Done ({r['verdict']})")
+                actions_needed.append(
+                    f"  🔴 #{r['num']} [{r['lkpr']}] Label S:Ready → S:Done ({r['verdict']})"
+                )
         for r in deep_missing:
-            actions_needed.append(f"  ⚠️ [{r['lkpr']}] Create GH issue (file: backlogs/{r['section']}/{r['filename']})")
+            actions_needed.append(
+                f"  ⚠️ [{r['lkpr']}] Create GH issue (file: backlogs/{r['section']}/{r['filename']})"
+            )
         for r in deep_file_loc:
             actions_needed.append(f"  📁 #{r['issue']} [{r['lkpr']}] {r['fix']}")
 
@@ -861,8 +899,7 @@ def main():
         f1 = check_merged_not_done(open_issues, merged_prs)
         f2 = check_done_but_open(open_issues)
         f3 = check_duplicates(all_issues)
-        f4 = check_markdown_vs_github(all_issues, backlog)
-        f5 = []  # skip branches (no local repo)
+        check_markdown_vs_github(all_issues, backlog)
         f6 = check_missing_invalid_labels(all_issues)
 
         total = len(f1) + len(f2) + len(f3) + len(f6)
@@ -902,8 +939,8 @@ def check_missing_invalid_labels(all_issues: list[dict]) -> list:
         num = issue["number"]
         title = issue["title"]
         lbls = label_names(issue)
-        s_labels = [l for l in lbls if l.startswith("S:")]
-        p_labels = [l for l in lbls if l.startswith("P:")]
+        s_labels = [lbl for lbl in lbls if lbl.startswith("S:")]
+        p_labels = [lbl for lbl in lbls if lbl.startswith("P:")]
         entry: dict = {"issue": num, "title": title, "labels": lbls}
         if len(s_labels) == 0:
             entry["problem"] = "missing_S"
