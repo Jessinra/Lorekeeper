@@ -1,6 +1,20 @@
+<!--
+  PR CONVENTIONS
+  ==============
+
+  Branch prefix   | Purpose              | Body convention
+  ----------------|----------------------|-----------------------------------------------
+  proposal/       | Proposal tickets     | Use "Refs #N" — DO NOT use "Closes #N"
+  feat/, fix/,    | Implementation work  | Use "Closes #N" — auto-closes on merge
+  chore/, etc.    |                      |
+
+  The CI checks this. If "proposal/" branch + "Closes #" → fail.
+-->
+
 ## Summary
 
-<!-- What does this PR do? Link the ticket: Closes #LKPR-XX -->
+<!-- For proposal PRs: Refs #LKPR-N -->
+<!-- For feature/fix PRs: Closes #LKPR-N -->
 
 ## Changes
 
