@@ -163,6 +163,12 @@ Closes #42"
 
 Options: `--draft`, `--reviewer user1,user2`, `--label "enhancement"`, `--base develop`
 
+**Pitfall — requesting a reviewer can fail the create:** `@copilot` is not always a valid GitHub login; in some repos/orgs Copilot review is configured through repo settings rather than a user-reviewer. A bad reviewer login makes `gh pr create --reviewer` fail outright. Create the PR first, then request the reviewer as a separate step so a lookup failure can't block the PR:
+
+```bash
+gh pr edit <PR_NUMBER> --add-reviewer <reviewer-login>
+```
+
 **With git + curl:**
 
 ```bash

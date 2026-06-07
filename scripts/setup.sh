@@ -283,7 +283,6 @@ _install_dev_skills_hermes() {
             lorekeeper-dev|after-changes|backlog-management|commit-convention) echo "software-development" ;;
             lorekeeper-pm) echo "product" ;;
             ui-ux-pro-max) echo "creative" ;;
-            github-pr) echo "software-development" ;;
             *) echo "misc" ;;
         esac
     }
@@ -511,21 +510,12 @@ if [ "${#SUMMARY_NAMES[@]}" -gt 0 ]; then
     echo -e "${BOLD}─────────────────────────────────────────${NC}"
 fi
 
-# ── 8. Optional: migrate from v1 ──────────────────────────────────────────────
-if [ -n "${V1_JSON:-}" ] && [ -f "$V1_JSON" ]; then
-    title "Migrating from v1..."
-    uv run --directory "$REPO_DIR" python scripts/migrate_from_json.py \
-        --source "$V1_JSON" --dest "$DATA_DIR"
-    info "Migration complete"
-fi
-
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}Setup complete.${NC}"
+echo ""
 echo ""
 echo "Start the dashboard:"
 echo "  uv run --directory $REPO_DIR lorekeeper-dashboard"
 echo "  → http://127.0.0.1:${LORE_DASH_PORT:-7777}"
 echo ""
-echo "Migrate from v1 (optional):"
-echo "  V1_JSON=/path/to/memories.json bash $REPO_DIR/scripts/setup.sh"

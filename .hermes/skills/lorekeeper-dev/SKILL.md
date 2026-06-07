@@ -201,7 +201,7 @@ Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`.
 2. Read the ticket file — specs live there, not in chat
 3. Change `status` to `in-progress`
 
-**Submitting work:** 3. Self-review: full test suite (`uv run pytest`) + lint (`uv run ruff check src tests`) + mypy (`uv run mypy src`) 4. Move ticket to `status: review` 5. Push branch + open PR via `gh pr create --reviewer @copilot` (load `github-pr` skill for details) 6. Ping Jason on Telegram to review and merge
+**Submitting work:** 3. Self-review: full test suite (`uv run pytest`) + lint (`uv run ruff check src tests`) + mypy (`uv run mypy src`) 4. Move ticket to `status: review` 5. Push branch + open PR via `gh pr create` (load `github-pr-workflow` skill for details) 6. Ping Jason on Telegram to review and merge
 
 ## Coding Standards
 
@@ -213,6 +213,8 @@ Tickets live in `backlogs/` as `LKPR-N-slug.md`. Completed → `backlogs/done/`.
 | Mutation        | **Avoid** — prefer returning new objects; no in-place mutation of args |
 
 These aren't style preferences — they're enforced during PM review. PRs violating the 800-line or 4-nesting limits will be sent back.
+
+**`scripts/` naming:** Python scripts use `snake_case.py` (e.g. `gh_reconcile.py`, `check_issues.py`); shell scripts use `kebab-case.sh` (e.g. `check-branch.sh`, `next-ticket-number.sh`). One-shot/throwaway migrations don't belong in `scripts/` long-term — delete them once the migration has run everywhere.
 
 ## Verification Standard
 
@@ -454,9 +456,10 @@ After every set of changes:
 2. README consistency — verify config defaults, tool signatures, env var names still match
 3. Commit with `[LKPR-N] type: title` format
 4. Push to `origin` (GitHub): `git push origin <branch>`
-5. Open a PR and tag Copilot as reviewer — load the `github-pr` skill. In short:
+5. Open a PR and request a reviewer — load the `github-pr-workflow` skill. In short:
    ```bash
-   gh pr create --base main --title "[LKPR-N] type: title" --body "..." --reviewer @copilot
+   gh pr create --base main --title "[LKPR-N] type: title" --body "..."
+   gh pr edit <PR_NUMBER> --add-reviewer @copilot   # separate step; may fail if login invalid
    ```
 6. Ping Jason on Telegram to review and merge
 

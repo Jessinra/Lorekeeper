@@ -582,7 +582,7 @@ Always open PRs with **Copilot tagged as reviewer**:
 gh pr create --base main --title "[LKPR-N] type: title" --body "..." --reviewer @copilot
 ```
 
-Full details in `.hermes/skills/github-pr/SKILL.md`.
+Full details in `.hermes/skills/github/github-pr-workflow/SKILL.md`.
 
 Reference: [Requesting a code review from Copilot](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/use-code-review)
 
