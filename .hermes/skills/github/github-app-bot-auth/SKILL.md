@@ -1,7 +1,7 @@
 ---
 name: github-app-bot-auth
 description: "GitHub App bot authentication — setup, token rotation, and cron refresh for jessinra-megumi-dev[bot]"
-version: 1.0.0
+version: 1.1.0
 author: Megumi Akane
 platforms: [macos]
 ---
@@ -49,8 +49,14 @@ The script:
 2. Generates a JWT signed with RS256 (PyJWT preferred, falls back to `openssl dgst -sha256 -sign`)
 3. Exchanges for an installation token via GitHub API
 4. Writes `~/.config/gh/hosts.yml` with the fresh token inline
+5. **Pushes the token into gh's keyring** via `gh auth login --with-token` (with `GH_TOKEN`/`GITHUB_TOKEN` unset)
+6. Verifies `gh auth token` resolves a valid `ghs_` token
 
-The `hosts.yml` file is read by `gh` CLI on every command — no restart needed.
+**Why step 5 matters (the critical fix):** on macOS, `gh` stores credentials in the **Keychain** and prefers the keyring over `hosts.yml`. Writing `hosts.yml` alone (the old behaviour) left `gh` authenticating with a **stale keyring token** — the recurring `The token in default is invalid` failure. The `--with-token` step keeps the keyring in sync so `gh` and git self-heal on every cron tick. No manual `logout`/`login` dance is needed anymore.
+
+**Output behaviour:** SILENT on success (empty stdout — the `no_agent` cron delivers nothing, so no Telegram spam). LOUD on failure only (one actionable line + exit 1, surfaced by the cron watchdog). The openssl fallback captures the signature with `subprocess` — no binary ever leaks to stdout.
+
+**Paths are hardcoded to `/Users/jessinra`, not `Path.home()`** — profile crons (e.g. diana) remap `HOME` to `~/.hermes/profiles/<name>/home/`, so `Path.home()` would resolve wrong. The GitHub App key + gh config are user-level shared resources.
 
 ## Manual Refresh (if cron fails)
 
@@ -85,7 +91,9 @@ gh auth switch --user Jessinra
 
 ## Cron Setup (for any Hermes profile)
 
-All agents share the same system `~/.config/gh/hosts.yml`, so only **one** cron job is needed system-wide. The existing `gh-bot-token-refresh` cron job under the default profile handles all agents.
+All agents share the same user-level `~/.config/gh/hosts.yml` **and** gh keyring, so one cron job system-wide is sufficient in principle. In practice there are two: the **default profile** job (`6183c59abea6`) is the source of truth, and a **diana profile** job (`f0f841b4e394`) runs the same logic.
+
+**Profile crons can't reach user-level scripts directly** — the runner blocks any script path that resolves outside the profile's own `scripts/` dir (and symlinks are rejected too). For the diana job, `~/.hermes/profiles/diana/scripts/gh-token-refresh.py` is a thin **wrapper** that `os.execv`'s the canonical user-level script, so all real logic stays single-source at `~/.hermes/scripts/gh-token-refresh.py`.
 
 If setting up per-profile:
 
@@ -200,19 +208,22 @@ git log --oneline HEAD..origin/main                        # remote commits not 
 
 ### Troubleshooting
 
+**First thing to try — just run the refresh script.** It now re-syncs the keyring too, so it fixes the `token in default is invalid` error on its own:
+
 ```bash
-# Bot token expired — manual refresh
-python3 ~/.hermes/scripts/gh-token-refresh.py
-
-# Token issues — verify
-gh auth status
+python3 ~/.hermes/scripts/gh-token-refresh.py   # silent = success; prints + exits 1 on failure
+gh auth status                                   # confirm: ✓ Logged in ... (keyring)
 gh api repos/Jessinra/Lorekeeper --jq '.full_name'
+```
 
+If `gh auth status` still shows the token as invalid after a refresh, the keyring write failed — check the script's stderr (run it directly, it will print the failing step). Legacy manual dance (rarely needed now):
+
+```bash
 # Fall back to personal account
 gh auth switch --user Jessinra
 
-# Reset gh auth entirely
-gh auth logout
-gh auth login                                              # browser flow for personal
-# Or pipe the bot token (for headless): see Manual Refresh above
+# Nuclear reset
+unset GH_TOKEN
+gh auth logout -h github.com -u "jessinra-megumi-dev[bot]"
+python3 ~/.hermes/scripts/gh-token-refresh.py    # re-mints + re-logs-in via keyring
 ```
