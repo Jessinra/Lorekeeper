@@ -185,7 +185,31 @@ def main() -> int:
         print("No GitHub token available.")
         return 1
 
-    do_fix = "--fix" in sys.argv
+    # Backward-compatible flags: --fix-done (old) ≡ --fix (new), --markdown-only
+    do_fix = "--fix" in sys.argv or "--fix-done" in sys.argv
+    markdown_only = "--markdown-only" in sys.argv
+
+    if markdown_only:
+        print("Scanning backlog markdown files...", end=" ", flush=True)
+        tickets: list[tuple[Path, str, str, int | None]] = []
+        for subdir in ["proposal", "done", "cancelled", "backlog"]:
+            dp = ROOT / "backlogs" / subdir
+            if not dp.exists():
+                continue
+            for fp in sorted(dp.glob("*.md")):
+                text = fp.read_text()
+                fm = re.search(r"^---\n(.*?)\n---", text, re.DOTALL)
+                tid = extract_frontmatter_field(fm.group(1), "id") if fm else fp.name
+                gi_raw = extract_frontmatter_field(fm.group(1), "github_issue") if fm else None
+                tickets.append((fp, tid, subdir, gi_raw))
+        print(f"{len(tickets)} files\n")
+        by_dir: dict[str, list[str]] = {}
+        for _fp, tid, subdir, gi_raw in tickets:
+            by_dir.setdefault(subdir, []).append(f"{tid} (#{gi_raw or '?'})")
+        for dirname, items in sorted(by_dir.items()):
+            print(f"  {dirname}/ ({len(items)}): {', '.join(items)}")
+        return 0
+
     errors = 0
     warnings = 0
     fixes = 0
@@ -345,7 +369,7 @@ def main() -> int:
 
     # --- Check for duplicate issues (same LKPR-N in title) ---
     lkpr_to_issues: dict[str, list[int]] = {}
-    for num, labels_for_issue in issue_labels.items():
+    for num, _labels_for_issue in issue_labels.items():
         if isinstance(num, int):
             issue_data = _api(f"/repos/{GITHUB_REPO}/issues/{num}", token)
             if isinstance(issue_data, dict) and "pull_request" not in issue_data:
@@ -357,7 +381,7 @@ def main() -> int:
 
     dupes = {k: v for k, v in lkpr_to_issues.items() if len(v) > 1}
     if dupes:
-        print(f"\n── Duplicate issues ──")
+        print("\n── Duplicate issues ──")
         for lkpr, nums in sorted(dupes.items()):
             print(f"  W [{lkpr}] {len(nums)} copies: {', '.join(f'#{n}' for n in nums)}")
             warnings += 1
@@ -393,7 +417,7 @@ def main() -> int:
 
         orphans = remote_branches - pr_branches
         if orphans:
-            print(f"\n── Orphan branches (no PR) ──")
+            print("\n── Orphan branches (no PR) ──")
             for branch in sorted(orphans):
                 print(f"  ? {branch}")
                 warnings += 1
