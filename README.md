@@ -135,7 +135,225 @@ Lorekeeper exposes **8 MCP tools** covering the full memory lifecycle:
 | `lore_processed_sessions` | Check which sessions are already processed               |
 | `lore_recommend_links`    | Suggest candidate links between related memories         |
 
-**Full reference with schemas and examples → see the [MCP tools](#) section below.**
+### `lore_search`
+
+```json
+{
+  "query": "checkout payment flow",
+  "min_score": 0.1,
+  "include_links": true,
+  "include_deleted": false,
+  "refine_from": null,
+  "format": "full",
+  "ids": null
+}
+```
+
+Returns ranked memories with relevance scores and linked memories.
+
+Two search modes:
+
+**Query mode** (default) — runs the hybrid semantic + BM25 pipeline. Parameters:
+
+- `query` (required unless `ids` is set): search text
+- `min_score` (default `0.1`): minimum `combined_score` threshold
+- `refine_from`: pass a list of `lore_id` strings from a previous search result to re-rank only within that candidate set using a new query. Unknown IDs are silently ignored. Max 200 IDs (configurable via `LORE_MAX_REFINE_FROM_IDS`)
+- `format`: `"full"` (default) returns complete memory objects with relevance scores; `"title"` returns compact `{id, title, score}` dicts for lower token cost
+
+**ID lookup mode** — when `ids` is set, skips the vector/BM25 pipeline entirely and fetches those specific `lore_id`s directly from SQL. Unknown IDs are silently ignored. `query` is ignored in this path. Max 50 IDs (configurable via `LORE_MAX_SEARCH_IDS`). Pair `ids` with `format='title'` for a two-step workflow: list titles first, then fetch full objects for specific IDs.
+
+Other params: `limit` (max results, defaults to `LORE_SEARCH_LIMIT`), `include_links` (default `true`; forced off in `format='title'` mode), `include_deleted` (default `false`).
+
+### `lore_insert`
+
+```json
+{
+  "memories": [
+    {
+      "title": "Mutable default args in Python",
+      "description": "def f(x=[]) shares the list across all calls — use None instead.",
+      "content": "..."
+    },
+    {
+      "title": "Token refresh interval",
+      "content": "Access tokens expire after 1h.",
+      "links": [
+        {
+          "target_memory_id": "<target-uuid>",
+          "relation_type": "related_to",
+          "reason": "part of OAuth flow"
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "source_memory_id": "<uuid>",
+      "target_memory_id": "<uuid>",
+      "relation_type": "related_to",
+      "reason": "Both about Python gotchas"
+    }
+  ],
+  "force": false
+}
+```
+
+Each memory dict may include:
+
+- `title` (required): short unique label
+- `content` (optional): the full text to store
+- `description` (optional): brief summary
+- `score` (optional, default 5.0): initial quality score 0–10
+- `links` (optional): inline links to create after insert. Each link: `{target_memory_id (required), relation_type (required), reason? (optional)}`
+
+Top-level `links` (linking existing memories to each other) and per-memory inline `links` can be used together in a single call.
+
+Duplicate detection runs automatically. Before inserting, the server computes a dedup score (`0.6·semantic + 0.4·keyword`). If it meets or exceeds `LORE_DUPLICATE_THRESHOLD` (default 0.85), the insert is blocked and the existing memory is returned. Use `force: true` to override.
+
+### `lore_remember`
+
+```json
+{
+  "thought": "Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score + 0.10 usage"
+}
+```
+
+Fast one-shot memory insert — zero friction. Pass a thought as a single string; the server auto-extracts the title (first ~80 chars, sentence boundary), stores the full content verbatim with a default score of 7.0, and auto-links to the nearest semantic neighbor if similarity ≥ 0.75. Returns `{id, title, linked_to: {id, score} | null}`. Uses the same dedup pipeline as `lore_insert` — exact title matches are definitive duplicates.
+
+Use this for quick capture. Use `lore_insert` when you need explicit titles, descriptions, scores, or manual links.
+
+### `lore_update`
+
+```json
+{
+  "memory_feedback": [{ "id": "<uuid>", "useful": true, "confidence": 8 }],
+  "link_feedback": [{ "id": "<uuid>", "useful": false }]
+}
+```
+
+Drives the quality signal loop. Call this after every `lore_search` to keep scores calibrated.
+
+### `lore_forget`
+
+```json
+{
+  "memory_ids": ["uuid1", "uuid2"],
+  "reason": "hallucinated"
+}
+```
+
+Immediately soft-deletes one or more memories. Use when a memory is wrong, duplicated, or outdated and you don't want it polluting future searches. The memory is excluded from `lore_search` results after this call.
+
+`reason` must be one of: `duplicate`, `hallucinated`, `outdated`, `expired`, `unspecified`. Logged for auditability. Soft-delete is reversible at the DB level, but no undelete tool is exposed.
+
+Returns `{ "forgotten": [...], "not_found": [...], "errors": [...] }`.
+
+### `lore_reflect`
+
+```json
+{
+  "session_id": "uuid1",
+  "summary": "Implemented reflect integration; extracted 3 lessons.",
+  "session_date": "2026-05-19",
+  "topic": "reflect-integration",
+  "task_type": "build",
+  "what_was_done": "Built the reflect integration...",
+  "decisions": "- Used single-session submit for context efficiency",
+  "lessons_learnt": ["Don't skip dedup check before inserting"],
+  "good_patterns": ["Parallelise independent API calls"],
+  "factual_discoveries": ["BM25 rebuild costs ~10ms at 5k memories"],
+  "memory_ids": ["uuid-a", "uuid-b"],
+  "auto_insert": true
+}
+```
+
+Marks one session as processed and stores its content in the dashboard Sessions tab. Call once per session — reflect, submit, then move to the next.
+
+**Auto-insert (default `auto_insert=true`):** Each item in `factual_discoveries` and `lessons_learnt` is automatically inserted as a standalone searchable memory. Discoveries get score 7.0, lessons get score 8.0. Duplicate-guarded — items already in the store return the existing ID with `"status": "duplicate"`; newly inserted items have `"status": "inserted"`. Pass `auto_insert=false` to store only in the reflection record without creating memories.
+
+**Idempotency:** If `session_id` was already processed, returns immediately with `"already_processed": true` and `"memories_created": []`. The `[]` reflects the current call only — the original call's auto-inserts are not reconstructed. Check `already_processed` to detect retries.
+
+Returns:
+
+```json
+{
+  "reflection_id": "...",
+  "session_id": "...",
+  "created_at": "...",
+  "memories_created": [
+    {
+      "id": "m-1",
+      "title": "BM25 rebuild costs ~10ms...",
+      "relation": "discovered_in",
+      "status": "inserted"
+    },
+    {
+      "id": "m-2",
+      "title": "Don't skip dedup check...",
+      "relation": "learned_in",
+      "status": "inserted"
+    }
+  ]
+}
+```
+
+### `lore_processed_sessions`
+
+No parameters. Returns all session IDs already marked as processed by `lore_reflect`.
+
+```json
+{}
+```
+
+Returns:
+
+```json
+{ "processed_session_ids": ["session-uuid-1", "session-uuid-2"] }
+```
+
+Use this to avoid re-processing sessions — check the list before calling `lore_reflect`.
+
+### `lore_recommend_links`
+
+```json
+{
+  "lore_id": "<uuid>",
+  "top_k": 10
+}
+```
+
+Suggests link candidates between a memory and related memories in the store. Single-stage scoring pipeline — semantic cosine, BM25, entity overlap, and temporal proximity combined into a weighted score. The agent evaluates the candidates and decides which links to create.
+
+**Does NOT write any links.** Returns candidates for review — confirm by calling `lore_insert` with `links=[]`.
+
+Parameters:
+
+- `lore_id` (required): source memory to find candidates for
+- `top_k` (optional, default from `LORE_LINK_TOP_M`): max candidates to return, overriding the default limit
+
+Returns:
+
+```json
+{
+  "candidates": [
+    {
+      "source_lore_id": "<uuid>",
+      "target_lore_id": "<uuid>",
+      "weighted_score": 0.65,
+      "scores": {
+        "cosine": 0.82,
+        "bm25": 0.45,
+        "entity": 0.0,
+        "temporal": 0.0
+      }
+    }
+  ],
+  "count": 10,
+  "source_lore_id": "<uuid>"
+}
+```
+
+Per-signal `scores` lets the agent make its own judgment about which candidates are worth linking — no LLM call inside Lorekeeper.
 
 ---
 
