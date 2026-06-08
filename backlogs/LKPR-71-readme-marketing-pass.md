@@ -50,6 +50,20 @@ Add concrete "when would you use this" scenarios:
 - Search latency at scale
 - Comparison vs built-in memory (CLAUDE.md / grep)
 
+### Phase 5 — Agent configs for auto-capture (zero-code)
+
+The most common question from new users: "how do I make my agent remember things automatically?" The answer is documentation, not new tools.
+
+- Write `scripts/lore-capture.sh` — a ~20-line shell script wrapping `lore_remember` that agents can call from their own lifecycle hooks
+- Add copy-paste config blocks for each major agent:
+  - **Claude Code**: hook via `~/.claude/settings.json` pre/post-exec scripts
+  - **Hermes**: skill trigger on session end
+  - **Codex**: startup/teardown script config
+  - **Cursor**: custom rules integration
+  - **Gemini CLI**: init script
+- Add the session auto-capture workflow as a "Getting Started" subsection in the README
+- Emphasize: one script works with every agent — Lorekeeper is universal
+
 ## Acceptance Criteria
 
 - [ ] Phase 1: Brand tone audit applied — hero section matches positioning manifesto
@@ -57,6 +71,9 @@ Add concrete "when would you use this" scenarios:
 - [ ] Phase 2: Screenshots in `docs/screenshots/` with consistent naming
 - [ ] Phase 3: Use-case section with 4+ concrete scenarios
 - [ ] Phase 4: Benchmark results section populated from LKPR-70 output (once available)
+- [ ] Phase 5: `scripts/lore-capture.sh` companion script committed
+- [ ] Phase 5: Copy-paste config blocks for 3+ agents in README
+- [ ] Phase 5: "Getting Started" subsection covers auto-capture workflow
 - [ ] Comparison table polished and visually scannable
 - [ ] README is scannable in < 30s — hero, screenshot, use-case, quickstart, benchmark
 
