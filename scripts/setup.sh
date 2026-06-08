@@ -43,10 +43,12 @@ else
 fi
 info "Install mode: $INSTALL_MODE"
 
-# ── 2. Install Python dependencies ────────────────────────────────────────────
-title "Installing dependencies..."
-uv sync --group dev --extra dashboard --directory "$REPO_DIR" --quiet
-info "Dependencies installed (including dashboard extras)"
+# ── 2. Install Python dependencies (git clone only) ──────────────────────────
+if [ "$INSTALL_MODE" = "git" ]; then
+    title "Installing dependencies..."
+    uv sync --group dev --extra dashboard --directory "$REPO_DIR" --quiet
+    info "Dependencies installed (including dashboard extras)"
+fi
 
 # ── 3. Create data directory ──────────────────────────────────────────────────
 title "Setting up data directory..."
