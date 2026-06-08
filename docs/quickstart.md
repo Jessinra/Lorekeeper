@@ -14,8 +14,12 @@ pip install lorekeeper-mcp
 
 ```bash
 lorekeeper --help
-# Information logged, server starts
+# usage: lorekeeper [-h]
+# Self-improving MCP memory server for AI agents.
+# Runs until stopped — connect your MCP client to start using it.
 ```
+
+> **Pro tip:** `lorekeeper` (no flags) starts the MCP server. It runs until you stop it with `Ctrl+C`. If you see the help text, the install worked.
 
 ---
 
