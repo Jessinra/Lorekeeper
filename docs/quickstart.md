@@ -7,23 +7,19 @@
 ## 1. Install
 
 ```bash
-pip install lorekeeper
+pip install lorekeeper-mcp
 ```
-
-> **No PyPI yet?** Until LKPR-57 ships, clone the repo and run `bash scripts/setup.sh`:
->
-> ```bash
-> git clone https://github.com/Jessinra/Lorekeeper.git
-> cd Lorekeeper
-> bash scripts/setup.sh
-> ```
 
 **Verify it works:**
 
 ```bash
 lorekeeper --help
-# → Lorekeeper MCP server. Run without arguments to start.
+# usage: lorekeeper [-h]
+# Self-improving MCP memory server for AI agents.
+# Runs until stopped — connect your MCP client to start using it.
 ```
+
+> **Pro tip:** `lorekeeper` (no flags) starts the MCP server. It runs until you stop it with `Ctrl+C`. If you see the help text, the install worked.
 
 ---
 

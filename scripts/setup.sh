@@ -29,10 +29,26 @@ info "uv: $(uv --version)"
 uv python find 3.11 &>/dev/null || err "Python 3.11 not found. Run: uv python install 3.11"
 info "Python 3.11: $(uv python find 3.11)"
 
-# ── 2. Install Python dependencies ────────────────────────────────────────────
-title "Installing dependencies..."
-uv sync --group dev --extra dashboard --directory "$REPO_DIR" --quiet
-info "Dependencies installed (including dashboard extras)"
+# ── Detect install mode: pip vs git clone ──────────────────────────────────────
+if command -v lorekeeper &>/dev/null && [ ! -f "$REPO_DIR/pyproject.toml" ]; then
+    # `lorekeeper` is on PATH and we're not in a git clone
+    MCP_CMD="lorekeeper"
+    MCP_ARGS="[]"
+    INSTALL_MODE="pip"
+else
+    # Git clone mode — use uv run --directory
+    MCP_CMD="uv"
+    MCP_ARGS="[\"run\", \"--directory\", \"$REPO_DIR\", \"lorekeeper\"]"
+    INSTALL_MODE="git"
+fi
+info "Install mode: $INSTALL_MODE"
+
+# ── 2. Install Python dependencies (git clone only) ──────────────────────────
+if [ "$INSTALL_MODE" = "git" ]; then
+    title "Installing dependencies..."
+    uv sync --group dev --extra dashboard --directory "$REPO_DIR" --quiet
+    info "Dependencies installed (including dashboard extras)"
+fi
 
 # ── 3. Create data directory ──────────────────────────────────────────────────
 title "Setting up data directory..."
@@ -141,10 +157,11 @@ _inject_mcp_json() {
     [ -f "$config" ] || echo '{}' > "$config"
     local result setup_ver
     setup_ver="$(_prompt_version)"
-    result=$(python3 - "$config" "$REPO_DIR" "$DATA_DIR" "$setup_ver" <<'PYEOF'
+    result=$(python3 - "$config" "$REPO_DIR" "$DATA_DIR" "$setup_ver" "$MCP_CMD" "$MCP_ARGS" <<'PYEOF'
 import sys, json, os, shutil
 
-config_path, repo_dir, data_dir, setup_ver = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+config_path, repo_dir, data_dir, setup_ver, mcp_cmd, mcp_args_json = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6]
+mcp_args = json.loads(mcp_args_json) if mcp_args_json else []
 
 try:
     with open(config_path) as f:
@@ -161,8 +178,8 @@ backup = config_path + ".setup-bak"
 shutil.copy2(config_path, backup)
 try:
     data.setdefault("mcpServers", {})["lorekeeper"] = {
-        "command": "uv",
-        "args": ["run", "--directory", repo_dir, "lorekeeper"],
+        "command": mcp_cmd,
+        "args": mcp_args,
         "env": {"LORE_DATA_DIR": data_dir, "LOREKEEPER_SETUP_VERSION": setup_ver},
     }
     with open(config_path, "w") as f:
@@ -515,7 +532,12 @@ echo ""
 echo -e "${BOLD}Setup complete.${NC}"
 echo ""
 echo ""
-echo "Start the dashboard:"
-echo "  uv run --directory $REPO_DIR lorekeeper-dashboard"
+if [ "$INSTALL_MODE" = "pip" ]; then
+    echo "Start the dashboard:"
+    echo "  lorekeeper-dashboard"
+else
+    echo "Start the dashboard:"
+    echo "  uv run --directory $REPO_DIR lorekeeper-dashboard"
+fi
 echo "  → http://127.0.0.1:${LORE_DASH_PORT:-7777}"
 echo ""
