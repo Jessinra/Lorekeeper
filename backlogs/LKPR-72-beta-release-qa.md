@@ -20,7 +20,9 @@ Before cutting the beta release, we need real human verification that the instal
 Three-phase QA pass:
 
 ### Phase 1 — Install flow QA
+
 On a clean Mac (or clean Hermes profile):
+
 1. `pip install lorekeeper-mcp` → verify version matches latest PyPI
 2. `lorekeeper --help` → verify all flags/docs correct
 3. `lorekeeper` (run server) → verify it starts, logs are clean, no deprecation warnings
@@ -31,7 +33,9 @@ On a clean Mac (or clean Hermes profile):
 8. Document any friction found and fix it
 
 ### Phase 2 — Quickstart walkthrough polish
+
 Read the quickstart guide (`docs/quickstart.md`) end-to-end on a fresh machine:
+
 1. Follow every step literally — note anything ambiguous, missing, or wrong
 2. Verify the "2 minutes" claim holds (time yourself)
 3. If it takes longer than 2 min, either speed up the flow or update the claim
@@ -39,7 +43,9 @@ Read the quickstart guide (`docs/quickstart.md`) end-to-end on a fresh machine:
 5. Verify the seed prompt text (LKPR-55 output) matches what the quickstart tells users to do
 
 ### Phase 3 — Dashboard UX audit
+
 Fresh-eyes pass on the dashboard:
+
 1. **Memories tab**: empty state → populate → search/filter → pagination
 2. **Sessions tab**: any lags, missing data, confusing layout
 3. **Metrics tab**: charts render, legends readable, responsive
