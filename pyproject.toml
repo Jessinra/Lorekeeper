@@ -94,6 +94,7 @@ dev = [
     "httpx>=0.28.1",
     "mypy>=2.1.0",
     "pytest>=9.0.3",
+    "pytest-playwright>=0.6.0",
     "pytest-timeout>=2.3",
     "ruff>=0.15.13",
 ]
