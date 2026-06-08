@@ -6,6 +6,7 @@ sprint: ~
 rice_score: ~
 filed_by: Akane (from Jason brainstorm)
 filed_date: 2026-06-08
+github_issue: 161
 ---
 
 # [LKPR-69] Agent hook auto-capture — lightweight capture of agent decisions without LLM
