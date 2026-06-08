@@ -280,8 +280,8 @@ _install_dev_skills_hermes() {
     mkdir -p "$dst"
     _skill_category() {
         case "$1" in
-            lorekeeper-dev|after-changes|backlog-management|commit-convention) echo "software-development" ;;
-            lorekeeper-pm) echo "product" ;;
+            lorekeeper-dev|after-changes|backlog-management|commit-convention|proposal-filing) echo "software-development" ;;
+            lorekeeper-pm|sprint-review) echo "product" ;;
             ui-ux-pro-max) echo "creative" ;;
             *) echo "misc" ;;
         esac
