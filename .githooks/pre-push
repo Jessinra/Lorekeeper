@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
-# Pre-push branch guard: block all pushes to main from any source.
-# - Blocks: git push origin main, git push origin feature:main, accidental pushes
-# - Does NOT block: pushes to feature branches (LKPR-*, feat/*, chore/*, etc.)
+# Lorekeeper pre-push hook
+# Slow checks that are too expensive for every commit.
+# Runs: branch guard, proposal issue check, mypy, unit tests, E2E tests.
+#
+# Install: scripts/setup.sh  (run once per clone)
+
 set -euo pipefail
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
 
 echo "🔒  Checking push targets..."
 
@@ -10,7 +16,6 @@ BLOCKED=0
 
 # Pre-push stdin format: <local-ref> <local-sha> <remote-ref> <remote-sha>
 while read -r local_ref local_sha remote_ref remote_sha; do
-    # Strip 'refs/heads/' prefix
     ref_name="${remote_ref#refs/heads/}"
 
     if [ "$ref_name" = "main" ] || [ "$ref_name" = "master" ]; then
@@ -30,6 +35,41 @@ echo "✅  push targets ok"
 
 echo ""
 echo "🎫  Checking proposal GitHub issues..."
-cd "$(git rev-parse --show-toplevel)"
 uv run python scripts/check_issues.py
 echo "✅  all proposals reference valid issues"
+
+echo ""
+echo "🔍  mypy..."
+uv run mypy src
+echo "✅  mypy passed"
+
+echo ""
+echo "🧪  Unit tests..."
+uv run pytest tests/ -q -x --tb=short
+echo "✅  unit tests passed"
+
+echo ""
+echo "🎭  E2E tests (Playwright / Chromium)..."
+# Detect chromium without launching a browser — check for INSTALLATION_COMPLETE sentinel
+# Playwright cache: macOS=~/Library/Caches/ms-playwright, Linux=~/.cache/ms-playwright
+CHROMIUM_FOUND=$(python3 -c "
+import pathlib, sys
+candidates = [
+    pathlib.Path.home() / 'Library' / 'Caches' / 'ms-playwright',
+    pathlib.Path.home() / '.cache' / 'ms-playwright',
+]
+for base in candidates:
+    if base.exists() and list(base.glob('chromium-*/INSTALLATION_COMPLETE')):
+        print('ok'); sys.exit(0)
+print('missing')
+" 2>/dev/null)
+
+if [ "$CHROMIUM_FOUND" = "ok" ]; then
+    uv run pytest tests/e2e/ -m e2e -q --tb=short
+    echo "✅  E2E passed"
+else
+    echo "⚠️  Chromium not installed — skipping E2E (run: uv run playwright install chromium)"
+fi
+
+echo ""
+echo "✅  All checks passed — pushing"

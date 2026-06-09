@@ -105,7 +105,8 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 - Type check: `uv run mypy src` (run before push; not in pre-commit — too slow)
 - Entrypoint: `uv run lorekeeper` (or `python -m lorekeeper`)
 
-Pre-commit hook blocks commit on lint/test failures. Install: `bash scripts/setup.sh`.
+Pre-commit hook (~3s): branch guard, ticket format, ruff, biome, prettier, mcp docs, skill format. Install: `bash scripts/setup.sh`.
+Pre-push hook (~65s): mypy, unit tests, E2E tests (skipped gracefully if Playwright/Chromium not installed).
 See `docs/linter-decisions.md` for rule selection rationale.
 
 All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
