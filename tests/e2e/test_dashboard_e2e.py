@@ -96,9 +96,11 @@ class TestDelete:
         page.goto("/")
         page.wait_for_selector("[data-testid=memory-row]")
 
-        # Click the first memory row → opens detail tab
+        # Extract the title cell text only (not the full row) to avoid
+        # false-positive assertions from incidental text matches in other columns.
         rows = page.locator("[data-testid=memory-row]")
-        first_title = rows.first.text_content()
+        first_title_cell = rows.first.locator(".col-title-main")
+        first_title = (first_title_cell.text_content() or "").strip()
         rows.first.click()
 
         # Should be on the detail tab now — click Edit
@@ -123,7 +125,7 @@ class TestDelete:
         resp = requests.get(f"{live_server}/api/memories", timeout=5)
         data = resp.json()
         titles = [m["title"] for m in data]
-        assert first_title not in titles, f"{first_title} should have been deleted"
+        assert first_title not in titles, f"{first_title!r} should have been deleted"
 
 
 # ===================================================================
@@ -223,8 +225,7 @@ class TestConfigToggle:
         page.locator("[data-testid=config-save]").click()
         page.wait_for_selector("[data-testid=toast]")
 
-        # Click Reload (data-action="config:load") — reloads from API
-        # The button labelled "Reset" actually reloads saved values from the backend
+        # Click Reload (data-action="config:load") — reloads saved values from the backend
         page.locator("[data-testid=config-reset]").click()
         page.wait_for_timeout(300)
 

@@ -92,68 +92,73 @@ def live_server(e2e_data_dir: Path, seed_db: None) -> Generator[str]:
 
     repo_root = Path(__file__).resolve().parent.parent.parent
 
-    proc = subprocess.Popen(
-        [
-            "uv", "run", "--extra", "dashboard",
-            "uvicorn", "lorekeeper.dashboard.app:app",
-            "--host", "127.0.0.1",
-            "--port", str(port),
-        ],
-        cwd=repo_root,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    # Write stderr to a temp file so we can show it on failure without
+    # risking deadlock from filling the pipe buffer (uvicorn access logs +
+    # Playwright asset requests can generate substantial output).
+    stderr_log = e2e_data_dir / "uvicorn-stderr.log"
 
-    url = f"http://127.0.0.1:{port}"
-
-    # Wait for the server to accept requests (up to 30 s)
-    stderr_lines: list[bytes] = []
-    deadline = time.monotonic() + 30
-    server_ok = False
-    while time.monotonic() < deadline:
-        # If process died before serving, collect stderr
-        if proc.poll() is not None:
-            stderr_lines = []
-            if proc.stderr:
-                for line in iter(proc.stderr.readline, b""):
-                    stderr_lines.append(line)
-            break
-        try:
-            resp = requests.get(f"{url}/", timeout=2)
-            if resp.status_code == 200:
-                server_ok = True
-                break
-        except (requests.ConnectionError, requests.Timeout):
-            time.sleep(0.5)
-
-    if not server_ok:
-        # Extra attempt: maybe the server just started after the loop
-        if proc.poll() is None:
-            try:
-                resp = requests.get(f"{url}/", timeout=2)
-                server_ok = resp.status_code == 200
-            except (requests.ConnectionError, requests.Timeout):
-                pass
-
-    if not server_ok:
-        proc.terminate()
-        proc.wait(timeout=5)
-        err_text = b"".join(stderr_lines).decode("utf-8", errors="replace")
-        pytest.fail(
-            f"Dashboard server did not start within 30 s at {url}\n"
-            f"stderr:\n{err_text[:2000]}"
+    with stderr_log.open("wb") as stderr_fh:
+        proc = subprocess.Popen(
+            [
+                "uv", "run", "--extra", "dashboard",
+                "uvicorn", "lorekeeper.dashboard.app:app",
+                "--host", "127.0.0.1",
+                "--port", str(port),
+            ],
+            cwd=repo_root,
+            env=env,
+            stdout=subprocess.DEVNULL,
+            stderr=stderr_fh,
         )
 
-    yield url
+        url = f"http://127.0.0.1:{port}"
 
-    # Teardown
+        # Wait for the server to accept requests (up to 30 s)
+        deadline = time.monotonic() + 30
+        server_ok = False
+        while time.monotonic() < deadline:
+            # If process died before serving, bail early
+            if proc.poll() is not None:
+                break
+            try:
+                resp = requests.get(f"{url}/", timeout=2)
+                if resp.status_code == 200:
+                    server_ok = True
+                    break
+            except (requests.ConnectionError, requests.Timeout):
+                time.sleep(0.5)
+
+        if not server_ok:
+            # Extra attempt: maybe the server just started after the loop
+            if proc.poll() is None:
+                try:
+                    resp = requests.get(f"{url}/", timeout=2)
+                    server_ok = resp.status_code == 200
+                except (requests.ConnectionError, requests.Timeout):
+                    pass
+
+        if not server_ok:
+            proc.terminate()
+            try:
+                proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+            err_text = stderr_log.read_text(errors="replace") if stderr_log.exists() else ""
+            pytest.fail(
+                f"Dashboard server did not start within 30 s at {url}\n"
+                f"stderr:\n{err_text[:2000]}"
+            )
+
+        yield url
+
+    # Teardown (outside the with block so the file handle is flushed/closed)
     proc.terminate()
     try:
         proc.wait(timeout=10)
     except subprocess.TimeoutExpired:
         proc.kill()
-        proc.wait(timeout=5)
+        proc.wait()
 
 
 @pytest.fixture(scope="session")
@@ -167,7 +172,7 @@ def base_url(live_server: str) -> Generator[str, None, None]:
 # ---------------------------------------------------------------------------
 
 
-def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Auto-apply the ``e2e`` marker to all tests under tests/e2e/."""
     for item in items:
         if item.nodeid.startswith("tests/e2e/"):
