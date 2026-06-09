@@ -96,21 +96,6 @@ class TestDelete:
         page.goto("/")
         page.wait_for_selector("[data-testid=memory-row]")
 
-        # Seed a dedicated memory for this test via the API so deletion
-        # doesn't corrupt the shared session fixture (which seeds exactly 5).
-        import requests as _req
-        resp = _req.post(
-            f"{live_server}/api/memories",
-            json={
-                "memories": [{"title": "ToDelete Canary", "content": "delete me", "score": 5.0}],
-                "links": [],
-            },
-            timeout=5,
-        )
-        assert resp.status_code == 200, f"Seed failed: {resp.text}"
-        page.reload()
-        page.wait_for_selector("[data-testid=memory-row]")
-
         # Click the first memory row → opens detail tab
         rows = page.locator("[data-testid=memory-row]")
         first_title = rows.first.text_content()
@@ -130,9 +115,9 @@ class TestDelete:
         # Wait for the toast confirm
         page.wait_for_selector("[data-testid=toast]")
 
-        # Should be back on the memories tab — canary deleted, original 5 remain
+        # Should be back on the memories tab with one fewer row (5 → 4)
         page.wait_for_selector("[data-testid=memory-row]")
-        expect(page.locator("[data-testid=memory-row]")).to_have_count(5)
+        expect(page.locator("[data-testid=memory-row]")).to_have_count(4)
 
         # Verify via API that the deleted memory is gone
         resp = requests.get(f"{live_server}/api/memories", timeout=5)
