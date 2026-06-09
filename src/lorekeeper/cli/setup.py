@@ -65,6 +65,14 @@ def _do_mcp(agent: DetectedAgent, data_dir: Path, dry_run: bool) -> str:
     path = _mcp_config_path(agent)
     if dry_run:
         return f"would configure {path}" if path.exists() else "missing"
+    # Ensure config file exists (like setup.sh — creates empty JSON for fresh agents)
+    if not path.exists():
+        if agent.type in (AgentType.HERMES_MAIN, AgentType.HERMES_PROFILE):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("mcp_servers:\n")
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}\n")
     if agent.type in (AgentType.HERMES_MAIN, AgentType.HERMES_PROFILE):
         return inject_mcp_yaml(path, data_dir=data_dir, namespace=agent.namespace)
     return inject_mcp_json(path, data_dir=data_dir)
@@ -147,16 +155,21 @@ def run_setup(dry_run: bool = False, data_dir: Path | None = None) -> int:
     header = f"{'Agent':<30}  {'MCP':<24}  {'Prompt':<24}  Skills"
     print(header)
     print("\u2500" * len(header))
+    has_errors = False
     for name, mcp, prompt, skills in results:
         print(f"{name:<30}  {_cell(mcp):<24}  {_cell(prompt):<24}  {_cell(skills)}")
+        if "error" in (mcp, prompt, skills):
+            has_errors = True
 
     print()
-    if not dry_run:
+    if has_errors:
+        print("! One or more steps reported an error — check agent configs above.")
+    elif not dry_run:
         print("Restart each agent to activate Lorekeeper.")
         print()
         _print_seed_prompt()
 
-    return 0
+    return 1 if has_errors else 0
 
 
 def _print_seed_prompt() -> None:

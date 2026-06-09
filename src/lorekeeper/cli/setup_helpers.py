@@ -1,6 +1,7 @@
 """Setup helpers — agent detection, MCP/prompt/skills injection.
 
-All functions are pure (no side effects in check mode) and importable for testing.
+All functions perform I/O (config file reads/writes) and are importable for testing
+via ``tmp_path`` isolation. The ``--check``/dry-run guard lives in ``setup.py``, not here.
 """
 from __future__ import annotations
 
@@ -128,7 +129,11 @@ def inject_mcp_json(config_path: Path, data_dir: Path) -> SetupResult:
 def inject_mcp_yaml(
     config_path: Path, data_dir: Path, namespace: str = "shared"
 ) -> SetupResult:
-    """Inject lorekeeper MCP entry into a Hermes YAML config (regex-based, no PyYAML)."""
+    """Inject lorekeeper MCP entry into a Hermes YAML config (regex-based, no PyYAML).
+
+    Safe for paths containing spaces — values are single-quoted in YAML.
+    Uses backup+restore for crash safety (matching inject_mcp_json behaviour).
+    """
     if not config_path.exists():
         return "missing"
     content = config_path.read_text()
@@ -139,21 +144,33 @@ def inject_mcp_yaml(
         r"^[ \t]+lorekeeper\s*:", mcp_match.group(0), re.MULTILINE
     ):
         return "skip"
-    ns_json = json.dumps(namespace)
+    # YAML-safe quoting: single-quote and escape embedded single quotes
+    def _yaml_str(s: str) -> str:
+        return f"'{s.replace(chr(39), chr(39)*2)}'"
+
+    ns_val = _yaml_str(namespace)
+    data_val = _yaml_str(str(data_dir))
     new_entry = (
         "  lorekeeper:\n"
         "    command: lorekeeper\n"
         "    args: []\n"
         "    env:\n"
-        f"      LORE_DATA_DIR: {data_dir}\n"
-        f"      LORE_NAMESPACE: {ns_json}\n"
+        f"      LORE_DATA_DIR: {data_val}\n"
+        f"      LORE_NAMESPACE: {ns_val}\n"
     )
-    if mcp_match:
-        pos = mcp_match.end()
-        content = content[:pos] + new_entry + content[pos:]
-    else:
-        content = content.rstrip() + "\nmcp_servers:\n" + new_entry
-    config_path.write_text(content)
+    backup = config_path.with_suffix(".yaml.setup-bak")
+    shutil.copy2(config_path, backup)
+    try:
+        if mcp_match:
+            pos = mcp_match.end()
+            content = content[:pos] + new_entry + content[pos:]
+        else:
+            content = content.rstrip() + "\nmcp_servers:\n" + new_entry
+        config_path.write_text(content)
+        backup.unlink()
+    except Exception:
+        shutil.move(str(backup), str(config_path))
+        return "error"
     return "added"
 
 
@@ -164,6 +181,8 @@ def inject_prompt(target_path: Path, prompt_text: str) -> SetupResult:
     """Inject/replace the ## Lorekeeper section in a target prompt file."""
     if not target_path.exists():
         return "missing"
+    if not prompt_text.strip():
+        return "error"
     content = target_path.read_text()
     if prompt_text.strip() in content:
         return "skip"

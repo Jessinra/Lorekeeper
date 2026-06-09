@@ -124,7 +124,10 @@ def test_inject_mcp_yaml_profile_namespace(tmp_path: Path) -> None:
     cfg = tmp_path / "config.yaml"
     cfg.write_text("model: claude\n")
     inject_mcp_yaml(cfg, data_dir=tmp_path / ".lorekeeper", namespace="diana")
-    assert '"diana"' in cfg.read_text()
+    content = cfg.read_text()
+    assert "'diana'" in content
+    # Data dir path should also be YAML-quoted
+    assert "'" + str(tmp_path / ".lorekeeper") + "'" in content
 
 
 # ── Prompt injection ───────────────────────────────────────────────────────────
@@ -159,6 +162,13 @@ def test_inject_prompt_skip_identical(tmp_path: Path) -> None:
     target.write_text("# My Agent\n\n" + SAMPLE_PROMPT)
     result = inject_prompt(target, prompt_text=SAMPLE_PROMPT)
     assert result == "skip"
+
+
+def test_inject_prompt_empty_text_returns_error(tmp_path: Path) -> None:
+    target = tmp_path / "soul.md"
+    target.write_text("# My Agent\n")
+    result = inject_prompt(target, prompt_text="")
+    assert result == "error"
 
 
 # ── Skills installation ────────────────────────────────────────────────────────
