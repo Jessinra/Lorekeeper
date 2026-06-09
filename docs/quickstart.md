@@ -14,20 +14,44 @@ pip install lorekeeper-mcp
 
 ```bash
 lorekeeper --help
-# usage: lorekeeper [-h]
+# usage: lorekeeper [-h] {setup} ...
+#
 # Self-improving MCP memory server for AI agents.
-# Runs until stopped — connect your MCP client to start using it.
+#
+# positional arguments:
+#   {setup}
+#     setup     Configure AI agents to use Lorekeeper.
+#
+# options:
+#   -h, --help  show this help message and exit
+#
+# Run without arguments to start the MCP server.
 ```
 
 > **Pro tip:** `lorekeeper` (no flags) starts the MCP server. It runs until you stop it with `Ctrl+C`. If you see the help text, the install worked.
 
 ---
 
-## 2. Connect your agent
+## 2. Configure your agents
 
-Add Lorekeeper as an MCP server in your agent's config.
+Run the one-command setup — it auto-detects Hermes, Claude Code, and Cursor:
 
-### Claude Code
+```bash
+lorekeeper setup
+```
+
+It will show which agents it found and ask for confirmation before writing. To preview without changes:
+
+```bash
+lorekeeper setup --check
+```
+
+Restart each agent after setup. You'll see 8 new MCP tools available.
+
+**Manual config (if you prefer):** expand the sections below.
+
+<details>
+<summary>Manual: Claude Code</summary>
 
 Edit `~/.claude/settings.json`:
 
@@ -43,11 +67,10 @@ Edit `~/.claude/settings.json`:
 }
 ```
 
-Restart Claude Code. You'll see 8 new tools available.
+</details>
 
-> **Git clone install?** Use `"command": "uv", "args": ["--directory", "/path/to/lorekeeper", "run", "lorekeeper"]` instead.
-
-### Cursor
+<details>
+<summary>Manual: Cursor</summary>
 
 Settings → MCP Servers → Add:
 
@@ -58,17 +81,22 @@ Settings → MCP Servers → Add:
 | Command | `lorekeeper` |
 | Args    | _(empty)_    |
 
-### Hermes Agent
+</details>
+
+<details>
+<summary>Manual: Hermes Agent</summary>
 
 Add to `~/.hermes/config.yaml`:
 
 ```yaml
-mcpServers:
+mcp_servers:
   lorekeeper:
     command: lorekeeper
     args: []
     env: {}
 ```
+
+</details>
 
 ---
 

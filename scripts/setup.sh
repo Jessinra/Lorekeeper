@@ -6,8 +6,8 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK_DIR="${PWD}"
 SKILLS_DEV="$REPO_DIR/.hermes/skills"         # dev skills → Hermes only (with category)
-SKILLS_USER="$REPO_DIR/assets/skills"          # user skills → all agents (flat)
-PROMPT_FILE="$REPO_DIR/assets/prompts/lorekeeper-agent-prompt.md"
+SKILLS_USER="$REPO_DIR/src/lorekeeper/assets/skills"          # user skills → all agents (flat)
+PROMPT_FILE="$REPO_DIR/src/lorekeeper/assets/prompts/lorekeeper-agent-prompt.md"
 DATA_DIR="${LORE_DATA_DIR:-$HOME/.lorekeeper}"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; BOLD='\033[1m'; NC='\033[0m'

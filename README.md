@@ -5,7 +5,7 @@
 > One command. No cloud. No config.
 >
 > ```bash
-> pip install lorekeeper-mcp && lorekeeper
+> pip install lorekeeper-mcp && lorekeeper setup && lorekeeper
 > ```
 >
 > Connect any MCP-compatible agent → it remembers across sessions.
@@ -37,24 +37,14 @@ bad memories decay → good memories rise → agent trusts it more
 # 1. Install
 pip install lorekeeper-mcp
 
-# 2. Start
+# 2. Configure your agents (auto-detects Hermes, Claude Code, Cursor)
+lorekeeper setup
+
+# 3. Start the MCP server
 lorekeeper
-
-# 3. Connect your agent
-# Add this to ~/.claude/settings.json or your MCP config:
 ```
 
-```json
-{
-  "mcpServers": {
-    "lorekeeper": {
-      "command": "lorekeeper",
-      "args": [],
-      "env": {}
-    }
-  }
-}
-```
+`lorekeeper setup` scans for installed agents and injects the MCP entry, agent prompt, and bundled skills automatically. Use `--check` to preview without writing.
 
 Then ask your agent:
 
