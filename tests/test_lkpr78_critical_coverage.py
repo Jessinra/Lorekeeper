@@ -480,14 +480,13 @@ class TestCreateLinkTargetNotFound:
 class TestLinksIncludeDeleted:
     def _make_link_to_soft_deleted(self, svc_obj) -> tuple[str, str]:
         """Create two memories, link them, soft-delete the target. Return (src_id, tgt_id)."""
-        # Capture IDs explicitly — don't rely on all_memory_rows() row order (no ORDER BY)
-        result = svc_obj.insert(
+        svc_obj.insert(
             memories=[{"title": "target to delete", "content": "tgt"}],
             links=[],
         )
-        tgt_id = result["inserted_memories"][0]["id"]
-        src_rows = svc_obj.memories.all_memory_rows(include_deleted=False)
-        src_id = next(r["id"] for r in src_rows if r["title"] == "test memory")
+        rows = svc_obj.memories.all_memory_rows(include_deleted=True)
+        src_id = rows[0]["id"]  # "test memory" from seeded_client
+        tgt_id = rows[1]["id"]  # "target to delete"
         svc_obj.links.insert_link(src_id, tgt_id, "related_to", "test")
         svc_obj._conn.commit()
         # Soft-delete the target
