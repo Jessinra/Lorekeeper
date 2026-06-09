@@ -58,6 +58,8 @@ def seed_db(e2e_data_dir: Path) -> None:
                 {"title": "Alpha Project Config", "content": "PostgreSQL config", "score": 8.0},
                 {"title": "Beta Deployment Setup", "content": "K8s Helm setup", "score": 6.5},
                 {"title": "Search Query Example", "content": "Search term docs", "score": 5.0},
+                # Canary used exclusively by TestDelete — other tests must not depend on it
+                {"title": "CANARY Delete Test", "content": "Canary for delete test", "score": 1.0},
             ],
             links=[],
         )
@@ -172,8 +174,14 @@ def base_url(live_server: str) -> Generator[str, None, None]:
 # ---------------------------------------------------------------------------
 
 
+@pytest.hookimpl(tryfirst=True)
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Auto-apply the ``e2e`` marker to all tests under tests/e2e/."""
+    """Auto-apply the ``e2e`` marker to all tests under tests/e2e/.
+
+    ``tryfirst=True`` ensures markers are applied before pytest's own
+    ``-m`` deselection hook runs, so ``addopts = "-m 'not e2e'"`` correctly
+    excludes these tests from the default unit run.
+    """
     for item in items:
         if item.nodeid.startswith("tests/e2e/"):
             item.add_marker(pytest.mark.e2e)

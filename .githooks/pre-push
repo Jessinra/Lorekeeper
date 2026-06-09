@@ -50,26 +50,8 @@ echo "✅  unit tests passed"
 
 echo ""
 echo "🎭  E2E tests (Playwright / Chromium)..."
-# Detect chromium without launching a browser — check for INSTALLATION_COMPLETE sentinel
-# Playwright cache: macOS=~/Library/Caches/ms-playwright, Linux=~/.cache/ms-playwright
-CHROMIUM_FOUND=$(python3 -c "
-import pathlib, sys
-candidates = [
-    pathlib.Path.home() / 'Library' / 'Caches' / 'ms-playwright',
-    pathlib.Path.home() / '.cache' / 'ms-playwright',
-]
-for base in candidates:
-    if base.exists() and list(base.glob('chromium-*/INSTALLATION_COMPLETE')):
-        print('ok'); sys.exit(0)
-print('missing')
-" 2>/dev/null)
-
-if [ "$CHROMIUM_FOUND" = "ok" ]; then
-    uv run pytest tests/e2e/ -m e2e -q --tb=short
-    echo "✅  E2E passed"
-else
-    echo "⚠️  Chromium not installed — skipping E2E (run: uv run playwright install chromium)"
-fi
+uv run pytest tests/e2e/ -m e2e -q --tb=short
+echo "✅  E2E passed"
 
 echo ""
 echo "✅  All checks passed — pushing"

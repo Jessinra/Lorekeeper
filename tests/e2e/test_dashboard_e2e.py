@@ -24,8 +24,8 @@ class TestMemoriesLoad:
     def test_table_renders_rows(self, page, live_server: str) -> None:
         page.goto("/")
         rows = page.locator("[data-testid=memory-row]")
-        # We seeded 5 memories
-        expect(rows).to_have_count(5)
+        # We seeded 6 memories (5 content + 1 canary for delete test)
+        expect(rows).to_have_count(6)
         # Check that each seeded title exists somewhere in the table
         for title in ["Test Memory One", "Alpha Project", "Beta Deployment"]:
             expect(page.locator(f"[data-testid=memory-row]:has-text('{title}')")).to_be_visible()
@@ -35,8 +35,8 @@ class TestMemoriesLoad:
         # The metrics strip shows total memory count
         page.wait_for_selector("[data-testid=memory-row]")
         count_text = page.locator("[data-testid=met-total]").text_content()
-        assert count_text == "5" or count_text == "5\n/", (
-            f"Expected 5 memories, got {count_text}"
+        assert count_text == "6" or count_text == "6\n/", (
+            f"Expected 6 memories, got {count_text}"
         )
 
 
@@ -81,7 +81,7 @@ class TestSearch:
 
         search.fill("")
         page.wait_for_timeout(250)  # debounce 150 ms + buffer
-        expect(rows).to_have_count(5, timeout=2000)
+        expect(rows).to_have_count(6, timeout=2000)
 
 
 # ===================================================================
@@ -92,16 +92,21 @@ class TestSearch:
 class TestDelete:
     """Clicking delete removes the memory from both DOM and backend."""
 
+    CANARY_TITLE = "CANARY Delete Test"
+
     def test_hard_delete_removes_memory(self, page, live_server: str) -> None:
+        """Delete the canary memory (seeded specifically for this test).
+
+        Using a named canary avoids mutating memories that other tests depend on,
+        making the suite order-independent.
+        """
         page.goto("/")
         page.wait_for_selector("[data-testid=memory-row]")
 
-        # Extract the title cell text only (not the full row) to avoid
-        # false-positive assertions from incidental text matches in other columns.
-        rows = page.locator("[data-testid=memory-row]")
-        first_title_cell = rows.first.locator(".col-title-main")
-        first_title = (first_title_cell.text_content() or "").strip()
-        rows.first.click()
+        # Navigate directly to the canary row by title
+        canary_row = page.locator(f"[data-testid=memory-row]:has-text('{self.CANARY_TITLE}')")
+        expect(canary_row).to_be_visible()
+        canary_row.click()
 
         # Should be on the detail tab now — click Edit
         page.wait_for_selector("[data-testid=detail-edit]")
@@ -117,15 +122,15 @@ class TestDelete:
         # Wait for the toast confirm
         page.wait_for_selector("[data-testid=toast]")
 
-        # Should be back on the memories tab with one fewer row (5 → 4)
+        # Should be back on the memories tab with one fewer row (6 → 5)
         page.wait_for_selector("[data-testid=memory-row]")
-        expect(page.locator("[data-testid=memory-row]")).to_have_count(4)
+        expect(page.locator("[data-testid=memory-row]")).to_have_count(5)
 
         # Verify via API that the deleted memory is gone
         resp = requests.get(f"{live_server}/api/memories", timeout=5)
         data = resp.json()
         titles = [m["title"] for m in data]
-        assert first_title not in titles, f"{first_title!r} should have been deleted"
+        assert self.CANARY_TITLE not in titles, f"{self.CANARY_TITLE!r} should have been deleted"
 
 
 # ===================================================================
