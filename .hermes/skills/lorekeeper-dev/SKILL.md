@@ -327,6 +327,11 @@ Before opening a PR, run through this:
   - [ ] Frontend stateful UI: state invalidation handled?
   - [ ] Docs written AFTER code is final — do they match actual behavior (not intent)?
   - [ ] No partial fixes — if Jason commented on area X before, is X fully resolved?
+  - [ ] Any `subprocess` with `timeout=N`? → wrapped in `try/except TimeoutExpired: proc.kill(); proc.wait()`?
+  - [ ] Any `subprocess.Popen` with `stdout=PIPE` or `stderr=PIPE` on a long-lived process? → redirect to `DEVNULL`/tempfile instead
+  - [ ] Any `pytest` hook (`pytest_collection_modifyitems`, etc.)? → correct signature from pytest docs?
+  - [ ] Any new `addopts` in `pyproject.toml`? → verify `uv run pytest tests/e2e/ -m e2e` still collects tests
+  - [ ] Any E2E tests added? → **run `uv run pytest tests/e2e/ -m e2e` locally before pushing** (unit CI pass ≠ E2E infra correct)
 - [ ] Pushed to `origin` and PR opened via `gh pr create --reviewer @copilot`?
 - [ ] Jason pinged on Telegram to review and merge?
 

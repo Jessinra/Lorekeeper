@@ -96,6 +96,8 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 - Python 3.11, managed by `uv`
 - Run tests (unit): `uv run pytest` — E2E tests are excluded by default
 - Run E2E tests: `uv run playwright install chromium` (once), then `uv run pytest tests/e2e/ -m e2e`
+- **Pre-PR rule**: if you added or changed E2E tests, run the E2E suite locally before opening the PR. Unit CI pass does NOT catch E2E infra bugs (hook signature errors, addopts conflicts, pipe deadlocks).
+- **CI**: the `e2e` job in `.github/workflows/ci.yml` is intentional and must never be removed.
 - Coverage report (optional): `bash scripts/test-coverage.sh`
 - Lint (Python): `uv run ruff check src tests scripts/`
 - Lint (JS): `npx @biomejs/biome check src/lorekeeper/dashboard/static/js/`
