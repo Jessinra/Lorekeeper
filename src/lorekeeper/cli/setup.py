@@ -11,6 +11,7 @@ Usage:
 """
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -64,7 +65,9 @@ def _prompt_path(agent: DetectedAgent) -> Path:
 def _do_mcp(agent: DetectedAgent, data_dir: Path, dry_run: bool) -> str:
     path = _mcp_config_path(agent)
     if dry_run:
-        return f"would configure {path}" if path.exists() else "missing"
+        if path.exists():
+            return f"would configure {path}"
+        return f"would create and configure {path}"
     # Ensure config file exists (like setup.sh — creates empty JSON for fresh agents)
     if not path.exists():
         if agent.type in (AgentType.HERMES_MAIN, AgentType.HERMES_PROFILE):
@@ -110,7 +113,8 @@ def run_setup(dry_run: bool = False, data_dir: Path | None = None) -> int:
     Returns exit code: 0 = ok, 1 = error.
     """
     if data_dir is None:
-        data_dir = _DEFAULT_DATA_DIR
+        env_val = os.environ.get("LORE_DATA_DIR")
+        data_dir = Path(env_val) if env_val else _DEFAULT_DATA_DIR
 
     print("Lorekeeper setup")
     print(f"  data:    {data_dir}")
