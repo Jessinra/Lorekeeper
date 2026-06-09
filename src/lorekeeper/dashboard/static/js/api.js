@@ -4,6 +4,7 @@ export function showToast(msg, type = "success") {
 	const t = document.createElement("div");
 	t.className = `toast toast-${type}`;
 	t.textContent = msg;
+	t.setAttribute("data-testid", "toast");
 	document.body.appendChild(t);
 	setTimeout(() => t.remove(), 2500);
 }

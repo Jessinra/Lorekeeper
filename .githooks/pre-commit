@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Lorekeeper pre-commit hook
-# 1. Blocks commits on main (branch guard)
-# 2. Runs lint and tests before every commit. Blocks on failure.
+# Fast checks only (< 10s total) — lint, format, structural validation.
+# Slow checks (mypy, unit tests, E2E) live in pre-push.
 #
 # Install: scripts/setup.sh  (run once per clone)
 
@@ -23,11 +23,6 @@ echo ""
 echo "🔍  ruff check..."
 uv run ruff check src tests scripts/
 echo "✅  ruff passed"
-
-echo ""
-echo "🔍  mypy..."
-uv run mypy src
-echo "✅  mypy passed"
 
 echo ""
 echo "🔍  biome check (JS)..."
@@ -52,9 +47,5 @@ uv run python scripts/check_skills.py
 echo "✅  skills ok"
 
 echo ""
-echo "🧪  pytest..."
-uv run pytest tests/ -q -x --tb=short
-echo "✅  tests passed"
-
-echo ""
 echo "✅  All checks passed — proceeding with commit"
+echo "   (mypy, unit tests, E2E run on pre-push)"

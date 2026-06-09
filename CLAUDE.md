@@ -94,7 +94,10 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 ## Environment / Tooling
 
 - Python 3.11, managed by `uv`
-- Run tests: `uv run pytest`
+- Run tests (unit): `uv run pytest` — E2E tests are excluded by default
+- Run E2E tests: `uv run playwright install chromium` (once), then `uv run pytest tests/e2e/ -m e2e`
+- **Pre-PR rule**: if you added or changed E2E tests, run the E2E suite locally before opening the PR. Unit CI pass does NOT catch E2E infra bugs (hook signature errors, addopts conflicts, pipe deadlocks).
+- **CI**: the `e2e` job in `.github/workflows/ci.yml` is intentional and must never be removed.
 - Coverage report (optional): `bash scripts/test-coverage.sh`
 - Lint (Python): `uv run ruff check src tests scripts/`
 - Lint (JS): `npx @biomejs/biome check src/lorekeeper/dashboard/static/js/`
@@ -102,7 +105,8 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 - Type check: `uv run mypy src` (run before push; not in pre-commit — too slow)
 - Entrypoint: `uv run lorekeeper` (or `python -m lorekeeper`)
 
-Pre-commit hook blocks commit on lint/test failures. Install: `bash scripts/setup.sh`.
+Pre-commit hook (~3s): branch guard, ticket format, ruff, biome, prettier, mcp docs, skill format. Install: `bash scripts/setup.sh`.
+Pre-push hook (~65s): mypy, unit tests, E2E tests (skipped gracefully if Playwright/Chromium not installed).
 See `docs/linter-decisions.md` for rule selection rationale.
 
 All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.

@@ -17,14 +17,14 @@
 
 <!-- ── Tab bar ── -->
 <nav class="tab-bar">
-  <button class="tab active" data-tab="memories">Memories</button>
-  <button class="tab"        data-tab="detail">Detail</button>
-  <button class="tab"        data-tab="links">Links</button>
-  <button class="tab"        data-tab="query">Query</button>
-  <button class="tab"        data-tab="sessions">Sessions</button>
-  <button class="tab"        data-tab="config">Config</button>
-  <button class="tab"        data-tab="backup">Backup</button>
-  <button class="tab"        data-tab="metrics">Metrics</button>
+  <button class="tab active" data-tab="memories" data-testid="tab-memories">Memories</button>
+  <button class="tab"        data-tab="detail"   data-testid="tab-detail">Detail</button>
+  <button class="tab"        data-tab="links"    data-testid="tab-links">Links</button>
+  <button class="tab"        data-tab="query"    data-testid="tab-query">Query</button>
+  <button class="tab"        data-tab="sessions" data-testid="tab-sessions">Sessions</button>
+  <button class="tab"        data-tab="config"   data-testid="tab-config">Config</button>
+  <button class="tab"        data-tab="backup"   data-testid="tab-backup">Backup</button>
+  <button class="tab"        data-tab="metrics"  data-testid="tab-metrics">Metrics</button>
 </nav>
 
 <!-- ══════════════════════════════════════════════════
@@ -34,7 +34,7 @@
   <div class="panel-controls">
     <div class="filter-wrap">
       <input type="text" id="mem-filter" class="filter-input" placeholder="Filter… (/ to focus, Esc to clear)"
-             data-input="memories:filter-input">
+             data-input="memories:filter-input" data-testid="mem-filter">
       <button id="mem-filter-clear" class="filter-clear hidden" data-action="memories:clear-filter">×</button>
     </div>
     <div class="time-filter-group">
@@ -45,14 +45,14 @@
     </div>
     <span class="item-count" id="memory-count"></span>
     <span class="panel-divider"></span>
-    <select id="ns-filter" class="ns-filter-select" data-change="memories:namespace-filter" title="Filter by namespace">
+    <select id="ns-filter" class="ns-filter-select" data-change="memories:namespace-filter" title="Filter by namespace" data-testid="ns-filter">
       <option value="">All namespaces</option>
     </select>
     <button id="btn-show-deleted" class="btn-secondary btn-sm" data-action="memories:toggle-deleted">Show deleted</button>
     <button id="btn-refresh-memories" class="btn-ghost btn-sm btn-refresh" title="Refresh memories (auto-refreshes every 30s)"><span class="refresh-icon">↺</span> Refresh</button>
   </div>
   <div class="metrics-strip">
-    <div class="metric-item"><span class="metric-value" id="met-total">—</span><span class="metric-label">memories</span></div>
+    <div class="metric-item"><span class="metric-value" id="met-total" data-testid="met-total">—</span><span class="metric-label">memories</span></div>
     <div class="metric-sep"></div>
     <div class="metric-item"><span class="metric-value" id="met-avg">—</span><span class="metric-label">avg score</span></div>
     <div class="metric-sep"></div>
@@ -74,7 +74,7 @@
           <th class="sortable col-date"  data-sort="updated_at"  data-sort-target="mem" id="th-updated_at">Date <span class="sort-arrow">↓</span></th>
         </tr>
       </thead>
-      <tbody id="memory-rows"></tbody>
+      <tbody id="memory-rows" data-testid="memory-table"></tbody>
     </table>
   </div>
 </div>
@@ -258,8 +258,8 @@
 
     <div class="config-actions">
       <span class="config-unsaved" id="cfg-unsaved">Unsaved changes</span>
-      <button class="btn-primary" data-action="config:save">Save Changes</button>
-      <button class="btn-secondary" data-action="config:load">Reset</button>
+      <button class="btn-primary" data-action="config:save" data-testid="config-save">Save Changes</button>
+      <button class="btn-secondary" data-action="config:load" data-testid="config-reset">Reset</button>
     </div>
   </div>
 </div>
@@ -275,7 +275,7 @@
       <h2>Export</h2>
       <p style="font-size:13px;color:var(--subtle);margin:4px 0 16px">Download all memories and links as a portable JSON file.</p>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <button class="btn-primary" data-action="backup:export">Export All Memories</button>
+        <button class="btn-primary" data-action="backup:export" data-testid="backup-export">Export All Memories</button>
         <label style="display:flex;align-items:center;gap:6px;font-size:13px">
           <input type="checkbox" id="export-include-deleted">
           Include soft-deleted

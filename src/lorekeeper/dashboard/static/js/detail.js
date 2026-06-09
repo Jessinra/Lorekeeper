@@ -85,7 +85,7 @@ export function _renderDetail(data, editMode) {
 
 	const headerActions = editMode
 		? ""
-		: `<button class="btn-secondary btn-sm" data-action="detail:enter-edit">Edit</button>`;
+		: `<button class="btn-secondary btn-sm" data-action="detail:enter-edit" data-testid="detail-edit">Edit</button>`;
 
 	// Returns a field-group cell. In edit mode renders editHTML; in view mode renders viewHTML.
 	const field = (label, viewHTML, editHTML, spanClass = "") =>
@@ -166,7 +166,7 @@ export function _renderDetail(data, editMode) {
       <button class="btn-warning" data-action="detail:soft-delete" data-id="${m.id}" data-current="${!!m.soft_deleted}">
         ${m.soft_deleted ? "Restore" : "Soft Delete"}
       </button>
-      <button class="btn-danger" data-action="detail:hard-delete" data-id="${m.id}">Hard Delete</button>
+      <button class="btn-danger" data-action="detail:hard-delete" data-id="${m.id}" data-testid="detail-hard-delete">Hard Delete</button>
     </div>
     `
 				: ""

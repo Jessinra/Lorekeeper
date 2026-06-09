@@ -239,7 +239,7 @@ export function renderList() {
 			const sub = m.description
 				? `<div class="col-title-sub">${esc(m.description)}</div>`
 				: "";
-			return `<tr class="${cls}" data-memory-id="${m.id}">
+			return `<tr class="${cls}" data-memory-id="${m.id}" data-testid="memory-row">
       <td class="col-status">${m.soft_deleted ? '<span class="badge badge-deleted">del</span>' : ""}</td>
       <td class="col-title"><div class="col-title-main" title="${esc(m.title)}">${newDot}${esc(m.title)}</div>${sub}</td>
       <td class="col-ns"><span class="ns-badge">${esc(m.namespace ?? "shared")}</span></td>

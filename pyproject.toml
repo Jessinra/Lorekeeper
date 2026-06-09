@@ -64,6 +64,12 @@ packages = ["src/lorekeeper"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 timeout = 300
+addopts = "-m 'not e2e'"
+# E2E tests are excluded from the default run; run them with:
+#   uv run pytest tests/e2e/ -m e2e
+markers = [
+    "e2e: E2E dashboard tests requiring a live server and Playwright browser",
+]
 
 [tool.ruff]
 line-length = 100
@@ -94,6 +100,7 @@ dev = [
     "httpx>=0.28.1",
     "mypy>=2.1.0",
     "pytest>=9.0.3",
+    "pytest-playwright>=0.6.0",
     "pytest-timeout>=2.3",
     "ruff>=0.15.13",
 ]
