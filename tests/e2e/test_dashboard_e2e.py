@@ -34,7 +34,7 @@ class TestMemoriesLoad:
         page.goto("/")
         # The metrics strip shows total memory count
         page.wait_for_selector("[data-testid=memory-row]")
-        count_text = page.locator("#met-total").text_content()
+        count_text = page.locator("[data-testid=met-total]").text_content()
         assert count_text == "5" or count_text == "5\n/", (
             f"Expected 5 memories, got {count_text}"
         )
@@ -81,7 +81,7 @@ class TestSearch:
 
         search.fill("")
         page.wait_for_timeout(250)  # debounce 150 ms + buffer
-        expect(rows).to_have_count(5)
+        expect(rows).to_have_count(5, timeout=2000)
 
 
 # ===================================================================
@@ -94,6 +94,21 @@ class TestDelete:
 
     def test_hard_delete_removes_memory(self, page, live_server: str) -> None:
         page.goto("/")
+        page.wait_for_selector("[data-testid=memory-row]")
+
+        # Seed a dedicated memory for this test via the API so deletion
+        # doesn't corrupt the shared session fixture (which seeds exactly 5).
+        import requests as _req
+        resp = _req.post(
+            f"{live_server}/api/memories",
+            json={
+                "memories": [{"title": "ToDelete Canary", "content": "delete me", "score": 5.0}],
+                "links": [],
+            },
+            timeout=5,
+        )
+        assert resp.status_code == 200, f"Seed failed: {resp.text}"
+        page.reload()
         page.wait_for_selector("[data-testid=memory-row]")
 
         # Click the first memory row → opens detail tab
@@ -115,9 +130,9 @@ class TestDelete:
         # Wait for the toast confirm
         page.wait_for_selector("[data-testid=toast]")
 
-        # Should be back on the memories tab with 4 rows
+        # Should be back on the memories tab — canary deleted, original 5 remain
         page.wait_for_selector("[data-testid=memory-row]")
-        expect(page.locator("[data-testid=memory-row]")).to_have_count(4)
+        expect(page.locator("[data-testid=memory-row]")).to_have_count(5)
 
         # Verify via API that the deleted memory is gone
         resp = requests.get(f"{live_server}/api/memories", timeout=5)
@@ -225,7 +240,7 @@ class TestConfigToggle:
 
         # Click Reload (data-action="config:load") — reloads from API
         # The button labelled "Reset" actually reloads saved values from the backend
-        page.locator("#tab-config button").filter(has_text="Reset").click()
+        page.locator("[data-testid=config-reset]").click()
         page.wait_for_timeout(300)
 
         # After reload, value should still be what we saved (3),

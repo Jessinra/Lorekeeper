@@ -52,7 +52,7 @@
     <button id="btn-refresh-memories" class="btn-ghost btn-sm btn-refresh" title="Refresh memories (auto-refreshes every 30s)"><span class="refresh-icon">↺</span> Refresh</button>
   </div>
   <div class="metrics-strip">
-    <div class="metric-item"><span class="metric-value" id="met-total">—</span><span class="metric-label">memories</span></div>
+    <div class="metric-item"><span class="metric-value" id="met-total" data-testid="met-total">—</span><span class="metric-label">memories</span></div>
     <div class="metric-sep"></div>
     <div class="metric-item"><span class="metric-value" id="met-avg">—</span><span class="metric-label">avg score</span></div>
     <div class="metric-sep"></div>
@@ -259,7 +259,7 @@
     <div class="config-actions">
       <span class="config-unsaved" id="cfg-unsaved">Unsaved changes</span>
       <button class="btn-primary" data-action="config:save" data-testid="config-save">Save Changes</button>
-      <button class="btn-secondary" data-action="config:load">Reset</button>
+      <button class="btn-secondary" data-action="config:load" data-testid="config-reset">Reset</button>
     </div>
   </div>
 </div>

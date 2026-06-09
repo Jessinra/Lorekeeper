@@ -423,8 +423,12 @@ The setup script:
 ## Development
 
 ```bash
-# Tests
+# Unit tests (fast — excludes E2E)
 uv run pytest
+
+# E2E dashboard tests (requires Playwright — ~30s, runs a live browser)
+uv run playwright install chromium  # one-time
+uv run pytest tests/e2e/ -m e2e
 
 # Lint
 uv run ruff check src tests

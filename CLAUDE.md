@@ -94,7 +94,8 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 ## Environment / Tooling
 
 - Python 3.11, managed by `uv`
-- Run tests: `uv run pytest`
+- Run tests (unit): `uv run pytest` — E2E tests are excluded by default
+- Run E2E tests: `uv run playwright install chromium` (once), then `uv run pytest tests/e2e/ -m e2e`
 - Coverage report (optional): `bash scripts/test-coverage.sh`
 - Lint (Python): `uv run ruff check src tests scripts/`
 - Lint (JS): `npx @biomejs/biome check src/lorekeeper/dashboard/static/js/`
