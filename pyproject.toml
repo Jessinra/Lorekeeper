@@ -64,6 +64,7 @@ packages = ["src/lorekeeper"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 timeout = 300
+addopts = "--ignore=tests/e2e"
 markers = [
     "e2e: E2E dashboard tests requiring a live server and Playwright browser",
 ]
