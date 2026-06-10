@@ -96,9 +96,9 @@ You set up your auth layer on Monday. Wednesday, a different agent starts fresh 
 Claude Code for review, Cursor for implementation, Hermes for planning — they shouldn't each start from zero. Lorekeeper namespaces let them share one store. One agent's discovery becomes every agent's knowledge.
 
 ```
-→ Diana (engineer agent) notes a performance quirk in the search service
+→ Engineer agent notes a performance quirk in the search service
 → lore_remember stores it under the shared namespace
-→ Akane (PM agent) surfaces it during sprint planning
+→ PM agent surfaces it during sprint planning
 → No briefing, no copy-paste
 ```
 
@@ -438,7 +438,7 @@ Seven tabs:
 
 ## Built by Agents, For Agents
 
-Lorekeeper is developed _using_ AI agents — Claude Code, Hermes, and our own agent team (Diana the engineer, Akane the PM). The development cycle is itself a working demo of what it does:
+Lorekeeper is developed _using_ AI agents — Claude Code, Hermes, and our own agent team. The development cycle is itself a working demo of what it does:
 
 ```
 agent builds a feature → uses Lorekeeper to capture what it learned →
