@@ -40,7 +40,11 @@ def _get_token() -> str:
 
 
 def get_issue_status(issue_number: int, token: str) -> str | None:
-    """Return issue state ('open', 'closed') or None if not found."""
+    """Return issue state ('open', 'closed') or None if not found.
+
+    GitHub's API occasionally returns transient 5xx responses. Treat those as
+    retryable so the CI guard doesn't fail on a single upstream hiccup.
+    """
     url = f"https://api.github.com/repos/{GITHUB_REPO}/issues/{issue_number}"
     headers = {
         "Accept": "application/vnd.github.v3+json",
@@ -50,19 +54,32 @@ def get_issue_status(issue_number: int, token: str) -> str | None:
         headers["Authorization"] = f"token {token}"
 
     req = urllib.request.Request(url, headers=headers, method="GET")
-    try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read())
-            # GitHub issues API returns PRs too; PRs are fine
-            return data.get("state")  # "open" or "closed"
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
+    last_error: str | None = None
+    for attempt in range(1, 4):
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read())
+                # GitHub issues API returns PRs too; PRs are fine
+                return data.get("state")  # "open" or "closed"
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None
+            if 500 <= e.code < 600:
+                last_error = f"HTTP {e.code}"
+                if attempt < 3:
+                    continue
+            print(f"  ⚠  HTTP {e.code} checking #{issue_number}: {e}")
             return None
-        print(f"  ⚠  HTTP {e.code} checking #{issue_number}: {e}")
-        return None
-    except Exception as e:
-        print(f"  ⚠  Error checking #{issue_number}: {e}")
-        return None
+        except Exception as e:
+            last_error = f"{type(e).__name__}: {e}"
+            if attempt < 3:
+                continue
+            print(f"  ⚠  Error checking #{issue_number}: {e}")
+            return None
+
+    if last_error:
+        print(f"  ⚠  Giving up checking #{issue_number} after retries: {last_error}")
+    return None
 
 
 def extract_frontmatter_field(text: str, field: str) -> str | None:
