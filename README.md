@@ -6,7 +6,8 @@
 > pip install lorekeeper-mcp && lorekeeper setup && lorekeeper
 > ```
 >
-> Your agent remembers across sessions — and gets **smarter the more you use it.**
+> Your agent remembers across sessions — and the memory gets **better, not just bigger.**
+> Local. No API keys. No sign-up. **Free to run forever.**
 
 ![Lorekeeper dashboard — Memories tab](docs/screenshots/screenshot-memories-tab.png)
 
@@ -14,16 +15,19 @@
 
 ## Why Lorekeeper
 
-Every AI agent session starts blank. You re-explain context, re-state preferences, re-teach patterns. Files like `CLAUDE.md` or `.cursorrules` help, but they're manual, unscalable, and have no search or decay.
+Every AI agent session starts blank. You re-explain context, re-state preferences, re-teach patterns — every single time.
 
-Lorekeeper gives your agent **persistent, self-improving memory** — install once, connect any agent, and it remembers everything. And unlike every other option, it gets _better_ with use:
+Files like `CLAUDE.md` and `.cursorrules` help, but they're hand-maintained, can't search themselves, and grow stale. Cloud services work, but your session data leaves your machine and you're paying per API call. Libraries are powerful, but you're writing the integration yourself.
+
+Lorekeeper is a different shape: **a local MCP server you `pip install` once.** It connects to your existing agents, stores memories in SQLite on your own disk, and starts improving with every session:
 
 ```
-Agent uses memories → rates relevance → scores adjust →
-bad memories decay → good memories rise → agent trusts it more
+Agent uses a memory → rates it useful or not →
+scores adjust automatically → weak memories decay →
+strong memories surface more often → search gets sharper
 ```
 
-**The feedback loop compounds.** A fresh install and a 3-month-old install are different products. The system learns what matters and quietly forgets what doesn't.
+A fresh install and a six-month-old install are **genuinely different products.** The longer you use it, the less noise you get — and the more your agents feel like they actually know your codebase.
 
 ---
 
@@ -137,43 +141,44 @@ alias gemini='gemini "$@"; echo "Session ended at $(date)" | lore-capture.sh'
 
 ## Use Cases
 
-### Agent session continuity
+### Staying in context across sessions
 
-You tell your agent your preferred git workflow, debug style, and project conventions. Next session, it already knows. No `CLAUDE.md` to maintain, no repeating yourself.
+You set up your auth layer on Monday. Wednesday, a different agent starts fresh with no idea. With Lorekeeper, it already knows the middleware path, the token format, and which test covers the edge case — because you told it once.
 
 ```
-"Remember that I always rebase before merging, and I prefer verbose git log output."
+"Remember that our JWT uses jose middleware in src/middleware/auth.ts
+ and refresh tokens expire in 7 days."
 → lore_remember stores it
-→ Every future session: agent knows before you say it
+→ Every future session, on any agent: already in context
 ```
 
-### Project onboarding in seconds
+### One memory pool, multiple agents
 
-Clone a new repo, run `lorekeeper setup`, point your agent at it. With a few `lore_remember` calls the agent knows the architecture, key decisions, and what not to break — even across agents.
+Claude Code for review, Cursor for implementation, Hermes for planning — they shouldn't each start from zero. Lorekeeper namespaces let them share one store. One agent's discovery becomes every agent's knowledge.
 
 ```
-"Remember the payment service uses idempotency keys — always include X-Idempotency-Key header."
-→ Claude Code, Cursor, and Codex all read from the same store
+→ Diana (engineer agent) notes a performance quirk in the search service
+→ lore_remember stores it under the shared namespace
+→ Akane (PM agent) surfaces it during sprint planning
+→ No briefing, no copy-paste
 ```
 
 ### Cross-session debugging
 
-You fixed a tricky bug two weeks ago. Your agent doesn't know. You don't remember the details either.
+You fixed a subtle CORS bug three weeks ago and your agent helped. Neither of you remembers the details.
 
 ```
-"What did we learn about the CORS issue?"
-→ lore_search returns the fix, the root cause, and the PR that shipped it
+"What did we figure out about the CORS issue?"
+→ lore_search returns the root cause, the fix, and the context around it
 ```
 
-### Multi-agent knowledge sharing
+### Project onboarding
 
-Different agents — Claude Code for review, Cursor for implementation, Hermes for PM tasks — all share one memory pool. One agent's discovery becomes every agent's knowledge.
+New repo, new agent session. Instead of re-explaining the architecture, you run a few `lore_remember` calls after the first session. The next session — and every agent after it — starts with the right foundation.
 
 ```
-→ Diana finds a performance quirk in the search service
-→ Stores it via lore_remember
-→ Akane's PM session surfaces it during planning
-→ You never have to brief both manually
+"Remember: the payment service requires X-Idempotency-Key on all POST requests."
+→ Claude Code, Cursor, and Codex all read from the same store
 ```
 
 ---
@@ -197,6 +202,8 @@ Different agents — Claude Code for review, Cursor for implementation, Hermes f
 
 ## How It Compares
 
+There are great tools in this space — each makes different trade-offs. Here's where Lorekeeper sits:
+
 |                     | File-based | Cloud services         | Docker servers   | Library (Mem0)         | agentmemory (Node) | **Lorekeeper**                          |
 | ------------------- | ---------- | ---------------------- | ---------------- | ---------------------- | ------------------ | --------------------------------------- |
 | **Setup**           | Built-in   | API key + cloud config | `docker compose` | Write integration code | `npx agentmemory`  | **`pip install`**                       |
@@ -207,6 +214,8 @@ Different agents — Claude Code for review, Cursor for implementation, Hermes f
 | **Dashboard**       | ❌         | ✅                     | ❌               | ❌                     | Viewer             | **✅ Full web UI**                      |
 | **Dependencies**    | None       | ~300MB                 | ~2GB             | ~1.4GB                 | ~200MB             | **~1.4GB** (embeddings)                 |
 | **Built by agents** | ❌         | ❌                     | ❌               | ❌                     | ❌                 | **✅ Dogfooded daily**                  |
+
+Cloud services and Docker-based solutions are strong choices for teams or production apps. Lorekeeper is optimised for the other end: solo developers and agent workflows where **zero ops, zero cloud, and a self-improving store** matter most.
 
 > **Dependency note:** ~1.4GB is from the sentence-transformers embedding model (PyTorch). This is the same weight class as any local embedding solution. We're honest about it.
 
@@ -490,17 +499,17 @@ Seven tabs:
 
 ## Built by Agents, For Agents
 
-Lorekeeper is developed using AI agents — Claude Code, Hermes, and our own agent team (Diana, Akane). The development cycle is itself a working demo:
+Lorekeeper is developed _using_ AI agents — Claude Code, Hermes, and our own agent team (Diana the engineer, Akane the PM). The development cycle is itself a working demo of what it does:
 
 ```
-agent builds feature → uses Lorekeeper to remember →
-captures learnings → searches them next session →
-builds the next feature better
+agent builds a feature → uses Lorekeeper to capture what it learned →
+searches those memories next session →
+builds the next feature with the context already there
 ```
 
-Every tool schema, return type, and workflow is shaped by **actual agent usage** — not theoretical assumptions. The agentic loop documented in the repo isn't aspirational copy; it's how we work.
+This isn't a marketing line. Every tool schema, return type, and workflow in Lorekeeper was shaped by agents using it daily — not by humans reading specs. When something was annoying to use, we changed it. When search returned noise, we tuned the weights. The product is what it is because the agents that build it depend on it.
 
-> **Why this matters:** A memory server built for agents by agents will always be more agent-friendly than one built by humans reading docs. Dogfooding is our design philosophy.
+> The agentic development loop documented in this repo is how we actually work — and it's what Lorekeeper is designed to support for you.
 
 ---
 
