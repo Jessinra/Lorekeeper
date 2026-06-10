@@ -95,13 +95,25 @@ Lorekeeper is already a persistent server (launchd/systemd/sidecar) — the thre
 
 ## Dependencies
 
-_None_ — independent of current sprint work
+This ticket pairs with existing capture-side tickets — they form the two sides of dreaming:
+
+- **LKPR-12 (Session End Hook, #58):** Original proposal for agents to call a hook at session end. LKPR-79 implements this concretely as `lore_session_hook`.
+- **LKPR-69 (Agent Hook Auto-Capture, #161):** Making the hook automatic at the agent/host level (Hermes gateway plugin or client auto-inject). The ideal UX — agent never thinks about it.
+- **LKPR-63 (Dreaming Orchestration, #140):** Earlier dreaming research focused on orchestrating reflection across memory stores. LKPR-79 supersedes with the cloud-first architecture.
+
+Self-hosted fallback (Phase 3) also relates to:
+
+- **LKPR-34 (Cloud Lorekeeper, #67):** The cloud service that hosts the dreaming engine.
+
+See `docs/ticket-relationships.md` for the full dependency graph once this ticket lands.
 
 ## Required Updates
 
 - **CLAUDE.md**: [ ] Add dreaming module path and config docs
 - **README.md**: [ ] Add dreaming setup/usage section
-- **Skills**: [ ] Update `reflect` skill to use `lore_session_hook` instead of Hermes-specific session discovery. Remove cron-based reflection once server-side is stable.
+- **Skills**: [ ] Update `reflect` skill to use `lore_session_hook` instead of Hermes-specific session discovery. Once Phase 2/3 is stable, the reflect cron can be retired.
+- **Backlog**: [ ] LKPR-12 (#58) and LKPR-69 (#161) are capture-side — this ticket provides the dream-side counterpart. Cross-reference them.
+- **Ticket relationships**: [ ] Add an entry in `docs/ticket-relationships.md` mapping the dreaming cluster: LKPR-12 (hook concept) → LKPR-69 (auto-capture) → LKPR-79 (dream engine), supersedes LKPR-63.
 - **Backlog**: [ ] After Phase 1, mark existing reflection cron tickets as superseded
 
 ## Open Questions
