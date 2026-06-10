@@ -1,167 +1,152 @@
-# Quickstart: Get Lorekeeper running in 2 minutes
+# Quickstart
 
-> From zero to your agent's first persistent memory.
-
----
-
-## 1. Install
-
-```bash
-pip install lorekeeper-mcp
-```
-
-**Verify it works:**
-
-```bash
-lorekeeper --help
-# usage: lorekeeper [-h] {setup} ...
-#
-# Self-improving MCP memory server for AI agents.
-#
-# positional arguments:
-#   {setup}
-#     setup     Configure AI agents to use Lorekeeper.
-#
-# options:
-#   -h, --help  show this help message and exit
-#
-# Run without arguments to start the MCP server.
-```
-
-> **Pro tip:** `lorekeeper` (no flags) starts the MCP server. It runs until you stop it with `Ctrl+C`. If you see the help text, the install worked.
+Get Lorekeeper running and seeding memories in **~2 min** (warm cache) or **~5 min** on first
+install (sentence-transformers model download is ~90 MB).
 
 ---
 
-## 2. Configure your agents
+## Prerequisites
 
-Run the one-command setup — it auto-detects Hermes, Claude Code, and Cursor:
+- Python 3.11+ ([`uv python install 3.11`](https://github.com/astral-sh/uv) if missing)
+- [`uv`](https://github.com/astral-sh/uv) — `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- One of: **Hermes Agent**, **Claude Code**, or **Cursor**
+
+---
+
+## 1 — Clone & run setup
 
 ```bash
-lorekeeper setup
+git clone <repo-url> lorekeeper
+cd lorekeeper
+bash scripts/setup.sh
 ```
 
-It will show which agents it found and ask for confirmation before writing. To preview without changes:
+The script:
+
+- Installs all Python dependencies (`uv sync --extra dashboard`)
+- Creates `~/.lorekeeper/` (data directory)
+- Auto-detects Hermes / Claude Code / Cursor and injects MCP config + prompt section
+- Installs skills for each detected agent
+- Prints a **seed prompt** — keep the terminal open for step 5
+
+---
+
+## 2 — Restart your agent
+
+After `setup.sh` finishes, **restart your agent** (Claude Code, Hermes, or Cursor) to load the
+new MCP config. The `lorekeeper` MCP server starts automatically on the next agent launch.
+
+---
+
+## 3 — Start the dashboard
+
+In a separate terminal:
 
 ```bash
-lorekeeper setup --check
+uv run lorekeeper-dashboard
 ```
 
-Restart each agent after setup. You'll see 8 new MCP tools available.
+Then open: **http://127.0.0.1:7777**
 
-**Manual config (if you prefer):** expand the sections below.
+The dashboard starts empty — memories appear here in real time as you insert them.
 
-<details>
-<summary>Manual: Claude Code</summary>
+> Change the port: `LORE_DASH_PORT=8888 uv run lorekeeper-dashboard`
 
-Edit `~/.claude/settings.json`:
+---
+
+## 4 — Seed your first memories
+
+Copy the seed prompt printed at the end of `setup.sh` and paste it into your agent:
+
+```
+Read your prompt/config files (soul.md, CLAUDE.md, .cursorrules, AGENTS.md) and
+save key facts about yourself to Lorekeeper using lore_remember or lore_insert — who you
+are, what you do, your constraints and preferences. Be thorough.
+```
+
+The agent will call `lore_remember` / `lore_insert` and the dashboard will populate.
+
+---
+
+## 5 — Verify MCP round-trip
+
+In your agent, run these two back-to-back:
+
+```
+lore_remember("My first test memory")
+lore_search("test memory")
+```
+
+Expected `lore_search` result — you should see the memory you just stored:
 
 ```json
 {
-  "mcpServers": {
-    "lorekeeper": {
-      "command": "lorekeeper",
-      "args": [],
-      "env": {}
+  "memories": [
+    {
+      "title": "My first test memory",
+      "combined_score": 0.87
     }
-  }
+  ],
+  "count": 1
 }
 ```
 
-</details>
-
-<details>
-<summary>Manual: Cursor</summary>
-
-Settings → MCP Servers → Add:
-
-| Field   | Value        |
-| ------- | ------------ |
-| Name    | `lorekeeper` |
-| Type    | `command`    |
-| Command | `lorekeeper` |
-| Args    | _(empty)_    |
-
-</details>
-
-<details>
-<summary>Manual: Hermes Agent</summary>
-
-Add to `~/.hermes/config.yaml`:
-
-```yaml
-mcp_servers:
-  lorekeeper:
-    command: lorekeeper
-    args: []
-    env: {}
-```
-
-</details>
-
 ---
 
-## 3. Save your first memory
+## CLI flags (new in 2.1.1)
 
-Ask your agent to remember something:
-
-> _"Remember that my favorite debug command is `curl -vX GET` for checking REST endpoints."_
-
-The agent calls `lore_remember({"thought": "..."})`. ✅ Memory stored.
-
-You can also ask it directly:
-
-> _"Search for my favorite debug command."_
-
-The agent calls `lore_search({"query": "debug command"})`. ✅ Memory retrieved.
-
----
-
-## 4. Make it automatic
-
-Add this to your agent's prompt file (`CLAUDE.md`, `.cursorrules`, `AGENTS.md`, or `soul.md`):
-
-```markdown
-## Lorekeeper
-
-At the start of every task, search Lorekeeper for relevant context.
-After the task, save new discoveries with `lore_remember` or `lore_insert`.
-```
-
-Now every session starts with context and saves what it learns.
-
----
-
-## 5. See everything in the dashboard
+The `lorekeeper` binary now accepts `--help` and `--version` without starting the MCP server:
 
 ```bash
-lorekeeper-dashboard
-# → http://127.0.0.1:7777
+lorekeeper --help
+# usage: lorekeeper [-h] [--version]
+# Personal AI memory MCP server — stores facts and knowledge for AI agents.
+
+lorekeeper --version
+# lorekeeper 2.1.1
 ```
 
-Browse, search, edit, and manage all your memories. Seven tabs:
-
-| Tab          | What it shows                                          |
-| ------------ | ------------------------------------------------------ |
-| **Memories** | All stored memories with scores, usage, dates          |
-| **Detail**   | Edit, delete, manage links per memory                  |
-| **Links**    | Knowledge graph connections between memories           |
-| **Query**    | Ad-hoc semantic + keyword search                       |
-| **Sessions** | Processed agent sessions with extracted learnings      |
-| **Config**   | Live tuning of search weights, quality signals, limits |
-| **Backup**   | Export/import memories as JSON                         |
+> `uv run lorekeeper --help` works too if the binary isn't on PATH.
 
 ---
 
-## What's next
+## Troubleshooting
 
-| Goal                        | Resource                                                       |
-| --------------------------- | -------------------------------------------------------------- |
-| Full MCP tool reference     | `README.md` → **MCP tools** section                            |
-| Understand the architecture | `docs/ARCHITECTURE.md`                                         |
-| Development setup           | `README.md` → **Development** section                          |
-| Report a bug                | [GitHub Issues](https://github.com/Jessinra/Lorekeeper/issues) |
-| Strategy & positioning      | `docs/positioning-manifesto.md`                                |
+**`lorekeeper: command not found`**
+
+The binary is only on PATH if installed via `uv tool install` or a virtualenv. Use
+`uv run lorekeeper` from inside the repo, or run:
+
+```bash
+uv tool install ./dist/lorekeeper-2.1.1-py3-none-any.whl
+```
 
 ---
 
-_Your first memory is stored at `~/.lorekeeper/`. Everything is local. Nothing leaves your machine._
+**Dashboard is empty after seeding**
+
+1. Check that the agent actually called `lore_remember` / `lore_insert` (look at the agent's
+   tool call log).
+2. Confirm the MCP server connected — if not, re-run `bash scripts/setup.sh` and restart the
+   agent.
+3. Hard-refresh the dashboard (`Cmd+Shift+R`).
+
+---
+
+**MCP tools not available in agent**
+
+- Confirm `setup.sh` ran without errors and showed your agent in the summary table.
+- Check the agent's MCP config file for a `lorekeeper` entry:
+  - Claude Code: `~/.claude/settings.json`
+  - Cursor: `~/.cursor/mcp.json`
+  - Hermes: `~/.hermes/mcp.yml`
+- Restart the agent if you edited config manually.
+
+---
+
+## Next steps
+
+- Browse all available tools: [`lore_search`, `lore_remember`, `lore_insert`, `lore_update`,
+  `lore_forget`, `lore_reflect`, `lore_recommend_links`, `lore_processed_sessions`]
+- Full configuration reference: [README.md — Configuration](../README.md#configuration)
+- Architecture deep-dive: [docs/ARCHITECTURE.md](ARCHITECTURE.md)
