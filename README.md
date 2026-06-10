@@ -1,16 +1,14 @@
 # Lorekeeper
 
-> **Memory for AI agents that gets smarter the more you use it.**
->
-> One command. No cloud. No config.
+> **Self-improving memory for AI agents. One command, no cloud, no config.**
 >
 > ```bash
 > pip install lorekeeper-mcp && lorekeeper setup && lorekeeper
 > ```
 >
-> Connect any MCP-compatible agent → it remembers across sessions.
+> Your agent remembers across sessions — and gets **smarter the more you use it.**
 
-![Lorekeeper dashboard — Memories tab](assets/dashboard-memories-tab.png)
+![Lorekeeper dashboard — Memories tab](docs/screenshots/screenshot-memories-tab.png)
 
 ---
 
@@ -58,6 +56,67 @@ It calls `lore_search` → memory retrieved. ✅
 
 **Full walkthrough → [docs/quickstart.md](docs/quickstart.md)**
 
+### Auto-capture (zero-code)
+
+Want your agent to remember things automatically — without explicitly calling `lore_remember`? Use the companion capture script with your agent's lifecycle hooks.
+
+```bash
+# Download the capture script
+curl -o ~/.local/bin/lore-capture.sh \
+  https://raw.githubusercontent.com/Jessinra/Lorekeeper/main/scripts/lore-capture.sh
+chmod +x ~/.local/bin/lore-capture.sh
+```
+
+Then wire it into your agent:
+
+**Claude Code** (`~/.claude/settings.json`):
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Session ended: $(date)' | ~/.local/bin/lore-capture.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Hermes Agent** (add to your Hermes skill's session-end trigger):
+
+```bash
+lore-capture.sh "Session complete: $(hermes sessions last --summary)"
+```
+
+**Cursor** (`.cursorrules` or `custom rules`):
+
+```
+After each conversation, call: lore-capture.sh "<key insight from this session>"
+```
+
+**Codex CLI** (`~/.codex/config.yaml`):
+
+```yaml
+hooks:
+  after_session: "echo '{{summary}}' | lore-capture.sh"
+```
+
+**Gemini CLI** (init script):
+
+```bash
+# Add to your shell init or Gemini session wrapper
+alias gemini='gemini "$@"; echo "Session ended at $(date)" | lore-capture.sh'
+```
+
+> One script works with every agent. Lorekeeper is universal.
+
 ---
 
 ## Features
@@ -73,6 +132,49 @@ It calls `lore_search` → memory retrieved. ✅
 | **Local-first**         | Your data stays on your machine. SQLite + LanceDB (or ChromaDB). No cloud dependency, no API keys.                            |
 | **Namespaces**          | Multiple agents share one store with isolated namespaces. Writes go to your namespace; reads include the shared pool.         |
 | **Reflection**          | Agents auto-extract learnings from sessions. Discoveries and lessons become searchable memories.                              |
+
+---
+
+## Use Cases
+
+### Agent session continuity
+
+You tell your agent your preferred git workflow, debug style, and project conventions. Next session, it already knows. No `CLAUDE.md` to maintain, no repeating yourself.
+
+```
+"Remember that I always rebase before merging, and I prefer verbose git log output."
+→ lore_remember stores it
+→ Every future session: agent knows before you say it
+```
+
+### Project onboarding in seconds
+
+Clone a new repo, run `lorekeeper setup`, point your agent at it. With a few `lore_remember` calls the agent knows the architecture, key decisions, and what not to break — even across agents.
+
+```
+"Remember the payment service uses idempotency keys — always include X-Idempotency-Key header."
+→ Claude Code, Cursor, and Codex all read from the same store
+```
+
+### Cross-session debugging
+
+You fixed a tricky bug two weeks ago. Your agent doesn't know. You don't remember the details either.
+
+```
+"What did we learn about the CORS issue?"
+→ lore_search returns the fix, the root cause, and the PR that shipped it
+```
+
+### Multi-agent knowledge sharing
+
+Different agents — Claude Code for review, Cursor for implementation, Hermes for PM tasks — all share one memory pool. One agent's discovery becomes every agent's knowledge.
+
+```
+→ Diana finds a performance quirk in the search service
+→ Stores it via lore_remember
+→ Akane's PM session surfaces it during planning
+→ You never have to brief both manually
+```
 
 ---
 
@@ -347,6 +449,20 @@ Per-signal `scores` lets the agent make its own judgment about which candidates 
 
 ---
 
+## Performance
+
+> 📊 **Benchmark results from LKPR-70 coming soon.** Lorekeeper is being benchmarked against agentmemory's published evaluation suite — retrieval precision, context token savings, and search latency at scale. Results will be published here once complete.
+
+Early internal numbers on a 1,000-memory store:
+
+- **Search latency:** ~40–80ms (hybrid pipeline, LanceDB backend)
+- **Duplicate detection:** ~30ms per insert (0.6·semantic + 0.4·keyword threshold)
+- **BM25 index rebuild:** ~10ms at 5k memories
+
+_Full benchmark methodology and reproducible script → [LKPR-70](https://github.com/Jessinra/Lorekeeper/issues/162)_
+
+---
+
 ## Dashboard
 
 A local web UI to browse, search, edit, and manage your memory store.
@@ -368,7 +484,7 @@ Seven tabs:
 | **Config**   | Live tuning of search weights, quality thresholds, limits                |
 | **Backup**   | Export/import memories as JSON with dedup preview                        |
 
-![Lorekeeper Query tab — hybrid search with scores](assets/dashboard-query-tab.png)
+![Lorekeeper Query tab — hybrid search with scores](docs/screenshots/screenshot-query-tab.png)
 
 ---
 

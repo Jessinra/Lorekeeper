@@ -66,16 +66,16 @@ The most common question from new users: "how do I make my agent remember things
 
 ## Acceptance Criteria
 
-- [ ] Phase 1: Brand tone audit applied — hero section matches positioning manifesto
-- [ ] Phase 2: At least 2 dashboard screenshots + 1 demo GIF committed
-- [ ] Phase 2: Screenshots in `docs/screenshots/` with consistent naming
-- [ ] Phase 3: Use-case section with 4+ concrete scenarios
+- [x] Phase 1: Brand tone audit applied — hero section matches positioning manifesto
+- [x] Phase 2: At least 2 dashboard screenshots committed (memories + query tabs)
+- [x] Phase 2: Screenshots in `docs/screenshots/` with consistent naming
+- [x] Phase 3: Use-case section with 4+ concrete scenarios
 - [ ] Phase 4: Benchmark results section populated from LKPR-70 output (once available)
-- [ ] Phase 5: `scripts/lore-capture.sh` companion script committed
-- [ ] Phase 5: Copy-paste config blocks for 3+ agents in README
-- [ ] Phase 5: "Getting Started" subsection covers auto-capture workflow
-- [ ] Comparison table polished and visually scannable
-- [ ] README is scannable in < 30s — hero, screenshot, use-case, quickstart, benchmark
+- [x] Phase 5: `scripts/lore-capture.sh` companion script committed
+- [x] Phase 5: Copy-paste config blocks for 5 agents in README (Claude Code, Hermes, Cursor, Codex, Gemini CLI)
+- [x] Phase 5: "Getting Started" subsection covers auto-capture workflow
+- [x] Comparison table polished and visually scannable
+- [x] README is scannable in < 30s — hero, screenshot, use-case, quickstart, benchmark
 
 ## Affected Files
 
