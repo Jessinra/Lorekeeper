@@ -9,7 +9,7 @@
 > Your agent remembers across sessions — and the memory gets **better, not just bigger.**
 > Local. No API keys. No sign-up. **Free to run forever.**
 
-![Lorekeeper dashboard — Memories tab](docs/screenshots/screenshot-memories-tab.png)
+![Lorekeeper dashboard — Memories tab](assets/dashboard-memories-tab.png)
 
 ---
 
@@ -432,7 +432,7 @@ Seven tabs:
 | **Config**   | Live tuning of search weights, quality thresholds, limits                |
 | **Backup**   | Export/import memories as JSON with dedup preview                        |
 
-![Lorekeeper Query tab — hybrid search with scores](docs/screenshots/screenshot-query-tab.png)
+![Lorekeeper Query tab — hybrid search with scores](assets/dashboard-query-tab.png)
 
 ---
 
