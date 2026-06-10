@@ -46,7 +46,7 @@ lorekeeper setup
 lorekeeper
 ```
 
-`lorekeeper setup` scans for installed agents and injects the MCP entry, agent prompt, and bundled skills automatically. Use `--check` to preview without writing.
+`lorekeeper setup` scans for installed agents and injects the MCP entry, agent prompt, and bundled skills automatically. Use `--check` to preview without writing. Run `lorekeeper --help` or `lorekeeper --version` to verify the install.
 
 Then ask your agent:
 
