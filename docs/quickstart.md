@@ -93,17 +93,17 @@ Expected `lore_search` result — you should see the memory you just stored:
 
 ---
 
-## CLI flags (new in 2.1.1)
+## CLI flags
 
 The `lorekeeper` binary now accepts `--help` and `--version` without starting the MCP server:
 
 ```bash
 lorekeeper --help
-# usage: lorekeeper [-h] [--version]
+# usage: lorekeeper [-h] [--version] {setup} ...
 # Personal AI memory MCP server — stores facts and knowledge for AI agents.
 
 lorekeeper --version
-# lorekeeper 2.1.1
+# lorekeeper 0.2.0
 ```
 
 > `uv run lorekeeper --help` works too if the binary isn't on PATH.
@@ -118,7 +118,7 @@ The binary is only on PATH if installed via `uv tool install` or a virtualenv. U
 `uv run lorekeeper` from inside the repo, or run:
 
 ```bash
-uv tool install ./dist/lorekeeper-2.1.1-py3-none-any.whl
+uv tool install ./dist/lorekeeper_mcp-0.2.0-py3-none-any.whl
 ```
 
 ---

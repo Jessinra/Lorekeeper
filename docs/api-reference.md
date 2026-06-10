@@ -261,7 +261,7 @@ Returns all session IDs already marked as processed by `lore_reflect`. Use this 
 Returns:
 
 ```json
-{ "processed_session_ids": ["session-uuid-1", "session-uuid-2"] }
+{ "session_ids": ["session-uuid-1", "session-uuid-2"] }
 ```
 
 ---

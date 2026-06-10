@@ -82,7 +82,10 @@ def main() -> int:
 
     if missing:
         print("❌  MCP tool documentation check FAILED")
-        print("   The following tools are registered in server.py but missing from README.md:\n")
+        print(
+            "   The following tools are registered in server.py but missing from README.md "
+            "or docs/api-reference.md:\n"
+        )
         for t in missing:
             print(f"   - {t}  →  add a '### `{t}`' section to README.md or docs/api-reference.md")
         print(
