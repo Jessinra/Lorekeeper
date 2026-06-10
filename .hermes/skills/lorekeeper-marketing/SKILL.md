@@ -61,20 +61,19 @@ production apps well — we're the other end of that spectrum.
 1. Hero block — tagline + install command + one-liner hook
 2. Why Lorekeeper — problem story, cooperative landscape framing, our niche
 3. Quick Start — install → setup → connect → first memory
-4. Auto-capture section — `scripts/lore-capture.sh` configs per agent
-5. Use Cases — 4 scenarios (session continuity, multi-agent, debugging, onboarding)
-6. Who It's For — explicit in/out
-7. How It Compares — table with cooperative framing sentence above and below
-8. Features table
-9. MCP Tools — full API reference
-10. Performance — benchmarks (LKPR-70) or honest stub
-11. Dashboard — screenshots
-12. Built by Agents — dogfooding story
-13. Setup (git clone) — dev path
-14. Development — test/lint commands
-15. Project Layout
-16. License
-17. Footer — links to manifesto + strategy docs
+4. Use Cases — 4 scenarios (session continuity, multi-agent, debugging, onboarding)
+5. Who It's For — explicit in/out
+6. How It Compares — table with cooperative framing sentence above and below
+7. Features table
+8. MCP Tools — full API reference
+9. Performance — benchmarks (LKPR-70) or honest stub
+10. Dashboard — screenshots
+11. Built by Agents — dogfooding story
+12. Setup (git clone) — dev path
+13. Development — test/lint commands
+14. Project Layout
+15. License
+16. Footer — links to manifesto + strategy docs
 
 ---
 
@@ -184,7 +183,6 @@ If a competitor has a paid version of something we offer free, say "Paid" not �
 | `docs/manifesto.md`             | Short public values statement              |
 | `docs/positioning-manifesto.md` | Internal strategy (not linked prominently) |
 | `docs/screenshots/`             | Screenshot assets for README               |
-| `scripts/lore-capture.sh`       | Auto-capture companion script              |
 
 Screenshots source of truth: `assets/` — copies placed into `docs/screenshots/` for README refs.
 

@@ -54,7 +54,7 @@ Add concrete "when would you use this" scenarios:
 
 The most common question from new users: "how do I make my agent remember things automatically?" The answer is documentation, not new tools.
 
-- Write `scripts/lore-capture.sh` — a ~20-line shell script wrapping `lore_remember` that agents can call from their own lifecycle hooks
+- ~~Write `scripts/lore-capture.sh` — a ~20-line shell script wrapping `lore_remember` that agents can call from their own lifecycle hooks~~ **Descoped** — `lore_remember` is simple enough to call directly; the script added ceremony without value
 - Add copy-paste config blocks for each major agent:
   - **Claude Code**: hook via `~/.claude/settings.json` pre/post-exec scripts
   - **Hermes**: skill trigger on session end
@@ -71,9 +71,9 @@ The most common question from new users: "how do I make my agent remember things
 - [x] Phase 2: Screenshots in `docs/screenshots/` with consistent naming
 - [x] Phase 3: Use-case section with 4+ concrete scenarios
 - [ ] Phase 4: Benchmark results section populated from LKPR-70 output (once available)
-- [x] Phase 5: `scripts/lore-capture.sh` companion script committed
-- [x] Phase 5: Copy-paste config blocks for 5 agents in README (Claude Code, Hermes, Cursor, Codex, Gemini CLI)
-- [x] Phase 5: "Getting Started" subsection covers auto-capture workflow
+- [ ] ~~Phase 5: `scripts/lore-capture.sh` companion script committed~~ **Descoped**
+- [ ] ~~Phase 5: Copy-paste config blocks for 5 agents in README (Claude Code, Hermes, Cursor, Codex, Gemini CLI)~~ **Descoped** — script was the dependency
+- [ ] ~~Phase 5: "Getting Started" subsection covers auto-capture workflow~~ **Descoped**
 - [x] Comparison table polished and visually scannable
 - [x] README is scannable in < 30s — hero, screenshot, use-case, quickstart, benchmark
 
@@ -82,6 +82,7 @@ The most common question from new users: "how do I make my agent remember things
 - `README.md` — main target
 - `docs/screenshots/` — new directory, 2-3 images + 1 GIF
 - `docs/positioning-manifesto.md` — already exists, reference only
+- ~~`scripts/lore-capture.sh`~~ removed from scope
 
 ## Dependencies
 
