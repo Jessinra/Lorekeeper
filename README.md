@@ -1,14 +1,13 @@
 # Lorekeeper
 
-> **Memory for AI agents that gets smarter the more you use it.**
->
-> One command. No cloud. No config.
+> **Self-improving memory for AI agents. One command, no cloud, no config.**
 >
 > ```bash
 > pip install lorekeeper-mcp && lorekeeper setup && lorekeeper
 > ```
 >
-> Connect any MCP-compatible agent → it remembers across sessions.
+> Your agent remembers across sessions — and the memory gets **better, not just bigger.**
+> Local. No API keys. No sign-up. **Free to run forever.**
 
 ![Lorekeeper dashboard — Memories tab](assets/dashboard-memories-tab.png)
 
@@ -16,16 +15,19 @@
 
 ## Why Lorekeeper
 
-Every AI agent session starts blank. You re-explain context, re-state preferences, re-teach patterns. Files like `CLAUDE.md` or `.cursorrules` help, but they're manual, unscalable, and have no search or decay.
+Every AI agent session starts blank. You re-explain context, re-state preferences, re-teach patterns — every single time.
 
-Lorekeeper gives your agent **persistent, self-improving memory** — install once, connect any agent, and it remembers everything. And unlike every other option, it gets _better_ with use:
+Files like `CLAUDE.md` and `.cursorrules` help, but they're hand-maintained, can't search themselves, and grow stale. Cloud services work, but your session data leaves your machine and you're paying per API call. Libraries are powerful, but you're writing the integration yourself.
+
+Lorekeeper is a different shape: **a local MCP server you `pip install` once.** It connects to your existing agents, stores memories in SQLite on your own disk, and starts improving with every session:
 
 ```
-Agent uses memories → rates relevance → scores adjust →
-bad memories decay → good memories rise → agent trusts it more
+Agent uses a memory → rates it useful or not →
+scores adjust automatically → weak memories decay →
+strong memories surface more often → search gets sharper
 ```
 
-**The feedback loop compounds.** A fresh install and a 3-month-old install are different products. The system learns what matters and quietly forgets what doesn't.
+A fresh install and a six-month-old install are **genuinely different products.** The longer you use it, the less noise you get — and the more your agents feel like they actually know your codebase.
 
 ---
 
@@ -76,6 +78,50 @@ It calls `lore_search` → memory retrieved. ✅
 
 ---
 
+## Use Cases
+
+### Staying in context across sessions
+
+You set up your auth layer on Monday. Wednesday, a different agent starts fresh with no idea. With Lorekeeper, it already knows the middleware path, the token format, and which test covers the edge case — because you told it once.
+
+```
+"Remember that our JWT uses jose middleware in src/middleware/auth.ts
+ and refresh tokens expire in 7 days."
+→ lore_remember stores it
+→ Every future session, on any agent: already in context
+```
+
+### One memory pool, multiple agents
+
+Claude Code for review, Cursor for implementation, Hermes for planning — they shouldn't each start from zero. Lorekeeper namespaces let them share one store. One agent's discovery becomes every agent's knowledge.
+
+```
+→ Engineer agent notes a performance quirk in the search service
+→ lore_remember stores it under the shared namespace
+→ PM agent surfaces it during sprint planning
+→ No briefing, no copy-paste
+```
+
+### Cross-session debugging
+
+You fixed a subtle CORS bug three weeks ago and your agent helped. Neither of you remembers the details.
+
+```
+"What did we figure out about the CORS issue?"
+→ lore_search returns the root cause, the fix, and the context around it
+```
+
+### Project onboarding
+
+New repo, new agent session. Instead of re-explaining the architecture, you run a few `lore_remember` calls after the first session. The next session — and every agent after it — starts with the right foundation.
+
+```
+"Remember: the payment service requires X-Idempotency-Key on all POST requests."
+→ Claude Code, Cursor, and Codex all read from the same store
+```
+
+---
+
 ## Who It's For
 
 **You, if you use:**
@@ -95,6 +141,8 @@ It calls `lore_search` → memory retrieved. ✅
 
 ## How It Compares
 
+There are great tools in this space — each makes different trade-offs. Here's where Lorekeeper sits:
+
 |                     | File-based | Cloud services         | Docker servers   | Library (Mem0)         | agentmemory (Node) | **Lorekeeper**                          |
 | ------------------- | ---------- | ---------------------- | ---------------- | ---------------------- | ------------------ | --------------------------------------- |
 | **Setup**           | Built-in   | API key + cloud config | `docker compose` | Write integration code | `npx agentmemory`  | **`pip install`**                       |
@@ -105,6 +153,8 @@ It calls `lore_search` → memory retrieved. ✅
 | **Dashboard**       | ❌         | ✅                     | ❌               | ❌                     | Viewer             | **✅ Full web UI**                      |
 | **Dependencies**    | None       | ~300MB                 | ~2GB             | ~1.4GB                 | ~200MB             | **~1.4GB** (embeddings)                 |
 | **Built by agents** | ❌         | ❌                     | ❌               | ❌                     | ❌                 | **✅ Dogfooded daily**                  |
+
+Cloud services and Docker-based solutions are strong choices for teams or production apps. Lorekeeper is optimised for the other end: solo developers and agent workflows where **zero ops, zero cloud, and a self-improving store** matter most.
 
 > **Dependency note:** ~1.4GB is from the sentence-transformers embedding model (PyTorch). This is the same weight class as any local embedding solution. We're honest about it.
 
@@ -347,6 +397,20 @@ Per-signal `scores` lets the agent make its own judgment about which candidates 
 
 ---
 
+## Performance
+
+> 📊 **Benchmark results from LKPR-70 coming soon.** Lorekeeper is being benchmarked against agentmemory's published evaluation suite — retrieval precision, context token savings, and search latency at scale. Results will be published here once complete.
+
+Early internal numbers on a 1,000-memory store:
+
+- **Search latency:** ~40–80ms (hybrid pipeline, LanceDB backend)
+- **Duplicate detection:** ~30ms per insert (0.6·semantic + 0.4·keyword threshold)
+- **BM25 index rebuild:** ~10ms at 5k memories
+
+_Full benchmark methodology and reproducible script → [LKPR-70](https://github.com/Jessinra/Lorekeeper/issues/162)_
+
+---
+
 ## Dashboard
 
 A local web UI to browse, search, edit, and manage your memory store.
@@ -374,17 +438,17 @@ Seven tabs:
 
 ## Built by Agents, For Agents
 
-Lorekeeper is developed using AI agents — Claude Code, Hermes, and our own agent team (Diana, Akane). The development cycle is itself a working demo:
+Lorekeeper is developed _using_ AI agents — Claude Code, Hermes, and our own agent team. The development cycle is itself a working demo of what it does:
 
 ```
-agent builds feature → uses Lorekeeper to remember →
-captures learnings → searches them next session →
-builds the next feature better
+agent builds a feature → uses Lorekeeper to capture what it learned →
+searches those memories next session →
+builds the next feature with the context already there
 ```
 
-Every tool schema, return type, and workflow is shaped by **actual agent usage** — not theoretical assumptions. The agentic loop documented in the repo isn't aspirational copy; it's how we work.
+This isn't a marketing line. Every tool schema, return type, and workflow in Lorekeeper was shaped by agents using it daily — not by humans reading specs. When something was annoying to use, we changed it. When search returned noise, we tuned the weights. The product is what it is because the agents that build it depend on it.
 
-> **Why this matters:** A memory server built for agents by agents will always be more agent-friendly than one built by humans reading docs. Dogfooding is our design philosophy.
+> The agentic development loop documented in this repo is how we actually work — and it's what Lorekeeper is designed to support for you.
 
 ---
 
@@ -466,4 +530,4 @@ Apache-2.0 — see [LICENSE](LICENSE).
 
 ---
 
-_Built by agents, for agents. [Read the strategy](docs/positioning-manifesto.md)._
+_Built by agents, for agents. [Manifesto](docs/manifesto.md) · [Strategy](docs/positioning-manifesto.md)_

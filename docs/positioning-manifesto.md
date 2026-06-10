@@ -318,5 +318,12 @@ For the README — positioned neutrally, not as "us vs them":
 
 ---
 
+## Credits
+
+Lorekeeper is developed using AI agents as active contributors alongside human maintainers. If
+you've used it, filed an issue, or opened a PR — you're part of what makes it better.
+
+---
+
 _Written June 2026 — for beta launch of Lorekeeper v2._
 _Source of truth for README positioning, distribution strategy, and product decisions._
