@@ -7,6 +7,7 @@ rice_score: ~
 filed_by: Akane
 filed_date: 2026-06-10
 github_issue: 179
+github_pr: 180
 ---
 
 # [LKPR-79] Dreaming — session hook + background reflection engine
@@ -24,7 +25,7 @@ MCP protocol cannot force an agent to run a task — its notifications are one-w
 
 ## Solution
 
-Add dreaming capabilities directly into Lorekeeper as a long-lived server process, removing the dependency on external cron or agent cooperation. Two-phased approach:
+Core architecture: **capture locally, dream in the cloud, sync results back**. The local Lorekeeper server collects session data; the dreaming engine runs wherever it can get an LLM — cloud service for hosted users, or a local background thread for self-hosted.
 
 ### Phase 1: Capture — `lore_session_hook` tool
 
@@ -41,26 +42,33 @@ lore_session_hook(
 )
 ```
 
-- Stores the session in a new `sessions` table (existing or extended) marked as `unprocessed`
+- Stores the session in the local store, marked as `unprocessed`
 - Immediate return (fire-and-forget from agent's perspective)
 - No blocking on reflection — the hook is just capture
-- Tool name aligns with "hook" pattern agents understand
+- Works with any MCP client, not just Hermes
 
-### Phase 2: Reflect — background thread in Lorekeeper server
+### Phase 2: Dream — cloud service (primary path)
 
-A background thread/task inside the Lorekeeper server process that:
+When Lorekeeper Cloud exists, a dedicated cloud worker:
+
+- Pulls unprocessed sessions from the local store (via API sync)
+- Runs the dreaming pipeline (reflection + link discovery + memory consolidation)
+- Uses the cloud's own LLM — no local compute needed
+- Writes results (new memories, links, reflections) back to the local store
+
+The user's local Lorekeeper stays lean — just capture and respond. All the LLM work happens server-side.
+
+### Phase 3 (fallback): Dream — local background thread (self-hosted)
+
+For users who don't use Lorekeeper Cloud, a background thread inside the Lorekeeper server process handles dreaming:
 
 - Runs on a configurable schedule (default: daily, via `config.yaml`)
-- Reads unprocessed sessions from the store
-- Calls the same internal logic as `lore_reflect` + `lore_recommend_links`
-- Uses the server's own DB credentials — no external auth needed
-- Sleeps/deactivates when idle (no CPU cost between runs)
+- Reads unprocessed sessions from local store
+- Calls the same reflection + link discovery logic
+- Uses its own LLM config (separate from search embeddings — different model/prompt)
+- Sleeps when idle
 
-Since Lorekeeper is already a persistent MCP server (launchd/systemd/sidecar), the user already keeps it running. The background thread piggybacks on that uptime.
-
-### Phase 3 (future): Cloud-hosted dreaming
-
-For Lorekeeper Cloud, a dedicated background worker processes unprocessed sessions with its own LLM. No user infrastructure required — the cloud service handles the full dreaming loop.
+Lorekeeper is already a persistent server (launchd/systemd/sidecar) — the thread piggybacks on that uptime. No cron, no agent cooperation needed.
 
 ## Acceptance Criteria
 
@@ -104,6 +112,6 @@ _None_ — independent of current sprint work
 
 ## Notes
 
-Filed after research across MCP spec, Claude Dreaming API docs, ChatGPT Dreaming V3, and OpenClaw Dreaming. MCP has no viable server→client push mechanism for task execution (sampling requires client opt-in + human-in-the-loop; notifications are one-way status only). Server-side background thread is the only reliable approach for self-hosted users.
+Filed after research across MCP spec, Claude Dreaming API docs, ChatGPT Dreaming V3, and OpenClaw Dreaming. MCP has no viable server→client push mechanism for task execution (sampling requires client opt-in + human-in-the-loop; notifications are one-way status only).
 
-Lorekeeper is already a long-lived server process — adding a background thread is a small incremental cost vs. the user experience improvement of zero-setup dreaming.
+**Architecture decision:** "capture locally, dream in the cloud, sync results back." The local server never needs an LLM for dreaming — it just stores session data. The dreaming engine (reflection + link discovery) runs wherever it has LLM access: cloud service for hosted users, local thread as self-hosted fallback. This keeps the local Lorekeeper install lean and avoids forcing users to configure an LLM just for dreaming.
