@@ -83,7 +83,7 @@ uv run lorekeeper --help
 # Exits cleanly without starting the server.
 
 uv run lorekeeper --version
-# Expected: lorekeeper 2.1.1 (or whatever version)
+# Expected: lorekeeper 0.2.0 (or whatever version)
 ```
 
 **Step 4: Commit**
@@ -220,29 +220,29 @@ git commit -m "[LKPR-72] fix: resolve pytest deprecation warnings (asyncio_mode,
 
 **Problem:** `pyproject.toml` says `version = "2.0.0"`, PyPI has `2.1.0`. For beta we need a clean version story — bump repo to at least `2.1.1` (or `2.2.0-beta.1`) so the beta tag is clearly newer than the PyPI release.
 
-**Step 1: Decide version**
+### Step 1: Decide version
 
-Discuss with Jason: `2.1.1` (patch) or `2.2.0` (minor, if beta has new features like dashboard tabs). For this plan, use `2.1.1`.
+The version line is not part of this docs-only follow-up. Keep docs/examples aligned to `0.2.0`.
 
 **Step 2: Update pyproject.toml**
 
 ```toml
 [project]
-version = "2.1.1"
+version = "0.2.0"
 ```
 
 **Step 3: Verify**
 
 ```bash
 uv run lorekeeper --version
-# Expected: lorekeeper 2.1.1
+# Expected: lorekeeper 0.2.0
 ```
 
 **Step 4: Commit**
 
 ```bash
 git add pyproject.toml
-git commit -m "[LKPR-72] chore: bump version to 2.1.1 for beta"
+git commit -m "[LKPR-72] chore: align docs with 0.2.0 package version"
 ```
 
 ---

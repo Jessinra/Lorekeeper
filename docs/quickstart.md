@@ -13,17 +13,21 @@ install (sentence-transformers model download is ~90 MB).
 
 ---
 
-## 1 — Clone & run setup
+## 1 — Install & configure
 
 ```bash
-git clone <repo-url> lorekeeper
-cd lorekeeper
-bash scripts/setup.sh
+pip install lorekeeper-mcp
+lorekeeper setup
 ```
 
-The script:
+If you are working from a git checkout, `bash scripts/setup.sh` still exists and also installs
 
-- Installs all Python dependencies (`uv sync --extra dashboard`)
+development hooks/skills. For the primary PyPI install path, `lorekeeper setup` is the command
+to run.
+
+What this does:
+
+- Installs the package and bundled CLI
 - Creates `~/.lorekeeper/` (data directory)
 - Auto-detects Hermes / Claude Code / Cursor and injects MCP config + prompt section
 - Installs skills for each detected agent

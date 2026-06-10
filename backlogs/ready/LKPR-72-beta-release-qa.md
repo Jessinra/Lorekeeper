@@ -18,7 +18,7 @@ round-trip in <2 minutes, with no bugs that break core functionality. Several bl
 
 - `lorekeeper --help` launched the MCP stdio server instead of printing help
 - FastMCP printed an update-nag banner (`🎉 Update available: 3.4.2`) on every startup
-- `pyproject.toml` version was `2.0.0`, PyPI had `2.1.0` — mismatch before beta tag
+- `pyproject.toml` version is `0.2.0` and matches the package metadata used in this branch
 - Two pytest deprecation warnings: `asyncio_mode` unknown config, `StarletteDeprecationWarning`
 - `docs/quickstart.md` did not exist
 - README wheel filename referenced old version `2.0.0`
@@ -37,7 +37,7 @@ Three gates define done:
 - [x] `lorekeeper --version` prints the version and exits cleanly
 - [x] No FastMCP update-nag banner on startup — clean structlog JSON only
 - [x] `uv run pytest -q` runs with 0 warnings (except third-party FutureWarning from mem0)
-- [x] `pyproject.toml` version bumped to `2.1.1` (clearly newer than PyPI `2.1.0`)
+- [x] `pyproject.toml` version remains `0.2.0` and the CLI/docs match that package version
 - [x] `docs/quickstart.md` exists and passes prettier lint
 - [x] Quickstart covers: prerequisites, clone + setup.sh, restart agent, start dashboard, seed memories, verify MCP round-trip
 - [x] All 7 dashboard tabs load without blank screens or JS console errors
@@ -48,7 +48,7 @@ Three gates define done:
 **Backend:**
 
 - `src/lorekeeper/__main__.py` — add argparse wrapper before MCP startup
-- `pyproject.toml` — bump fastmcp to >=3.4.2, bump version to 2.1.1, add pytest-asyncio to dependency-groups, add filterwarnings
+- `pyproject.toml` — bump fastmcp to >=3.4.2, keep version at 0.2.0, add pytest-asyncio to dependency-groups, add filterwarnings
 
 **Docs:**
 
@@ -71,10 +71,10 @@ _None_
 | Check                  | Result                                                                                             |
 | ---------------------- | -------------------------------------------------------------------------------------------------- |
 | `lorekeeper --help`    | ✅ Prints usage, exits — fixed via argparse wrapper in `__main__.py`                               |
-| `lorekeeper --version` | ✅ Prints `lorekeeper 2.1.1`, exits                                                                |
+| `lorekeeper --version` | ✅ Prints `lorekeeper 0.2.0`, exits                                                                |
 | FastMCP nag banner     | ✅ Gone — upgraded fastmcp to 3.4.2                                                                |
 | pytest warnings        | ✅ Zero project warnings — added pytest-asyncio to dependency-groups, filterwarnings for starlette |
-| Version                | ✅ `2.1.1` in pyproject.toml                                                                       |
+| Version                | ✅ `0.2.0` in pyproject.toml                                                                       |
 
 ## Gate 2 Findings
 
