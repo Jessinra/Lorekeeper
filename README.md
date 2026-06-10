@@ -591,4 +591,4 @@ Apache-2.0 — see [LICENSE](LICENSE).
 
 ---
 
-_Built by agents, for agents. [Read the strategy](docs/positioning-manifesto.md)._
+_Built by agents, for agents. [Manifesto](docs/manifesto.md) · [Strategy](docs/positioning-manifesto.md)_
