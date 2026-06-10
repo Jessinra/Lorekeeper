@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-CI guard: every @mcp.tool() in server.py must have a ### `lore_<name>` section in README.md.
+CI guard: every @mcp.tool() in server.py must have a ### `lore_<name>` section
+in README.md or docs/api-reference.md.
 
 Exit 0 — all tools documented.
-Exit 1 — one or more tools missing from README; prints actionable diff.
+Exit 1 — one or more tools missing from both files; prints actionable diff.
 """
 
 import re
@@ -13,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 SERVER = ROOT / "src" / "lorekeeper" / "server.py"
 README = ROOT / "README.md"
+API_REF = ROOT / "docs" / "api-reference.md"
 
 
 def extract_tool_names(server_text: str) -> list[str]:
@@ -64,16 +66,17 @@ def extract_tool_names(server_text: str) -> list[str]:
 
 
 def extract_documented_tools(readme_text: str) -> set[str]:
-    """Return all tool names that have a ### `lore_<name>` heading in README."""
-    return set(re.findall(r"###\s+`(lore_\w+)`", readme_text))
+    """Return all tool names that have a ## or ### `lore_<name>` heading in the given text."""
+    return set(re.findall(r"#{2,3}\s+`(lore_\w+)`", readme_text))
 
 
 def main() -> int:
     server_text = SERVER.read_text()
     readme_text = README.read_text()
+    api_ref_text = API_REF.read_text() if API_REF.exists() else ""
 
     registered = extract_tool_names(server_text)
-    documented = extract_documented_tools(readme_text)
+    documented = extract_documented_tools(readme_text) | extract_documented_tools(api_ref_text)
 
     missing = [t for t in registered if t not in documented]
 
@@ -81,7 +84,7 @@ def main() -> int:
         print("❌  MCP tool documentation check FAILED")
         print("   The following tools are registered in server.py but missing from README.md:\n")
         for t in missing:
-            print(f"   - {t}  →  add a '### `{t}`' section to README.md")
+            print(f"   - {t}  →  add a '### `{t}`' section to README.md or docs/api-reference.md")
         print(
             "\n   See the PR checklist (.github/pull_request_template.md) "
             "for the full doc requirements."
