@@ -19,7 +19,7 @@ dependencies = [
   "mem0ai>=0.1.100",
   "chromadb>=0.5.0",
   "sentence-transformers>=3.0",
-  "fastmcp>=0.4.0",
+  "fastmcp>=3.4.2",
   "pydantic>=2.7",
   "pydantic-settings>=2.3",
   "rank-bm25>=0.2.2",
@@ -70,6 +70,10 @@ addopts = "-m 'not e2e'"
 markers = [
     "e2e: E2E dashboard tests requiring a live server and Playwright browser",
 ]
+filterwarnings = [
+    "ignore::starlette.exceptions.StarletteDeprecationWarning",
+    "ignore::DeprecationWarning:fastapi",
+]
 
 [tool.ruff]
 line-length = 100
@@ -100,6 +104,7 @@ dev = [
     "httpx>=0.28.1",
     "mypy>=2.1.0",
     "pytest>=9.0.3",
+    "pytest-asyncio>=0.23",
     "pytest-playwright>=0.6.0",
     "pytest-timeout>=2.3",
     "ruff>=0.15.13",
