@@ -223,6 +223,35 @@ export function renderList() {
 			: `${state.allMemories.length}`;
 	document.getElementById("memory-count").textContent = countLabel;
 
+	// ── Empty states ────────────────────────────────────────────────────────
+	if (filtered.length === 0) {
+		const hasFilter =
+			ft || state.timeFilterDays !== null || state.namespaceFilter;
+		let msg;
+		if (state.allMemories.length === 0) {
+			msg = `<tr data-testid="mem-empty-state">
+      <td colspan="8" class="run-empty">
+        <strong>━━ No memories yet ━━</strong><br><br>
+        Lorekeeper starts empty. Give the seed prompt to any<br>
+        connected agent to populate your first memories:<br><br>
+        <code>"Read your prompt/config files and save key facts<br>
+        &nbsp;about yourself using lore_remember or lore_insert."</code><br><br>
+        Or import an existing backup from the Backup tab.
+      </td>
+    </tr>`;
+		} else if (hasFilter) {
+			msg = `<tr data-testid="mem-empty-state">
+      <td colspan="8" class="run-empty">No memories match your filter.</td>
+    </tr>`;
+		} else {
+			msg = `<tr data-testid="mem-empty-state">
+      <td colspan="8" class="run-empty">No memories to display.</td>
+    </tr>`;
+		}
+		document.getElementById("memory-rows").innerHTML = msg;
+		return;
+	}
+
 	const sorted = clientSort(filtered, state.memSort.field, state.memSort.dir);
 	document.getElementById("memory-rows").innerHTML = sorted
 		.map((m) => {
