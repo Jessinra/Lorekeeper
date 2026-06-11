@@ -75,3 +75,41 @@ First 10 LoCoMo samples with the same pipeline (answer-text substring metric, no
 | w_sem=0.30, w_key=0.70  | 0.040     | 0.055     | 0.070     | 0.090     | 0.055     |
 
 Hybrid always beats either signal alone on LoCoMo. Balanced 50/50 slightly edges the default on this metric.
+
+---
+
+## Failure Analysis
+
+### single-session-preference (56.7% R@1) — Cold retrieval problem
+
+The worst-performing category. These queries ask about a general preference in one domain but the gold session is about a **different specific topic**:
+
+> **Query:** _"Can you suggest a hotel for my upcoming trip to **Miami**?"_ > **Gold session:** User discussing a **Seattle** trip
+
+The query and gold session share only generic verbs (suggest, recommend, want, help). The specific topic terms (Miami vs Seattle, hotel vs apartment) differ. Keyword overlap with the gold session is effectively zero for the topic-bearing words.
+
+**Root cause:** This is a **cold retrieval** problem — the textual signal connecting query to gold session is too weak for any pure text-similarity approach to reliably rank it at position 1. The correct session is identified by conversation _structure_ (user-asks-for-recommendation → assistant-responds → user-follows-up) rather than content.
+
+### temporal-reasoning (77.4% R@1) — Missing temporal features
+
+These queries ask about _relative timing and ordering_ ("How many days passed between X and Y?", "Which happened first?"). The gold session contains the right events, but the temporal _relationship_ is what the question tests. Keyword overlap with gold: **60.5%** average (vs 75.7% for knowledge-update).
+
+**Root cause:** Pure text similarity cannot model temporal ordering. The `decay_factor` in the hybrid score (zeroed in this benchmark) would help by boosting recent sessions.
+
+### single-session-user (84.3% R@1) — Paraphrase / sparse mention
+
+Queries ask about specific user-stated facts. Some are trivial ("What breed is my dog?" — the breed name appears verbatim). Others fail when the mention is a single word buried in 48 sessions × 12 turns each, and the query uses a paraphrase with no verbatim overlap.
+
+---
+
+## Improvement Candidates
+
+| Idea                                                            | Category Helped  | Effort        | Why It Would Work                                                                                                                                                                                                                       |
+| --------------------------------------------------------------- | ---------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Weight tuning** (ablate different `w_sem`/`w_key`)            | All (minor)      | Trivial       | Already hybrid; small tweaks might gain 1-2% on aggregate                                                                                                                                                                               |
+| **Different embedding model** (`gte-small`, `bge-base`, `e5`)   | preference, user | 1 hour        | `all-MiniLM-L6-v2` is 384-dim, released 2020. Newer 768-dim models handle paraphrase better                                                                                                                                             |
+| **Recency scoring** (enable `decay_factor` term)                | temporal         | 1 day         | Already built into the formula but zeroed for this benchmark                                                                                                                                                                            |
+| **Query expansion** (append common assistant response patterns) | preference       | 2 days        | "Recommend a hotel for Miami" → expand with "recommendation, suggestions, hotels" to catch more conversational structure                                                                                                                |
+| **Conversation structure signals** (encode role-pattern)        | preference       | 2-3 days      | User-asks→assistant-answers→user-follows-up pattern is distinctive for preference sessions                                                                                                                                              |
+| **LLM re-ranker** (classify top-20 candidates)                  | All              | 1 week + cost | Would catch all categories but adds latency and per-query cost                                                                                                                                                                          |
+| **single-preference ceiling**                                   | preference       | —             | This category may have a **hard ceiling** for text-only retrieval. When query and gold session share zero topic-specific terms, no embedding or BM25 tuning can bridge the gap reliably. A structural or behavioral signal is required. |
