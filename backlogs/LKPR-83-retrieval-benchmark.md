@@ -27,7 +27,7 @@ The current test suite tests correctness/unit behavior, not retrieval quality on
 A standalone Python script at `scripts/benchmark_retrieval.py` that replicates the exact retrieval pipeline from `src/lorekeeper/services/`:
 
 1. **Semantic**: sentence-transformers `all-MiniLM-L6-v2` → cosine similarity (brute force, same as LanceDB full scan would give)
-2. **Keyword**: BM25 via `rank_bm25` with field boosts (`title×3 + description×2 + content×1`), top-hit normalized to 1.0
+2. **Keyword**: BM25 via `rank_bm25` with field boosts (title×3 + description×2 + content×1), top-hit normalized to 1.0
 3. **Hybrid**: exact `hybrid_score()` formula — `w_sem·semantic + w_key·keyword` (memory_score and usage_count terms zeroed out since those need app-level data)
 
 Runs against the **LongMemEval-S** dataset (ICLR 2025, 500 questions, ~48 sessions per question with `answer_session_ids` gold labels — downloaded from HuggingFace `xiaowu0162/longmemeval-cleaned`). Each question has known gold session IDs, so the metric is pure retrieval: did the right session appear in top-k? No LLM needed.
