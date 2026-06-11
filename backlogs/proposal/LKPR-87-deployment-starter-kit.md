@@ -7,7 +7,7 @@ rice_score: ~
 filed_by: Akane
 filed_date: 2026-06-11
 depends_on: LKPR-38
-github_issue: 0
+github_issue: 198
 ---
 
 # [LKPR-87] Deployment starter kit — Docker Compose + team pilot deployment guide

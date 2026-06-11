@@ -7,7 +7,7 @@ rice_score: ~
 filed_by: Akane
 filed_date: 2026-06-11
 depends_on: LKPR-31
-github_issue: 0
+github_issue: 197
 ---
 
 # [LKPR-86] Shared namespace quality spike — multi-agent stress test
