@@ -306,6 +306,21 @@ src/lorekeeper/
 
 ---
 
+## Performance
+
+All 500 LongMemEval-S questions, default hybrid weights (sem=0.45, kw=0.30):
+
+| Metric   | Value     | Latency       |
+| -------- | --------- | ------------- |
+| **R@1**  | **84.6%** | 32.9 ms/query |
+| **R@3**  | **93.6%** |               |
+| **R@5**  | **96.6%** |               |
+| **R@10** | **98.8%** |               |
+
+Full per-category breakdown → [docs/research/2026-06-11-retrieval-benchmark-results.md](docs/research/2026-06-11-retrieval-benchmark-results.md)
+
+---
+
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE).
