@@ -20,17 +20,6 @@
 
 -
 
-## 🔴 Pre-Submit BLOCKER Checklist
-
-Run before pushing. These must be clean — no exceptions.
-
-- [ ] No `print()` calls in `src/lorekeeper/` runtime code (use `structlog`)
-- [ ] `mem0.add()` calls have `infer=False`
-- [ ] No hardcoded secrets, API keys, or tokens
-- [ ] No f-string or `.format()` inside SQL `cursor.execute()` calls
-- [ ] No `lore_id` / Mem0 internal id confusion in public outputs
-- [ ] MCP tool names, input schemas, and output schemas unchanged (or explicitly versioned)
-
 ## Standard Checklist
 
 ### General
