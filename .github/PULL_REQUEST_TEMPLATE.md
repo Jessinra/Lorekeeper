@@ -20,7 +20,7 @@
 
 -
 
-## Checklist
+## Standard Checklist
 
 ### General
 
@@ -45,3 +45,23 @@
 - [ ] All checklist items above
 - [ ] Old tool name removed from README and prompt files
 - [ ] Existing skills that reference the old tool name updated
+
+### High-risk changes (scoring, dedup, soft-delete, migrations)
+
+> Skip if this PR doesn't touch memory ranking, duplicate detection, scoring, or persistence.
+
+- [ ] Regression test added that would catch a scoring regression
+- [ ] Migration is additive and idempotent (safe to run more than once)
+- [ ] Existing migration entries NOT modified — new entry added with strictly higher version number
+- [ ] `CLAUDE.md` architecture section updated if the change affects the hybrid scoring formula
+
+---
+
+## Merge Contract
+
+A PR is mergeable when:
+
+- ✅ All `blocker:` comments resolved
+- ✅ All `issue:` (MAJOR) comments resolved OR follow-up ticket created with reason to defer
+- ✅ CI gates green: lint → type check → tests → PR size
+- ✅ At least 1 human approval
