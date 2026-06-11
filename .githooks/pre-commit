@@ -20,6 +20,11 @@ bash scripts/validate-ticket.sh
 echo "✅  tickets valid"
 
 echo ""
+echo "🚨  BLOCKER patterns check (Layer 0)..."
+uv run python scripts/check_blockers.py
+echo "✅  no blockers"
+
+echo ""
 echo "🔍  ruff check..."
 uv run ruff check src tests scripts/
 echo "✅  ruff passed"
