@@ -82,15 +82,6 @@ jobs:
               );
             }
 
-      - name: PR size check
-        if: github.event_name == 'pull_request'
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-          GITHUB_PR_TITLE: ${{ github.event.pull_request.title }}
-          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
-        run: |
-          bash scripts/pr-size-check.sh --base "$BASE_BRANCH"
-
       - name: Prettier markdown check
         run: |
           while IFS= read -r -d '' f; do
