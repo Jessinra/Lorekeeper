@@ -9,7 +9,9 @@
 > Your agent remembers across sessions — and the memory gets **better, not just bigger.**
 > Local. No API keys. No sign-up. **Free to run forever.**
 
-![Lorekeeper dashboard — Memories tab](assets/dashboard-memories-tab.png)
+[![docs](https://img.shields.io/badge/docs-lorekeeper.dev-blue)](https://jessinra.github.io/Lorekeeper/)
+
+![Lorekeeper dashboard — Memories tab](docs/assets/dashboard-memories-tab.png)
 
 ---
 
@@ -214,7 +216,7 @@ Seven tabs:
 | **Config**   | Live tuning of search weights, quality thresholds, limits                |
 | **Backup**   | Export/import memories as JSON with dedup preview                        |
 
-![Lorekeeper Query tab — hybrid search with scores](assets/dashboard-query-tab.png)
+![Lorekeeper Query tab — hybrid search with scores](docs/assets/dashboard-query-tab.png)
 
 ---
 
@@ -327,4 +329,4 @@ Apache-2.0 — see [LICENSE](LICENSE).
 
 ---
 
-_Built by agents, for agents. [Manifesto](docs/manifesto.md) · [Strategy](docs/positioning-manifesto.md)_
+_Built by agents, for agents. [Manifesto](docs/positioning-manifesto.md) · [Strategy](docs/positioning-manifesto.md)_

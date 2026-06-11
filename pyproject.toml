@@ -43,6 +43,11 @@ dashboard = [
   "uvicorn[standard]>=0.30",
   "aiofiles>=23.0",
 ]
+docs = [
+  "mkdocs>=1.6",
+  "mkdocs-material>=9.5",
+  "mkdocs-include-markdown-plugin>=6.0",
+]
 
 [project.scripts]
 lorekeeper = "lorekeeper.__main__:main"
@@ -51,7 +56,7 @@ lorekeeper-dashboard = "lorekeeper.dashboard:main"
 [project.urls]
 Homepage = "https://github.com/Jessinra/Lorekeeper"
 Repository = "https://github.com/Jessinra/Lorekeeper"
-Documentation = "https://github.com/Jessinra/Lorekeeper#readme"
+Documentation = "https://jessinra.github.io/Lorekeeper/"
 Issues = "https://github.com/Jessinra/Lorekeeper/issues"
 
 [build-system]
@@ -109,4 +114,9 @@ dev = [
     "pytest-playwright>=0.6.0",
     "pytest-timeout>=2.3",
     "ruff>=0.15.13",
+]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocs-include-markdown-plugin>=6.0",
 ]

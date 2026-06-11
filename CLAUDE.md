@@ -104,6 +104,9 @@ See `PLAN.md` for the full specification including all data models, SQLite schem
 - Lint (Markdown): `while IFS= read -r -d '' f; do [ -f "$f" ] && printf '%s\0' "$f"; done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve`
 - Type check: `uv run mypy src` (run before push; not in pre-commit — too slow)
 - Entrypoint: `uv run lorekeeper` (or `python -m lorekeeper`)
+- Build docs (local preview): `uv sync --group docs && uv run mkdocs serve`
+- Build docs (strict): `uv run mkdocs build --strict`
+- Pre-PR rule: always run `mkdocs build --strict` before opening a PR that touches `mkdocs.yml`, `docs/`, or `README.md`.
 
 Pre-commit hook (~3s): branch guard, ticket format, ruff, biome, prettier, mcp docs, skill format. Install: `bash scripts/setup.sh`.
 Pre-push hook (~65s): mypy, unit tests, E2E tests (skipped gracefully if Playwright/Chromium not installed).

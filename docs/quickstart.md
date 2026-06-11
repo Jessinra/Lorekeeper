@@ -152,5 +152,5 @@ uv tool install ./dist/lorekeeper_mcp-0.2.0-py3-none-any.whl
 
 - Browse all available tools: [`lore_search`, `lore_remember`, `lore_insert`, `lore_update`,
   `lore_forget`, `lore_reflect`, `lore_recommend_links`, `lore_processed_sessions`]
-- Full configuration reference: [README.md — Configuration](../README.md#configuration)
+- Full configuration reference: [README.md — Configuration](https://github.com/Jessinra/Lorekeeper#configuration)
 - Architecture deep-dive: [docs/ARCHITECTURE.md](ARCHITECTURE.md)
