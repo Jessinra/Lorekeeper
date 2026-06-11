@@ -17,7 +17,11 @@ Multiple Hermes personas on separate machines each have their own isolated Lorek
 
 ## Solution
 
-Lightweight hosted Lorekeeper that agents explicitly push/pull from. Add a `source` field to identify which agent wrote what. Keep local DBs fully private. Implementation details (hosting, transport, auth) deferred until there's a concrete trigger — e.g. dev persona hits a moment of "I wish I could show Akane this".
+Lightweight hosted Lorekeeper that agents explicitly push/pull from. Add a `source` field to identify which agent wrote what. Keep local DBs fully private.
+
+Primary initial workload: **dreaming (LKPR-79)** — the cloud worker pulls unprocessed sessions from local Lorekeeper instances, runs reflection + link discovery, and syncs results back. This is the concrete trigger that justifies the cloud infra: local server captures sessions, cloud server does the LLM work.
+
+Implementation details (hosting, transport, auth) scoped as needed to support the sync-dream-sync loop.
 
 ## Acceptance Criteria
 
@@ -30,4 +34,4 @@ Lightweight hosted Lorekeeper that agents explicitly push/pull from. Add a `sour
 - **CLAUDE.md**: [ ] add `source` field docs
 - **README.md**: [ ] cloud deployment instructions
 - **Skills**: [ ] N/A
-- **Backlog**: [x] Remove proposal note
+- **Backlog**: [x] Update when dreaming (LKPR-79) lands — LKPR-79's cloud dreaming worker will be the first major workload running on Cloud Lorekeeper. Add sync endpoints for unprocessed sessions + dreaming results.
