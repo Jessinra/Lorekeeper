@@ -1,5 +1,5 @@
 ---
-name: lorekeeper-code-review-patterns
+name: lorekeeper-code-reviewer
 description: "Lorekeeper-specific BLOCKER patterns, severity tiers, and review checklist — used when reviewing any PR touching src/lorekeeper/"
 version: 1.0.0
 author: Diana
