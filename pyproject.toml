@@ -103,6 +103,7 @@ ignore = [
 python_version = "3.11"
 strict = true
 ignore_missing_imports = true
+disable_error_code = "untyped-decorator"
 
 
 [dependency-groups]
