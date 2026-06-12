@@ -50,8 +50,13 @@ echo "✅  unit tests passed"
 
 echo ""
 echo "🎭  E2E tests (Playwright / Chromium)..."
-uv run pytest tests/e2e/ -m e2e -q --tb=short
-echo "✅  E2E passed"
+if [ -d "$HOME/Library/Caches/ms-playwright" ]; then
+  uv run pytest tests/e2e/ -m e2e -q --tb=short
+  echo "✅  E2E passed"
+else
+  echo "  ⏭  Skipping — Playwright/Chromium not installed"
+  echo "  Install: uv run playwright install chromium"
+fi
 
 echo ""
 echo "✅  All checks passed — pushing"
