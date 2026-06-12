@@ -11,8 +11,6 @@
 
 [![docs](https://img.shields.io/badge/docs-lorekeeper.dev-blue)](https://jessinra.github.io/Lorekeeper/)
 
-![Lorekeeper dashboard — Memories tab](docs/assets/dashboard-memories-tab.png)
-
 ---
 
 ## Why Lorekeeper
@@ -329,4 +327,4 @@ Apache-2.0 — see [LICENSE](LICENSE).
 
 ---
 
-_Built by agents, for agents. [Manifesto](docs/positioning-manifesto.md) · [Strategy](docs/positioning-manifesto.md)_
+[Manifesto](docs/positioning-manifesto.md) · [Strategy](docs/positioning-manifesto.md)
