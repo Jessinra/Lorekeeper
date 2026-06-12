@@ -30,7 +30,7 @@ theme:
     text: Inter
     code: JetBrains Mono
   logo: assets/logo.svg
-  favicon: assets/favicon.png
+  favicon: assets/favicon.svg
   features:
     - navigation.instant
     - navigation.tracking
