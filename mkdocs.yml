@@ -29,7 +29,8 @@ theme:
   font:
     text: Inter
     code: JetBrains Mono
-  logo: material/memory
+  logo: assets/logo.svg
+  favicon: assets/favicon.png
   features:
     - navigation.instant
     - navigation.tracking
