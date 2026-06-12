@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Lorekeeper Logo — White variant for docsite teal header -->
+  <defs>
+    <clipPath id="keeper-clip">
+      <path d="M 512 0 L 512 512 L 0 512 L 0 0 Z
+               M 256,50 L 294,116 L 256,182 L 218,116 Z" fill-rule="evenodd"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#keeper-clip)">
+    <circle cx="256" cy="256" r="182" fill="none" stroke="#ffffff" stroke-width="22"/>
+    <circle cx="256" cy="256" r="132" fill="none" stroke="#ffffff" stroke-width="42"/>
+  </g>
+</svg>
