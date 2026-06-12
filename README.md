@@ -1,6 +1,15 @@
-# Lorekeeper
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <img src="docs/assets/logo.svg" width="180" alt="Lorekeeper">
+  </picture>
+</p>
 
-> **Self-improving memory for AI agents. One command, no cloud, no config.**
+<h1 align="center">Lorekeeper</h1>
+
+<p align="center">
+  <strong>Self-improving memory for AI agents. One command, no cloud, no config.</strong>
+</p>
 >
 > ```bash
 > pip install lorekeeper-mcp && lorekeeper setup && lorekeeper
