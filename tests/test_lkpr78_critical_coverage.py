@@ -21,7 +21,13 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+try:
+    from fastapi.testclient import TestClient
+except ImportError:
+    TestClient = None  # type: ignore[misc]
+
+pytest.importorskip("fastapi", reason="dashboard extra not installed")
 
 from lorekeeper.config import Settings
 from lorekeeper.services.keyword_index import KeywordIndex
