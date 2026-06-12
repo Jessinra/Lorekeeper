@@ -10,8 +10,8 @@
 <p align="center">
   <strong>Self-improving memory for AI agents. One command, no cloud, no config.</strong>
 </p>
->
-> ```bash
+
+> ```
 > pip install lorekeeper-mcp && lorekeeper setup && lorekeeper
 > ```
 >

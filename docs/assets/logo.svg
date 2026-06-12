@@ -3,12 +3,12 @@
   <!-- Color: Dusty Violet #7b5d8b — professional steel base + purple hue -->
   <!-- Transparent background variant (README, docsite header, light backgrounds) -->
   <defs>
-    <mask id="keeper-cut">
-      <rect x="0" y="0" width="512" height="512" fill="white"/>
-      <polygon points="256,50 294,116 256,182 218,116" fill="black"/>
-    </mask>
+    <clipPath id="keeper-clip">
+      <path d="M 512 0 L 512 512 L 0 512 L 0 0 Z
+               M 256,50 L 294,116 L 256,182 L 218,116 Z" fill-rule="evenodd"/>
+    </clipPath>
   </defs>
-  <g mask="url(#keeper-cut)">
+  <g clip-path="url(#keeper-clip)">
     <circle cx="256" cy="256" r="182" fill="none" stroke="#7b5d8b" stroke-width="22"/>
     <circle cx="256" cy="256" r="132" fill="none" stroke="#7b5d8b" stroke-width="42"/>
   </g>
