@@ -104,9 +104,9 @@ python_version = "3.11"
 strict = true
 ignore_missing_imports = true
 
-
 [dependency-groups]
 dev = [
+    "fastapi>=0.111",
     "httpx>=0.28.1",
     "mypy>=2.1.0",
     "pytest>=9.0.3",
@@ -114,6 +114,7 @@ dev = [
     "pytest-playwright>=0.6.0",
     "pytest-timeout>=2.3",
     "ruff>=0.15.13",
+    "uvicorn[standard]>=0.30",
 ]
 docs = [
     "mkdocs>=1.6",

@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
-    <img src="docs/assets/logo.svg" width="180" alt="Lorekeeper">
-  </picture>
+  <img src="docs/assets/logo.svg" width="180" alt="Lorekeeper">
 </p>
 
 <h1 align="center">Lorekeeper</h1>
@@ -10,15 +7,15 @@
 <p align="center">
   <strong>Self-improving memory for AI agents. One command, no cloud, no config.</strong>
 </p>
->
+
+[![docs](https://img.shields.io/badge/docs-lorekeeper.dev-blue)](https://jessinra.github.io/Lorekeeper/)
+
 > ```bash
 > pip install lorekeeper-mcp && lorekeeper setup && lorekeeper
 > ```
 >
 > Your agent remembers across sessions — and the memory gets **better, not just bigger.**
 > Local. No API keys. No sign-up. **Free to run forever.**
-
-[![docs](https://img.shields.io/badge/docs-lorekeeper.dev-blue)](https://jessinra.github.io/Lorekeeper/)
 
 ---
 
