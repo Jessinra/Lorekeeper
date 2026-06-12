@@ -2,7 +2,14 @@
   <!-- Lorekeeper Logo — Keeper's Ring (C-c V3c) -->
   <!-- Color: Dusty Violet #7b5d8b — professional steel base + purple hue -->
   <!-- Transparent background variant (README, docsite header, light backgrounds) -->
-  <circle cx="256" cy="256" r="182" fill="none" stroke="#7b5d8b" stroke-width="22"/>
-  <circle cx="256" cy="256" r="132" fill="none" stroke="#7b5d8b" stroke-width="42"/>
-  <polygon points="256,50 294,116 256,182 218,116" fill="transparent"/>
+  <defs>
+    <mask id="keeper-cut">
+      <rect x="0" y="0" width="512" height="512" fill="white"/>
+      <polygon points="256,50 294,116 256,182 218,116" fill="black"/>
+    </mask>
+  </defs>
+  <g mask="url(#keeper-cut)">
+    <circle cx="256" cy="256" r="182" fill="none" stroke="#7b5d8b" stroke-width="22"/>
+    <circle cx="256" cy="256" r="132" fill="none" stroke="#7b5d8b" stroke-width="42"/>
+  </g>
 </svg>
