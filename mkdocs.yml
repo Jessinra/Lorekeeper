@@ -1,0 +1,69 @@
+site_name: Lorekeeper
+site_description: "Self-improving memory for AI agents — open-source MCP server"
+site_url: "https://jessinra.github.io/Lorekeeper/"
+repo_url: "https://github.com/Jessinra/Lorekeeper"
+repo_name: Jessinra/Lorekeeper
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  font:
+    text: Inter
+    code: JetBrains Mono
+  logo: material/memory
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - include-markdown
+
+exclude_docs: |
+  plans/
+  research/
+  linter-decisions.md
+  ARCHITECTURE.md
+
+markdown_extensions:
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - API Reference: api-reference.md
+  - Comparison: positioning-manifesto.md
+  - Roadmap: growth-strategy.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Jessinra/Lorekeeper
+
+copyright: Copyright &copy; 2026 Jessinra Kai &mdash; Apache-2.0

@@ -18,6 +18,9 @@ data/
 # Logs
 log/*.log
 
+# Docs build output
+site/
+
 # Test / coverage
 .pytest_cache/
 .coverage
