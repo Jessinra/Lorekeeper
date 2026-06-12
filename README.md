@@ -7,15 +7,15 @@
 <p align="center">
   <strong>Self-improving memory for AI agents. One command, no cloud, no config.</strong>
 </p>
->
+
+[![docs](https://img.shields.io/badge/docs-lorekeeper.dev-blue)](https://jessinra.github.io/Lorekeeper/)
+
 > ```bash
 > pip install lorekeeper-mcp && lorekeeper setup && lorekeeper
 > ```
 >
 > Your agent remembers across sessions — and the memory gets **better, not just bigger.**
 > Local. No API keys. No sign-up. **Free to run forever.**
-
-[![docs](https://img.shields.io/badge/docs-lorekeeper.dev-blue)](https://jessinra.github.io/Lorekeeper/)
 
 ---
 
