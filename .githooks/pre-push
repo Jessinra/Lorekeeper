@@ -50,8 +50,12 @@ echo "✅  unit tests passed"
 
 echo ""
 echo "🎭  E2E tests (Playwright / Chromium)..."
-uv run pytest tests/e2e/ -m e2e -q --tb=short
-echo "✅  E2E passed"
+if uv run python -c "from playwright.sync_api import sync_playwright; sync_playwright().__enter__().chromium.launch(headless=True).close()" 2>/dev/null; then
+  uv run pytest tests/e2e/ -m e2e -q --tb=short
+  echo "✅  E2E passed"
+else
+  echo "⚠️   Chromium not available — skipping E2E tests (install: uv run playwright install chromium)"
+fi
 
 echo ""
 echo "✅  All checks passed — pushing"
