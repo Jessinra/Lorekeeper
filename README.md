@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
-    <img src="docs/assets/logo.svg" width="180" alt="Lorekeeper">
-  </picture>
+  <img src="docs/assets/logo.svg" width="180" alt="Lorekeeper">
 </p>
 
 <h1 align="center">Lorekeeper</h1>
