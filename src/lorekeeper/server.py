@@ -12,6 +12,14 @@ from lorekeeper.serializers import (
 )
 from lorekeeper.services.config_store import ConfigStore
 from lorekeeper.services.database import Database
+from lorekeeper.services.encouragement import (
+    for_forget,
+    for_insert,
+    for_reflect,
+    for_remember,
+    for_update,
+    set_rate,
+)
 from lorekeeper.services.engine_factory import build_engine
 from lorekeeper.services.keyword_index import KeywordIndex
 from lorekeeper.services.link_store import LinkStore
@@ -70,6 +78,10 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     all_mems = list(svc._all_memories(include_deleted=True).values())
     kw.rebuild(all_mems)
     log.info("bm25_rebuilt", count=len(all_mems))
+
+    # Set guidance injection rate for write responses
+    set_rate(s.enc_rate)
+    log.info("enc_rate_set", rate=s.enc_rate)
 
     _svc = svc
     return svc
@@ -242,7 +254,11 @@ async def lore_insert(
     relation_type, and reason.
     """
     try:
-        return _handle_insert(get_service(), memories or [], links or [], force)
+        result = _handle_insert(get_service(), memories or [], links or [], force)
+        mem_count = len(memories or [])
+        link_count = len(links or [])
+        result.update(for_insert(memory_count=mem_count, link_count=link_count))
+        return result
     except Exception:
         log.exception("lore_insert_failed", memory_count=len(memories or []))
         raise
@@ -276,9 +292,17 @@ async def lore_recommend_links(
 
 @mcp.tool(name="lore_remember")
 async def lore_remember(thought: str) -> dict[str, Any]:
-    """Fast one-shot memory insert. Pass a thought, get a memory with auto-title."""
+    """Capture a thought instantly — one fact, one call.
+
+    Use this when you discover something worth keeping:
+    a decision, a bug root cause, a user preference, a pattern.
+
+    Minimal effort, high reward. Your future self will find this useful.
+    """
     try:
-        return get_service().remember(thought)
+        result = get_service().remember(thought)
+        result.update(for_remember())
+        return result
     except Exception:
         log.exception("lore_remember_failed", thought=thought[:80])
         raise
@@ -299,7 +323,9 @@ async def lore_update(
     Call after every ``lore_search`` to keep scores calibrated.
     """
     try:
-        return get_service().update(memory_feedback or [], link_feedback or [])
+        result = get_service().update(memory_feedback or [], link_feedback or [])
+        result.update(for_update())
+        return result
     except Exception:
         log.exception("lore_update_failed")
         raise
@@ -331,7 +357,10 @@ async def lore_reflect(
     memory_ids: list[str] | None = None,
     auto_insert: bool = True,
 ) -> dict[str, Any]:
-    """Call once per session — reflect on one session, submit, then move to the next.
+    """Reflect on a completed session — save what you learned.
+
+    Minimal usage: pass session_id and summary. That's enough.
+    The rest are extras for when you discovered something substantial.
 
     Args:
         session_id: Unique session identifier (required).
@@ -360,7 +389,7 @@ async def lore_reflect(
     first-time call.
     """
     try:
-        return get_service().submit_reflection(
+        result = get_service().submit_reflection(
             session_id=session_id,
             session_date=session_date,
             topic=topic,
@@ -375,6 +404,10 @@ async def lore_reflect(
             memory_ids=memory_ids or [],
             auto_insert=auto_insert,
         )
+        result.update(for_reflect(
+            already_processed=result.get("already_processed", False)
+        ))
+        return result
     except Exception:
         log.exception("lore_reflect_failed", session_id=session_id)
         raise
@@ -409,7 +442,10 @@ async def lore_forget(
     if reason not in _VALID_REASONS:
         raise ValueError(f"Unknown reason {reason!r}. Must be one of: {sorted(_VALID_REASONS)}")
     try:
-        return get_service().forget(memory_ids, reason)
+        result = get_service().forget(memory_ids, reason)
+        forgotten_count = len(result.get("forgotten", []))
+        result.update(for_forget(count=forgotten_count))
+        return result
     except Exception:
         log.exception("lore_forget_failed", memory_ids=memory_ids, reason=reason)
         raise

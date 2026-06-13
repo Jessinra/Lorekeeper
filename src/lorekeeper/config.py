@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     decay_lambda: float = 0.0077  # time-decay λ; 0 disables decay (LORE_DECAY_LAMBDA)
     new_memory_default_score: float = 5.0  # default score for new memories
 
+    # Encouragement / guidance rate (0.0–1.0). 1.0 = always include guidance in write responses
+    enc_rate: float = Field(default=1.0, ge=0.0, le=1.0, description="Probability of including guidance in write responses (LORE_ENC_RATE)")  # noqa: E501
+
     namespace: str = Field(default="shared")  # LORE_NAMESPACE — agent write namespace + read scope
 
     # Auto-link
