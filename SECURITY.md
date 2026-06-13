@@ -1,43 +1,34 @@
 # Security Policy
 
+## Supported Versions
+
+| Version | Supported          |
+| ------- | ------------------ |
+| 0.3.x   | :white_check_mark: |
+| < 0.3   | :x:                |
+
 ## Reporting a Vulnerability
 
-Lorekeeper is in pre-beta. Security is taken seriously — if you find something, please report it privately.
+Lorekeeper stores AI agent memory locally. If you discover a security vulnerability,
+please report it privately so we can address it before disclosure.
 
-**Do not** open a public GitHub issue for security vulnerabilities.
+**Do not file a public GitHub issue.** Instead, email the maintainer directly at
+**jessinra.kai@gmail.com** with:
 
-**Report via:** [GitHub Security Advisory](https://github.com/Jessinra/Lorekeeper/security/advisories/new)
+- A description of the vulnerability
+- Steps to reproduce (minimal, if possible)
+- Affected versions
 
-Or email: jessinra.kai@gmail.com
-
-## What to Include
-
-- Description of the vulnerability
-- Steps to reproduce
-- Affected version(s) — commit hash or release tag
-- Any relevant logs, screenshots, or proof-of-concept
-
-## Response
-
-- **Acknowledgment** within 48 hours
-- **Assessment and fix plan** within 5 business days for confirmed vulnerabilities
-- **Disclosure** coordinated with the reporter — we aim for public disclosure within 30 days of fix
+We aim to acknowledge receipt within 48 hours and provide an initial assessment
+within 5 business days. Once the issue is resolved, we'll coordinate disclosure
+with you.
 
 ## Scope
 
-- Lorekeeper MCP server (`src/lorekeeper/`)
-- Dashboard web UI (`src/lorekeeper/dashboard/`)
-- Official client integration scripts
+This policy covers the `lorekeeper-mcp` Python package and the `lorekeeper`
+CLI tool. Issues in dependencies (Chromadb, Mem0, etc.) should be reported
+to their respective maintainers.
 
-**Out of scope:** Theoretical attacks requiring physical access, dependency CVEs already tracked by Dependabot, social engineering of the maintainer.
+## Preferred Encryption
 
-## Supported Versions
-
-| Version | Supported                    |
-| ------- | ---------------------------- |
-| main    | ✅                           |
-| < 1.0   | ⚠️ Best-effort — pre-release |
-
-## Hall of Fame
-
-We don't have one yet. First reporter gets their name/alias added here if they want.
+PGP key available on request — email to arrange.

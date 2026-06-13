@@ -1,6 +1,6 @@
 [project]
 name = "lorekeeper-mcp"
-version = "0.2.0"
+version = "0.3.0"
 description = "Self-improving MCP memory server for AI agents. One command, no cloud, no config."
 requires-python = ">=3.11"
 readme = "README.md"
