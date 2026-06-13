@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/data/server-schema.json",
+  "name": "io.github.jessinra/lorekeeper",
+  "version": "0.3.0",
+  "description": "Self-improving memory for AI agents. One command, no cloud, no config.",
+  "long_description": "Lorekeeper is an MCP server that gives AI agents persistent, self-improving memory.\n\nInstall with one command, no cloud, no API keys, no Docker.\n\n**Features**\n- Hybrid semantic + keyword search across all stored memories\n- Feedback loop that automatically improves memory quality over time\n- Interactive dashboard for browsing and managing memories\n- Auto-linking between related memories\n- Namespace isolation (per-agent or per-project)\n- Structured session reflection for autonomous memory curation\n\n**Install**\n```bash\npip install lorekeeper-mcp && lorekeeper setup\n```\nOr ephemeral:\n```bash\nuvx lorekeeper-mcp\n```",
+  "homepage": "https://github.com/Jessinra/Lorekeeper",
+  "docs_url": "https://lorekeeper.dev",
+  "icon_url": "https://lorekeeper.dev/assets/logo.svg",
+  "license": "Apache-2.0",
+  "runtime": "python",
+  "install_command": "pip install lorekeeper-mcp && lorekeeper setup",
+  "repository": "https://github.com/Jessinra/Lorekeeper",
+  "categories": ["ai", "memory", "developer-tools", "mcp"],
+  "tags": ["mcp-server", "ai-memory", "agent-memory", "self-improving", "python", "claude-code", "codex"],
+  "tools": [
+    {
+      "name": "lore_search",
+      "description": "Hybrid semantic and keyword search across memories, or bulk-fetch by ID"
+    },
+    {
+      "name": "lore_remember",
+      "description": "Fast one-shot memory insert with auto-generated title"
+    },
+    {
+      "name": "lore_insert",
+      "description": "Structured memory insert with content, links, and inline link creation"
+    },
+    {
+      "name": "lore_update",
+      "description": "Rate memories and links as useful or not — drives the self-improving quality loop"
+    },
+    {
+      "name": "lore_forget",
+      "description": "Soft-delete one or more memories by ID"
+    },
+    {
+      "name": "lore_recommend_links",
+      "description": "Suggest link candidates between a memory and related memories"
+    },
+    {
+      "name": "lore_reflect",
+      "description": "Structured session reflection — submits lessons, decisions, and auto-creates memories"
+    },
+    {
+      "name": "lore_processed_sessions",
+      "description": "List all session IDs that have been processed via lore_reflect"
+    }
+  ]
+}
