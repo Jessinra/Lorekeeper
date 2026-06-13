@@ -7,19 +7,14 @@ carry prompts, instructions, or any agent-directed signal in future.
 
 Rate: controlled by ``LORE_ENC_RATE`` (0.0-1.0). At 1.0, every write response includes a message.
 At 0.3, ~30% of calls include it — useful for avoiding desensitisation.
-
-A/B tracking: every delivered message is logged to ``{LORE_DATA_DIR}/ab_messages.jsonl``
-so effectiveness can be measured by correlating message IDs with subsequent tool usage.
 """
 
 from __future__ import annotations
 
 import json
 import logging
-import os
 import random
 import secrets
-import time
 from pathlib import Path
 from typing import Any
 
@@ -35,12 +30,6 @@ def set_rate(rate: float) -> None:
     """Set the injection rate (0.0-1.0) for guidance responses."""
     global _INJECTION_RATE
     _INJECTION_RATE = max(0.0, min(1.0, rate))
-
-
-def _data_dir() -> Path:
-    """Resolve LORE_DATA_DIR for A/B log writes."""
-    raw = os.environ.get("LORE_DATA_DIR") or str(Path.home() / ".lorekeeper")
-    return Path(raw)
 
 
 def _load() -> dict[str, list[dict[str, str]]]:
@@ -80,32 +69,14 @@ def _pick(category: str) -> dict[str, str]:
     return secrets.choice(pool)
 
 
-def _log_delivery(message_id: str, category: str, session_context: str = "") -> None:
-    """Log a message delivery for A/B analysis."""
-    try:
-        path = _data_dir() / "ab_messages.jsonl"
-        entry = {
-            "ts": time.time(),
-            "message_id": message_id,
-            "category": category,
-            "session_context": session_context,
-        }
-        with open(path, "a") as f:
-            f.write(json.dumps(entry) + "\n")
-    except Exception:
-        pass  # never break the MCP tool over analytics
-
-
 def get_guidance(category: str) -> dict[str, Any]:
     """Return a dict with 'message' (text) and 'message_id' for the category.
 
     Respects the configured injection rate — may return an empty dict.
-    Also logs the delivery for A/B analysis. Prefer the categorical helpers below.
     """
     if _INJECTION_RATE < 1.0 and random.random() > _INJECTION_RATE:
         return {}
     msg = _pick(category)
-    _log_delivery(msg["id"], category)
     return {"message": msg["text"], "message_id": msg["id"]}
 
 
