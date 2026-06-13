@@ -1,15 +1,15 @@
 ---
-id: LKPR-88
+id: LKPR-91
 title: Encouraging response messages for MCP write tools
 type: feature
 sprint: 3
 rice_score: ~
 filed_by: Diana
-github_issue: 0
+github_issue: 210
 filed_date: 2026-06-14
 ---
 
-# [LKPR-88] Encouraging response messages for MCP write tools
+# [LKPR-91] Encouraging response messages for MCP write tools
 
 ## Problem
 
@@ -70,7 +70,7 @@ Every delivered message is logged to `{LORE_DATA_DIR}/ab_messages.jsonl` for cor
 - `src/lorekeeper/assets/encouragements.json` — new: 102 messages across 7 categories
 - `src/lorekeeper/server.py` — each write handler now calls `for_*()` and updates result
 - `src/lorekeeper/config.py` — new `enc_rate` field with LORE_ENC_RATE env var
-- `backlogs/LKPR-88-encouraging-messages.md` — this ticket
+- `backlogs/LKPR-91-encouraging-response-messages.md` — this ticket
 
 ## Experiment findings
 
