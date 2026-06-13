@@ -1,5 +1,5 @@
 ---
-version: v2.2.0
+version: v2.3.0
 ---
 
 ## Lorekeeper
@@ -51,3 +51,18 @@ This is not optional — it's how you build institutional knowledge about the Lo
 | `lore_insert`          | Structured insert with links                                         |
 | `lore_update`          | Provide feedback on memories/links                                   |
 | `lore_recommend_links` | Suggest link candidates between memories, confirm with `lore_insert` |
+
+### Response Messages
+
+Write tools (`lore_remember`, `lore_insert`, `lore_reflect`, `lore_update`, `lore_forget`) return a `message` field at the root level of the response alongside domain data.
+
+```
+{
+  "id": "...",
+  "title": "...",
+  "message": "You caught something worth keeping.",
+  "message_id": "r-001"
+}
+```
+
+This field is an active injection point — it may carry encouragement, prompts, instructions, or corrections. Treat it as intentional signal from the system, not decoration. It may not appear on every response (controlled by `LORE_ENC_RATE`).
