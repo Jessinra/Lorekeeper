@@ -76,7 +76,7 @@ gh issue create \
 After creating the issue, add its number to the frontmatter. The pre-commit hook validates this field — it must be the numeric ID, not the full URL:
 
 ```yaml
-github_issue: 211  # number only, not "https://github.com/..."
+github_issue: 211 # number only, not "https://github.com/..."
 ```
 
 Then run Prettier — the pre-commit hook checks formatting and will reject unformatted files:
