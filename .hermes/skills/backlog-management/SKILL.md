@@ -1,7 +1,7 @@
 ---
 name: backlog-management
 description: Lorekeeper backlog management — ticket lifecycle, numbering, scripts, and conventions. Load this when filing tickets, moving ticket states, checking what's ready to work on, or onboarding to the project workflow.
-version: v1.0.0
+version: v1.1.0
 tags: []
 related_skills: [lorekeeper-dev, lorekeeper-pm]
 ---
@@ -14,14 +14,16 @@ How tickets work in the Lorekeeper project. Every ticket has a lifecycle and a h
 
 ```
 ~/Code/lorekeeper/backlogs/
-├── LKPR-N-<slug>.md    # Active tickets
-├── done/               # Completed tickets
+├── proposal/           # Raw ideas, S:Proposal
+├── ready/              # Validated + prioritized, S:Ready
+├── done/               # Shipped + verified, S:Done
+├── cancelled/          # Won't do, S:Cancelled
 └── TEMPLATE.md         # Template
 ```
 
-Lorekeeper tickets (code, proposals, process, setup) → `backlogs/LKPR-N-<slug>.md`
+Tickets are PROPOSAL → READY → DONE (or CANCELLED). **File location must match status** — when status changes, `git mv` the file to the corresponding subdirectory. Zero files should live at `backlogs/` root level.
 
-Hermes infrastructure tickets (Docker, profiles, swarm) → `~/.hermes/backlogs/HERMES-N-<slug>.md` — NOT this repo.
+**Currently deferred** tickets (S:Deferred) remain in `proposal/` with the deferred label; they aren't ready for promotion but aren't dead either. Cancelled tickets are never reborn.
 
 ## Ticket Lifecycle
 
@@ -31,21 +33,51 @@ S:proposal → S:ready → S:in-progress → S:review → S:done
                S:deferred / S:cancelled
 ```
 
-| Status          | Meaning                                       | Who moves it |
-| --------------- | --------------------------------------------- | ------------ |
-| `S:proposal`    | Raw idea, not yet committed                   | Anyone       |
-| `S:ready`       | Validated & prioritised, ready to work        | PM           |
-| `S:in-progress` | Being worked on                               | Dev          |
-| `S:review`      | Code done, pending PM review                  | Dev          |
-| `S:done`        | Shipped, verified → moved to `backlogs/done/` | PM           |
-| `S:deferred`    | Valid but not now                             | PM           |
-| `S:cancelled`   | Won't do                                      | PM           |
+| Status          | Meaning                                | Who moves it | File location |
+| --------------- | -------------------------------------- | ------------ | ------------- |
+| `S:proposal`    | Raw idea, not yet committed            | Anyone       | `proposal/`   |
+| `S:ready`       | Validated & prioritised, ready to work | PM           | `ready/`      |
+| `S:in-progress` | Being worked on                        | Dev          | `ready/`      |
+| `S:review`      | Code done, pending PM review           | Dev          | `ready/`      |
+| `S:done`        | Shipped, verified                      | PM           | `done/`       |
+| `S:deferred`    | Valid but not now                      | PM           | `proposal/`   |
+| `S:cancelled`   | Won't do                               | PM           | `cancelled/`  |
 
 ## Numbering Convention
 
 **SEQUENTIAL only.** Highest existing number + 1. Gaps are from done tickets moved to `backlogs/done/`. Never fill gaps.
 
-Check both `backlogs/` and `backlogs/done/` to find the highest number.
+Check all subdirectories (`proposal/`, `ready/`, `done/`, `cancelled/`) to find the highest number.
+
+## Frontmatter Convention
+
+Each file has a YAML frontmatter with metadata. The `github_issue` field is **mandatory** and enforced by the pre-commit hook:
+
+```yaml
+---
+id: LKPR-N
+title: Short descriptive title
+type: bug | feature | enhancement | research | chore
+status: S:Proposal
+priority: P2:medium # P0:critical | P1:high | P2:medium | P3:low
+sprint: ~
+rice_score: ~
+filed_by: Akane | Diana | Jason
+filed_date: YYYY-MM-DD
+github_issue: 123 # REQUIRED — pre-commit hook validates this
+---
+```
+
+**Status and priority must stay in sync between file frontmatter and GitHub labels.** Both are sources of truth. When promoting a ticket (e.g. proposal → ready), update BOTH:
+
+1. File: change `status: S:Proposal` → `S:Ready`, `git mv` to new subdirectory
+2. GitHub: `gh issue edit N --add-label "S:Ready" --remove-label "S:Proposal"`
+
+The daily backlog triage cron job (`lorekeeper-daily-backlog-triage`) checks for drift between file status and GH labels and reports mismatches.
+
+Sections: Problem, Solution, Acceptance Criteria, Affected Files (Backend + Dashboard), Dependencies, Open Questions, Notes.
+
+For dashboard changes, list the UI component. If backend-only, write `_none_` for Dashboard.
 
 ## Scripts
 
@@ -53,80 +85,72 @@ Check both `backlogs/` and `backlogs/done/` to find the highest number.
 
 ```bash
 cd ~/Code/lorekeeper
-
-# All tickets grouped by status
 ./scripts/lorekeeper-backlog.sh
-
-# Filter by status
-./scripts/lorekeeper-backlog.sh proposal    # ideas to triage
-./scripts/lorekeeper-backlog.sh backlog     # what's ready to work on
-./scripts/lorekeeper-backlog.sh review      # what needs PM review
-./scripts/lorekeeper-backlog.sh in-progress # what's being worked on
+./scripts/lorekeeper-backlog.sh proposal
+./scripts/lorekeeper-backlog.sh backlog
 ```
 
-The script reads YAML frontmatter from `backlogs/*.md`, groups by status, shows priority tags, and auto-detects duplicate ticket numbers. The integrity check shows the next available ticket number.
-
-### `lorekeeper-setup.sh` — Install repo skills
+### `next-ticket-number.sh` — Get the next available number
 
 ```bash
-./scripts/lorekeeper-setup.sh
+./scripts/next-ticket-number.sh
+./scripts/next-ticket-number.sh -m  # machine-parseable
 ```
 
-Symlinks `.hermes/skills/` from the repo into `~/.hermes/skills/`. Run once per machine, or after adding/updating any skill in `.hermes/skills/`.
+Uses GitHub Issues API — authoritative regardless of which branch you're on.
 
-## Ticket Format
+## Promoting a Ticket (Proposal → Ready)
 
-Frontmatter:
-
-```yaml
----
-id: LKPR-N
-title: Short descriptive title
-type: bug | feature | chore | research
-sprint: ~ # 1 | 2 | 3 | unplanned | deferred
-rice_score: ~ # omit if not scored
-filed_by: Akane | Dev | Jason
-filed_date: YYYY-MM-DD
----
+```bash
+cd ~/Code/lorekeeper
+git mv backlogs/proposal/LKPR-N-<slug>.md backlogs/ready/
+# Edit status: S:Proposal → S:Ready
+npx prettier --write --prose-wrap preserve backlogs/ready/LKPR-N-<slug>.md
+gh issue edit N --add-label "S:Ready" --remove-label "S:Proposal"
+git add backlogs/ready/LKPR-N-<slug>.md
+git commit -m "[LKPR-0] chore: promote LKPR-N to ready"
 ```
 
-**Status and priority live in GitHub labels only.** Do not add `status:` or `priority:` to ticket frontmatter — they drift. GH labels are the source of truth.
+## Closing a Ticket (Done)
 
-Sections: Problem, Solution, Acceptance Criteria, Affected Files (Backend + Dashboard), Dependencies, Open Questions, Notes.
+```bash
+cd ~/Code/lorekeeper
+git mv backlogs/ready/LKPR-N-<slug>.md backlogs/done/
+# Edit status: S:Ready → S:Done
+gh issue close N
+git add backlogs/done/LKPR-N-<slug>.md
+git commit -m "[LKPR-0] chore: close LKPR-N (shipped)"
+```
 
-For dashboard changes, list the UI component. If backend-only, write `_none_` for Dashboard.
+## Reconciling Backlog Drift
 
-## Discipline Rules
+When files and GitHub issues have drifted:
 
-1. **Check backlog before starting work** → `./scripts/lorekeeper-backlog.sh S:ready`
-2. **When starting a ticket** → change `status` to `S:in-progress`
-3. **When submitting for review** → change `status` to `S:review`, add label `S:Review`
-4. **When verifying done** → change `status` to `S:done`, add `resolved_date`, move file to `backlogs/done/`
-5. **No ticket left in `S:in-progress` at session end** — move to `S:review` or revert to `S:ready`
-6. **Check next number before filing** → `./scripts/lorekeeper-backlog.sh | grep "Next ticket number"`
-7. **File symptoms first, not speculative root cause** — label unconfirmed hypotheses clearly
+1. **Audit**: Compare file frontmatter vs GH labels for every ticket
+2. **File location**: Ensure file is in correct subdirectory matching its status
+3. **Status sync**: Update file `status:` to match GH label
+4. **Title collision**: If GH title claims wrong LKPR-N vs body `id:`, fix the title
+5. **Missing `github_issue`**: Add the field — pre-commit validates it
+6. **Root-level files**: Move to appropriate subdirectory
+7. **Duplicate files**: Remove the copy in wrong directory, keep the correct one
 
 ## Filing a New Ticket
 
 ```bash
-# 1. Get next number from GitHub Issues (authoritative — works without latest pull)
+# 1. Get next number
 ./scripts/next-ticket-number.sh
-# Returns e.g. "LKPR-43"
-
 # 2. Copy template
-cp backlogs/TEMPLATE.md backlogs/LKPR-NEXT-<slug>.md
-
-# 3. Fill it in (symptoms first, then solution)
-# 4. Commit
-git add backlogs/LKPR-NEXT-<slug>.md
-git commit -m "[LKPR-0] chore: add LKPR-NEXT <short title>"
+cp backlogs/TEMPLATE.md backlogs/proposal/LKPR-NEXT-<slug>.md
+# 3. Fill in, create GH issue, add github_issue to frontmatter
+# 4. npx prettier --write --prose-wrap preserve
+# 5. Commit on proposal branch
 ```
-
-**Important:** Use `./scripts/next-ticket-number.sh` (GitHub Issues API), not the local script — it's authoritative regardless of which branch you're on or when you last pulled.
 
 ## Pitfalls
 
 - Don't fill gaps in numbering — sequential only
-- Don't put lorekeeper management tickets in `~/.hermes/backlogs/` — they go here
-- Don't guess root cause without evidence — mark it as unverified
 - Don't leave `status: in-progress` across sessions without context
+- File-GH label drift is common — the daily triage cron catches it
+- When creating a file from an existing GH issue body, check for title/number collisions first
+- Pre-commit hook validates: `github_issue`, prettier, ticket prefix
+- Use `git push --no-verify` to bypass pre-push hook only on proposal branches, never main

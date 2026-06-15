@@ -2,7 +2,8 @@
 id: LKPR-61
 title: Add created_after / updated_after recency filters to lore_search
 type: feature
-sprint: ~
+status: S:Ready
+priority: P2:medium
 rice_score: ~
 filed_by: Akane
 github_issue: 132

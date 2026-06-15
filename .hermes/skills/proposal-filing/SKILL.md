@@ -1,7 +1,7 @@
 ---
 name: proposal-filing
 description: File a new Lorekeeper proposal ticket — create markdown, create GitHub issue, commit, push. Use when requesting a new feature, filing a bug, or submitting a product idea.
-version: v1.0.0
+version: v1.1.0
 tags: []
 related_skills: [backlog-management, lorekeeper-pm]
 ---
@@ -53,6 +53,7 @@ sprint: ~
 rice_score: ~
 filed_by: Diana # whoever is filing
 filed_date: YYYY-MM-DD
+github_issue: ~ # fill after step 3
 ---
 ```
 
@@ -70,7 +71,21 @@ gh issue create \
 
 **Important:** GitHub label format has a space between colon and value (e.g. `P2: medium`, not `P2:medium`).
 
-### 4. Commit the markdown file
+### 4. Add GitHub issue number to frontmatter
+
+After creating the issue, add its number to the frontmatter. The pre-commit hook validates this field — it must be the numeric ID, not the full URL:
+
+```yaml
+github_issue: 211 # number only, not "https://github.com/..."
+```
+
+Then run Prettier — the pre-commit hook checks formatting and will reject unformatted files:
+
+```bash
+npx prettier --write --prose-wrap preserve backlogs/LKPR-N-<slug>.md
+```
+
+### 5. Commit the markdown file
 
 ```bash
 git add backlogs/LKPR-N-<slug>.md
@@ -79,7 +94,7 @@ git commit -m "[LKPR-0] chore: add LKPR-N <short title>"
 
 Use `[LKPR-0]` prefix for chores/proposals (not `[LKPR-dev]` — that's for implementation work).
 
-### 5. Push and open a PR
+### 6. Push and open a PR
 
 Direct pushes to `main` are blocked by the pre-push hook. Always use a feature branch:
 
@@ -87,7 +102,7 @@ Direct pushes to `main` are blocked by the pre-push hook. Always use a feature b
 # Create a feature branch for this proposal
 git checkout -b proposal/LKPR-N-<slug>
 
-# Commit is already done in step 4, so just push
+# Commit is already done in step 5, so just push
 git push origin proposal/LKPR-N-<slug>
 ```
 
@@ -106,7 +121,10 @@ gh pr create \
 
 ## Troubleshooting
 
-- **Pre-commit hook rejects:** Check frontmatter has all required fields (`sprint`, `rice_score` can be `~`)
+- **Pre-commit hook rejects:** Two common causes:
+  - Missing `github_issue` in frontmatter (fill after step 3)
+  - Markdown not formatted — run `npx prettier --write --prose-wrap preserve backlogs/LKPR-N-<slug>.md`
+- **Pre-push hook timed out:** The hook runs mypy + unit tests + E2E tests (~60s). Retry with a longer `timeout` parameter (300s).
 - **Labels fail:** Labels are `"S:Proposal,P2: medium"` (space after colon, NOT `P2:medium`)
 - **Wrong branch:** Development work goes on feature branches. Proposals go to `main` or `chore/backlog`
 
@@ -114,4 +132,5 @@ gh pr create \
 
 - File symptoms first, not root cause — label unconfirmed hypotheses clearly
 - For ideas that need research first, set `type: research` and add an Open Questions section
+- Run `./scripts/next-ticket-number.sh -m` early — it queries GitHub, so no local pull needed
 - If you suspect a ticket is stale/low priority, mention it in Notes — PM will triage during sprint review

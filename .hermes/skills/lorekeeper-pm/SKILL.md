@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-pm
 description: PM workflow for Lorekeeper. Load this when managing the backlog, filing tickets, reviewing dev work, or planning features. For ticket lifecycle, numbering, and script details, see the backlog-management skill.
-version: v2.3.0
+version: v2.4.0
 tags: []
 related_skills: [backlog-management, lorekeeper-dev, sprint-review]
 ---
@@ -64,6 +64,14 @@ Once per week, pull up to **10 proposal tickets** into the active backlog:
 3. Commit + push on the **`chore/backlog`** branch
 4. Open a PR against `main` — auto-approved, no review needed
 5. Jason will squash-merge it
+
+### Mid-sprint goal shift
+
+When Jason sets a new sprint goal mid-sprint (e.g. "lets continue with a new goal in mind":
+
+1. **Analyze first** — map the goal to specific friction points → proposed fixes → effort estimates. Present the analysis to Jason.
+2. **Get greenlight** — wait for Jason to confirm the mix before pulling into backlog.
+3. **Only then, execute** — update ticket statuses to `S:ready`, move files to `backlogs/ready/` if needed, commit on `chore/backlog` branch, open PR. Don't stop after analysis.
 
 ### Filing a New Ticket
 
@@ -264,6 +272,10 @@ Dev committed LKPR-29 directly to main without review. Jason reset main, dev was
 ### Missed cross-reference checks in reviews
 
 LKPR-29's PR (#5) was missing two things: default score should be 5 (match `lore_insert`), and `lore_remember` wasn't recording metrics in the dashboard. Both were caught only during PM review on GitHub, not in the initial implementation. **Lesson:** add explicit cross-reference and dashboard checks to review (see checklist above).
+
+### Analysis without execution
+
+During mid-sprint goal shifts, PM can fall into analysis mode — producing good reasoning but stopping short of executing the status changes, branch, and PR. Encode the "Mid-sprint goal shift" workflow above into practice: present analysis → get greenlight → execute fully.
 
 ---
 
