@@ -33,15 +33,15 @@ S:proposal → S:ready → S:in-progress → S:review → S:done
                S:deferred / S:cancelled
 ```
 
-| Status          | Meaning                                       | Who moves it | File location |
-| --------------- | --------------------------------------------- | ------------ | ------------- |
-| `S:proposal`    | Raw idea, not yet committed                   | Anyone       | `proposal/`   |
-| `S:ready`       | Validated & prioritised, ready to work        | PM           | `ready/`      |
-| `S:in-progress` | Being worked on                               | Dev          | `ready/`      |
-| `S:review`      | Code done, pending PM review                  | Dev          | `ready/`      |
-| `S:done`        | Shipped, verified                             | PM           | `done/`       |
-| `S:deferred`    | Valid but not now                             | PM           | `proposal/`   |
-| `S:cancelled`   | Won't do                                      | PM           | `cancelled/`  |
+| Status          | Meaning                                | Who moves it | File location |
+| --------------- | -------------------------------------- | ------------ | ------------- |
+| `S:proposal`    | Raw idea, not yet committed            | Anyone       | `proposal/`   |
+| `S:ready`       | Validated & prioritised, ready to work | PM           | `ready/`      |
+| `S:in-progress` | Being worked on                        | Dev          | `ready/`      |
+| `S:review`      | Code done, pending PM review           | Dev          | `ready/`      |
+| `S:done`        | Shipped, verified                      | PM           | `done/`       |
+| `S:deferred`    | Valid but not now                      | PM           | `proposal/`   |
+| `S:cancelled`   | Won't do                               | PM           | `cancelled/`  |
 
 ## Numbering Convention
 
@@ -59,16 +59,17 @@ id: LKPR-N
 title: Short descriptive title
 type: bug | feature | enhancement | research | chore
 status: S:Proposal
-priority: P2:medium  # P0:critical | P1:high | P2:medium | P3:low
+priority: P2:medium # P0:critical | P1:high | P2:medium | P3:low
 sprint: ~
 rice_score: ~
 filed_by: Akane | Diana | Jason
 filed_date: YYYY-MM-DD
-github_issue: 123   # REQUIRED — pre-commit hook validates this
+github_issue: 123 # REQUIRED — pre-commit hook validates this
 ---
 ```
 
 **Status and priority must stay in sync between file frontmatter and GitHub labels.** Both are sources of truth. When promoting a ticket (e.g. proposal → ready), update BOTH:
+
 1. File: change `status: S:Proposal` → `S:Ready`, `git mv` to new subdirectory
 2. GitHub: `gh issue edit N --add-label "S:Ready" --remove-label "S:Proposal"`
 
