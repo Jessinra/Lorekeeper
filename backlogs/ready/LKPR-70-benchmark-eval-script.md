@@ -2,7 +2,7 @@
 id: LKPR-70
 title: Benchmark / Eval Script — retrieval quality + performance + end-to-end
 type: enhancement
-status: S:Proposal
+status: S:Ready
 priority: P2:medium
 sprint: ~
 rice_score: ~

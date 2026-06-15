@@ -2,7 +2,8 @@
 id: LKPR-80
 title: sort_by param on lore_search — sort by recency or frequency
 type: feature
-sprint: ~
+status: S:Ready
+priority: P2:medium
 rice_score: ~
 filed_by: Akane (daily-ideas cron)
 github_issue: 183

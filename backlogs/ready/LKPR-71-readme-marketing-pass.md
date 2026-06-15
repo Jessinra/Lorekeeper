@@ -2,7 +2,7 @@
 id: LKPR-71
 title: README marketing pass — branding, screenshots, use-cases, benchmark results
 type: chore
-status: S:Proposal
+status: S:Review
 priority: P1:high
 sprint: beta
 rice_score: ~

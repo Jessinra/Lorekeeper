@@ -108,6 +108,9 @@ A **master dreaming cron** (`dreaming.sh`) that runs a configurable schedule (de
 
 ## Dependencies
 
+- **LKPR-79**: Dreaming session hook + background reflection engine — provides the autonomous reflection that this pipeline orchestrates into a multi-phase cron job.
+- **LKPR-9**: Memory decay model — provides the decay state that the pipeline iterates on.
+
 | Phase              | Depends On                                              | Status                   |
 | ------------------ | ------------------------------------------------------- | ------------------------ |
 | 1. Batch reflect   | `lore_reflect` (done), `lore_processed_sessions` (done) | ✅ All available         |
