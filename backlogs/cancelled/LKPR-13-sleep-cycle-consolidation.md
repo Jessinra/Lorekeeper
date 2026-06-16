@@ -65,3 +65,7 @@ High long-term value but low confidence (30%) — this is a genuinely hard probl
 - **README.md**: [ ] N/A — legacy ticket, filed before convention
 - **Skills**: [ ] N/A — legacy ticket, filed before convention
 - **Backlog**: [ ] N/A — legacy ticket, filed before convention
+
+
+---
+*Absorbed into LKPR-63 (Dreaming orchestration) as a sub-phase.*

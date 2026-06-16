@@ -2,7 +2,7 @@
 id: LKPR-94
 title: Dreaming via external agent invocation — configurable command for autonomous reflection
 type: feature
-status: S:proposal
+status: S:Cancelled
 priority: P3:low
 sprint: ~
 rice_score: ~
@@ -67,3 +67,6 @@ S (~1 day). A shell script, a CLI command, and docs. Zero changes to the Lorekee
 This is a pragmatic solution that defers the hard problem (Lorekeeper needing its own LLM) to the user's existing agent infrastructure. It's not elegant, but it works today and costs nothing to maintain. Revisit if we ever offer a cloud dreaming service.
 
 Originated from Letta Code competitor analysis — Letta uses server-side scheduling for sleep-time compute, which Lorekeeper can't replicate without its own LLM infrastructure.
+
+---
+*Absorbed into LKPR-63 (Dreaming orchestration) as execution layer.*

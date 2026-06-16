@@ -113,3 +113,7 @@ Filed alongside LKPR-67 (relation type revision) as a pair of backlog cleanup ti
 Not a replacement for LKPR-32 (encrypted backup) — that ticket adds encryption on top of whatever export pipeline exists. This ticket builds the plain-text CLI foundation that LKPR-32 could later encrypt.
 
 Key design principle: the export format should be identical to what the dashboard export produces, so both paths are interoperable. Users can export via CLI, import via dashboard, or vice versa.
+
+
+---
+*Absorbed into LKPR-32 (Encrypted backup/restore) — CLI export merged into backup ticket.*

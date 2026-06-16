@@ -64,3 +64,7 @@ _None_
 ## Notes
 
 Originated from daily-ideas cron (2026-05-27). Idea 1, approved as P2.
+
+
+---
+*Absorbed into LKPR-22 (Time-travel queries) — changelog scope merged into WAL-based audit trail proposal.*
