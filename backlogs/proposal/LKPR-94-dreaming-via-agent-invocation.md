@@ -49,9 +49,14 @@ Does NOT work with Cursor (no headless mode) or pure MCP clients (no CLI agent).
 
 ## Why Not
 
-- **Cloud dreaming service** — contradicts local-first values, needs server infra
-- **Built-in scheduler** — Lorekeeper server would need an LLM API key, startup delay, more complexity
-- **Accept API key directly** — possible alternative, but means separate billing from the user's agent
+This isn't a binary choice. Local dreaming (via agent invocation) and cloud dreaming are **complementary**:
+
+- **Local dreaming** — works now, zero infra, reuses user's existing agent auth/billing
+- **Cloud dreaming** — works for everyone, no CLI agent dependency, runs even when the user's machine is off
+
+The framing should be a **tiered progression**: local dreaming for power users who want full control and no external dependency → cloud dreaming as an optional upgrade for deeper autonomy.
+
+Ideally, both paths share the same dreaming engine (LKPR-79) — local mode calls the agent CLI, cloud mode calls an LLM API directly. The engine is the same, only the execution backend differs.
 
 ## Effort
 
