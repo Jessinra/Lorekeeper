@@ -114,6 +114,6 @@ Not a replacement for LKPR-32 (encrypted backup) — that ticket adds encryption
 
 Key design principle: the export format should be identical to what the dashboard export produces, so both paths are interoperable. Users can export via CLI, import via dashboard, or vice versa.
 
-
 ---
-*Absorbed into LKPR-32 (Encrypted backup/restore) — CLI export merged into backup ticket.*
+
+_Absorbed into LKPR-32 (Encrypted backup/restore) — CLI export merged into backup ticket._

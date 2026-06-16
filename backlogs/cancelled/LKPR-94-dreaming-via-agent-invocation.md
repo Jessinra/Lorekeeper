@@ -32,6 +32,7 @@ Ship a lightweight script (`scripts/lore-dream.sh`) that:
 The script is designed to be placed in system cron / launchd / systemd timer. Setup is a one-time command: `lore setup-dreaming --schedule nightly --agent claude`.
 
 Works with any CLI agent that has headless/scriptable mode:
+
 - Claude Code: `claude --print "instruction"`
 - OpenAI Codex: `codex --instruction "instruction"`
 - OpenCode: `opencode --input "instruction"`
@@ -69,4 +70,5 @@ This is a pragmatic solution that defers the hard problem (Lorekeeper needing it
 Originated from Letta Code competitor analysis — Letta uses server-side scheduling for sleep-time compute, which Lorekeeper can't replicate without its own LLM infrastructure.
 
 ---
-*Absorbed into LKPR-63 (Dreaming orchestration) as execution layer.*
+
+_Absorbed into LKPR-63 (Dreaming orchestration) as execution layer._
