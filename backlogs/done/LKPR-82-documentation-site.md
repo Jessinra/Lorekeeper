@@ -2,7 +2,7 @@
 id: LKPR-82
 title: Documentation site — MkDocs + GitHub Pages for browsable quickstart + API ref
 type: enhancement
-status: S:Ready
+status: S:Done
 priority: P1:high
 sprint: beta
 rice_score: ~
