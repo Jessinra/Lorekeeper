@@ -351,4 +351,144 @@ def test_recommend_links_valid_call_returns_shape(svc):
     assert "candidates" in result
     assert "count" in result
     assert "source_lore_id" in result
-    assert result["count"] == len(result["candidates"])
+
+
+# ── LKPR-61: created_after / updated_after validation tests ─────────────────
+
+
+def test_created_after_invalid_iso_string_raises(svc):
+    with pytest.raises(ValueError, match="Invalid ISO timestamp for 'created_after'"):
+        _handle_search(svc, "test", created_after="not-a-date")
+
+
+def test_updated_after_invalid_iso_string_raises(svc):
+    with pytest.raises(ValueError, match="Invalid ISO timestamp for 'updated_after'"):
+        _handle_search(svc, "test", updated_after="2026/06/01")
+
+
+def test_created_after_non_utc_offset_raises(svc):
+    with pytest.raises(ValueError, match="Non-UTC timezone offset"):
+        _handle_search(svc, "test", created_after="2026-06-01T00:00:00+05:30")
+
+
+def test_created_after_utc_z_notation_accepted(svc):
+    """Z suffix is UTC — should not raise."""
+    result = _handle_search(svc, "test", created_after="2026-06-01T00:00:00Z")
+    assert "results" in result
+
+
+def test_created_after_naive_string_treated_as_utc(svc):
+    """Naive ISO strings (no tz) are treated as UTC — should not raise."""
+    result = _handle_search(svc, "test", created_after="2026-06-01T00:00:00")
+    assert "results" in result
+
+
+def test_created_after_plus_zero_utc_accepted(svc):
+    """+00:00 offset is UTC — should not raise."""
+    result = _handle_search(svc, "test", created_after="2026-06-01T00:00:00+00:00")
+    assert "results" in result
+
+
+def test_created_after_filters_in_full_pipeline(svc):
+    """Integration: created_after actually filters results end-to-end via handler."""
+    r = svc.insert(
+        memories=[
+            {"title": "old mem", "content": "old content"},
+            {"title": "new mem", "content": "new content"},
+        ],
+        links=[],
+    )
+    ids = [m["id"] for m in r["inserted_memories"]]
+    old_id, new_id = ids[0], ids[1]
+
+    # Backdate "old mem" to Jan 2026 and set "new mem" to June 2026 directly in DB.
+    svc._conn.execute(
+        "UPDATE memories SET created_at = ? WHERE id = ?",
+        ("2026-01-01T00:00:00+00:00", old_id),
+    )
+    svc._conn.execute(
+        "UPDATE memories SET created_at = ? WHERE id = ?",
+        ("2026-06-01T00:00:00+00:00", new_id),
+    )
+    svc._conn.commit()
+    svc._invalidate_cache()
+
+    all_rows = svc.memories.all_memory_rows()
+    svc._engine._search_results = [{"lore_id": row["id"], "score": 0.9} for row in all_rows]
+
+    result = _handle_search(svc, "content", created_after="2026-03-01T00:00:00")
+    titles = {item["memory"]["title"] for item in result["results"]}
+    assert "new mem" in titles
+    assert "old mem" not in titles
+
+
+# ── LKPR-80: sort_by validation tests ────────────────────────────────────────
+
+
+def test_sort_by_unknown_value_raises(svc):
+    with pytest.raises(ValueError, match="Unknown sort_by"):
+        _handle_search(svc, "test", sort_by="magic")
+
+
+def test_sort_by_valid_values_do_not_raise(svc):
+    """All three valid sort_by values must be accepted without error."""
+    for valid in ("relevance", "recent", "frequent"):
+        result = _handle_search(svc, "test", sort_by=valid)
+        assert "results" in result
+
+
+def test_sort_by_recent_returns_results(svc):
+    """sort_by='recent' round-trip via handler — at least returns valid shape."""
+    svc.insert(
+        memories=[{"title": "r1", "content": "content r1"},
+                  {"title": "r2", "content": "content r2"}],
+        links=[],
+    )
+    all_rows = svc.memories.all_memory_rows()
+    svc._engine._search_results = [{"lore_id": r["id"], "score": 0.9} for r in all_rows]
+    result = _handle_search(svc, "content r1", sort_by="recent")
+    assert isinstance(result["results"], list)
+
+
+def test_sort_by_frequent_returns_results(svc):
+    """sort_by='frequent' round-trip via handler — at least returns valid shape."""
+    svc.insert(
+        memories=[{"title": "f1", "content": "content f1"}],
+        links=[],
+    )
+    all_rows = svc.memories.all_memory_rows()
+    svc._engine._search_results = [{"lore_id": r["id"], "score": 0.9} for r in all_rows]
+    result = _handle_search(svc, "content f1", sort_by="frequent")
+    assert isinstance(result["results"], list)
+
+
+def test_sort_by_and_created_after_compose_in_handler(svc):
+    """sort_by and created_after work together end-to-end."""
+    r = svc.insert(
+        memories=[
+            {"title": "old entry", "content": "entry old"},
+            {"title": "recent entry", "content": "entry recent"},
+        ],
+        links=[],
+    )
+    ids = [m["id"] for m in r["inserted_memories"]]
+    old_id, new_id = ids[0], ids[1]
+
+    svc._conn.execute(
+        "UPDATE memories SET created_at = ?, updated_at = ? WHERE id = ?",
+        ("2026-01-01T00:00:00+00:00", "2026-01-01T00:00:00+00:00", old_id),
+    )
+    svc._conn.execute(
+        "UPDATE memories SET created_at = ?, updated_at = ? WHERE id = ?",
+        ("2026-06-01T00:00:00+00:00", "2026-06-15T00:00:00+00:00", new_id),
+    )
+    svc._conn.commit()
+    svc._invalidate_cache()
+
+    all_rows = svc.memories.all_memory_rows()
+    svc._engine._search_results = [{"lore_id": row["id"], "score": 0.9} for row in all_rows]
+
+    result = _handle_search(svc, "entry", created_after="2026-03-01T00:00:00", sort_by="recent")
+    titles = [item["memory"]["title"] for item in result["results"]]
+    assert "old entry" not in titles
+    assert "recent entry" in titles

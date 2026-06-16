@@ -6,6 +6,9 @@ from typing import Any
 from lorekeeper.config import Settings
 from lorekeeper.models import Memory, MemoryLink
 
+# Valid sort_by values for lore_search.
+VALID_SORT_BY: frozenset[str] = frozenset({"relevance", "recent", "frequent"})
+
 
 @dataclass
 class SearchResult:
@@ -57,6 +60,34 @@ def time_decay(memory: Memory, lam: float) -> float:
 REFINE_FROM_CAP = 200
 
 
+def _parse_iso_utc(ts: str) -> datetime:
+    """Parse an ISO 8601 timestamp and return a UTC-aware datetime.
+
+    Accepts naive strings (treated as UTC) and UTC-offset strings.
+    Rejects non-UTC offsets with a clear ValueError.
+    """
+    dt = datetime.fromisoformat(ts)
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+    # Allow only UTC (offset == 0) — keeps handling simple and unambiguous.
+    utcoff = dt.utcoffset()
+    if utcoff is not None and utcoff.total_seconds() != 0:
+        raise ValueError(
+            f"Non-UTC timezone offset in timestamp {ts!r}. "
+            "Pass UTC timestamps (e.g. '2026-06-01T00:00:00Z' or "
+            "'2026-06-01T00:00:00+00:00')."
+        )
+    return dt
+
+
+def _parse_filter_dt(value: str, field_name: str) -> datetime:
+    """Validate and parse a timestamp filter value; raise ValueError on bad input."""
+    try:
+        return _parse_iso_utc(value)
+    except ValueError as exc:
+        raise ValueError(f"Invalid ISO timestamp for {field_name!r}: {exc}") from exc
+
+
 def rank_results(
     semantic_hits: list[dict[str, Any]],   # [{lore_id, score}]
     keyword_hits: dict[str, float],  # {lore_id: score}
@@ -67,6 +98,9 @@ def rank_results(
     min_score: float,
     include_deleted: bool,
     refine_from: list[str] | None = None,
+    created_after: datetime | None = None,
+    updated_after: datetime | None = None,
+    sort_by: str = "relevance",
 ) -> list[SearchResult]:
     if refine_from is not None:
         # Iterative narrowing: restrict candidates to the provided ID set
@@ -87,6 +121,23 @@ def rank_results(
             continue
         if not include_deleted and mem.soft_deleted:
             continue
+
+        # LKPR-61: timestamp pre-filters — applied in Python against the cache.
+        if created_after is not None:
+            try:
+                mem_created = _parse_iso_utc(mem.created_at)
+            except ValueError:
+                continue
+            if mem_created < created_after:
+                continue
+        if updated_after is not None:
+            try:
+                mem_updated = _parse_iso_utc(mem.updated_at)
+            except ValueError:
+                continue
+            if mem_updated < updated_after:
+                continue
+
         sem = sem_map.get(lore_id, 0.0)
         kw = keyword_hits.get(lore_id, 0.0)
         combined = hybrid_score(sem, kw, mem.score, mem.usage_count, settings)
@@ -103,5 +154,12 @@ def rank_results(
             decay_factor=decay,
         ))
 
-    results.sort(key=lambda r: r.combined_score, reverse=True)
+    # LKPR-80: sort_by — default is relevance (combined_score DESC).
+    if sort_by == "recent":
+        results.sort(key=lambda r: _parse_iso_utc(r.memory.updated_at), reverse=True)
+    elif sort_by == "frequent":
+        results.sort(key=lambda r: r.memory.usage_count, reverse=True)
+    else:
+        results.sort(key=lambda r: r.combined_score, reverse=True)
+
     return results[:limit]

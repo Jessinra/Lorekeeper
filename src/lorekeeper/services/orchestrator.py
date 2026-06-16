@@ -23,7 +23,7 @@ from lorekeeper.services.memory_engine import MemoryEngine
 from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.reflection_store import ReflectionStore
-from lorekeeper.services.search import SearchResult, rank_results
+from lorekeeper.services.search import SearchResult, _parse_iso_utc, rank_results
 
 if TYPE_CHECKING:
     from lorekeeper.services.link_candidate import LinkCandidate
@@ -154,6 +154,9 @@ class MemoryService:
         include_deleted: bool = False,
         refine_from: list[str] | None = None,
         search_format: str = "full",
+        created_after: datetime | None = None,
+        updated_after: datetime | None = None,
+        sort_by: str = "relevance",
     ) -> list[SearchResult]:
         self._increment_metric("lore_search")
         sem_hits = self._engine.search(query, limit=200)
@@ -174,6 +177,9 @@ class MemoryService:
             sem_hits, kw_hits, memories, links_by_id,
             self.settings, limit, min_score, include_deleted,
             refine_from=refine_from,
+            created_after=created_after,
+            updated_after=updated_after,
+            sort_by=sort_by,
         )
 
         # Increment usage on returned memories
@@ -188,10 +194,14 @@ class MemoryService:
         ids: list[str],
         include_deleted: bool = False,
         include_links: bool = True,
+        created_after: datetime | None = None,
+        updated_after: datetime | None = None,
+        sort_by: str = "relevance",
     ) -> list[SearchResult]:
         """Bulk lookup by lore_id — skips vector/BM25 entirely.
 
         Returns SearchResult objects with zero relevance scores (SQL-only path).
+        Timestamp filters and sort_by compose with the ids path.
         """
         if not ids:
             return []
@@ -205,6 +215,19 @@ class MemoryService:
             mem = _row_to_memory(row)
             if not include_deleted and mem.soft_deleted:
                 continue
+            # LKPR-61: apply timestamp filters on the ids path too.
+            if created_after is not None:
+                try:
+                    if _parse_iso_utc(mem.created_at) < created_after:
+                        continue
+                except ValueError:
+                    continue
+            if updated_after is not None:
+                try:
+                    if _parse_iso_utc(mem.updated_at) < updated_after:
+                        continue
+                except ValueError:
+                    continue
             links: list[MemoryLink] = []
             if include_links:
                 links = self.links.links_for_memory(mem.id)[:self.settings.max_links_per_memory]
@@ -216,15 +239,21 @@ class MemoryService:
                 links=links,
                 decay_factor=1.0,
             ))
-        # Preserve input ID order
-        result_by_id = {r.memory.id: r for r in results}
-        ordered: list[SearchResult] = [result_by_id[i] for i in ids if i in result_by_id]
+        # LKPR-80: sort_by on the ids path.
+        if sort_by == "recent":
+            results.sort(key=lambda r: _parse_iso_utc(r.memory.updated_at), reverse=True)
+        elif sort_by == "frequent":
+            results.sort(key=lambda r: r.memory.usage_count, reverse=True)
+        else:
+            # Default: preserve input ID order (original behaviour).
+            result_by_id = {r.memory.id: r for r in results}
+            results = [result_by_id[i] for i in ids if i in result_by_id]
 
         # Increment usage_count on all returned memories in one transaction
-        self.memories.bulk_increment_usage_count([r.memory.id for r in ordered])
+        self.memories.bulk_increment_usage_count([r.memory.id for r in results])
         self._conn.commit()
 
-        return ordered
+        return results
 
     # ── Insert ────────────────────────────────────────────────────────────────
 
