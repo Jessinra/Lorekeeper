@@ -27,6 +27,7 @@ from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.services.reflection_store import ReflectionStore
+from lorekeeper.services.search import VALID_SORT_BY, parse_filter_dt
 
 log = structlog.get_logger()
 mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
@@ -104,11 +105,22 @@ def _handle_search(
     refine_from: list[str] | None = None,
     format: str = "full",
     ids: list[str] | None = None,
+    created_after: str | None = None,
+    updated_after: str | None = None,
+    sort_by: str = "relevance",
 ) -> dict[str, Any]:
     if format not in _VALID_SEARCH_FORMATS:
         raise ValueError(
             f"Unknown format {format!r}. Must be one of: {sorted(_VALID_SEARCH_FORMATS)}"
         )
+    if sort_by not in VALID_SORT_BY:
+        raise ValueError(
+            f"Unknown sort_by {sort_by!r}. Must be one of: {sorted(VALID_SORT_BY)}"
+        )
+
+    # Parse and validate timestamp filters up front — clear error before any DB work.
+    dt_created_after = parse_filter_dt(created_after, "created_after") if created_after else None
+    dt_updated_after = parse_filter_dt(updated_after, "updated_after") if updated_after else None
 
     # When ids provided — skip search pipeline, bulk SQL lookup
     if ids is not None:
@@ -123,6 +135,9 @@ def _handle_search(
             ids,
             include_deleted=include_deleted,
             include_links=include_links and format != "title",
+            created_after=dt_created_after,
+            updated_after=dt_updated_after,
+            sort_by=sort_by,
         )
         if format == "title":
             serialized = [serialize_search_result_title(r) for r in results]
@@ -143,6 +158,9 @@ def _handle_search(
         query, limit, min_score, include_links, include_deleted,
         refine_from=refine_from,
         search_format=format,
+        created_after=dt_created_after,
+        updated_after=dt_updated_after,
+        sort_by=sort_by,
     )
     if format == "title":
         serialized = [serialize_search_result_title(r) for r in results]
@@ -200,6 +218,9 @@ async def lore_search(
     refine_from: list[str] | None = None,
     format: str = "full",
     ids: list[str] | None = None,
+    created_after: str | None = None,
+    updated_after: str | None = None,
+    sort_by: str = "relevance",
 ) -> dict[str, Any]:
     """Search memories by semantic + keyword query, or bulk-fetch by ID.
 
@@ -222,11 +243,24 @@ async def lore_search(
             bypassing the search pipeline. Silently skips unknown IDs. Pair
             with ``format='title'`` for a two-step list-then-fetch workflow.
             Max 50 IDs (configurable via ``max_search_ids``).
+        created_after: ISO 8601 UTC timestamp. Only return memories created on
+            or after this time (e.g. ``'2026-06-04T00:00:00'``). UTC only;
+            non-UTC offsets raise a validation error.
+        updated_after: ISO 8601 UTC timestamp. Only return memories updated on
+            or after this time. Composes with ``created_after`` and all other
+            filters.
+        sort_by: ``'relevance'`` (default) ranks by hybrid score when the search
+            pipeline runs. In ``ids`` lookup mode there is no scoring, so
+            ``'relevance'`` preserves the caller-provided ``ids`` order instead.
+            ``'recent'`` sorts by ``updated_at DESC``. ``'frequent'`` sorts by
+            ``usage_count DESC``. Composes with timestamp filters.
     """
     try:
         return _handle_search(
             get_service(), query, limit, min_score, include_links, include_deleted,
             refine_from=refine_from, format=format, ids=ids,
+            created_after=created_after, updated_after=updated_after,
+            sort_by=sort_by,
         )
     except Exception:
         log.exception("lore_search_failed", query=query)
