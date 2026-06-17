@@ -85,10 +85,14 @@ _parse_iso_utc = parse_iso_utc
 
 
 def parse_filter_dt(value: str, field_name: str) -> datetime:
-    """Validate and parse a timestamp filter value; raise ValueError on bad input."""
+    """Validate and parse a timestamp filter value; raise ValueError on bad input.
+
+    Wraps both ValueError (bad format) and TypeError (non-string input, e.g. JSON
+    number or null passed by an MCP client) so callers always see ValueError.
+    """
     try:
         return parse_iso_utc(value)
-    except ValueError as exc:
+    except (ValueError, TypeError) as exc:
         raise ValueError(f"Invalid ISO timestamp for {field_name!r}: {exc}") from exc
 
 

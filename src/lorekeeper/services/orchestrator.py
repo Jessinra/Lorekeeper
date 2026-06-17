@@ -23,7 +23,7 @@ from lorekeeper.services.memory_engine import MemoryEngine
 from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.reflection_store import ReflectionStore
-from lorekeeper.services.search import SearchResult, _parse_iso_utc, rank_results
+from lorekeeper.services.search import SearchResult, parse_iso_utc, rank_results
 
 if TYPE_CHECKING:
     from lorekeeper.services.link_candidate import LinkCandidate
@@ -218,13 +218,13 @@ class MemoryService:
             # LKPR-61: apply timestamp filters on the ids path too.
             if created_after is not None:
                 try:
-                    if _parse_iso_utc(mem.created_at) < created_after:
+                    if parse_iso_utc(mem.created_at) < created_after:
                         continue
                 except ValueError:
                     continue
             if updated_after is not None:
                 try:
-                    if _parse_iso_utc(mem.updated_at) < updated_after:
+                    if parse_iso_utc(mem.updated_at) < updated_after:
                         continue
                 except ValueError:
                     continue
@@ -245,7 +245,7 @@ class MemoryService:
         if sort_by == "recent":
             def _recent_key(r: SearchResult) -> datetime:
                 try:
-                    return _parse_iso_utc(r.memory.updated_at)
+                    return parse_iso_utc(r.memory.updated_at)
                 except (ValueError, TypeError):
                     return datetime.min.replace(tzinfo=UTC)
 
