@@ -21,6 +21,10 @@ Proactively capture valuable knowledge into Lorekeeper. Do not wait to be asked 
 
 ## Workflow
 
+### Reference notes
+
+- `references/representation-translation-lesson.md` — condensed pattern from Anthropic's chemist post: store lessons about translating between representations, provenance, and auditability here when they generalize beyond a single session.
+
 ### Step 1: Compose the memory
 
 Write a standalone fact (must make sense without conversation context):
@@ -108,3 +112,9 @@ If `lore_insert` returns a `duplicates` array, the memory was NOT inserted. Revi
 - **Always link** — the knowledge graph depends on it
 - **One fact per memory** — insert multiple memories for multiple facts
 - **Feedback immediately** — call `lore_update` right after `lore_search`, before inserting
+
+## Related Skills
+
+- **[lorekeeper-protocol]** — The full session protocol that orchestrates when to call these tools.
+- **[lorekeeper-search]** — Companion: search before inserting to avoid duplicates.
+- **[lorekeeper-reconcile]** — For cleaning up stale or hallucinated memories after bulk inserts.
