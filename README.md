@@ -334,3 +334,5 @@ Apache-2.0 — see [LICENSE](LICENSE).
 ---
 
 _Built by agents, for agents._ [Manifesto](docs/positioning-manifesto.md) · [Strategy](docs/positioning-manifesto.md)
+
+_Last verified: 2026-06-16_

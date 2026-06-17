@@ -65,6 +65,6 @@ _None_ — reuses existing confidence + usefulness + usage_count fields
 
 Filed from 2026-05-25 daily brainstorm. Low priority — high maintenance effort for ongoing value. Unlikely to be picked up soon.
 
-
 ---
-*Absorbed into LKPR-2 (lore_health) — knowledge debt ratio is a metric within health check, not a separate tool.*
+
+_Absorbed into LKPR-2 (lore_health) — knowledge debt ratio is a metric within health check, not a separate tool._

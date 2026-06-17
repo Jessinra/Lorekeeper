@@ -88,6 +88,6 @@ lore_split_candidates(n=20, min_length=250)
 - LKPR-28 (inline links on insert) — agent carries forward links ✓ (done)
 - LKPR-54 (lore_forget) — agent deletes originals ✓ (done)
 
-
 ---
-*Absorbed into LKPR-63 (Dreaming orchestration) as a sub-phase.*
+
+_Absorbed into LKPR-63 (Dreaming orchestration) as a sub-phase._
