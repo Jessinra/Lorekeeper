@@ -27,7 +27,7 @@ from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.services.reflection_store import ReflectionStore
-from lorekeeper.services.search import VALID_SORT_BY, _parse_filter_dt
+from lorekeeper.services.search import VALID_SORT_BY, parse_filter_dt
 
 log = structlog.get_logger()
 mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
@@ -119,8 +119,8 @@ def _handle_search(
         )
 
     # Parse and validate timestamp filters up front — clear error before any DB work.
-    dt_created_after = _parse_filter_dt(created_after, "created_after") if created_after else None
-    dt_updated_after = _parse_filter_dt(updated_after, "updated_after") if updated_after else None
+    dt_created_after = parse_filter_dt(created_after, "created_after") if created_after else None
+    dt_updated_after = parse_filter_dt(updated_after, "updated_after") if updated_after else None
 
     # When ids provided — skip search pipeline, bulk SQL lookup
     if ids is not None:
@@ -249,8 +249,10 @@ async def lore_search(
         updated_after: ISO 8601 UTC timestamp. Only return memories updated on
             or after this time. Composes with ``created_after`` and all other
             filters.
-        sort_by: ``'relevance'`` (default) ranks by hybrid score. ``'recent'``
-            sorts by ``updated_at DESC``. ``'frequent'`` sorts by
+        sort_by: ``'relevance'`` (default) ranks by hybrid score when the search
+            pipeline runs. In ``ids`` lookup mode there is no scoring, so
+            ``'relevance'`` preserves the caller-provided ``ids`` order instead.
+            ``'recent'`` sorts by ``updated_at DESC``. ``'frequent'`` sorts by
             ``usage_count DESC``. Composes with timestamp filters.
     """
     try:

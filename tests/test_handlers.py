@@ -346,11 +346,16 @@ def test_recommend_links_top_k_capped_at_50(svc):
 
 
 def test_recommend_links_valid_call_returns_shape(svc):
-    """Valid call must return dict with candidates, count, source_lore_id."""
+    """Valid call must return dict with candidates, count, source_lore_id.
+
+    Invariant: count must equal len(candidates).
+    """
     result = _handle_recommend_links(svc, lore_id="some-id")
     assert "candidates" in result
     assert "count" in result
     assert "source_lore_id" in result
+    # Invariant: count must always equal the actual number of candidates returned.
+    assert result["count"] == len(result["candidates"])
 
 
 # ── LKPR-61: created_after / updated_after validation tests ─────────────────

@@ -333,3 +333,22 @@ def test_sort_by_frequent_composes_with_limit(sort_mems):
     assert results[0].memory.id == "a"   # usage=10
     assert results[1].memory.id == "b"   # usage=5
 
+
+def test_sort_by_recent_malformed_updated_at_does_not_crash():
+    """A single memory with a malformed updated_at must not raise — it should sort last."""
+    good = _mem("good", updated_at="2026-06-15T00:00:00+00:00")
+    bad = _mem("bad", updated_at="NOT-A-DATE")
+    mems = {"good": good, "bad": bad}
+    sem = [{"lore_id": "good", "score": 0.5}, {"lore_id": "bad", "score": 0.5}]
+    results = rank_results(
+        sem, {}, mems, {}, S,
+        limit=10, min_score=0.0, include_deleted=False,
+        sort_by="recent",
+    )
+    ids = [r.memory.id for r in results]
+    # Both returned — no crash.
+    assert "good" in ids
+    assert "bad" in ids
+    # Good (valid timestamp) should sort before bad (malformed → datetime.min).
+    assert ids.index("good") < ids.index("bad")
+

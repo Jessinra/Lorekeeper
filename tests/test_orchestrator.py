@@ -1022,3 +1022,37 @@ def test_reflect_auto_insert_partial_failure_continues(svc):
         assert result["memories_created"][0]["relation"] == "discovered_in"
     finally:
         service._extract_title = original_extract
+
+
+# ── LKPR-80: sort_by crash-guard on ids-path ─────────────────────────────────
+
+
+def test_ids_sort_by_recent_malformed_updated_at_does_not_crash(svc):
+    """ids-path sort_by='recent' must not raise on a malformed updated_at.
+
+    Offending row should sort last.
+    """
+    service, _engine = svc
+
+    # Insert two memories with known updated_at
+    r = service.insert([
+        {"title": "good memory", "content": "c", "description": "d"},
+        {"title": "bad timestamp memory", "content": "c", "description": "d"},
+    ], links=[])
+    ids_inserted = [m["id"] for m in r["inserted_memories"]]
+
+    # Patch one memory's updated_at to a malformed value directly in the DB.
+    bad_id = ids_inserted[1]
+    service.memories._conn.execute(
+        "UPDATE memories SET updated_at = 'NOT-A-DATE' WHERE id = ?", (bad_id,)
+    )
+    service.memories._conn.commit()
+
+    # This must not raise despite the bad timestamp.
+    results = service.search_by_ids(ids=ids_inserted, sort_by="recent")
+    result_ids = [r.memory.id for r in results]
+
+    # Both returned — no crash.
+    assert len(result_ids) == 2
+    # The bad-timestamp memory should sort last (datetime.min fallback).
+    assert result_ids.index(ids_inserted[0]) < result_ids.index(bad_id)

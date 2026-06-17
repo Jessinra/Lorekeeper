@@ -60,7 +60,7 @@ def time_decay(memory: Memory, lam: float) -> float:
 REFINE_FROM_CAP = 200
 
 
-def _parse_iso_utc(ts: str) -> datetime:
+def parse_iso_utc(ts: str) -> datetime:
     """Parse an ISO 8601 timestamp and return a UTC-aware datetime.
 
     Accepts naive strings (treated as UTC) and UTC-offset strings.
@@ -80,12 +80,20 @@ def _parse_iso_utc(ts: str) -> datetime:
     return dt
 
 
-def _parse_filter_dt(value: str, field_name: str) -> datetime:
+# Backward-compatible alias — callers that imported the private name continue to work.
+_parse_iso_utc = parse_iso_utc
+
+
+def parse_filter_dt(value: str, field_name: str) -> datetime:
     """Validate and parse a timestamp filter value; raise ValueError on bad input."""
     try:
-        return _parse_iso_utc(value)
+        return parse_iso_utc(value)
     except ValueError as exc:
         raise ValueError(f"Invalid ISO timestamp for {field_name!r}: {exc}") from exc
+
+
+# Backward-compatible alias.
+_parse_filter_dt = parse_filter_dt
 
 
 def rank_results(
@@ -155,8 +163,16 @@ def rank_results(
         ))
 
     # LKPR-80: sort_by — default is relevance (combined_score DESC).
+    # Guard: a single malformed updated_at must not crash the entire sort; fall back to
+    # datetime.min so the offending row sorts last rather than raising ValueError.
     if sort_by == "recent":
-        results.sort(key=lambda r: _parse_iso_utc(r.memory.updated_at), reverse=True)
+        def _recent_key(r: SearchResult) -> datetime:
+            try:
+                return parse_iso_utc(r.memory.updated_at)
+            except (ValueError, TypeError):
+                return datetime.min.replace(tzinfo=UTC)
+
+        results.sort(key=_recent_key, reverse=True)
     elif sort_by == "frequent":
         results.sort(key=lambda r: r.memory.usage_count, reverse=True)
     else:

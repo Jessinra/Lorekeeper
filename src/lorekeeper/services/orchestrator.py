@@ -240,8 +240,16 @@ class MemoryService:
                 decay_factor=1.0,
             ))
         # LKPR-80: sort_by on the ids path.
+        # Guard: a single malformed updated_at must not crash the entire sort; fall back to
+        # datetime.min so the offending row sorts last rather than raising ValueError.
         if sort_by == "recent":
-            results.sort(key=lambda r: _parse_iso_utc(r.memory.updated_at), reverse=True)
+            def _recent_key(r: SearchResult) -> datetime:
+                try:
+                    return _parse_iso_utc(r.memory.updated_at)
+                except (ValueError, TypeError):
+                    return datetime.min.replace(tzinfo=UTC)
+
+            results.sort(key=_recent_key, reverse=True)
         elif sort_by == "frequent":
             results.sort(key=lambda r: r.memory.usage_count, reverse=True)
         else:

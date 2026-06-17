@@ -49,7 +49,7 @@ Returns ranked memories with relevance scores and linked memories.
 - `include_deleted` (default `false`)
 - `created_after` (optional): ISO 8601 UTC timestamp — only return memories with `created_at ≥ T`. Naive strings treated as UTC. Non-UTC offsets raise an error. Composes with all other filters.
 - `updated_after` (optional): ISO 8601 UTC timestamp — only return memories with `updated_at ≥ T`. Same UTC rules as `created_after`.
-- `sort_by` (default `"relevance"`): controls result ordering. `"relevance"` ranks by hybrid score (default). `"recent"` sorts by `updated_at DESC`. `"frequent"` sorts by `usage_count DESC`. Composes with timestamp filters and `limit`.
+- `sort_by` (default `"relevance"`): controls result ordering. `"relevance"` ranks by hybrid score when the search pipeline runs; in **ids lookup mode** (when `ids` is set) there is no scoring, so `"relevance"` preserves the caller-provided `ids` order instead. `"recent"` sorts by `updated_at DESC`. `"frequent"` sorts by `usage_count DESC`. Composes with timestamp filters and `limit`.
 
 **ID lookup mode** — when `ids` is set, skips the vector/BM25 pipeline entirely and fetches those specific `lore_id`s directly from SQL. `query` is ignored. Unknown IDs silently ignored. Max 50 IDs (configurable via `LORE_MAX_SEARCH_IDS`). Pair with `format='title'` for a two-step list-then-fetch workflow. `created_after`, `updated_after`, and `sort_by` all compose with the ids path.
 
