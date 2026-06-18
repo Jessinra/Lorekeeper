@@ -131,3 +131,9 @@ Present a reconciliation report to the user:
 4. Compare each memory against the doc; for technical claims, also verify via codebase.
 5. `lore_update` with confidence ratings; insert corrections for wrong facts and new memories for uncovered topics.
 6. Present reconciliation report.
+
+## Related Skills
+
+- **[lorekeeper-protocol]** — Orchestrates when to trigger reconciliation.
+- **[lorekeeper-search]** — Use search to surface candidate memories before reconciling.
+- **[lorekeeper-memorize]** — After reconciling, re-insert corrected facts.

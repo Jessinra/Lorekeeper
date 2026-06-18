@@ -12,6 +12,18 @@ Lorekeeper is a persistent memory store exposed via MCP tools (`lore_search`, `l
 
 ## Workflow
 
+### Fresh-news / time-sensitive searches
+
+When the task is about news, releases, or anything that must be recent:
+
+- Search with explicit date anchors and primary-source domains.
+- Verify the publish date on every candidate before using it.
+- Skip anything older than the requested cutoff or whose date cannot be confirmed.
+- Treat aggregators as discovery only; prefer official blogs, docs, GitHub releases, arXiv, and government pages.
+- If nothing meets the cutoff, returning nothing is correct.
+
+See `references/news-freshness.md` for a compact checklist.
+
 ### Step 1: Search
 
 Call `lore_search` with a specific natural language query.
@@ -23,6 +35,8 @@ lore_search({ query: "voucher stacking rules in checkout", limit: 10, min_score:
 - Use natural language questions, not single keywords
 - Raise `min_score` (e.g. 0.3) if results are noisy; lower `limit` if you need fewer results
 - Soft-deleted memories (flagged as unreliable) are excluded by default.
+- **Filter by recency**: `created_after` / `updated_after` accept ISO 8601 UTC strings (naive = UTC; non-UTC offsets raise an error). Use to scope searches to a time window, e.g. `created_after: "2026-06-01T00:00:00"`.
+- **Change sort order**: `sort_by` accepts `"relevance"` (default, by hybrid score), `"recent"` (by `updated_at DESC`), or `"frequent"` (by `usage_count DESC`). Composes with timestamp filters and `limit`.
 
 ### Step 2: Use the results and verify
 
@@ -119,3 +133,9 @@ If search returns zero results, there is nothing to provide feedback on — proc
 - **Feedback after task completion** — wait until you have used the results before judging usefulness
 - **Batch into one call** — send all feedback in a single `lore_update`, not one per memory
 - **Be honest about uncertainty** — if you cannot verify, use confidence 5–6 rather than guessing high
+
+## Related Skills
+
+- **[lorekeeper-protocol]** — The full session protocol orchestrating when to search.
+- **[lorekeeper-memorize]** — Companion: search first, then insert new discoveries.
+- **[lorekeeper-reconcile]** — When search returns suspected stale data, run reconcile to fact-check.
