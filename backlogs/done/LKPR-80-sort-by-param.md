@@ -2,12 +2,14 @@
 id: LKPR-80
 title: sort_by param on lore_search — sort by recency or frequency
 type: feature
-status: S:Ready
+status: S:done
 priority: P2:medium
 rice_score: ~
 filed_by: Akane (daily-ideas cron)
 github_issue: 183
 filed_date: 2026-06-10
+updated_date: 2026-06-18
+resolved_date: 2026-06-17
 ---
 
 # [LKPR-80] `sort_by` param on `lore_search`
@@ -28,12 +30,12 @@ One param, one conditional ORDER BY branch in the re-ranking step. The recency f
 
 ## Acceptance Criteria
 
-- [ ] `lore_search` accepts `sort_by` parameter
-- [ ] `"recent"` returns memories sorted by `updated_at` descending
-- [ ] `"frequent"` returns memories sorted by `usage_count` descending
-- [ ] `"relevance"` (default) unchanged — full hybrid score ranking
-- [ ] Param composes with existing filters (query, ids, limit, min_score)
-- [ ] Backward compatible — existing calls without sort_by work identically
+- [x] `lore_search` accepts `sort_by` parameter
+- [x] `"recent"` returns memories sorted by `updated_at` descending
+- [x] `"frequent"` returns memories sorted by `usage_count` descending
+- [x] `"relevance"` (default) unchanged — full hybrid score ranking
+- [x] Param composes with existing filters (query, ids, limit, min_score)
+- [x] Backward compatible — existing calls without sort_by work identically
 
 ## Effort
 
@@ -43,8 +45,12 @@ S — one optional param, ORDER BY branch in the search pipeline. ~20-30 LOC.
 
 `claude-mem` has `timeline` as a separate tool (heavier, more code). `agentmemory` has no sort. Folding sort into search is simpler — same utility, better UX.
 
+## Notes
+
+Shipped in PR #215 (commit 682b8dc). Combined with LKPR-61 for an efficient single-PR delivery.
+
 ## Required Updates
 
-- **CLAUDE.md**: [ ] document `sort_by` param
-- **Handlers**: [ ] add param to `lore_search` MCP handler
-- **Search service**: [ ] add sort_by branching in result re-ranking
+- **CLAUDE.md**: [x] document `sort_by` param
+- **Handlers**: [x] add param to `lore_search` MCP handler
+- **Search service**: [x] add sort_by branching in result re-ranking

@@ -2,11 +2,14 @@
 id: LKPR-34
 title: Cloud Lorekeeper — shared memory across agent machines
 type: feature
+status: S:proposal
+priority: P3:low
 sprint: ~
 rice_score: ~
 filed_by: Hermes
 github_issue: 67
 filed_date: 2026-05-27
+updated_date: 2026-06-18
 ---
 
 # [LKPR-34] Cloud Lorekeeper — shared memory across agent machines
@@ -35,3 +38,7 @@ Implementation details (hosting, transport, auth) scoped as needed to support th
 - **README.md**: [ ] cloud deployment instructions
 - **Skills**: [ ] N/A
 - **Backlog**: [x] Update when dreaming (LKPR-79) lands — LKPR-79's cloud dreaming worker will be the first major workload running on Cloud Lorekeeper. Add sync endpoints for unprocessed sessions + dreaming results.
+
+## Notes
+
+Moved from `done/` to `proposal/` on 2026-06-18 per Jason decision — cloud is deprioritized in current strategy. Local-first is the cost moat. Revisit when team tier validates shared namespace thesis.
