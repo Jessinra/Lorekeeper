@@ -13,7 +13,7 @@ import sqlite3
 import pytest
 
 from lorekeeper.config import Settings
-from lorekeeper.models import SOURCE_TYPES
+from lorekeeper.models import SOURCE_TYPES, WRITE_SOURCE_TYPES
 from lorekeeper.server import _handle_insert, _handle_search
 from lorekeeper.services.database import _migration_3_add_source_type
 from lorekeeper.services.keyword_index import KeywordIndex
@@ -70,8 +70,8 @@ def test_insert_default_source_type_is_observed(svc):
 
 
 def test_insert_explicit_source_type_persisted(svc):
-    """source_type set explicitly in memory dict must be stored as-is."""
-    for st in SOURCE_TYPES:
+    """Write-time source_type set explicitly in memory dict must be stored as-is."""
+    for st in WRITE_SOURCE_TYPES:
         r = _handle_insert(
             svc,
             memories=[{"title": f"typed-{st}", "content": "content", "source_type": st}],
@@ -199,9 +199,23 @@ def test_insert_invalid_source_type_raises_value_error(svc):
         )
 
 
+def test_insert_unknown_source_type_is_rejected(svc):
+    """'unknown' source_type must be rejected on insert — it is reserved for migration backfill."""
+    with pytest.raises(ValueError, match="invalid source_type"):
+        _handle_insert(
+            svc,
+            memories=[{"title": "unknown-type", "content": "test", "source_type": "unknown"}],
+            links=[],
+        )
+
+
 def test_insert_valid_source_types_do_not_raise(svc):
-    """All valid SOURCE_TYPES must be accepted by _handle_insert without error."""
-    for st in SOURCE_TYPES:
+    """All write-time WRITE_SOURCE_TYPES must be accepted by _handle_insert without error.
+
+    'unknown' is excluded — it is reserved for migration backfill and must NOT be
+    accepted on new inserts.
+    """
+    for st in WRITE_SOURCE_TYPES:
         result = _handle_insert(
             svc,
             memories=[{"title": f"valid-{st}", "content": "test", "source_type": st}],

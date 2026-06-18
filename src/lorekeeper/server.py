@@ -5,7 +5,7 @@ from fastmcp import FastMCP
 from pydantic import ValidationError
 
 from lorekeeper.config import Settings
-from lorekeeper.models import SOURCE_TYPES
+from lorekeeper.models import SOURCE_TYPES, WRITE_SOURCE_TYPES
 from lorekeeper.serializers import (
     serialize_link_candidate,
     serialize_search_result,
@@ -188,10 +188,10 @@ def _handle_insert(
     for i, m in enumerate(memories):
         if "title" not in m:
             raise ValueError(f"memory at index {i} is missing required field: 'title'")
-        if "source_type" in m and m["source_type"] not in SOURCE_TYPES:
+        if "source_type" in m and m["source_type"] not in WRITE_SOURCE_TYPES:
             raise ValueError(
                 f"memory at index {i} has invalid source_type {m['source_type']!r}. "
-                f"Must be one of: {sorted(SOURCE_TYPES)}"
+                f"Must be one of: {sorted(WRITE_SOURCE_TYPES)}"
             )
     return svc.insert(memories, links, force)
 
@@ -359,9 +359,9 @@ async def lore_remember(thought: str, source_type: str = "observed") -> dict[str
             (extracted from conversation). Other values: ``'inferred'``,
             ``'user_stated'``, ``'consolidated'``, ``'injected'``.
     """
-    if source_type not in SOURCE_TYPES:
+    if source_type not in WRITE_SOURCE_TYPES:
         raise ValueError(
-            f"Unknown source_type {source_type!r}. Must be one of: {sorted(SOURCE_TYPES)}"
+            f"Unknown source_type {source_type!r}. Must be one of: {sorted(WRITE_SOURCE_TYPES)}"
         )
     try:
         result = get_service().remember(thought, source_type=source_type)

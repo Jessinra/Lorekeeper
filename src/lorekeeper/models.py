@@ -14,6 +14,10 @@ SourceType = Literal[
 
 SOURCE_TYPES: frozenset[str] = frozenset(get_args(SourceType))
 
+# Write-time source types — 'unknown' is reserved for migration backfill only;
+# callers must not submit it via the public API.
+WRITE_SOURCE_TYPES: frozenset[str] = SOURCE_TYPES - {"unknown"}
+
 # Literal type for valid link relation types.
 RelationType = Literal[
     "related_to",
@@ -44,7 +48,7 @@ class Memory(BaseModel):
     confidence_count: int = 0
     last_used: str | None = None  # ISO datetime; null → fall back to created_at for decay
     namespace: str = "shared"  # agent write namespace; reads union [namespace, "shared"]
-    source_type: str = "observed"  # provenance tag — SourceType enum values
+    source_type: SourceType = "observed"  # provenance tag — write-time types only
 
 
 class MemoryLink(BaseModel):

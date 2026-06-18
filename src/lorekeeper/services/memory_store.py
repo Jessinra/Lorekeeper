@@ -55,7 +55,8 @@ class MemoryStore:
               usage_count=excluded.usage_count, score=excluded.score,
               soft_deleted=excluded.soft_deleted, confidence=excluded.confidence,
               confidence_count=excluded.confidence_count,
-              last_used=COALESCE(excluded.last_used, last_used)
+              last_used=COALESCE(excluded.last_used, last_used),
+              source_type=excluded.source_type
             """,
             (id, title, description, content, created_at, updated_at,
              usage_count, score, int(soft_deleted), confidence,
