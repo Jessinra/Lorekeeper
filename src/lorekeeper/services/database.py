@@ -306,11 +306,27 @@ def _migration_2_extend_relation_types(conn: sqlite3.Connection) -> None:
     log.info("link_relation_types_extended", count=8)
 
 
+def _migration_3_add_source_type(conn: sqlite3.Connection) -> None:
+    """Add source_type column to memories — backfill existing rows as 'unknown'.
+
+    New rows will be written with explicit source_type values by the application;
+    rows inserted before this migration get 'unknown' (pre-provenance sentinel).
+    Uses column-existence guard so a double-apply is safe.
+    """
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(memories)")}
+    if "source_type" not in existing:
+        conn.execute(
+            "ALTER TABLE memories ADD COLUMN source_type TEXT NOT NULL DEFAULT 'unknown'"
+        )
+        log.info("memories_source_type_column_added")
+
+
 # Each entry: (version, name, callable taking sqlite3.Connection).
 # Append new migrations here with incrementing version numbers.
 MIGRATIONS: list[tuple[int, str, Callable[[sqlite3.Connection], None]]] = [
     (1, "bootstrap_schema_and_fixups", _migration_1_bootstrap),
     (2, "extend_relation_types", _migration_2_extend_relation_types),
+    (3, "add_source_type_to_memories", _migration_3_add_source_type),
 ]
 
 

@@ -157,6 +157,7 @@ class MemoryService:
         created_after: datetime | None = None,
         updated_after: datetime | None = None,
         sort_by: str = "relevance",
+        source_type: str | None = None,
     ) -> list[SearchResult]:
         self._increment_metric("lore_search")
         sem_hits = self._engine.search(query, limit=200)
@@ -180,6 +181,7 @@ class MemoryService:
             created_after=created_after,
             updated_after=updated_after,
             sort_by=sort_by,
+            source_type=source_type,
         )
 
         # Increment usage on returned memories
@@ -197,6 +199,7 @@ class MemoryService:
         created_after: datetime | None = None,
         updated_after: datetime | None = None,
         sort_by: str = "relevance",
+        source_type: str | None = None,
     ) -> list[SearchResult]:
         """Bulk lookup by lore_id — skips vector/BM25 entirely.
 
@@ -228,6 +231,9 @@ class MemoryService:
                         continue
                 except ValueError:
                     continue
+            # LKPR-18: source_type filter on the ids path.
+            if source_type is not None and mem.source_type != source_type:
+                continue
             links: list[MemoryLink] = []
             if include_links:
                 links = self.links.links_for_memory(mem.id)[:self.settings.max_links_per_memory]
@@ -376,17 +382,21 @@ class MemoryService:
 
     # ── Remember (fast one-shot insert) ────────────────────────────────────────
 
-    def remember(self, thought: str) -> dict[str, Any]:
+    def remember(self, thought: str, source_type: str = "observed") -> dict[str, Any]:
         """Fast one-shot insert with auto-extracted fields and auto-linking."""
         self._increment_metric("lore_remember")
-        result = self._remember_with_score(thought, score=self.settings.new_memory_default_score)
+        result = self._remember_with_score(
+            thought, score=self.settings.new_memory_default_score, source_type=source_type
+        )
         return {
             "id": result["id"],
             "title": result["title"],
             "linked_to": result["linked_to"],
         }
 
-    def _remember_with_score(self, thought: str, score: float) -> dict[str, Any]:
+    def _remember_with_score(
+        self, thought: str, score: float, source_type: str = "observed"
+    ) -> dict[str, Any]:
         """Internal helper for remember-like insert with explicit score override.
 
         Returns a stable payload with created flag so callers (e.g. lore_reflect)
@@ -400,6 +410,7 @@ class MemoryService:
             "description": description,
             "content": thought,
             "score": score,
+            "source_type": source_type,
         }, force=False)
 
         if "duplicate" in result:
@@ -520,6 +531,7 @@ class MemoryService:
         description = m.get("description", "")
         content = m.get("content", "")
         score = float(m.get("score", self.settings.new_memory_default_score))
+        source_type = m.get("source_type", "observed")
         text = f"{title} {description} {content}"
 
         if not force:
@@ -557,6 +569,7 @@ class MemoryService:
         self.memories.upsert_memory_row(
             id=lore_id, title=title, description=description, content=content,
             created_at=now, updated_at=now, score=score, namespace=self._namespace,
+            source_type=source_type,
         )
         log.info("memory_inserted", lore_id=lore_id, title=title)
         return {"inserted": {"id": lore_id, "title": title}}
@@ -1021,4 +1034,5 @@ def _row_to_memory(row: Any) -> Memory:
         confidence_count=row["confidence_count"],
         last_used=row["last_used"] if "last_used" in row.keys() else None,
         namespace=row["namespace"] if "namespace" in row.keys() else "shared",
+        source_type=row["source_type"] if "source_type" in row.keys() else "unknown",
     )

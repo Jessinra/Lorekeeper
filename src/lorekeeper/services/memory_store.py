@@ -40,14 +40,15 @@ class MemoryStore:
         confidence_count: int = 0,
         last_used: str | None = None,
         namespace: str = "shared",
+        source_type: str = "observed",
     ) -> None:
         self._conn.execute(
             """
             INSERT INTO memories
               (id, title, description, content, created_at, updated_at,
                usage_count, score, soft_deleted, confidence, confidence_count,
-               last_used, namespace)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+               last_used, namespace, source_type)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(id) DO UPDATE SET
               title=excluded.title, description=excluded.description,
               content=excluded.content, updated_at=excluded.updated_at,
@@ -58,7 +59,7 @@ class MemoryStore:
             """,
             (id, title, description, content, created_at, updated_at,
              usage_count, score, int(soft_deleted), confidence,
-             confidence_count, last_used, namespace),
+             confidence_count, last_used, namespace, source_type),
         )
 
     def get_memory_row(

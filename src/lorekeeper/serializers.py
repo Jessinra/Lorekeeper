@@ -50,6 +50,7 @@ def serialize_memory(
     }
     result["namespace"] = memory.namespace
     result["last_used"] = memory.last_used
+    result["source_type"] = memory.source_type
     if exclude_fields:
         for field in exclude_fields:
             result.pop(field, None)

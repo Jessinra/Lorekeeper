@@ -2,6 +2,18 @@ from typing import Literal, get_args
 
 from pydantic import BaseModel
 
+# Literal type for valid memory source types.
+SourceType = Literal[
+    "observed",     # extracted from conversation (default)
+    "inferred",     # agent derived it
+    "user_stated",  # user said it explicitly
+    "consolidated", # merged from multiple memories
+    "injected",     # manually added
+    "unknown",      # pre-provenance (backfilled)
+]
+
+SOURCE_TYPES: frozenset[str] = frozenset(get_args(SourceType))
+
 # Literal type for valid link relation types.
 RelationType = Literal[
     "related_to",
@@ -32,6 +44,7 @@ class Memory(BaseModel):
     confidence_count: int = 0
     last_used: str | None = None  # ISO datetime; null → fall back to created_at for decay
     namespace: str = "shared"  # agent write namespace; reads union [namespace, "shared"]
+    source_type: str = "observed"  # provenance tag — SourceType enum values
 
 
 class MemoryLink(BaseModel):
