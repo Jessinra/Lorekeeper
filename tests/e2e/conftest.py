@@ -42,9 +42,7 @@ def seed_db(e2e_data_dir: Path) -> None:
     Runs once per session so all E2E tests share the same seeded state.
     """
     _old_lore = _unset_env("LORE_DATA_DIR")
-    _old_vs = _unset_env("LORE_VECTOR_STORE")
     os.environ["LORE_DATA_DIR"] = str(e2e_data_dir)
-    os.environ["LORE_VECTOR_STORE"] = "lancedb"
 
     try:
         from lorekeeper.server import init_service
@@ -70,7 +68,6 @@ def seed_db(e2e_data_dir: Path) -> None:
         srv_mod._svc = None
     finally:
         _restore_env("LORE_DATA_DIR", _old_lore)
-        _restore_env("LORE_VECTOR_STORE", _old_vs)
 
 
 @pytest.fixture(scope="session")
@@ -81,7 +78,6 @@ def live_server(e2e_data_dir: Path, seed_db: None) -> Generator[str]:
     """
     env = os.environ.copy()
     env["LORE_DATA_DIR"] = str(e2e_data_dir)
-    env["LORE_VECTOR_STORE"] = "lancedb"
     env["LORE_DASH_RELOAD"] = "0"
 
     # Find a free ephemeral port
