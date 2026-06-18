@@ -33,7 +33,6 @@ Lorekeeper follows a strict 4-layer architecture. Every file belongs to exactly 
 │  services/feedback.py    services/engine_factory.py     │
 │  services/memory_engine.py                              │
 │  services/lancedb_engine.py                             │
-│  services/chromadb_engine.py                            │
 │                                                         │
 │  Reusable business logic. No direct DB access.          │
 │  No transport awareness.                                │
