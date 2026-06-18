@@ -55,7 +55,7 @@ def configure_logging(level: str = "INFO", log_dir: Path | None = None) -> None:
         root.addHandler(error_handler)
 
     # Silence noisy third-party loggers
-    for name in ("chromadb", "mem0", "sentence_transformers", "httpx", "httpcore"):
+    for name in ("sentence_transformers", "httpx", "httpcore"):
         logging.getLogger(name).setLevel(logging.ERROR)
 
     structlog.configure(
