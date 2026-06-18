@@ -19,7 +19,7 @@ def test_fresh_db_starts_at_version_zero(tmp_path):
 def test_migrate_applies_bootstrap_to_fresh_db(tmp_path):
     db = Database(tmp_path / "boot.db")
     db.migrate()
-    assert db.current_version() == 2
+    assert db.current_version() == 3
 
     # All expected tables exist
     tables = {
@@ -247,10 +247,10 @@ def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
     from lorekeeper.services import database as db_module
 
     db = Database(tmp_path / "rollback.db")
-    db.migrate()  # apply v1 + v2 baseline
-    assert db.current_version() == 2
+    db.migrate()  # apply v1 + v2 + v3 baseline
+    assert db.current_version() == 3
 
-    # Inject a failing v2 migration into the MIGRATIONS list, then call migrate().
+    # Inject a failing v4 migration into the MIGRATIONS list, then call migrate().
     calls = {"count": 0}
 
     def _failing_migration(conn):
@@ -260,13 +260,13 @@ def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
         raise RuntimeError("simulated migration failure")
 
     original = list(db_module.MIGRATIONS)
-    db_module.MIGRATIONS.append((3, "failing_v3", _failing_migration))
+    db_module.MIGRATIONS.append((4, "failing_v4", _failing_migration))
     try:
         with pytest.raises(RuntimeError, match="simulated migration failure"):
             db.migrate()
 
         # Schema version must NOT have advanced
-        assert db.current_version() == 2
+        assert db.current_version() == 3
 
         # The CREATE TABLE inside the failed migration must have been rolled back
         table = db.conn.execute(

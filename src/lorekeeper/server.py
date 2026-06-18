@@ -5,6 +5,7 @@ from fastmcp import FastMCP
 from pydantic import ValidationError
 
 from lorekeeper.config import Settings
+from lorekeeper.models import SOURCE_TYPES, WRITE_SOURCE_TYPES
 from lorekeeper.serializers import (
     serialize_link_candidate,
     serialize_search_result,
@@ -108,6 +109,7 @@ def _handle_search(
     created_after: str | None = None,
     updated_after: str | None = None,
     sort_by: str = "relevance",
+    source_type: str | None = None,
 ) -> dict[str, Any]:
     if format not in _VALID_SEARCH_FORMATS:
         raise ValueError(
@@ -116,6 +118,10 @@ def _handle_search(
     if sort_by not in VALID_SORT_BY:
         raise ValueError(
             f"Unknown sort_by {sort_by!r}. Must be one of: {sorted(VALID_SORT_BY)}"
+        )
+    if source_type is not None and source_type not in SOURCE_TYPES:
+        raise ValueError(
+            f"Unknown source_type {source_type!r}. Must be one of: {sorted(SOURCE_TYPES)}"
         )
 
     # Parse and validate timestamp filters up front — clear error before any DB work.
@@ -138,6 +144,7 @@ def _handle_search(
             created_after=dt_created_after,
             updated_after=dt_updated_after,
             sort_by=sort_by,
+            source_type=source_type,
         )
         if format == "title":
             serialized = [serialize_search_result_title(r) for r in results]
@@ -161,6 +168,7 @@ def _handle_search(
         created_after=dt_created_after,
         updated_after=dt_updated_after,
         sort_by=sort_by,
+        source_type=source_type,
     )
     if format == "title":
         serialized = [serialize_search_result_title(r) for r in results]
@@ -180,6 +188,11 @@ def _handle_insert(
     for i, m in enumerate(memories):
         if "title" not in m:
             raise ValueError(f"memory at index {i} is missing required field: 'title'")
+        if "source_type" in m and m["source_type"] not in WRITE_SOURCE_TYPES:
+            raise ValueError(
+                f"memory at index {i} has invalid source_type {m['source_type']!r}. "
+                f"Must be one of: {sorted(WRITE_SOURCE_TYPES)}"
+            )
     return svc.insert(memories, links, force)
 
 
@@ -221,6 +234,7 @@ async def lore_search(
     created_after: str | None = None,
     updated_after: str | None = None,
     sort_by: str = "relevance",
+    source_type: str | None = None,
 ) -> dict[str, Any]:
     """Search memories by semantic + keyword query, or bulk-fetch by ID.
 
@@ -254,13 +268,16 @@ async def lore_search(
             ``'relevance'`` preserves the caller-provided ``ids`` order instead.
             ``'recent'`` sorts by ``updated_at DESC``. ``'frequent'`` sorts by
             ``usage_count DESC``. Composes with timestamp filters.
+        source_type: Optional provenance filter. When set, only return memories
+            with this exact source_type. One of: ``observed``, ``inferred``,
+            ``user_stated``, ``consolidated``, ``injected``, ``unknown``.
     """
     try:
         return _handle_search(
             get_service(), query, limit, min_score, include_links, include_deleted,
             refine_from=refine_from, format=format, ids=ids,
             created_after=created_after, updated_after=updated_after,
-            sort_by=sort_by,
+            sort_by=sort_by, source_type=source_type,
         )
     except Exception:
         log.exception("lore_search_failed", query=query)
@@ -280,6 +297,9 @@ async def lore_insert(
       - content (str, optional): the full text to store
       - description (str, optional): brief summary
       - score (float, optional, default 5.0): initial quality score 0-10
+      - source_type (str, optional, default 'observed'): provenance tag.
+        One of: ``observed``, ``inferred``, ``user_stated``,
+        ``consolidated``, ``injected``.
       - links (list[dict[str, Any]], optional): inline links to create after insert.
         Each link dict: {target_memory_id (str, required), relation_type (str, required),
         reason? (str)}
@@ -325,16 +345,26 @@ async def lore_recommend_links(
 
 
 @mcp.tool(name="lore_remember")
-async def lore_remember(thought: str) -> dict[str, Any]:
+async def lore_remember(thought: str, source_type: str = "observed") -> dict[str, Any]:
     """Capture a thought instantly — one fact, one call.
 
     Use this when you discover something worth keeping:
     a decision, a bug root cause, a user preference, a pattern.
 
     Minimal effort, high reward. Your future self will find this useful.
+
+    Args:
+        thought: The fact or observation to store verbatim.
+        source_type: Provenance tag for this memory. Defaults to ``'observed'``
+            (extracted from conversation). Other values: ``'inferred'``,
+            ``'user_stated'``, ``'consolidated'``, ``'injected'``.
     """
+    if source_type not in WRITE_SOURCE_TYPES:
+        raise ValueError(
+            f"Unknown source_type {source_type!r}. Must be one of: {sorted(WRITE_SOURCE_TYPES)}"
+        )
     try:
-        result = get_service().remember(thought)
+        result = get_service().remember(thought, source_type=source_type)
         result.update(for_remember())
         return result
     except Exception:

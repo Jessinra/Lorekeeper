@@ -113,6 +113,7 @@ def rank_results(
     created_after: datetime | None = None,
     updated_after: datetime | None = None,
     sort_by: str = "relevance",
+    source_type: str | None = None,
 ) -> list[SearchResult]:
     if refine_from is not None:
         # Iterative narrowing: restrict candidates to the provided ID set
@@ -149,6 +150,10 @@ def rank_results(
                 continue
             if mem_updated < updated_after:
                 continue
+
+        # LKPR-18: source_type pre-filter — exact match, single value.
+        if source_type is not None and mem.source_type != source_type:
+            continue
 
         sem = sem_map.get(lore_id, 0.0)
         kw = keyword_hits.get(lore_id, 0.0)
