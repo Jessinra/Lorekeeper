@@ -7,7 +7,9 @@ rice_score: ~
 filed_by: Hermes
 github_issue: 61
 filed_date: 2026-05-22
-updated_date: 2026-06-15
+updated_date: 2026-06-18
+resolved_date: 2026-06-18
+status: S:done
 ---
 
 # [LKPR-18] Memory Provenance Tagging — source_type on memories
@@ -30,12 +32,12 @@ Expose `source_type` in retrieval results. Allow agents to filter by source type
 
 ## Acceptance Criteria
 
-- [ ] `lore_insert` accepts optional `source_type` param (defaults to `observed`)
-- [ ] `lore_remember` accepts optional `source_type` param (defaults to `observed`)
-- [ ] `source_type` stored in SQLite metadata and returned in `lore_search` results
-- [ ] `lore_search` supports optional `source_type` filter param (exact match, single value)
-- [ ] Existing memories backfilled with `source_type: unknown`
-- [ ] Schema migration handles existing data without data loss
+- [x] `lore_insert` accepts optional `source_type` param (defaults to `observed`)
+- [x] `lore_remember` accepts optional `source_type` param (defaults to `observed`)
+- [x] `source_type` stored in SQLite metadata and returned in `lore_search` results
+- [x] `lore_search` supports optional `source_type` filter param (exact match, single value)
+- [x] Existing memories backfilled with `source_type: unknown`
+- [x] Schema migration handles existing data without data loss
 
 ## Affected Files
 
@@ -59,6 +61,12 @@ _None_
 ## Notes
 
 Phase B (agent tags / `tags_filter`) split out to LKPR-95.
+
+Shipped in PR #219 (commit d91f6e6). Key design decisions:
+
+- `WRITE_SOURCE_TYPES = SOURCE_TYPES - {"unknown"}` — write-time validation excludes the backfill sentinel
+- `Memory.source_type: SourceType` (Literal) instead of `str` — Pydantic + mypy enforce closed enum
+- `ON CONFLICT DO UPDATE` includes `source_type=excluded.source_type` — upsert correctly overwrites provenance
 
 ## Required Updates
 
