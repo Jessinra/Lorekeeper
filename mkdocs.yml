@@ -9,6 +9,9 @@ theme:
   name: material
   palette:
     - media: "(prefers-color-scheme)"
+      scheme: default
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-auto
         name: Switch to light mode

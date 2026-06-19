@@ -17,7 +17,6 @@ import json
 from html.parser import HTMLParser
 from pathlib import Path
 
-import pytest
 import yaml
 
 # ---------------------------------------------------------------------------
@@ -76,6 +75,7 @@ _ALLOWED_EXTERNAL = {
 _ALLOWED_INTERNAL = {
     "/Lorekeeper/",
     "/Lorekeeper/docs/",
+    "/Lorekeeper/docs/#features",
     "/Lorekeeper/docs/quickstart/",
 }
 
@@ -105,7 +105,7 @@ class TestLandingPageHTML:
             if not s.startswith(("http://", "https://", "data:", "//"))
         ]
         assert local_srcs == [], (
-            f"Found <img> or <link> with local src/href (could 404 on GitHub Pages):\n"
+            "Found <img> or <link> with local src/href (could 404 on GitHub Pages):\n"
             + "\n".join(f"  {s}" for s in local_srcs)
         )
 
@@ -114,7 +114,7 @@ class TestLandingPageHTML:
         collector = _parse_landing_html()
         unknown = [h for h in collector.hrefs if h not in _ALL_ALLOWED_HREFS]
         assert unknown == [], (
-            f"Found unexpected hrefs in landing/index.html:\n"
+            "Found unexpected hrefs in landing/index.html:\n"
             + "\n".join(f"  {h}" for h in unknown)
             + "\nIf intentional, add to _ALLOWED_EXTERNAL / _ALLOWED_INTERNAL."
         )
@@ -136,6 +136,12 @@ class TestLandingPageHTML:
         collector = _parse_landing_html()
         assert "/Lorekeeper/docs/" in collector.hrefs, (
             "Nav/footer should link to /Lorekeeper/docs/"
+        )
+
+    def test_features_link_to_docs_features(self) -> None:
+        collector = _parse_landing_html()
+        assert "/Lorekeeper/docs/#features" in collector.hrefs, (
+            "Features should link to /Lorekeeper/docs/#features"
         )
 
     def test_stat_ids_present(self) -> None:
@@ -160,6 +166,61 @@ class TestLandingPageHTML:
     def test_lorekeeper_start_command_present(self) -> None:
         html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
         assert "lorekeeper start" in html, "'lorekeeper start' command missing from landing"
+
+    def test_terminal_copy_js_references_correct_commands(self) -> None:
+        """The copy-to-clipboard JS must match the visible terminal commands exactly."""
+        html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
+        assert (
+            "pip install lorekeeper\\nlorekeeper start" in html
+        ), "Copy JS commands don't match visible terminal commands"
+
+    def test_nav_link_count_matches_expectations(self) -> None:
+        """Exact nav link count prevents unknown links from being added accidentally.
+
+        Current anchors: logo(1) + nav(4) + nav-cta(1) + hero buttons(2)
+                        + OSS banner(1) + footer links(3) = 12.
+        """
+        collector = _parse_landing_html()
+        assert len(collector.hrefs) == 12, (
+            f"Expected 12 <a> links in landing page, got {len(collector.hrefs)}. "
+            f"If intentional, update count. Links: {collector.hrefs}"
+        )
+
+    def test_external_links_have_rel_noopener(self) -> None:
+        """External links should have rel=noopener for security."""
+        import re
+
+        html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
+        ext_links = re.findall(
+            r'<a\s[^>]*href="https://(?!fonts\.)[^"]*"[^>]*>',
+            html,
+        )
+        for link in ext_links:
+            assert 'rel="noopener"' in link, (
+                f"External link missing rel=\"noopener\": {link[:80]}"
+            )
+
+    def test_landing_has_color_palette_dusty_purple(self) -> None:
+        """The landing page's CSS custom property must use the approved brand purple #8a7bb5."""
+        html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
+        assert "--purple: #8a7bb5" in html or "--purple:#8a7bb5" in html, (
+            "Brand purple #8a7bb5 not found in landing page CSS. Expected --purple: #8a7bb5"
+        )
+
+    def test_responsive_breakpoints_present(self) -> None:
+        """Landing page must have responsive breakpoints for mobile QA."""
+        html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
+        for bp in ["max-width: 900px", "max-width: 640px", "max-width: 375px"]:
+            assert bp in html, f"Missing responsive breakpoint: {bp}"
+
+    def test_config_json_fetch_path_is_relative(self) -> None:
+        """Stats fetch URL should be relative so it works on GH Pages."""
+        html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
+        assert any(
+            variant in html
+            for variant in ["./landing/config.json", "'./landing/config.json'",
+                            '"./landing/config.json"']
+        ), "Stats fetch URL should be relative './landing/config.json'"
 
 
 # ===========================================================================
@@ -237,20 +298,26 @@ class TestDocsiteMkdocs:
                         if not (REPO / "docs" / page).exists():
                             missing.append(page)
         assert missing == [], (
-            f"Nav references pages that don't exist:\n"
+            "Nav references pages that don't exist:\n"
             + "\n".join(f"  docs/{p}" for p in missing)
         )
 
     def test_primary_custom_on_all_palettes(self) -> None:
-        """All colour-scheme palettes must use primary: custom (brand override via extra_css)."""
+        """All palette entries must have primary: custom (brand override via extra_css).
+
+        Every entry gets a primary key — no implicit defaults to theme default (indigo).
+        """
         cfg = self._load()
         palettes = cfg.get("theme", {}).get("palette", [])
         assert palettes, "No palette defined in mkdocs.yml"
         for i, pal in enumerate(palettes):
-            if "primary" in pal:
-                assert pal["primary"] == "custom", (
-                    f"palette[{i}].primary should be 'custom', got '{pal['primary']}'"
-                )
+            assert "primary" in pal, (
+                f"palette[{i}] missing 'primary' key — brand color won't apply on first load. "
+                f"Media: {pal.get('media', '?')}"
+            )
+            assert pal["primary"] == "custom", (
+                f"palette[{i}].primary should be 'custom', got '{pal['primary']}'"
+            )
 
     def test_site_url_is_set(self) -> None:
         cfg = self._load()
@@ -270,6 +337,17 @@ class TestDocsiteMkdocs:
         assert "include-markdown" in plugin_names, (
             "include-markdown plugin not found in mkdocs.yml plugins list"
         )
+
+    def test_extra_css_uses_brand_purple_light_mode(self) -> None:
+        """extra.css must define #8a7bb5 dusty purple for light mode."""
+        css = (REPO / "docs" / "assets" / "extra.css").read_text(encoding="utf-8")
+        assert "#8a7bb5" in css, "Brand purple #8a7bb5 missing from extra.css"
+        # Light mode default should be #8a7bb5 as primary
+        assert any(
+            variant in css
+            for variant in ["--md-primary-fg-color:              #8a7bb5",
+                            "--md-primary-fg-color:#8a7bb5"]
+        ), "Light mode --md-primary-fg-color must be #8a7bb5 in extra.css"
 
 
 # ===========================================================================
