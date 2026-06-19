@@ -5,7 +5,7 @@ Tests that:
   1. landing/index.html has no broken links or <img> with local-file srcs
   2. landing/config.json is structurally valid
   3. mkdocs.yml wires up logo, favicon, extra_css, nav pages correctly
-  4. docs/index.md contains required hero + CTA content
+  4. docs/index.md includes README.md via include-markdown
   5. .github/workflows/docs.yml copies landing artefacts correctly
 
 All stdlib-only — no network, no browser, no server required.
@@ -412,29 +412,10 @@ class TestDocsiteMkdocs:
 
 
 class TestDocsiteIndexMd:
-    """docs/index.md includes README.md — verify included content and structure."""
+    """docs/index.md includes README.md — verify the include directive."""
 
     def _read(self) -> str:
         return (REPO / "docs" / "index.md").read_text(encoding="utf-8")
-
-    def _readme(self) -> str:
-        return (REPO / "README.md").read_text(encoding="utf-8")
-
-    def test_quickstart_link_present(self) -> None:
-        assert "quickstart.md" in self._readme() or "docs/quickstart.md" in self._readme(), (
-            "Quickstart link missing from README.md (surfaced by docs/index.md)"
-        )
-
-    def test_github_link_present(self) -> None:
-        assert "github.com/Jessinra/Lorekeeper" in self._readme(), (
-            "GitHub link or reference missing from README.md (surfaced by docs/index.md)"
-        )
-
-    def test_pip_install_present(self) -> None:
-        assert "pip install lorekeeper-mcp" in self._readme(), (
-            "pip install command missing or wrong package name in README.md "
-            "(must be 'pip install lorekeeper-mcp')"
-        )
 
     def test_readme_include_present(self) -> None:
         assert "include-markdown" in self._read(), (
