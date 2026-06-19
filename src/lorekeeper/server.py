@@ -47,8 +47,8 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     s = settings or Settings()
     s.data_dir.mkdir(parents=True, exist_ok=True)
 
-    log.info("init_lorekeeper", data_dir=str(s.data_dir), vector_store=s.vector_store)
-    engine = build_engine(s.vector_store, s.chroma_path, s.lancedb_path, s.embedding_model)
+    log.info("init_lorekeeper", data_dir=str(s.data_dir), vector_store="lancedb")
+    engine = build_engine(s.lancedb_path, s.embedding_model)
     engine.probe_score_scale()
 
     # Shared SQLite connection + versioned migrations

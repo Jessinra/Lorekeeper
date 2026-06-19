@@ -78,7 +78,7 @@ It calls `lore_search` → memory retrieved. ✅
 | **Duplicate detection** | New inserts are checked against existing memories. Near-identical content is blocked (override with `force=true`).            |
 | **Dashboard**           | Full web UI — browse, search, edit, delete. Seven tabs including backup/restore with dedup preview.                           |
 | **Universal MCP**       | Works with Claude Code, Cursor, Hermes, Copilot, OpenCode — any MCP-compatible agent.                                         |
-| **Local-first**         | Your data stays on your machine. SQLite + LanceDB (or ChromaDB). No cloud dependency, no API keys.                            |
+| **Local-first**         | Your data stays on your machine. SQLite + LanceDB. No cloud dependency, no API keys.                                          |
 | **Namespaces**          | Multiple agents share one store with isolated namespaces. Writes go to your namespace; reads include the shared pool.         |
 | **Reflection**          | Agents auto-extract learnings from sessions. Discoveries and lessons become searchable memories.                              |
 
@@ -300,7 +300,6 @@ src/lorekeeper/
     ├── orchestrator.py  # MemoryService — coordinates all sub-services
     ├── memory_engine.py # Vector store abstraction
     ├── lancedb_engine.py# LanceDB backend
-    ├── chromadb_engine.py# ChromaDB backend
     ├── link_store.py    # SQLite — memories, links, reflections
     ├── keyword_index.py # BM25 index
     ├── search.py        # Hybrid ranking

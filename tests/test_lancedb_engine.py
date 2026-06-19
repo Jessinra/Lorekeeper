@@ -28,7 +28,7 @@ def lancedb_engine():
 
 
 class TestLanceDBSearch:
-    """Search scoring tests — mirrors test_chromadb_engine.py structure."""
+    """Search scoring tests."""
 
     def test_exact_match_scores_highest(self, lancedb_engine):
         results = lancedb_engine.search("Python programming language data science")

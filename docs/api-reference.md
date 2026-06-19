@@ -62,7 +62,7 @@ final    = combined × decay
 
 Where:
 
-- `semantic` — cosine similarity from the vector store (LanceDB or ChromaDB), normalised to [0, 1]
+- `semantic` — cosine similarity from the vector store (LanceDB), normalised to [0, 1]
 - `keyword` — BM25 score, top-hit normalised to 1.0
 - `score/10` — the memory's quality score (0–10), normalised
 - `log_usage_norm = log2(1 + usage_count) / log2(1 + cap)` — usage frequency signal
@@ -323,7 +323,6 @@ All env vars use the `LORE_` prefix. Key configuration:
 | Variable                      | Default         | Purpose                                                 |
 | ----------------------------- | --------------- | ------------------------------------------------------- |
 | `LORE_DATA_DIR`               | `~/.lorekeeper` | Where SQLite + vector DB live                           |
-| `LORE_VECTOR_STORE`           | `lancedb`       | Vector backend: `lancedb` or `chroma`                   |
 | `LORE_SEARCH_LIMIT`           | `10`            | Default max results from `lore_search`                  |
 | `LORE_DUPLICATE_THRESHOLD`    | `0.85`          | Dedup block threshold (`0.6·semantic + 0.4·keyword`)    |
 | `LORE_DECAY_LAMBDA`           | `0.0077`        | Time-decay rate (~90-day half-life). Set `0` to disable |

@@ -173,7 +173,7 @@ def test_increment_metric_logs_on_sqlite_failure_and_does_not_raise(tmp_path):
         def search(self, *a, **kw): return []
         def get_all(self): return []
         def normalize_score(self, x): return x
-        def find_mem0_id(self, x): return None
+        def find_vector_id(self, x): return None
 
     s = build_stores(tmp_path / "metric_boom.db")
     svc = build_service(s, _NoopEngine(), KeywordIndex(), Settings())

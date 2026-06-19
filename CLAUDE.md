@@ -4,10 +4,10 @@
 
 The repo serves two purposes:
 
-1. **The product**: MCP server providing `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_forget`, `lore_recommend_links`. Replaces the Node.js v1 with Python + Mem0.
+1. **The product**: MCP server providing `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_forget`, `lore_recommend_links`. Replaces the Node.js v1 with Python + LanceDB.
 2. **The demonstration**: The development process itself is looped. Session learnings are captured → consolidated → applied back to agent config. This repo is the proof of concept.
 
-**Data dir**: `~/.lorekeeper` (Chroma or LanceDB + SQLite; controlled by `LORE_DATA_DIR`; set `LORE_VECTOR_STORE=lancedb` to switch)
+**Data dir**: `~/.lorekeeper` (LanceDB + SQLite; controlled by `LORE_DATA_DIR`)
 
 ---
 
@@ -15,7 +15,7 @@ The repo serves two purposes:
 
 Two stores working together:
 
-- **Chroma (default) or LanceDB** — vector embeddings, semantic ANN search (384-dim `all-MiniLM-L6-v2`). Set `LORE_VECTOR_STORE=lancedb` to use LanceDB for concurrent multi-process access. See `backlogs/LKPR-31-switch-to-lancedb-vector-store.md`.
+- **LanceDB** — vector embeddings, semantic ANN search (384-dim `all-MiniLM-L6-v2`). LanceDB returns cosine distance (converted to similarity internally), supports concurrent multi-process access.
 - **SQLite sidecar** — memory metadata (score, confidence, soft_deleted, usage_count), all MemoryLink rows, BM25 index rebuild source
 
 The canonical `lore_id` UUID lives in Mem0's metadata field. All app logic uses `lore_id`. Mem0 assigns its own internal id — never expose it.
@@ -42,9 +42,9 @@ All stores share a single `Database` instance — they receive it via constructo
 ## Critical Constraints
 
 - **MCP API surface is identical to v1** — same tool names, same input/output schemas. The three existing skills (`lorekeeper-memorize`, `lorekeeper-search`, `lorekeeper-reconcile`) must work with zero changes.
-- **`infer=False` on every `mem0.add()` call** — text is stored verbatim, no LLM extraction.
+- **No LLM extraction on add** — text is stored verbatim, no inference or rewriting.
 - **stdout is reserved for MCP protocol** — all logging goes to stderr via `structlog`.
-- **Probe semantic score scale at startup** — Chroma can return similarity (higher=better) or distance (lower=better) depending on version. Log which mode is detected. This is the #1 risk. LanceDB always returns cosine distance (converted to similarity internally).
+- **Probe semantic score scale at startup** — LanceDB always returns cosine distance (converted to similarity internally).
 
 ---
 
@@ -214,7 +214,7 @@ Lorekeeper is a **program layer above the memory provider**, designed to be exte
 
 - **Conversation lifecycle hooks**: prefetch before each turn → sync after → extract on session end
 - **Background cron jobs**: auto re-index, reshape memories, consolidation ("sleep cycle")
-- **Provider-agnostic**: Mem0/Chroma today, swappable (Qdrant, Pinecone, LangMem)
+- **Provider-agnostic vector layer**: LanceDB today, swappable (Qdrant, Pinecone)
 - **Context injection**: eventually stuffs relevant memories into system prompt automatically
 
 For v2, the scope is: **MCP server + hybrid search + quality signals + migration**. The lifecycle hooks and cron jobs are Phase 2+. See `docs/plans/agentic-loop.md` for the full roadmap.
@@ -320,5 +320,5 @@ When editing any file in `src/lorekeeper/`, `pyproject.toml`, or `loop/`, check 
 - Auto-extraction from session transcripts (`infer=True`)
 - Automatic system-prompt injection (agent pulls explicitly for now)
 - Procedural memory / nightly CLAUDE.md update proposals
-- Episodic memory (session journal as second Chroma collection)
+- Episodic memory (session journal as a second vector collection)
 - Multi-user / multi-tenant support

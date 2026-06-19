@@ -50,7 +50,7 @@ class FakeVectorEngine:
     def get_all(self) -> list[dict]:
         return [{"lore_id": k, "mem0_id": k} for k in self._store]
 
-    def find_mem0_id(self, lore_id: str) -> str | None:
+    def find_vector_id(self, lore_id: str) -> str | None:
         return lore_id if lore_id in self._store else None
 
 

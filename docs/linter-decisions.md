@@ -51,7 +51,7 @@ Settled during LKPR-25 (2026-05-23). Revisit if the codebase changes significant
 **Config**: `pyproject.toml` → `[tool.mypy]`
 
 - `strict = true` — full strictness: no implicit `Any`, no untyped defs, checks return types
-- `ignore_missing_imports = true` — third-party stubs (mem0, chromadb) are incomplete; errors here are noise
+- `ignore_missing_imports = true` — third-party stubs (e.g. `lancedb`) are incomplete; errors here are noise
 
 **Not in pre-commit**: mypy takes ~10–30s on a cold run because it needs to type-check all imports including heavy third-party libs. It runs in CI and should be run locally before pushing (`uv run mypy src`), but blocking every commit on it makes the feedback loop too slow.
 
