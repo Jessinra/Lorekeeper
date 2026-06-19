@@ -78,11 +78,11 @@ Moved the `git config` commands to execute **after** `cd build && git init -b gh
 
 ## Action Items
 
-| #   | Action                                                                                                                                                                          | Owner | Status |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
-| 1   | Add git config placement to CI/CD workflow review checklist — any custom git deploy step must set `user.name`/`user.email` **after** `git init` and inside the target directory | Diana | Done   |
-| 2   | Create `incident-analysis` skill documenting hotfix procedure, postmortem template, and IR workflow                                                                             | Diana | Done   |
-| 3   | Consider adding a `workflow_dispatch` trigger or PR-level preview deploy for landing page / docs changes so regressions are caught before hitting `main`                        | Jason | Open   |
+| #   | Action                                                                                                                                                                                                                               | Owner | Status                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- | -------------------------- |
+| 1   | Add git config placement to CI/CD workflow review checklist — any custom git deploy step must set `user.name`/`user.email` **after** `git init` and inside the target directory                                                      | Diana | Done                       |
+| 2   | Create `incident-analysis` skill documenting hotfix procedure, postmortem template, and IR workflow                                                                                                                                  | Diana | Done                       |
+| 3   | Add PR-level build check — `pull_request` trigger with `paths` filter on `landing/`, `docs/`, `mkdocs.yml`, `.github/workflows/docs.yml` — runs `mkdocs build --strict` on PRs, skips deploy. Caught by this workflow change itself. | Diana | Done (added to `docs.yml`) |
 
 ## Lessons Learned
 
