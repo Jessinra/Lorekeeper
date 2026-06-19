@@ -13,7 +13,7 @@ Lorekeeper gives every agent persistent memory — between sessions, across conv
 </div>
 
 ```bash
-pip install lorekeeper
+pip install lorekeeper-mcp
 lorekeeper start
 ```
 

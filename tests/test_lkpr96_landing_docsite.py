@@ -96,17 +96,41 @@ class TestLandingPageHTML:
     def test_landing_html_exists(self) -> None:
         assert (REPO / "landing" / "index.html").exists(), "landing/index.html must exist"
 
-    def test_no_local_img_srcs(self) -> None:
-        """No <img src='local-file'>. Logo is an inline CSS span — no raster images."""
+    def test_local_img_srcs_exist_on_disk(self) -> None:
+        """Any local <img src> must point to a file that exists, so it won't 404 on GH Pages.
+
+        The hero uses the official ./assets/logo.svg — verify it's actually present.
+        """
         collector = _parse_landing_html()
         local_srcs = [
             s
             for s in collector.srcs
             if not s.startswith(("http://", "https://", "data:", "//"))
         ]
-        assert local_srcs == [], (
-            "Found <img> or <link> with local src/href (could 404 on GitHub Pages):\n"
-            + "\n".join(f"  {s}" for s in local_srcs)
+        landing_dir = REPO / "landing"
+        missing = []
+        for src in local_srcs:
+            # Resolve relative to the landing dir (e.g. "./assets/logo.svg")
+            resolved = (landing_dir / src.lstrip("./")).resolve()
+            if not resolved.exists():
+                missing.append(src)
+        assert missing == [], (
+            "Local <img>/<script> src points to a file that doesn't exist "
+            "(would 404 on GitHub Pages):\n"
+            + "\n".join(f"  {s}" for s in missing)
+        )
+
+    def test_hero_uses_official_logo_asset(self) -> None:
+        """Hero must reference the official logo SVG, not a recreated inline SVG."""
+        html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
+        assert "./assets/logo.svg" in html, (
+            "Hero should reference the official ./assets/logo.svg"
+        )
+        # The asset must be the same official logo shipped in docs/assets
+        landing_logo = (REPO / "landing" / "assets" / "logo.svg").read_text(encoding="utf-8")
+        docs_logo = (REPO / "docs" / "assets" / "logo.svg").read_text(encoding="utf-8")
+        assert landing_logo == docs_logo, (
+            "landing/assets/logo.svg must be identical to the official docs/assets/logo.svg"
         )
 
     def test_all_hrefs_are_known(self) -> None:
@@ -161,7 +185,23 @@ class TestLandingPageHTML:
 
     def test_pip_install_command_present(self) -> None:
         html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
-        assert "pip install lorekeeper" in html, "Install command missing from terminal block"
+        assert "pip install lorekeeper-mcp" in html, (
+            "Install command missing or wrong package name. Must be 'pip install lorekeeper-mcp' "
+            "(PyPI package is lorekeeper-mcp, not lorekeeper)"
+        )
+
+    def test_pip_install_uses_correct_package_name(self) -> None:
+        """The PyPI package is 'lorekeeper-mcp' — guard against the bare 'lorekeeper' name."""
+        import re
+
+        html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
+        # Find every 'pip install ...' occurrence and assert the package is lorekeeper-mcp
+        installs = re.findall(r"pip install (\S+)", html)
+        assert installs, "No 'pip install' command found on landing page"
+        for pkg in installs:
+            assert pkg.startswith("lorekeeper-mcp"), (
+                f"pip install references wrong package: '{pkg}'. Expected 'lorekeeper-mcp'"
+            )
 
     def test_lorekeeper_start_command_present(self) -> None:
         html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
@@ -171,7 +211,7 @@ class TestLandingPageHTML:
         """The copy-to-clipboard JS must match the visible terminal commands exactly."""
         html = (REPO / "landing" / "index.html").read_text(encoding="utf-8")
         assert (
-            "pip install lorekeeper\\nlorekeeper start" in html
+            "pip install lorekeeper-mcp\\nlorekeeper start" in html
         ), "Copy JS commands don't match visible terminal commands"
 
     def test_nav_link_count_matches_expectations(self) -> None:
@@ -375,8 +415,9 @@ class TestDocsiteIndexMd:
         )
 
     def test_pip_install_present(self) -> None:
-        assert "pip install lorekeeper" in self._read(), (
-            "pip install command missing from docs/index.md"
+        assert "pip install lorekeeper-mcp" in self._read(), (
+            "pip install command missing or wrong package name in docs/index.md "
+            "(must be 'pip install lorekeeper-mcp')"
         )
 
     def test_readme_include_present(self) -> None:
@@ -417,6 +458,12 @@ class TestDeployWorkflow:
     def test_config_json_copied(self) -> None:
         assert "cp landing/config.json build/landing/config.json" in self._read(), (
             "landing/config.json copy step missing from docs.yml"
+        )
+
+    def test_logo_asset_copied(self) -> None:
+        assert "cp landing/assets/logo.svg build/assets/logo.svg" in self._read(), (
+            "landing/assets/logo.svg copy step missing from docs.yml — "
+            "hero logo would 404 on GitHub Pages"
         )
 
     def test_deploys_to_gh_pages(self) -> None:

@@ -133,13 +133,8 @@ footer { border-top: 1px solid var(--border); padding: 32px 24px; }
 </div></nav>
 
 <section class="hero">
-<div class="hero-logo" aria-hidden="true">
-  <svg width="56" height="56" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="512" height="512" rx="80" fill="var(--purple-light)"/>
-    <circle cx="256" cy="256" r="182" stroke="var(--purple)" stroke-width="22"/>
-    <circle cx="256" cy="256" r="132" stroke="var(--purple)" stroke-width="42"/>
-    <polygon points="256,50 294,116 256,182 218,116" fill="var(--purple)"/>
-  </svg>
+<div class="hero-logo">
+  <img src="./assets/logo.svg" alt="Lorekeeper logo" width="72" height="72">
 </div>
 <div class="hero-badge">🧠 Used by 200+ agent teams</div>
 <h1>Don't let your agents<br><span class="accent">forget what they've learned</span></h1>
@@ -154,7 +149,7 @@ footer { border-top: 1px solid var(--border); padding: 32px 24px; }
   <span class="terminal-header-copy" id="copy-hint">Click to copy</span>
 </div>
 <div class="terminal-body">
-  <span class="prompt">$</span> <span class="cmd">pip install lorekeeper</span> <span class="success">✓ installed</span><br>
+  <span class="prompt">$</span> <span class="cmd">pip install lorekeeper-mcp</span> <span class="success">✓ installed</span><br>
   <span class="prompt">$</span> <span class="cmd">lorekeeper start</span><br>
   <span class="dim">→ Memory server running on port 8765</span><br>
   <span class="dim">→ Added to your MCP config. You're all set.</span>
@@ -198,7 +193,7 @@ footer { border-top: 1px solid var(--border); padding: 32px 24px; }
 
 <section class="section"><div class="section-header"><h2>Get started in 30 seconds</h2></div>
 <div class="pipeline">
-<div class="pipeline-step"><div class="pipeline-num">1</div><h4>Install</h4><p>pip install lorekeeper</p></div>
+<div class="pipeline-step"><div class="pipeline-num">1</div><h4>Install</h4><p>pip install lorekeeper-mcp</p></div>
 <div class="pipeline-step"><div class="pipeline-num">2</div><h4>Config</h4><p>Add to your MCP config</p></div>
 <div class="pipeline-step"><div class="pipeline-num">3</div><h4>Run</h4><p>lorekeeper start</p></div>
 <div class="pipeline-step"><div class="pipeline-num">4</div><h4>Done</h4><p>Cross-session recall</p></div>
@@ -247,7 +242,7 @@ footer { border-top: 1px solid var(--border); padding: 32px 24px; }
   var hint = document.getElementById('copy-hint');
   if (!terminal || !navigator.clipboard) return;
 
-  var commands = 'pip install lorekeeper\nlorekeeper start';
+  var commands = 'pip install lorekeeper-mcp\nlorekeeper start';
 
   terminal.addEventListener('click', function () {
     navigator.clipboard.writeText(commands).then(function () {

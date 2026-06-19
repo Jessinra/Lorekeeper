@@ -27,6 +27,8 @@ jobs:
           cp landing/index.html build/index.html
           mkdir -p build/landing
           cp landing/config.json build/landing/config.json
+          mkdir -p build/assets
+          cp landing/assets/logo.svg build/assets/logo.svg
       - name: Deploy to GitHub Pages
         run: |
           git config user.name "github-actions[bot]"
