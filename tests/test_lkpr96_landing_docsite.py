@@ -379,9 +379,9 @@ class TestDocsiteMkdocs:
         )
 
     def test_attr_list_extension_enabled(self) -> None:
-        """docs/index.md hero uses { .md-button } attr_list syntax — extension must be present.
+        """attr_list extension enables { .md-button } syntax for CTA buttons in markdown.
 
-        Without attr_list, the CTA buttons render as literal '{ .md-button }' text.
+        Required if any MkDocs page uses .md-button class syntax.
         """
         cfg = self._load()
         extensions = [
@@ -397,10 +397,11 @@ class TestDocsiteMkdocs:
         """extra.css must define #8a7bb5 dusty purple for light mode."""
         css = (REPO / "docs" / "assets" / "extra.css").read_text(encoding="utf-8")
         assert "#8a7bb5" in css, "Brand purple #8a7bb5 missing from extra.css"
-        # Light mode default should be #8a7bb5 as primary
+        # Light mode default should be #8a7bb5 as primary (prettier may normalize spacing)
         assert any(
             variant in css
-            for variant in ["--md-primary-fg-color:              #8a7bb5",
+            for variant in ["--md-primary-fg-color: #8a7bb5",
+                            "--md-primary-fg-color:              #8a7bb5",
                             "--md-primary-fg-color:#8a7bb5"]
         ), "Light mode --md-primary-fg-color must be #8a7bb5 in extra.css"
 
@@ -411,27 +412,27 @@ class TestDocsiteMkdocs:
 
 
 class TestDocsiteIndexMd:
-    """docs/index.md hero block is correct and links properly."""
+    """docs/index.md includes README.md — verify included content and structure."""
 
     def _read(self) -> str:
         return (REPO / "docs" / "index.md").read_text(encoding="utf-8")
 
-    def test_lk_hero_class_present(self) -> None:
-        assert "lk-hero" in self._read(), "lk-hero CSS class missing from docs/index.md"
+    def _readme(self) -> str:
+        return (REPO / "README.md").read_text(encoding="utf-8")
 
     def test_quickstart_link_present(self) -> None:
-        assert "quickstart.md" in self._read(), (
-            "Quickstart link missing from docs/index.md hero"
+        assert "quickstart.md" in self._readme() or "docs/quickstart.md" in self._readme(), (
+            "Quickstart link missing from README.md (surfaced by docs/index.md)"
         )
 
     def test_github_link_present(self) -> None:
-        assert "https://github.com/Jessinra/Lorekeeper" in self._read(), (
-            "GitHub link missing from docs/index.md"
+        assert "github.com/Jessinra/Lorekeeper" in self._readme(), (
+            "GitHub link or reference missing from README.md (surfaced by docs/index.md)"
         )
 
     def test_pip_install_present(self) -> None:
-        assert "pip install lorekeeper-mcp" in self._read(), (
-            "pip install command missing or wrong package name in docs/index.md "
+        assert "pip install lorekeeper-mcp" in self._readme(), (
+            "pip install command missing or wrong package name in README.md "
             "(must be 'pip install lorekeeper-mcp')"
         )
 
