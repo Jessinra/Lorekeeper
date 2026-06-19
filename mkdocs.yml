@@ -50,6 +50,7 @@ exclude_docs: |
   research/
   linter-decisions.md
   ARCHITECTURE.md
+  incidents/
 
 markdown_extensions:
   - pymdownx.superfences
