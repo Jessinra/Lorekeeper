@@ -82,7 +82,7 @@ _For developers using AI coding agents who are tired of their agents forgetting 
 
 > **Memory for AI agents that gets smarter the more you use it.**
 >
-> `pip install lorekeeper` → connect your agent → it remembers.  
+> `pip install lorekeeper-mcp` → connect your agent → it remembers.  
 > No cloud. No config. No maintenance.
 
 ---
@@ -227,7 +227,7 @@ README is the landing page. It must:
 
 | Channel              | Tactic                                                                                                                                   |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **PyPI**             | `pip install lorekeeper`. Must be the default install path.                                                                              |
+| **PyPI**             | `pip install lorekeeper-mcp`. Must be the default install path.                                                                          |
 | **Reddit**           | r/ClaudeAI, r/MCP, r/ClaudeCode — share comparisons, answer questions.                                                                   |
 | **MCP server lists** | awesome-mcp-servers, mcpservers.org, mcpmarket.com — be listed everywhere.                                                               |
 | **YouTube**          | 2-minute setup demo. Show pip install → agent config → first memory.                                                                     |
@@ -261,7 +261,7 @@ Let the fast movers educate the market. We watch what works for them, what users
 - ✅ Dashboard functional
 - ✅ 266 tests passing
 - ✅ Self-improving feedback loop
-- ✅ `pip install lorekeeper` (PyPI)
+- ✅ `pip install lorekeeper-mcp` (PyPI)
 - ✅ Compelling README that converts
 
 ### Phase 2: Launch (post-beta)

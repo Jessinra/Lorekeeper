@@ -378,6 +378,21 @@ class TestDocsiteMkdocs:
             "include-markdown plugin not found in mkdocs.yml plugins list"
         )
 
+    def test_attr_list_extension_enabled(self) -> None:
+        """docs/index.md hero uses { .md-button } attr_list syntax — extension must be present.
+
+        Without attr_list, the CTA buttons render as literal '{ .md-button }' text.
+        """
+        cfg = self._load()
+        extensions = [
+            (e if isinstance(e, str) else next(iter(e)))
+            for e in cfg.get("markdown_extensions", [])
+        ]
+        assert "attr_list" in extensions, (
+            "attr_list extension missing from mkdocs.yml — docs/index.md hero buttons "
+            "(.md-button) would render as literal text instead of styled buttons"
+        )
+
     def test_extra_css_uses_brand_purple_light_mode(self) -> None:
         """extra.css must define #8a7bb5 dusty purple for light mode."""
         css = (REPO / "docs" / "assets" / "extra.css").read_text(encoding="utf-8")
