@@ -1,0 +1,58 @@
+/* LKPR-96: Lorekeeper brand colors — dusty purple #8a7bb5 */
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color:              #8a7bb5;
+  --md-primary-fg-color--light:       #b0a6d6;
+  --md-primary-fg-color--dark:        #6b5d95;
+  --md-accent-fg-color:               #8a7bb5;
+  --md-accent-fg-color--transparent:  rgba(138, 123, 181, 0.1);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:              #b0a6d6;
+  --md-primary-fg-color--light:       #c9c2e4;
+  --md-primary-fg-color--dark:        #8a7bb5;
+  --md-accent-fg-color:               #b0a6d6;
+  --md-accent-fg-color--transparent:  rgba(176, 166, 214, 0.1);
+}
+
+/* Docs hero section (docs/index.md) */
+.lk-hero {
+  text-align: center;
+  padding: 2.5rem 1rem 2rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  margin-bottom: 2rem;
+}
+.lk-hero-badge {
+  display: inline-block;
+  background: rgba(138, 123, 181, 0.1);
+  color: #8a7bb5;
+  border-radius: 9999px;
+  padding: 4px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+.lk-hero h1 {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.75rem;
+}
+.lk-hero p {
+  max-width: 520px;
+  margin: 0 auto 1.5rem;
+  color: var(--md-default-fg-color--light);
+}
+.lk-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.lk-hero pre {
+  max-width: 360px;
+  margin: 0 auto;
+  text-align: left;
+}
