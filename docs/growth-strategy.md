@@ -160,7 +160,7 @@ Developer installs Lorekeeper
   → Agent remembers better
   → Developer sees improvement in daily work
   → Team member asks "how is your agent so fast?"
-  → pip install lorekeeper (referral, no effort)
+  → pip install lorekeeper-mcp (referral, no effort)
   → Shared namespace makes team memory compound
 ```
 

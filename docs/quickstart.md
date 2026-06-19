@@ -37,7 +37,7 @@ What this does:
 
 ## 2 — Restart your agent
 
-After `setup.sh` finishes, **restart your agent** (Claude Code, Hermes, or Cursor) to load the
+After `lorekeeper setup` finishes, **restart your agent** (Claude Code, Hermes, or Cursor) to load the
 new MCP config. The `lorekeeper` MCP server starts automatically on the next agent launch.
 
 ---
@@ -60,7 +60,7 @@ The dashboard starts empty — memories appear here in real time as you insert t
 
 ## 4 — Seed your first memories
 
-Copy the seed prompt printed at the end of `setup.sh` and paste it into your agent:
+Copy the seed prompt printed at the end of `lorekeeper setup` and paste it into your agent:
 
 ```
 Read your prompt/config files (soul.md, CLAUDE.md, .cursorrules, AGENTS.md) and
@@ -131,7 +131,7 @@ uv tool install ./dist/lorekeeper_mcp-0.2.0-py3-none-any.whl
 
 1. Check that the agent actually called `lore_remember` / `lore_insert` (look at the agent's
    tool call log).
-2. Confirm the MCP server connected — if not, re-run `bash scripts/setup.sh` and restart the
+2. Confirm the MCP server connected — if not, re-run `lorekeeper setup` and restart the
    agent.
 3. Hard-refresh the dashboard (`Cmd+Shift+R`).
 
@@ -139,7 +139,7 @@ uv tool install ./dist/lorekeeper_mcp-0.2.0-py3-none-any.whl
 
 **MCP tools not available in agent**
 
-- Confirm `setup.sh` ran without errors and showed your agent in the summary table.
+- Confirm `lorekeeper setup` ran without errors and showed your agent in the summary table.
 - Check the agent's MCP config file for a `lorekeeper` entry:
   - Claude Code: `~/.claude/settings.json`
   - Cursor: `~/.cursor/mcp.json`
@@ -153,4 +153,4 @@ uv tool install ./dist/lorekeeper_mcp-0.2.0-py3-none-any.whl
 - Browse all available tools: [`lore_search`, `lore_remember`, `lore_insert`, `lore_update`,
   `lore_forget`, `lore_reflect`, `lore_recommend_links`, `lore_processed_sessions`]
 - Full configuration reference: [README.md — Configuration](https://github.com/Jessinra/Lorekeeper#configuration)
-- Architecture deep-dive: [docs/ARCHITECTURE.md](ARCHITECTURE.md)
+- Architecture deep-dive: [docs/ARCHITECTURE.md](https://github.com/Jessinra/Lorekeeper/blob/main/docs/ARCHITECTURE.md)

@@ -1,6 +1,6 @@
 site_name: Lorekeeper
 site_description: "Self-improving memory for AI agents — open-source MCP server"
-site_url: "https://jessinra.github.io/Lorekeeper/"
+site_url: "https://jessinra.github.io/Lorekeeper/docs/"
 repo_url: "https://github.com/Jessinra/Lorekeeper"
 repo_name: Jessinra/Lorekeeper
 edit_uri: edit/main/docs/
@@ -9,20 +9,23 @@ theme:
   name: material
   palette:
     - media: "(prefers-color-scheme)"
+      scheme: default
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-auto
         name: Switch to light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: teal
-      accent: cyan
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: teal
-      accent: cyan
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to system preference
@@ -54,6 +57,11 @@ markdown_extensions:
       alternate_style: true
   - admonition
   - pymdownx.details
+  - md_in_html
+  - attr_list
+
+extra_css:
+  - assets/extra.css
 
 nav:
   - Home: index.md

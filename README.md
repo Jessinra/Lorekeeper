@@ -322,13 +322,13 @@ All 500 LongMemEval-S questions, default hybrid weights (sem=0.45, kw=0.30):
 | **R@5**  | **96.6%** |               |
 | **R@10** | **98.8%** |               |
 
-Full per-category breakdown → [docs/research/2026-06-11-retrieval-benchmark-results.md](docs/research/2026-06-11-retrieval-benchmark-results.md)
+Full per-category breakdown → [docs/research/2026-06-11-retrieval-benchmark-results.md](https://github.com/Jessinra/Lorekeeper/blob/main/docs/research/2026-06-11-retrieval-benchmark-results.md)
 
 ---
 
 ## License
 
-Apache-2.0 — see [LICENSE](LICENSE).
+Apache-2.0 — see [LICENSE](https://github.com/Jessinra/Lorekeeper/blob/main/LICENSE).
 
 ---
 
