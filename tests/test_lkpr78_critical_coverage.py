@@ -52,7 +52,7 @@ class FakeEngine:
     def normalize_score(self, raw: float) -> float:
         return raw
 
-    def find_mem0_id(self, lore_id: str) -> str | None:
+    def find_vector_id(self, lore_id: str) -> str | None:
         return lore_id if lore_id in self._store else None
 
 

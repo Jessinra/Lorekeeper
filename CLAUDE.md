@@ -4,7 +4,7 @@
 
 The repo serves two purposes:
 
-1. **The product**: MCP server providing `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_forget`, `lore_recommend_links`. Replaces the Node.js v1 with Python + Mem0.
+1. **The product**: MCP server providing `lore_search`, `lore_remember`, `lore_insert`, `lore_update`, `lore_forget`, `lore_recommend_links`. Replaces the Node.js v1 with Python + LanceDB.
 2. **The demonstration**: The development process itself is looped. Session learnings are captured → consolidated → applied back to agent config. This repo is the proof of concept.
 
 **Data dir**: `~/.lorekeeper` (LanceDB + SQLite; controlled by `LORE_DATA_DIR`)
@@ -42,7 +42,7 @@ All stores share a single `Database` instance — they receive it via constructo
 ## Critical Constraints
 
 - **MCP API surface is identical to v1** — same tool names, same input/output schemas. The three existing skills (`lorekeeper-memorize`, `lorekeeper-search`, `lorekeeper-reconcile`) must work with zero changes.
-- **`infer=False` on every `mem0.add()` call** — text is stored verbatim, no LLM extraction.
+- **No LLM extraction on add** — text is stored verbatim, no inference or rewriting.
 - **stdout is reserved for MCP protocol** — all logging goes to stderr via `structlog`.
 - **Probe semantic score scale at startup** — LanceDB always returns cosine distance (converted to similarity internally).
 

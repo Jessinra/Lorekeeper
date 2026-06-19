@@ -26,14 +26,14 @@ class MemoryEngine(ABC):
     def get_all(self) -> list[dict[str, Any]]: ...
 
     @abstractmethod
-    def find_mem0_id(self, lore_id: str) -> str | None:
+    def find_vector_id(self, lore_id: str) -> str | None:
         """Look up the internal vector-store ID for a given lore_id.
 
         Returns None if the lore_id is not found in the vector index.
         """
 
     @abstractmethod
-    def delete_by_mem0_id(self, mem0_id: str) -> None: ...
+    def delete_by_vector_id(self, vector_id: str) -> None: ...
 
     @abstractmethod
     def get_embeddings_batch(self, lore_ids: list[str]) -> dict[str, np.ndarray]:

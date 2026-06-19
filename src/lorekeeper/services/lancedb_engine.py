@@ -113,12 +113,12 @@ class LanceDBEngine(MemoryEngine):
                 out.append({"lore_id": lore_id, "mem0_id": mem0_id})
         return out
 
-    def find_mem0_id(self, lore_id: str) -> str | None:
-        """Look up mem0_id by lore_id."""
+    def find_vector_id(self, lore_id: str) -> str | None:
+        """Look up the internal vector-store ID (mem0_id column) by lore_id."""
         try:
             tbl = self._table.to_arrow()
         except Exception:
-            log.error("lancedb_find_mem0_id_failed", lore_id=lore_id, exc_info=True)
+            log.error("lancedb_find_vector_id_failed", lore_id=lore_id, exc_info=True)
             return None
         ids = tbl.column("lore_id")
         mem0_ids = tbl.column("mem0_id")
@@ -127,9 +127,9 @@ class LanceDBEngine(MemoryEngine):
                 return cast(str, mem0_ids[i].as_py())
         return None
 
-    def delete_by_mem0_id(self, mem0_id: str) -> None:
-        """Delete a row by mem0_id."""
-        escaped = mem0_id.replace("'", "''")
+    def delete_by_vector_id(self, vector_id: str) -> None:
+        """Delete a row by internal vector-store ID (mem0_id column)."""
+        escaped = vector_id.replace("'", "''")
         self._table.delete(f"mem0_id = '{escaped}'")
 
     def get_embeddings_batch(self, lore_ids: list[str]) -> dict[str, np.ndarray]:

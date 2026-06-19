@@ -16,6 +16,7 @@ github_issue: 225
 ## Problem
 
 Lorekeeper supported two vector backends (LanceDB + ChromaDB) via `engine_factory.py`, but ChromaDB was never the active backend after LKPR-31 switched the default to LanceDB. The multi-backend code path was dead weight:
+
 - `chromadb_engine.py` (205 lines) and its tests (148 lines) had zero live callers
 - `mem0ai` + `chromadb` were heavy deps installed for nothing
 - `LORE_VECTOR_STORE` config field implied a choice that didn't exist in practice
@@ -28,6 +29,7 @@ Remove everything ChromaDB/mem0ai-related: code, tests, deps, config fields, and
 ## Scope
 
 ### Code removed
+
 - `src/lorekeeper/services/chromadb_engine.py` (205 lines, deleted)
 - `tests/test_chromadb_engine.py` (148 lines, deleted)
 - `scripts/seed_lancedb.py` (one-time migration script, 61 lines, deleted)
@@ -37,6 +39,7 @@ Remove everything ChromaDB/mem0ai-related: code, tests, deps, config fields, and
 - Chroma branch from `engine_factory.py` (18 → 9 lines)
 
 ### Docs cleaned
+
 - `docs/ARCHITECTURE.md`: removed `chromadb_engine.py` from MODULE LAYER diagram
 - `docs/api-reference.md`: LanceDB-only truth; deleted `LORE_VECTOR_STORE` env var row
 - `docs/linter-decisions.md`: updated mypy `ignore_missing_imports` example
@@ -44,6 +47,7 @@ Remove everything ChromaDB/mem0ai-related: code, tests, deps, config fields, and
 - `CLAUDE.md`: replaced all 5 stale Chroma/Mem0 references
 
 ### Tests / E2E
+
 - `tests/e2e/conftest.py`: removed stale `LORE_VECTOR_STORE` save/restore in `seed_db` and `live_server` fixtures
 
 ## Acceptance Criteria
