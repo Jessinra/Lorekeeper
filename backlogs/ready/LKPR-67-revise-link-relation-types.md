@@ -2,7 +2,7 @@
 id: LKPR-67
 title: Revise link relation types for clarity and coverage
 type: enhancement
-sprint: ~
+sprint: 4
 rice_score: ~
 filed_by: Akane
 github_issue: 148
@@ -50,7 +50,7 @@ That's 8 → 7, but every type is distinct and self-evident.
 - [ ] All existing tests pass; new tests added for old-type→new-type mapping
 - [ ] CLI/API validation rejects old types on new `lore_insert` or `lore_recommend_links` feedback
 
-### Read-side migration (preferred approach)
+## Read-side migration (preferred approach)
 
 Rather than a blocking column-rewrite migration (which would scan 100% of existing links), use a read-side mapping:
 
