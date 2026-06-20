@@ -7,25 +7,27 @@ Adding a new periodic job in ``server.py``::
 
     from lorekeeper.scheduler import PeriodicJob
 
-    PeriodicJob(svc, svc.sweep_links, "sweep",
+    PeriodicJob(config, job_fn, "sweep",
                 interval_hours=12, poll_seconds=300).start()
 
-    PeriodicJob(svc, svc.auto_reflect, "reflect",
+    PeriodicJob(config, job_fn, "reflect",
                 interval_hours=6, poll_seconds=300).start()
 
-Each job gets its own daemon thread. Exceptions are caught and logged — the
-server never crashes from a job failure.
+``config`` is a ``ConfigStore`` instance and ``job_fn`` is a zero-arg callable
+returning a stats dict. Each job gets its own daemon thread. Exceptions are
+caught and logged — the server never crashes from a job failure.
 """
+
+from __future__ import annotations
 
 import threading
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import structlog
 
-if TYPE_CHECKING:
-    from lorekeeper.services.orchestrator import MemoryService
+from lorekeeper.services.config_store import ConfigStore
 
 log = structlog.get_logger()
 
@@ -34,7 +36,7 @@ class PeriodicJob:
     """Daemon thread that runs a callable on a configurable schedule.
 
     Args:
-        svc: MemoryService — accessed via ``svc.config`` for timer persistence.
+        config: ConfigStore — used for timer persistence via ``config_overrides``.
         job_fn: Zero-argument callable returning a stats dict. Called when
             the timer fires.
         name: Short identifier used for the timer key in ``config_overrides``
@@ -45,13 +47,13 @@ class PeriodicJob:
 
     def __init__(
         self,
-        svc: "MemoryService",
+        config: ConfigStore,
         job_fn: Callable[[], dict[str, Any]],
         name: str,
         interval_hours: int = 12,
         poll_seconds: int = 300,
     ) -> None:
-        self._svc = svc
+        self._config = config
         self._job_fn = job_fn
         self._name = name
         self._interval = timedelta(hours=interval_hours)
@@ -69,7 +71,7 @@ class PeriodicJob:
     def _loop(self) -> None:
         while not self._stop.wait(self._poll):
             try:
-                overrides = self._svc.config.get_overrides()
+                overrides = self._config.get_overrides()
                 raw = overrides.get(self._timer_key)
                 if raw is not None:
                     next_run = datetime.fromisoformat(str(raw))
@@ -79,7 +81,7 @@ class PeriodicJob:
                 # First run (no key) or timer elapsed
                 stats = self._job_fn()
                 next_time = datetime.now(UTC) + self._interval
-                self._svc.config.set_override(self._timer_key, next_time.isoformat())
+                self._config.set_override(self._timer_key, next_time.isoformat())
                 log.info("periodic_job_completed", name=self._name, stats=stats)
             except Exception:
                 log.exception("periodic_job_failed", name=self._name)

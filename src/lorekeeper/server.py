@@ -29,6 +29,7 @@ from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.services.reflection_store import ReflectionStore
 from lorekeeper.services.search import VALID_SORT_BY, parse_filter_dt
+from lorekeeper.services.suggestion_store import LinkSuggestionStore
 
 log = structlog.get_logger()
 mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
@@ -75,7 +76,27 @@ def init_service(settings: Settings | None = None) -> MemoryService:
 
     kw = KeywordIndex()
 
-    svc = MemoryService(engine, memories, links, db, reflections, metrics, config, kw, s)
+    # Build namespace filter (shared agents see everything; scoped agents see own + shared)
+    ns_filter: list[str] | None = (
+        None if s.namespace == "shared" else [s.namespace, "shared"]
+    )
+
+    # LKPR-58: instantiate LinkCandidateGenerator once so spaCy model is only loaded once.
+    from lorekeeper.services.link_candidate import LinkCandidateGenerator
+
+    link_candidate_generator = LinkCandidateGenerator(
+        engine=engine,
+        memory_store=memories,
+        link_store=links,
+        keyword_index=kw,
+        settings=s,
+        ns_filter=ns_filter,
+    )
+
+    svc = MemoryService(
+        engine, memories, links, db, reflections, metrics, config, kw, s,
+        link_candidate_generator=link_candidate_generator,
+    )
     # Bootstrap BM25 from existing memories
     all_mems = list(svc._all_memories(include_deleted=True).values())
     kw.rebuild(all_mems)
@@ -85,13 +106,25 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     set_rate(s.enc_rate)
     log.info("enc_rate_set", rate=s.enc_rate)
 
-    # Start internal sweep scheduler (LKPR-99)
+    # Start internal sweep scheduler (LKPR-99) — standalone SweepService,
+    # not coupled to MemoryService internals.
     from lorekeeper.scheduler import PeriodicJob
+    from lorekeeper.services.sweep_service import SweepService
 
+    suggestions = LinkSuggestionStore(db)
+    sweep_svc = SweepService(
+        memory_store=memories,
+        link_store=links,
+        suggestion_store=suggestions,
+        link_candidate_generator=link_candidate_generator,
+        settings=s,
+        metrics_store=metrics,
+        conn=db.conn,
+    )
     PeriodicJob(
-        svc, svc.sweep_links, "sweep",
-        interval_hours=svc.settings.suggest_interval_hours,
-        poll_seconds=svc.settings.suggest_poll_seconds,
+        config, sweep_svc.run, "sweep",
+        interval_hours=s.suggest_interval_hours,
+        poll_seconds=s.suggest_poll_seconds,
     ).start()
     log.info("sweep_scheduler_started")
 

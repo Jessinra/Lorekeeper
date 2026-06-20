@@ -17,11 +17,12 @@ from lorekeeper.config import Settings
 from lorekeeper.services.config_store import ConfigStore
 from lorekeeper.services.database import Database
 from lorekeeper.services.keyword_index import KeywordIndex
-from lorekeeper.services.link_store import LinkStore, LinkSuggestionStore
+from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.services.reflection_store import ReflectionStore
+from lorekeeper.services.suggestion_store import LinkSuggestionStore
 
 
 @dataclass

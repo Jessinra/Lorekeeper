@@ -1070,7 +1070,20 @@ def test_ids_sort_by_recent_malformed_updated_at_does_not_crash(svc):
 
 
 class TestSweepLinks:
-    """Sweep algorithm tests (LKPR-99) — uses FakeEngine + real SQLite."""
+    """Sweep algorithm tests (LKPR-99) — uses SweepService + FakeEngine + real SQLite."""
+
+    from lorekeeper.services.sweep_service import SweepService
+
+    def _make_sweeper(self, service):
+        return self.SweepService(
+            memory_store=service.memories,
+            link_store=service.links,
+            suggestion_store=service.suggestions,
+            link_candidate_generator=service._link_candidate_generator,
+            settings=service.settings,
+            metrics_store=service.metrics,
+            conn=service._conn,
+        )
 
     def _seed_memories(self, service, engine):
         r = service.insert(memories=[
@@ -1090,8 +1103,9 @@ class TestSweepLinks:
 
     def test_sweep_generates_suggestions(self, svc):
         service, engine = svc
+        sweeper = self._make_sweeper(service)
         self._seed_memories(service, engine)
-        stats = service.sweep_links()
+        stats = sweeper.run()
         assert stats["memories_scanned"] == 4
         assert stats["candidates_generated"] >= 1
         pending = service.suggestions.all_pending_suggestions()
@@ -1099,26 +1113,29 @@ class TestSweepLinks:
 
     def test_sweep_creates_no_real_links(self, svc):
         service, engine = svc
+        sweeper = self._make_sweeper(service)
         self._seed_memories(service, engine)
         before = len(service.links.all_links())
-        service.sweep_links()
+        sweeper.run()
         after = len(service.links.all_links())
         assert after == before
 
     def test_sweep_skips_already_linked(self, svc):
         service, engine = svc
+        sweeper = self._make_sweeper(service)
         ids = self._seed_memories(service, engine)
         service.links.insert_link(
             source_memory_id=ids[0], target_memory_id=ids[1],
             relation_type="references", reason="test",
         )
         service.commit()
-        service.sweep_links()
+        sweeper.run()
         pending = service.suggestions.all_pending_suggestions()
         assert len(pending) >= 1
 
     def test_sweep_skips_rejected_pairs(self, svc):
         service, engine = svc
+        sweeper = self._make_sweeper(service)
         ids = self._seed_memories(service, engine)
         service.suggestions.insert_suggestion(
             source_memory_id=ids[0], target_memory_id=ids[1],
@@ -1126,13 +1143,14 @@ class TestSweepLinks:
             status="rejected",
         )
         service.commit()
-        stats = service.sweep_links()
+        stats = sweeper.run()
         assert stats["skipped_rejected"] >= 1
 
     def test_sweep_stats_structure(self, svc):
         service, engine = svc
+        sweeper = self._make_sweeper(service)
         self._seed_memories(service, engine)
-        stats = service.sweep_links()
+        stats = sweeper.run()
         expected = {
             "memories_scanned", "candidates_generated", "high_confidence",
             "standard", "skipped_rejected", "skipped_linked", "expired_pruned",
@@ -1141,10 +1159,11 @@ class TestSweepLinks:
 
     def test_sweep_prunes_expired(self, svc):
         service, engine = svc
+        sweeper = self._make_sweeper(service)
 
         # Verify the sweep calls prune_expired (stats key present).
         # Actual pruning behavior is tested in TestLinkSuggestionStore.
         self._seed_memories(service, engine)
-        stats = service.sweep_links()
+        stats = sweeper.run()
         assert "expired_pruned" in stats
         assert isinstance(stats["expired_pruned"], int)

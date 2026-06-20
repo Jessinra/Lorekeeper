@@ -19,15 +19,16 @@ from lorekeeper.services.feedback import (
     should_soft_delete,
 )
 from lorekeeper.services.keyword_index import KeywordIndex
-from lorekeeper.services.link_store import LinkStore, LinkSuggestionStore
+from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_engine import MemoryEngine
 from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.reflection_store import ReflectionStore
 from lorekeeper.services.search import SearchResult, parse_iso_utc, rank_results
+from lorekeeper.services.suggestion_store import LinkSuggestionStore
 
 if TYPE_CHECKING:
-    from lorekeeper.services.link_candidate import LinkCandidate
+    from lorekeeper.services.link_candidate import LinkCandidate, LinkCandidateGenerator
 
 log = structlog.get_logger()
 
@@ -75,6 +76,7 @@ class MemoryService:
         config: ConfigStore,
         keyword_index: KeywordIndex,
         settings: Settings,
+        link_candidate_generator: LinkCandidateGenerator | None = None,
     ) -> None:
         self._engine = engine
         self.memories = memories
@@ -97,15 +99,19 @@ class MemoryService:
         # (include_deleted=True) dataset; include_deleted=False is filtered in Python.
         self._memory_cache: dict[str, Memory] | None = None
         # LKPR-58: instantiate LinkCandidateGenerator once so spaCy model is only loaded once.
-        from lorekeeper.services.link_candidate import LinkCandidateGenerator
-        self._link_candidate_generator = LinkCandidateGenerator(
-            engine=self._engine,
-            memory_store=self.memories,
-            link_store=self.links,
-            keyword_index=self._kw,
-            settings=self.settings,
-            ns_filter=self._ns_filter,
-        )
+        if link_candidate_generator is not None:
+            self._link_candidate_generator = link_candidate_generator
+        else:
+            from lorekeeper.services.link_candidate import LinkCandidateGenerator
+
+            self._link_candidate_generator = LinkCandidateGenerator(
+                engine=self._engine,
+                memory_store=self.memories,
+                link_store=self.links,
+                keyword_index=self._kw,
+                settings=self.settings,
+                ns_filter=self._ns_filter,
+            )
 
     def _invalidate_cache(self) -> None:
         """Mark the memory cache dirty. Call at every write that adds/removes memories."""
@@ -988,109 +994,6 @@ class MemoryService:
             "created_at": now,
             "memories_created": memories_created,
         }
-
-    def sweep_links(self) -> dict[str, Any]:
-        """Iterate all active memories, generate candidates, tag and write suggestions.
-
-        No real memory_links rows are created. Candidates above the high-confidence
-        threshold get confidence='high'; others get confidence='standard'.
-        Rejected and already-linked pairs are skipped.
-
-        Returns stats dict with keys: memories_scanned, candidates_generated,
-        high_confidence, standard, skipped_rejected, skipped_linked, expired_pruned.
-        """
-        self._increment_metric("lore_sweep")
-        all_mems = self._all_memories(include_deleted=False)
-
-        # Pre-load rejection and link sets
-        rejected = self.suggestions.rejected_pairs()
-        all_links = self.links.all_links()
-        linked_pairs: set[tuple[str, str]] = set()
-        for lnk in all_links:
-            src, tgt = lnk.source_memory_id, lnk.target_memory_id
-            linked_pairs.add((src, tgt))
-            linked_pairs.add((tgt, src))
-
-        stats: dict[str, Any] = {
-            "memories_scanned": 0,
-            "candidates_generated": 0,
-            "high_confidence": 0,
-            "standard": 0,
-            "skipped_rejected": 0,
-            "skipped_linked": 0,
-            "expired_pruned": 0,
-        }
-
-        for mem_id, _mem_obj in all_mems.items():
-            stats["memories_scanned"] += 1
-            try:
-                candidates = self._link_candidate_generator.generate(mem_id)
-            except Exception:
-                log.warning("sweep_generate_failed", lore_id=mem_id, exc_info=True)
-                continue
-
-            for c in candidates:
-                if c.weighted_score < self.settings.link_score_threshold:
-                    continue
-
-                pair = (c.source_lore_id, c.target_lore_id)
-                if pair in linked_pairs:
-                    stats["skipped_linked"] += 1
-                    continue
-                if pair in rejected:
-                    stats["skipped_rejected"] += 1
-                    continue
-
-                confidence = (
-                    "high"
-                    if c.weighted_score >= self.settings.suggest_high_confidence_score
-                    else "standard"
-                )
-
-                try:
-                    # Resolve titles from the all_mems cache
-                    hits = all_mems
-                    src_title = hits[c.source_lore_id].title if c.source_lore_id in hits else ""
-                    tgt_title = hits[c.target_lore_id].title if c.target_lore_id in hits else ""
-
-                    self.suggestions.upsert_suggestion(
-                        source_memory_id=c.source_lore_id,
-                        target_memory_id=c.target_lore_id,
-                        source_title=src_title,
-                        target_title=tgt_title,
-                        weighted_score=c.weighted_score,
-                        cosine_score=c.cosine_score,
-                        bm25_score=c.bm25_score,
-                        entity_score=c.entity_score,
-                        temporal_score=c.temporal_score,
-                        suggested_type=None,
-                        confidence=confidence,
-                        status="pending",
-                    )
-                    stats["candidates_generated"] += 1
-                    if confidence == "high":
-                        stats["high_confidence"] += 1
-                    else:
-                        stats["standard"] += 1
-                except Exception:
-                    log.warning(
-                        "sweep_upsert_failed",
-                        source=c.source_lore_id,
-                        target=c.target_lore_id,
-                        exc_info=True,
-                    )
-
-        # Prune expired suggestions
-        try:
-            stats["expired_pruned"] = self.suggestions.prune_expired(
-                self.settings.suggest_ttl_days
-            )
-        except Exception:
-            log.warning("sweep_prune_failed", exc_info=True)
-
-        self._conn.commit()
-        log.info("sweep_completed", stats=stats)
-        return stats
 
     def recommend_links(
         self,

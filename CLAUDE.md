@@ -32,7 +32,7 @@ The SQLite layer is split into a shared `Database` class (owning the connection 
 | `ReflectionStore`     | `reflections` + `sessions` (FK-coupled)                                           | `services/reflection_store.py` |
 | `MetricsStore`        | `api_metrics` table                                                               | `services/metrics_store.py`    |
 | `ConfigStore`         | `config_overrides` table                                                          | `services/config_store.py`     |
-| `LinkSuggestionStore` | `link_suggestions` table — sweep-generated candidate pairs with scores            | `services/link_store.py`       |
+| `LinkSuggestionStore` | `link_suggestions` — sweep-generated candidate pairs with scores                  | `services/suggestion_store.py` |
 
 All stores share a single `Database` instance — they receive it via constructor and use its `conn` property. The `MemoryService` orchestrator exposes them as public attributes (`svc.memories`, `svc.links`, `svc.suggestions`, `svc.reflections`, `svc.metrics`, `svc.config`, `svc.settings`).
 
@@ -115,32 +115,32 @@ See `docs/linter-decisions.md` for rule selection rationale.
 
 All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 
-| Env var                       | Default                              | Purpose                                                                                                                                                   |
-| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `LORE_DATA_DIR`               | `~/.lorekeeper`                      | Where SQLite + vector DB live                                                                                                                             |
-| `LORE_NAMESPACE`              | `shared`                             | Agent write namespace. Writes tagged with this value; reads return union of `[namespace, "shared"]`. Set automatically by `setup.sh` for Hermes profiles. |
-| `LORE_SEARCH_LIMIT`           | `5`                                  | Default number of results returned by `lore_search`                                                                                                       |
-| `LORE_MAX_SEARCH_IDS`         | `50`                                 | Max IDs in `lore_search(ids=[...])` bulk lookup — enforced at handler layer (bypassing the handler bypasses this cap)                                     |
-| `LORE_MAX_REFINE_FROM_IDS`    | `200`                                | Max IDs in `lore_search(refine_from=[...])` — enforced at handler layer (bypassing the handler bypasses this cap)                                         |
-| `LORE_LINK_TOP_K`             | `50`                                 | Cosine pre-filter: top-K candidates per memory before scoring                                                                                             |
-| `LORE_LINK_TOP_M`             | `10`                                 | Max candidates returned by `lore_recommend_links`                                                                                                         |
-| `LORE_LINK_SCORE_THRESHOLD`   | `0.3`                                | Minimum Stage 1 weighted score to pass                                                                                                                    |
-| `LORE_LINK_WEIGHT_COSINE`     | `0.5`                                | Cosine similarity weight in combined score                                                                                                                |
-| `LORE_LINK_WEIGHT_BM25`       | `0.3`                                | BM25 keyword overlap weight                                                                                                                               |
-| `LORE_LINK_WEIGHT_ENTITY`     | `0.1`                                | Entity overlap (spaCy NER) weight                                                                                                                         |
-| `LORE_LINK_WEIGHT_TEMPORAL`   | `0.1`                                | Temporal proximity weight                                                                                                                                 |
-| `LORE_LINK_TEMPORAL_TAU_DAYS` | `30`                                 | Decay half-life for temporal scorer (days)                                                                                                                |
-|                               | `LORE_LINK_SPACY_MODEL`              | `en_core_web_sm`                                                                                                                                          | spaCy model for entity overlap scorer                               |
-|                               | `LORE_SUGGEST_HIGH_CONFIDENCE_SCORE` | `0.85`                                                                                                                                                    | Min weighted score for `confidence='high'` tag on sweep suggestions |
-|                               | `LORE_SUGGEST_INTERVAL_HOURS`        | `12`                                                                                                                                                      | Time between full link-suggestion sweeps                            |
-|                               | `LORE_SUGGEST_TTL_DAYS`              | `30`                                                                                                                                                      | TTL for unacted suggestions in days                                 |
-|                               | `LORE_SUGGEST_POLL_SECONDS`          | `300`                                                                                                                                                     | Scheduler daemon poll interval in seconds                           |
+| Env var                              | Default          | Purpose                                                                                                                                                   |
+| ------------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LORE_DATA_DIR`                      | `~/.lorekeeper`  | Where SQLite + vector DB live                                                                                                                             |
+| `LORE_NAMESPACE`                     | `shared`         | Agent write namespace. Writes tagged with this value; reads return union of `[namespace, "shared"]`. Set automatically by `setup.sh` for Hermes profiles. |
+| `LORE_SEARCH_LIMIT`                  | `5`              | Default number of results returned by `lore_search`                                                                                                       |
+| `LORE_MAX_SEARCH_IDS`                | `50`             | Max IDs in `lore_search(ids=[...])` bulk lookup — enforced at handler layer (bypassing the handler bypasses this cap)                                     |
+| `LORE_MAX_REFINE_FROM_IDS`           | `200`            | Max IDs in `lore_search(refine_from=[...])` — enforced at handler layer (bypassing the handler bypasses this cap)                                         |
+| `LORE_LINK_TOP_K`                    | `50`             | Cosine pre-filter: top-K candidates per memory before scoring                                                                                             |
+| `LORE_LINK_TOP_M`                    | `10`             | Max candidates returned by `lore_recommend_links`                                                                                                         |
+| `LORE_LINK_SCORE_THRESHOLD`          | `0.3`            | Minimum Stage 1 weighted score to pass                                                                                                                    |
+| `LORE_LINK_WEIGHT_COSINE`            | `0.5`            | Cosine similarity weight in combined score                                                                                                                |
+| `LORE_LINK_WEIGHT_BM25`              | `0.3`            | BM25 keyword overlap weight                                                                                                                               |
+| `LORE_LINK_WEIGHT_ENTITY`            | `0.1`            | Entity overlap (spaCy NER) weight                                                                                                                         |
+| `LORE_LINK_WEIGHT_TEMPORAL`          | `0.1`            | Temporal proximity weight                                                                                                                                 |
+| `LORE_LINK_TEMPORAL_TAU_DAYS`        | `30`             | Decay half-life for temporal scorer (days)                                                                                                                |
+| `LORE_LINK_SPACY_MODEL`              | `en_core_web_sm` | spaCy model for entity overlap scorer                                                                                                                     |
+| `LORE_SUGGEST_HIGH_CONFIDENCE_SCORE` | `0.85`           | Min weighted score for `confidence='high'` tag on sweep suggestions                                                                                       |
+| `LORE_SUGGEST_INTERVAL_HOURS`        | `12`             | Time between full link-suggestion sweeps                                                                                                                  |
+| `LORE_SUGGEST_TTL_DAYS`              | `30`             | TTL for unacted suggestions in days                                                                                                                       |
+| `LORE_SUGGEST_POLL_SECONDS`          | `300`            | Scheduler daemon poll interval in seconds                                                                                                                 |
 
 ### Periodic Jobs (Internal Scheduler)
 
 A generic `PeriodicJob` daemon thread runs inside the MCP server process. Each job persists its schedule in `config_overrides["{name}_next_run_at"]`, surviving restarts.
 
-**Sweep job (LKPR-99):** Checks the timer every `LORE_SUGGEST_POLL_SECONDS` (default 5 min). When elapsed, fires `sweep_links()`:
+**Sweep job (LKPR-99):** Implemented as a standalone `SweepService` in `services/sweep_service.py` — not coupled to `MemoryService`. Checks the timer every `LORE_SUGGEST_POLL_SECONDS` (default 5 min). When elapsed, fires `run()`:
 
 1. Iterates all active memories
 2. Runs the existing `LinkCandidateGenerator` on each memory
