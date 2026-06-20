@@ -49,7 +49,9 @@ CREATE TABLE IF NOT EXISTS memory_links (
   source_memory_id  TEXT NOT NULL,
   target_memory_id  TEXT NOT NULL,
   relation_type     TEXT NOT NULL CHECK (relation_type IN
-                      ('related_to','used_in','used_for','used_by','used_as')),
+                      ('related_to','used_in','used_for','used_by','used_as',
+                       'contradicts','supersedes','depends_on',
+                       'references','part_of','derived_from','causes')),
   reason            TEXT NOT NULL,
   score             REAL    NOT NULL DEFAULT 1.0,
   created_at        TEXT    NOT NULL,
@@ -321,12 +323,72 @@ def _migration_3_add_source_type(conn: sqlite3.Connection) -> None:
         log.info("memories_source_type_column_added")
 
 
+def _migration_4_revise_link_relation_types(conn: sqlite3.Connection) -> None:
+    """Expand memory_links CHECK constraint to accept all 12 relation types.
+
+    The application layer (models.py RELATION_TYPES) already enforces the new
+    7-type set for writes. The DB CHECK must accept the full union of old (5)
+    + transitional (3) + new (7) = 12 distinct strings so legacy rows survive
+    reads without the CHECK firing during the table-rebuild copy step.
+
+    Read-side mapping in link_store._row_to_link normalises old type strings to
+    new canonical types for all callers — no column rewrite needed.
+
+    Idempotency: if memory_links_old already exists (crash mid-migration) we
+    skip the RENAME and proceed from CREATE so a restart recovers cleanly.
+
+    Note on executescript(): sqlite3.executescript() issues an implicit COMMIT
+    before running its SQL. This is intentional here — the table rebuild is
+    self-contained and the migration runner (Database.migrate) wraps each
+    migration in its own `with conn:` transaction block, so the implicit commit
+    does not break outer atomicity; the version row insert is a separate step.
+    """
+    old_exists = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='memory_links_old'"
+    ).fetchone()
+
+    if not old_exists:
+        conn.execute("ALTER TABLE memory_links RENAME TO memory_links_old")
+
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS memory_links (
+          id                TEXT PRIMARY KEY,
+          source_memory_id  TEXT NOT NULL,
+          target_memory_id  TEXT NOT NULL,
+          relation_type     TEXT NOT NULL CHECK (relation_type IN
+                            ('related_to','used_in','used_for','used_by','used_as',
+                             'contradicts','supersedes','depends_on',
+                             'references','part_of','derived_from','causes')),
+          reason            TEXT NOT NULL,
+          score             REAL    NOT NULL DEFAULT 1.0,
+          created_at        TEXT    NOT NULL,
+          updated_at        TEXT    NOT NULL,
+          usage_count       INTEGER NOT NULL DEFAULT 0,
+          confidence        REAL,
+          confidence_count  INTEGER NOT NULL DEFAULT 0,
+          FOREIGN KEY (source_memory_id) REFERENCES memories(id) ON DELETE CASCADE,
+          FOREIGN KEY (target_memory_id) REFERENCES memories(id) ON DELETE CASCADE
+        );
+
+        INSERT OR IGNORE INTO memory_links SELECT * FROM memory_links_old;
+
+        DROP TABLE memory_links_old;
+
+        CREATE INDEX IF NOT EXISTS idx_links_source ON memory_links(source_memory_id);
+        CREATE INDEX IF NOT EXISTS idx_links_target ON memory_links(target_memory_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_links_unique_pair
+            ON memory_links(source_memory_id, target_memory_id, relation_type);
+    """)
+    log.info("link_relation_types_revised", accepted_count=12)
+
+
 # Each entry: (version, name, callable taking sqlite3.Connection).
 # Append new migrations here with incrementing version numbers.
 MIGRATIONS: list[tuple[int, str, Callable[[sqlite3.Connection], None]]] = [
     (1, "bootstrap_schema_and_fixups", _migration_1_bootstrap),
     (2, "extend_relation_types", _migration_2_extend_relation_types),
     (3, "add_source_type_to_memories", _migration_3_add_source_type),
+    (4, "revise_link_relation_types", _migration_4_revise_link_relation_types),
 ]
 
 

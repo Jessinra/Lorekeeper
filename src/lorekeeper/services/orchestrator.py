@@ -513,7 +513,7 @@ class MemoryService:
                 self.links.insert_link(
                     source_memory_id=lore_id,
                     target_memory_id=hit["lore_id"],
-                    relation_type="related_to",
+                    relation_type="references",
                     reason=f"auto-linked from lore_{source}: {raw_score:.2f}",
                 )
             except Exception:
@@ -687,7 +687,7 @@ class MemoryService:
                     "id": lid,
                     "source_memory_id": src,
                     "target_memory_id": tgt,
-                    "relation_type": lnk.get("relation_type", "related_to"),
+                    "relation_type": lnk.get("relation_type", "references"),
                     "reason": lnk.get("reason", ""),
                 })
             else:
@@ -696,7 +696,7 @@ class MemoryService:
                         id=lid,
                         source_memory_id=src,
                         target_memory_id=tgt,
-                        relation_type=lnk.get("relation_type", "related_to"),
+                        relation_type=lnk.get("relation_type", "references"),
                         reason=lnk.get("reason", ""),
                         score=float(lnk.get("score", 1.0)),
                         created_at=lnk.get("created_at"),

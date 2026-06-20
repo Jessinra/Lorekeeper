@@ -113,7 +113,7 @@ def test_insert_link_between_memories(svc):
     r2 = service.insert(
         memories=[],
         links=[{"source_memory_id": id_a, "target_memory_id": id_b,
-                "relation_type": "related_to", "reason": "they relate"}],
+                "relation_type": "references", "reason": "they relate"}],
     )
     assert len(r2["inserted_links"]) == 1
 
@@ -360,7 +360,7 @@ def test_insert_with_inline_links(svc):
             "content": "source",
             "links": [{
                 "target_memory_id": target_id,
-                "relation_type": "related_to",
+                "relation_type": "references",
                 "reason": "they are connected",
             }],
         }],
@@ -376,7 +376,7 @@ def test_insert_with_inline_links(svc):
     links = service.links.links_for_memory(source_id)
     assert len(links) == 1
     assert links[0].target_memory_id == target_id
-    assert links[0].relation_type == "related_to"
+    assert links[0].relation_type == "references"
     assert links[0].reason == "they are connected"
 
 
@@ -391,7 +391,7 @@ def test_insert_inline_link_invalid_target(svc):
             "content": "orphan",
             "links": [{
                 "target_memory_id": "nonexistent-id",
-                "relation_type": "related_to",
+                "relation_type": "references",
             }],
         }],
         links=[],
@@ -469,7 +469,7 @@ def test_insert_inline_link_missing_target_memory_id(svc):
             "description": "m",
             "content": "missing target_memory_id",
             "links": [{
-                "relation_type": "related_to",
+                "relation_type": "references",
             }],
         }],
         links=[],
@@ -665,14 +665,14 @@ def test_insert_with_inline_links_and_top_level_links(svc):
             "content": "source",
             "links": [{
                 "target_memory_id": id_a,
-                "relation_type": "used_in",
+                "relation_type": "part_of",
                 "reason": "inline link",
             }],
         }],
         links=[{
             "source_memory_id": id_b,
             "target_memory_id": id_c,
-            "relation_type": "related_to",
+            "relation_type": "references",
             "reason": "top-level link between targets",
         }],
     )

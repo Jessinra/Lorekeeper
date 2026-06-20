@@ -117,7 +117,7 @@ class TestUpdateLinkFeedback:
         )
         ids = [m["id"] for m in result["inserted_memories"]]
         src_id, tgt_id = ids[0], ids[1]
-        link = svc.links.insert_link(src_id, tgt_id, "related_to", "test")
+        link = svc.links.insert_link(src_id, tgt_id, "references", "test")
         svc._conn.commit()
         return src_id, tgt_id, link.id
 
@@ -464,7 +464,7 @@ class TestCreateLinkTargetNotFound:
             json={
                 "source_memory_id": src_id,
                 "target_memory_id": "nonexistent-target",
-                "relation_type": "related_to",
+                "relation_type": "references",
                 "reason": "testing",
             },
         )
@@ -488,7 +488,7 @@ class TestLinksIncludeDeleted:
         tgt_id = result["inserted_memories"][0]["id"]
         src_rows = svc_obj.memories.all_memory_rows(include_deleted=False)
         src_id = next(r["id"] for r in src_rows if r["title"] == "test memory")
-        svc_obj.links.insert_link(src_id, tgt_id, "related_to", "test")
+        svc_obj.links.insert_link(src_id, tgt_id, "references", "test")
         svc_obj._conn.commit()
         # Soft-delete the target
         svc_obj.forget([tgt_id], reason="outdated")

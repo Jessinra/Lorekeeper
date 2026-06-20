@@ -262,7 +262,7 @@ def test_search_by_ids_include_links_fetches_actual_links(svc):
         links=[],
     )
     ids = [m["id"] for m in r["inserted_memories"]]
-    svc.links.insert_link(ids[0], ids[1], "related_to", "test link")
+    svc.links.insert_link(ids[0], ids[1], "references", "test link")
 
     result = _handle_search(svc, "", ids=[ids[0]], include_links=True)
     assert len(result["results"]) == 1
