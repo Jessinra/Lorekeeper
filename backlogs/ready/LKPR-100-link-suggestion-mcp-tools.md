@@ -2,7 +2,7 @@
 id: LKPR-100
 title: MCP tools for link suggestion review — get suggestions and accept/reject
 type: feature
-sprint: ~
+sprint: 4
 rice_score: ~
 filed_by: Akane
 github_issue: 232

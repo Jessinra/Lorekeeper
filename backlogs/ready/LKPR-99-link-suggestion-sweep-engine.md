@@ -2,7 +2,7 @@
 id: LKPR-99
 title: Link suggestion sweep engine — periodic batch candidate generation with auto-accept
 type: feature
-sprint: ~
+sprint: 4
 rice_score: ~
 filed_by: Akane
 github_issue: 231

@@ -2,12 +2,11 @@
 id: LKPR-67
 title: Revise link relation types for clarity and coverage
 type: enhancement
-sprint: ~
+sprint: 4
 rice_score: ~
 filed_by: Akane
 github_issue: 148
 filed_date: 2026-06-06
-absorbed_by: LKPR-99
 ---
 
 # [LKPR-67] Revise link relation types for clarity and coverage

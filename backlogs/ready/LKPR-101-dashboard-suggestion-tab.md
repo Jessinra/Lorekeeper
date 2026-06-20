@@ -2,7 +2,7 @@
 id: LKPR-101
 title: Dashboard suggestion review tab — accept/reject UI and config panel
 type: feature
-sprint: ~
+sprint: 4
 rice_score: ~
 filed_by: Akane
 github_issue: 233
