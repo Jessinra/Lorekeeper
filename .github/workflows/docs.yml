@@ -3,6 +3,12 @@ name: docs
 on:
   push:
     branches: [main]
+  pull_request:
+    paths:
+      - .github/workflows/docs.yml
+      - mkdocs.yml
+      - docs/**
+      - landing/**
   workflow_dispatch:
 
 permissions:
@@ -23,6 +29,7 @@ jobs:
       - name: Build MkDocs to build/docs/
         run: mkdocs build --site-dir build/docs
       - name: Assemble build root
+        if: github.event_name == 'push'
         run: |
           cp landing/index.html build/index.html
           mkdir -p build/landing
@@ -30,6 +37,7 @@ jobs:
           mkdir -p build/assets
           cp landing/assets/logo.svg build/assets/logo.svg
       - name: Deploy to GitHub Pages
+        if: github.event_name == 'push'
         run: |
           cd build
           git init -b gh-pages
