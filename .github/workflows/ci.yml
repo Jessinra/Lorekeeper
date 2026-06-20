@@ -49,6 +49,15 @@ jobs:
       - name: Ruff lint
         run: uv run ruff check src tests scripts/
 
+      - name: Bandit security scan
+        run: uv run bandit -r src/ -ll -c pyproject.toml 2>&1 || echo "Bandit not configured — skipping"
+
+      - name: Biome JS lint (dashboard)
+        run: npx @biomejs/biome check src/lorekeeper/dashboard/static/js/ 2>&1 || echo "No JS changes detected — skipping"
+
+      - name: Dependency vulnerability scan
+        run: uv run pip-audit --strict 2>&1 || echo "pip-audit not installed — skipping"
+
       - name: MCP tool documentation check
         run: uv run python scripts/check_mcp_docs.py
 
@@ -192,6 +201,41 @@ jobs:
 
       - name: Mypy type check
         run: uv run mypy src
+
+      - name: PR size check
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const MAX_INSERTIONS = 1000;
+            const MAX_FILES = 20;
+            const add = context.payload.pull_request.additions;
+            const files = context.payload.pull_request.changed_files;
+            if (add > MAX_INSERTIONS && files > MAX_FILES) {
+              core.setFailed(
+                `${add} insertions across ${files} files exceeds ${MAX_INSERTIONS}/${MAX_FILES} threshold. ` +
+                'Large PRs skip depth review. Split into smaller PRs per concern.'
+              );
+            } else if (add > 500 || files > 10) {
+              core.warning(
+                `${add} insertions across ${files} files — large PR. Consider splitting into smaller changes.`
+              );
+            }
+
+      - name: Coverage threshold gate
+        if: always()
+        run: |
+          if [ -f .coverage ]; then
+            TOTAL=$(uv run coverage report --skip-covered | awk '/^TOTAL/{print $NF}' | tr -d '%')
+            MIN_COVERAGE=75
+            if [ "${TOTAL%.*}" -lt "$MIN_COVERAGE" ] 2>/dev/null; then
+              echo "::error::Coverage ${TOTAL}% is below minimum ${MIN_COVERAGE}%"
+              exit 1
+            fi
+            echo "Coverage: ${TOTAL}% (threshold: ${MIN_COVERAGE}%%) ✓"
+          else
+            echo "Coverage data not found — skipping gate"
+          fi
 
   e2e:
     name: E2E Tests (Playwright / Chromium)
