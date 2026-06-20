@@ -26,7 +26,7 @@ from lorekeeper.services.reflection_store import ReflectionStore
 from lorekeeper.services.search import SearchResult, parse_iso_utc, rank_results
 
 if TYPE_CHECKING:
-    from lorekeeper.services.link_candidate import LinkCandidate
+    from lorekeeper.services.link_candidate import LinkCandidate, LinkCandidateGenerator
 
 log = structlog.get_logger()
 
@@ -73,6 +73,7 @@ class MemoryService:
         config: ConfigStore,
         keyword_index: KeywordIndex,
         settings: Settings,
+        link_candidate_generator: LinkCandidateGenerator | None = None,
     ) -> None:
         self._engine = engine
         self.memories = memories
@@ -94,15 +95,19 @@ class MemoryService:
         # (include_deleted=True) dataset; include_deleted=False is filtered in Python.
         self._memory_cache: dict[str, Memory] | None = None
         # LKPR-58: instantiate LinkCandidateGenerator once so spaCy model is only loaded once.
-        from lorekeeper.services.link_candidate import LinkCandidateGenerator
-        self._link_candidate_generator = LinkCandidateGenerator(
-            engine=self._engine,
-            memory_store=self.memories,
-            link_store=self.links,
-            keyword_index=self._kw,
-            settings=self.settings,
-            ns_filter=self._ns_filter,
-        )
+        if link_candidate_generator is not None:
+            self._link_candidate_generator = link_candidate_generator
+        else:
+            from lorekeeper.services.link_candidate import LinkCandidateGenerator
+
+            self._link_candidate_generator = LinkCandidateGenerator(
+                engine=self._engine,
+                memory_store=self.memories,
+                link_store=self.links,
+                keyword_index=self._kw,
+                settings=self.settings,
+                ns_filter=self._ns_filter,
+            )
 
     def _invalidate_cache(self) -> None:
         """Mark the memory cache dirty. Call at every write that adds/removes memories."""

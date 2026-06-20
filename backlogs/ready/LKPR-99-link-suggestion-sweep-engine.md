@@ -69,15 +69,17 @@ for each active memory (non-deleted):
 - Uses the existing `LinkCandidateGenerator` from `link_candidate.py` — already O(n×K) thanks to cosine pre-filter (avoids O(n²) brute force)
 - No LLM calls anywhere
 
-### 3. Auto-accept
+### 3. High-confidence tagging
 
-- **Threshold:** `LORE_SUGGEST_AUTO_ACCEPT_SCORE` (env config, default 0.85)
-- On auto-accept: create a real `memory_links` row with a relation type, delete suggestion
-- **Type selection heuristics:**
-  - if temporal_score > 0.7 AND cosine_score > 0.8 → `derived_from`
-  - if entity_score > 0.5 AND both spatial/temporal proximity → `part_of`
-  - else → `references` (safe default)
-  - All types are from the LKPR-67 set; the heuristic can be refined later
+Instead of auto-accepting, candidates above a confidence threshold get tagged with a `confidence='high'` label on the suggestion row:
+
+- **Threshold:** `LORE_SUGGEST_HIGH_CONFIDENCE_SCORE` (env config, default 0.85)
+- Candidates at or above threshold → `confidence = 'high'`
+- Candidates below threshold → `confidence = 'standard'` (default)
+- The tag makes it filterable for future agent-review tools (LKPR-100)
+- Stored scores (cosine, bm25, entity, temporal, weighted) provide a labelled dataset for training a future classifier to learn the right auto-accept threshold
+
+**No real links are created by the sweep engine.** All links are purely through human/agent review. This keeps the suggestion pipeline stateless and reversible — high-confidence data accumulates as training material.
 
 ### 4. Scheduling
 
@@ -93,9 +95,9 @@ Sweep trigger (cron/button)
          ↓
 LinkCandidateGenerator.generate(memory_id)  ← existing scorers
          ↓
-   ┌─ score ≥ auto_accept ─→ insert memory_links → delete suggestion
+   ┌─ score ≥ high-confidence threshold ─→ insert suggestion (confidence='high')
    │
-   └─ score < auto_accept ─→ insert pending suggestion
+   └─ score < threshold ─→ insert suggestion (confidence='standard')
          ↓
    Agent reviews via MCP (LKPR-100) or dashboard (LKPR-101)
 ```
@@ -105,16 +107,18 @@ LinkCandidateGenerator.generate(memory_id)  ← existing scorers
 - [ ] `link_suggestions` table created via DB migration (version N) with unique pair constraint
 - [ ] `LinkSuggestionStore` in `services/link_store.py` — full CRUD for suggestions table
 - [ ] Sweep function iterates all active memories, runs `LinkCandidateGenerator`, writes to link_suggestions
-- [ ] Auto-accept: candidates above `LORE_SUGGEST_AUTO_ACCEPT_SCORE` create real `memory_links` rows automatically
-- [ ] Type selection heuristics suggest appropriate relation type from LKPR-67 set
+- [ ] High-confidence tagging: candidates above `LORE_SUGGEST_HIGH_CONFIDENCE_SCORE` get `confidence='high'` label; below get `confidence='standard'`
+- [ ] No real `memory_links` rows are created by the sweep engine — suggestions table only
 - [ ] Previously rejected pairs are excluded from future sweeps (read status='rejected')
 - [ ] Already-linked pairs excluded (real link exists either direction)
 - [ ] Unique pair constraint enforced (canonical ordering, no duplicates)
 - [ ] Executable entrypoint: `scripts/sweep-links.py` for cron/systemd
-- [ ] Config env vars: `LORE_SUGGEST_AUTO_ACCEPT_SCORE`, `LORE_SUGGEST_INTERVAL_HOURS`, `LORE_SUGGEST_TTL_DAYS`
+- [ ] Config env vars: `LORE_SUGGEST_HIGH_CONFIDENCE_SCORE`, `LORE_SUGGEST_INTERVAL_HOURS`, `LORE_SUGGEST_TTL_DAYS`, `LORE_SUGGEST_POLL_SECONDS`
 - [ ] Auto-expiry: suggestions older than TTL are pruned
 - [ ] No LLM calls anywhere in the pipeline
-- [ ] All existing tests pass; new tests for suggestion pipeline (table operations, sweep algorithm, auto-accept logic)
+- [ ] Internal scheduler (`src/lorekeeper/scheduler.py`): daemon thread polls every `LORE_SUGGEST_POLL_SECONDS`, checks `sweep_next_run_at` in `config_overrides`, fires sweep when timer elapsed, persists next run timestamp
+- [ ] Scheduler starts during server init (`src/lorekeeper/server.py`)
+- [ ] All existing tests pass; new tests for suggestion pipeline (table operations, sweep algorithm, confidence tagging)
 
 ## Dependencies
 

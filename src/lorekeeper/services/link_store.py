@@ -1,10 +1,12 @@
 """Memory link CRUD.
 
-Post-LKPR-51, this module owns only the `memory_links` table. Memory rows,
+Post-LKPR-51, this module owns only the ``memory_links`` table. Memory rows,
 reflections, sessions, metrics, and config overrides each have their own
-focused store. The shared `Database` class owns connection lifecycle and
-migrations — `LinkStore` just executes link queries on the connection it
-gets from `Database`.
+focused store. The shared ``Database`` class owns connection lifecycle and
+migrations — ``LinkStore`` just executes link queries on the connection it
+gets from ``Database``.
+
+**LinkSuggestionStore** was extracted to ``suggestion_store.py`` (LKPR-99).
 """
 
 from __future__ import annotations
@@ -152,3 +154,6 @@ def _row_to_link(row: sqlite3.Row) -> MemoryLink:
         confidence=row["confidence"],
         confidence_count=row["confidence_count"],
     )
+
+
+

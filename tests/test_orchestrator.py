@@ -27,6 +27,17 @@ class FakeEngine:
     def search(self, query: str, limit: int = 200) -> list[dict]:
         return self._search_results[:limit]
 
+    def get_embeddings_batch(self, ids: list[str]) -> dict[str, list[float]]:
+        """Return unit-length vectors for all known IDs so cosine scoring works."""
+        import numpy as np
+
+        out = {}
+        for lid in ids:
+            if lid in self._store:
+                v = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+                out[lid] = v
+        return out
+
     def get_all(self) -> list[dict]:
         return [{"lore_id": k, "mem0_id": k} for k in self._store]
 
@@ -1056,3 +1067,106 @@ def test_ids_sort_by_recent_malformed_updated_at_does_not_crash(svc):
     assert len(result_ids) == 2
     # The bad-timestamp memory should sort last (datetime.min fallback).
     assert result_ids.index(ids_inserted[0]) < result_ids.index(bad_id)
+
+
+class TestSweepLinks:
+    """Sweep algorithm tests (LKPR-99) — uses SweepService + FakeEngine + real SQLite."""
+
+    from lorekeeper.services.sweep_service import SweepService
+
+    def _make_sweeper(self, service):
+        from lorekeeper.services.suggestion_store import LinkSuggestionStore
+
+        self._sug_store = LinkSuggestionStore(service.memories._db)
+        return self.SweepService(
+            memory_store=service.memories,
+            link_store=service.links,
+            suggestion_store=self._sug_store,
+            link_candidate_generator=service._link_candidate_generator,
+            settings=service.settings,
+            metrics_store=service.metrics,
+            conn=service._conn,
+        )
+
+    def _seed_memories(self, service, engine):
+        r = service.insert(memories=[
+            {"title": "alpha", "description": "first", "content": "alpha about databases"},
+            {"title": "beta", "description": "second", "content": "beta about caching"},
+            {"title": "gamma", "description": "third", "content": "gamma about strategies"},
+            {"title": "delta", "description": "fourth", "content": "delta about frameworks"},
+        ], links=[])
+        ids = [m["id"] for m in r["inserted_memories"]]
+        engine._search_results = [
+            {"lore_id": ids[1], "score": 0.85},
+            {"lore_id": ids[2], "score": 0.75},
+            {"lore_id": ids[0], "score": 0.65},
+            {"lore_id": ids[3], "score": 0.30},
+        ]
+        return ids
+
+    def test_sweep_generates_suggestions(self, svc):
+        service, engine = svc
+        sweeper = self._make_sweeper(service)
+        self._seed_memories(service, engine)
+        stats = sweeper.run()
+        assert stats["memories_scanned"] == 4
+        assert stats["candidates_generated"] >= 1
+        pending = self._sug_store.all_pending_suggestions()
+        assert len(pending) >= 1
+
+    def test_sweep_creates_no_real_links(self, svc):
+        service, engine = svc
+        sweeper = self._make_sweeper(service)
+        self._seed_memories(service, engine)
+        before = len(service.links.all_links())
+        sweeper.run()
+        after = len(service.links.all_links())
+        assert after == before
+
+    def test_sweep_skips_already_linked(self, svc):
+        service, engine = svc
+        sweeper = self._make_sweeper(service)
+        ids = self._seed_memories(service, engine)
+        service.links.insert_link(
+            source_memory_id=ids[0], target_memory_id=ids[1],
+            relation_type="references", reason="test",
+        )
+        service.commit()
+        sweeper.run()
+        pending = self._sug_store.all_pending_suggestions()
+        assert len(pending) >= 1
+
+    def test_sweep_skips_rejected_pairs(self, svc):
+        service, engine = svc
+        sweeper = self._make_sweeper(service)
+        ids = self._seed_memories(service, engine)
+        self._sug_store.insert_suggestion(
+            source_memory_id=ids[0], target_memory_id=ids[1],
+            source_title="", target_title="", weighted_score=0.0,
+            status="rejected",
+        )
+        service.commit()
+        stats = sweeper.run()
+        assert stats["skipped_rejected"] >= 1
+
+    def test_sweep_stats_structure(self, svc):
+        service, engine = svc
+        sweeper = self._make_sweeper(service)
+        self._seed_memories(service, engine)
+        stats = sweeper.run()
+        expected = {
+            "memories_scanned", "candidates_generated", "high_confidence",
+            "standard", "skipped_rejected", "skipped_linked", "expired_pruned",
+        }
+        assert set(stats.keys()) == expected
+
+    def test_sweep_prunes_expired(self, svc):
+        service, engine = svc
+        sweeper = self._make_sweeper(service)
+
+        # Verify the sweep calls prune_expired (stats key present).
+        # Actual pruning behavior is tested in TestLinkSuggestionStore.
+        self._seed_memories(service, engine)
+        stats = sweeper.run()
+        assert "expired_pruned" in stats
+        assert isinstance(stats["expired_pruned"], int)

@@ -22,6 +22,7 @@ from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.services.reflection_store import ReflectionStore
+from lorekeeper.services.suggestion_store import LinkSuggestionStore
 
 
 @dataclass
@@ -30,6 +31,7 @@ class Stores:
     db: Database
     memories: MemoryStore
     links: LinkStore
+    suggestions: LinkSuggestionStore
     reflections: ReflectionStore
     metrics: MetricsStore
     config: ConfigStore
@@ -43,6 +45,7 @@ def build_stores(db_path: Path) -> Stores:
         db=db,
         memories=MemoryStore(db),
         links=LinkStore(db),
+        suggestions=LinkSuggestionStore(db),
         reflections=ReflectionStore(db),
         metrics=MetricsStore(db),
         config=ConfigStore(db),
