@@ -155,7 +155,7 @@ If you find yourself reluctant to reflect, the fix is usually in the identity fr
     {
       "source_memory_id": "...",
       "target_memory_id": "...",
-      "relation_type": "related_to",
+      "relation_type": "references",
       "reason": "..."
     }
   ],

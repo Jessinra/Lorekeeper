@@ -1,6 +1,10 @@
+from pathlib import Path
 from typing import Literal, get_args
 
+import yaml
 from pydantic import BaseModel
+
+# ── Source types (hardcoded — stable, no migration needed) ─────────────
 
 # Literal type for valid memory source types.
 SourceType = Literal[
@@ -18,7 +22,13 @@ SOURCE_TYPES: frozenset[str] = frozenset(get_args(SourceType))
 # callers must not submit it via the public API.
 WRITE_SOURCE_TYPES: frozenset[str] = SOURCE_TYPES - {"unknown"}
 
-# Literal type for valid link relation types.
+# ── Link relation types (config-driven for easy evolution) ──────────────
+
+_TYPES_YAML = Path(__file__).parent / "types.yaml"
+
+# RelationType Literal — the canonical type-hint source. When adding/
+# removing types, update this Literal AND types.yaml.
+# A script or startup check (test_models_sync) keeps them in sync.
 RelationType = Literal[
     "references",    # mentions or cites — clean default for most links
     "depends_on",    # requires or builds upon another memory
@@ -29,23 +39,25 @@ RelationType = Literal[
     "causes",        # direct causal relationship
 ]
 
-# Immutable set of all valid relation type strings — single source of truth.
-RELATION_TYPES: frozenset[str] = frozenset(get_args(RelationType))
+# Immutable set of all valid relation type strings — loaded from config.
+# Runtime validation uses this; the Literal above is for type checkers.
+RELATION_TYPES: frozenset[str]
+TYPE_MIGRATION_MAP: dict[str, str]
 
-# Read-side migration map: old type strings stored in DB → new canonical type.
-# Applied on every link read so callers always see the new type set.
-# Old types are no longer accepted at write time (validated against RELATION_TYPES).
-TYPE_MIGRATION_MAP: dict[str, str] = {
-    "related_to": "references",  # catch-all → default
-    "used_in":    "part_of",     # "used in X context" → compositional
-    "used_for":   "references",  # "used for purpose" → reference
-    "used_by":    "depends_on",  # LOSSY: A--used_by-->B (B depends on A) →
-                               # mapped as A--depends_on-->B (A depends on B).
-                               # Correct semantic would require source/target swap
-                               # on read. This is a best-effort string-only mapping;
-                               # the ticket (LKPR-67) chose simplicity over perfection.
-    "used_as":    "references",  # "used as tool" → reference
-}
+def _load_type_config() -> tuple[frozenset[str], dict[str, str]]:
+    """Load relation types from types.yaml. Falls back to Literal if file missing."""
+    if not _TYPES_YAML.exists():
+        # types.yaml not shipped yet — fall back to the Literal source.
+        return frozenset(get_args(RelationType)), {}
+
+    with _TYPES_YAML.open() as f:
+        cfg = yaml.safe_load(f)
+
+    types = frozenset(cfg.get("relation_types", get_args(RelationType)))
+    migration_map: dict[str, str] = cfg.get("migration_map", {})
+    return types, migration_map
+
+RELATION_TYPES, TYPE_MIGRATION_MAP = _load_type_config()
 
 
 class Memory(BaseModel):

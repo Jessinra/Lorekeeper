@@ -353,3 +353,33 @@ def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
         # Restore registry so other tests aren't affected
         db_module.MIGRATIONS[:] = original
         db.close()
+
+
+def test_relation_type_literal_matches_types_config():
+    """The RelationType Literal and types.yaml must stay in sync.
+
+    When adding/removing types, update BOTH:
+    1. The RelationType Literal in models.py
+    2. The relation_types list in src/lorekeeper/types.yaml
+
+    This test catches drift between the two.
+    """
+    from typing import get_args
+
+    from lorekeeper.models import RELATION_TYPES, RelationType
+
+    literal_types = frozenset(get_args(RelationType))
+    assert literal_types == RELATION_TYPES, (
+        f"RelationType Literal ({sorted(literal_types)}) differs from "
+        f"types.yaml config ({sorted(RELATION_TYPES)}). "
+        "Update both files to match."
+    )
+
+    # Also verify TYPE_MIGRATION_MAP values are all valid
+    from lorekeeper.models import TYPE_MIGRATION_MAP
+
+    for old_type, new_type in TYPE_MIGRATION_MAP.items():
+        assert new_type in RELATION_TYPES, (
+            f"TYPE_MIGRATION_MAP[{old_type!r}] = {new_type!r} "
+            f"is not a valid relation type (valid: {sorted(RELATION_TYPES)})"
+        )

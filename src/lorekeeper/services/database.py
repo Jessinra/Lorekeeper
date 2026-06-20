@@ -25,6 +25,8 @@ from pathlib import Path
 
 import structlog
 
+from lorekeeper.models import RELATION_TYPES
+
 log = structlog.get_logger()
 
 BASE_SCHEMA = """
@@ -323,6 +325,77 @@ def _migration_3_add_source_type(conn: sqlite3.Connection) -> None:
         log.info("memories_source_type_column_added")
 
 
+def _link_types_check_clause(allowed_types: list[str]) -> str:
+    """Generate a SQL CHECK clause for the memory_links.relation_type column.
+
+    Future migrations that add or remove relation types should use this helper
+    + ``_rebuild_memory_links_table()`` instead of writing raw SQL.
+    """
+    quoted = ", ".join(repr(t) for t in sorted(allowed_types))
+    return f"CHECK (relation_type IN ({quoted}))"
+
+
+_MEMORY_LINKS_COLUMNS = """
+  id                TEXT PRIMARY KEY,
+  source_memory_id  TEXT NOT NULL,
+  target_memory_id  TEXT NOT NULL,
+  relation_type     TEXT NOT NULL,
+  reason            TEXT NOT NULL,
+  score             REAL    NOT NULL DEFAULT 1.0,
+  created_at        TEXT    NOT NULL,
+  updated_at        TEXT    NOT NULL,
+  usage_count       INTEGER NOT NULL DEFAULT 0,
+  confidence        REAL,
+  confidence_count  INTEGER NOT NULL DEFAULT 0,
+  FOREIGN KEY (source_memory_id) REFERENCES memories(id) ON DELETE CASCADE,
+  FOREIGN KEY (target_memory_id) REFERENCES memories(id) ON DELETE CASCADE
+""".strip()
+
+
+def _rebuild_memory_links_table(
+    conn: sqlite3.Connection,
+    allowed_types: list[str],
+    *,
+    old_table_name: str = "memory_links_old",
+) -> None:
+    """Rebuild memory_links with a new CHECK constraint on relation_type.
+
+    Crash-idempotent: if *old_table_name* already exists (from a previous
+    partial run), the RENAME step is skipped so a restart recovers cleanly.
+
+    Future migrations that add/remove relation types should call this helper
+    instead of writing raw table-rebuild SQL.
+    """
+    check_clause = _link_types_check_clause(allowed_types)
+
+    old_exists = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+        (old_table_name,),
+    ).fetchone()
+
+    if not old_exists:
+        conn.execute(f"ALTER TABLE memory_links RENAME TO {old_table_name}")
+
+    conn.executescript(f"""
+        CREATE TABLE IF NOT EXISTS memory_links (
+          {_MEMORY_LINKS_COLUMNS},
+          {check_clause}
+        );
+
+        INSERT OR IGNORE INTO memory_links
+        SELECT * FROM {old_table_name};
+
+        DROP TABLE {old_table_name};
+
+        CREATE INDEX IF NOT EXISTS idx_links_source
+            ON memory_links(source_memory_id);
+        CREATE INDEX IF NOT EXISTS idx_links_target
+            ON memory_links(target_memory_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_links_unique_pair
+            ON memory_links(source_memory_id, target_memory_id, relation_type);
+    """)
+
+
 def _migration_4_revise_link_relation_types(conn: sqlite3.Connection) -> None:
     """Expand memory_links CHECK constraint to accept all 12 relation types.
 
@@ -333,59 +406,14 @@ def _migration_4_revise_link_relation_types(conn: sqlite3.Connection) -> None:
 
     Read-side mapping in link_store._row_to_link normalises old type strings to
     new canonical types for all callers — no column rewrite needed.
-
-    Idempotency: if memory_links_old already exists (crash mid-migration) we
-    skip the RENAME and proceed from CREATE so a restart recovers cleanly.
-
-    Note on executescript(): sqlite3.executescript() issues an implicit COMMIT
-    before running its SQL. This breaks the `with conn:` transaction boundary:
-    the ALTER TABLE RENAME (run before executescript) is committed separately
-    from the CREATE/INSERT/DROP inside executescript. If the script fails, the
-    RENAME is already persisted — which is why the idempotency guard above
-    (checking for memory_links_old) exists: on restart, finding the old table
-    tells us the RENAME happened but the rebuild didn't finish, so we skip
-    the RENAME and go straight to CREATE/INSERT/DROP.
-
-    The outer Database.migrate() wrapper's `with conn:` still exits cleanly
-    (no exception raised by the migration function), and the version row
-    insert is a separate statement outside that block.
     """
-    old_exists = conn.execute(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='memory_links_old'"
-    ).fetchone()
-
-    if not old_exists:
-        conn.execute("ALTER TABLE memory_links RENAME TO memory_links_old")
-
-    conn.executescript("""
-        CREATE TABLE IF NOT EXISTS memory_links (
-          id                TEXT PRIMARY KEY,
-          source_memory_id  TEXT NOT NULL,
-          target_memory_id  TEXT NOT NULL,
-          relation_type     TEXT NOT NULL CHECK (relation_type IN
-                            ('related_to','used_in','used_for','used_by','used_as',
-                             'contradicts','supersedes','depends_on',
-                             'references','part_of','derived_from','causes')),
-          reason            TEXT NOT NULL,
-          score             REAL    NOT NULL DEFAULT 1.0,
-          created_at        TEXT    NOT NULL,
-          updated_at        TEXT    NOT NULL,
-          usage_count       INTEGER NOT NULL DEFAULT 0,
-          confidence        REAL,
-          confidence_count  INTEGER NOT NULL DEFAULT 0,
-          FOREIGN KEY (source_memory_id) REFERENCES memories(id) ON DELETE CASCADE,
-          FOREIGN KEY (target_memory_id) REFERENCES memories(id) ON DELETE CASCADE
-        );
-
-        INSERT OR IGNORE INTO memory_links SELECT * FROM memory_links_old;
-
-        DROP TABLE memory_links_old;
-
-        CREATE INDEX IF NOT EXISTS idx_links_source ON memory_links(source_memory_id);
-        CREATE INDEX IF NOT EXISTS idx_links_target ON memory_links(target_memory_id);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_links_unique_pair
-            ON memory_links(source_memory_id, target_memory_id, relation_type);
-    """)
+    _ALL_12: list[str] = sorted(
+        set(RELATION_TYPES)
+        | {
+            "related_to", "used_in", "used_for", "used_by", "used_as",
+        }
+    )
+    _rebuild_memory_links_table(conn, _ALL_12)
     log.info("link_relation_types_revised", accepted_count=12)
 
 
