@@ -26,7 +26,7 @@ def stores(tmp_path):
 
 
 def test_insert_and_retrieve_link(stores):
-    link = stores.links.insert_link("a", "b", "related_to", "they are related")
+    link = stores.links.insert_link("a", "b", "references", "they are related")
     assert link.id
     assert link.source_memory_id == "a"
     assert link.target_memory_id == "b"
@@ -37,8 +37,8 @@ def test_insert_and_retrieve_link(stores):
 
 
 def test_links_for_memory_bidirectional(stores):
-    stores.links.insert_link("a", "b", "related_to", "a→b")
-    stores.links.insert_link("c", "a", "used_in", "c→a")
+    stores.links.insert_link("a", "b", "references", "a→b")
+    stores.links.insert_link("c", "a", "part_of", "c→a")
 
     links = stores.links.links_for_memory("a")
     assert len(links) == 2
@@ -46,11 +46,11 @@ def test_links_for_memory_bidirectional(stores):
 
 def test_fk_rejects_missing_memory(stores):
     with pytest.raises(sqlite3.IntegrityError):
-        stores.links.insert_link("a", "nonexistent", "related_to", "bad link")
+        stores.links.insert_link("a", "nonexistent", "references", "bad link")
 
 
 def test_update_link_score(stores):
-    link = stores.links.insert_link("a", "b", "related_to", "r")
+    link = stores.links.insert_link("a", "b", "references", "r")
     stores.links.update_link_fields(link.id, score=5.0)
     updated = stores.links.get_link(link.id)
     assert updated is not None
@@ -63,7 +63,7 @@ def test_cascade_delete(stores):
     Crosses MemoryStore + LinkStore — kept here because it verifies the FK
     cascade semantics of the link table.
     """
-    link = stores.links.insert_link("a", "b", "related_to", "r")
+    link = stores.links.insert_link("a", "b", "references", "r")
     stores.memories.delete_memory_row("a")
     assert stores.links.get_link(link.id) is None
 
@@ -211,3 +211,47 @@ def test_get_memory_rows_dedup(tmp_path):
     assert len(rows) == 2  # no duplicates
 
     s.db.close()
+
+
+def test_read_side_migration_map_normalises_legacy_types(stores):
+    """Legacy relation_type strings stored in DB are normalised on read.
+
+    Insert a link row with each legacy type directly via SQL (bypassing the
+    application-layer validator), fetch it back by ID, and assert the exact
+    new canonical type returned — per-type, no overlap ambiguity.
+    """
+    import uuid
+    from datetime import UTC, datetime
+
+    ts = datetime.now(UTC).isoformat()
+
+    type_pairs: list[tuple[str, str, str]] = [
+        ("related_to", "references", "related spot-check"),
+        ("used_in",    "part_of",    "used_in spot-check"),
+        ("used_for",   "references", "used_for spot-check"),
+        ("used_by",    "depends_on", "used_by spot-check"),
+        ("used_as",    "references", "used_as spot-check"),
+    ]
+
+    for old_type, expected_new, reason in type_pairs:
+        lid = str(uuid.uuid4())
+
+        # Bypass insert_link (which would reject old types) — write raw SQL.
+        stores.db.conn.execute(
+            """INSERT INTO memory_links
+              (id, source_memory_id, target_memory_id, relation_type,
+               reason, score, created_at, updated_at, usage_count,
+               confidence, confidence_count)
+            VALUES (?, 'a', 'b', ?, ?, 1.0, ?, ?, 0, NULL, 0)
+            """,
+            (lid, old_type, reason, ts, ts),
+        )
+        stores.db.conn.commit()
+
+        # Fetch by exact ID and assert the mapped type.
+        fetched = stores.links.get_link(lid)
+        assert fetched is not None, f"link {lid} (old={old_type}) not found"
+        assert fetched.relation_type == expected_new, (
+            f"old='{old_type}' expected='{expected_new}' "
+            f"got='{fetched.relation_type}'"
+        )

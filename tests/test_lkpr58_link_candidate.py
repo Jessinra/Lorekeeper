@@ -302,7 +302,7 @@ def test_generator_filters_existing_links(tmp_path):
     src = _insert_memory(svc, "src", "content A")
     tgt = _insert_memory(svc, "tgt", "content A related")
     # Pre-link
-    svc.links.insert_link(src, tgt, "related_to", "manual")
+    svc.links.insert_link(src, tgt, "references", "manual")
     _rebuild_kw(svc)
     _seed_vectors_from_content(eng, svc)
 
@@ -357,8 +357,8 @@ def test_generator_links_for_memory_filter_bidirectional(tmp_path):
     b = _insert_memory(svc, "b", "shared topic too")
     c = _insert_memory(svc, "c", "shared topic also")
     # Link a←b and a→c
-    svc.links.insert_link(a, b, "related_to", "pre-existing")
-    svc.links.insert_link(c, a, "related_to", "pre-existing")
+    svc.links.insert_link(a, b, "references", "pre-existing")
+    svc.links.insert_link(c, a, "references", "pre-existing")
     _rebuild_kw(svc)
     _seed_vectors_from_content(eng, svc)
 

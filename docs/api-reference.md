@@ -90,7 +90,7 @@ Semantic candidates: top 200 from Mem0. Keyword candidates: BM25. Both pools are
       "links": [
         {
           "target_memory_id": "<target-uuid>",
-          "relation_type": "related_to",
+          "relation_type": "references",
           "reason": "part of OAuth flow"
         }
       ]
@@ -100,7 +100,7 @@ Semantic candidates: top 200 from Mem0. Keyword candidates: BM25. Both pools are
     {
       "source_memory_id": "<uuid>",
       "target_memory_id": "<uuid>",
-      "relation_type": "related_to",
+      "relation_type": "references",
       "reason": "Both about Python gotchas"
     }
   ],

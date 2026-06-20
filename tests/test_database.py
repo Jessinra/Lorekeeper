@@ -7,6 +7,7 @@ from lorekeeper.services.database import (
     Database,
     _migration_1_bootstrap,
     _migration_2_extend_relation_types,
+    _migration_4_revise_link_relation_types,
 )
 
 
@@ -19,7 +20,7 @@ def test_fresh_db_starts_at_version_zero(tmp_path):
 def test_migrate_applies_bootstrap_to_fresh_db(tmp_path):
     db = Database(tmp_path / "boot.db")
     db.migrate()
-    assert db.current_version() == 3
+    assert db.current_version() == 4
 
     # All expected tables exist
     tables = {
@@ -237,6 +238,77 @@ def test_migrations_list_versions_strictly_increasing():
     assert versions[0] == 1
 
 
+def test_migration_4_revise_link_relation_types_on_populated_db(tmp_path):
+    """Migration v4 rebuilds memory_links with an expanded 12-value CHECK.
+
+    Sets up a DB at v1-v3 with real links using the old 8-type CHECK,
+    then applies v4 and verifies:
+    - All old rows survive the table rebuild
+    - New types accepted by the enlarged CHECK
+    - Old types still pass the CHECK (permissive for legacy data)
+    - DB correctly reaches version 4
+    """
+    import uuid
+
+    db = Database(tmp_path / "v4.db")
+    conn = db.conn
+    ts = "2026-01-01T00:00:00+00:00"
+
+    # Apply v1–v3 manually so we land with the old 8-type CHECK
+    _migration_1_bootstrap(conn)
+    conn.commit()
+    _migration_2_extend_relation_types(conn)
+    conn.commit()
+
+    # Seed two memory rows so FK constraints are satisfied
+    for mem_id in ("m1", "m2"):
+        conn.execute(
+            "INSERT INTO memories (id,title,description,content,created_at,updated_at) "
+            "VALUES (?,?,?,?,?,?)",
+            (mem_id, f"title-{mem_id}", "d", "c", ts, ts),
+        )
+
+    # Insert links using old type strings (valid under v2 CHECK)
+    old_link_ids = []
+    for old_type in ("related_to", "used_in", "contradicts", "supersedes", "depends_on"):
+        lid = str(uuid.uuid4())
+        old_link_ids.append((lid, old_type))
+        conn.execute(
+            "INSERT INTO memory_links "
+            "(id,source_memory_id,target_memory_id,relation_type,reason,score,"
+            "created_at,updated_at,usage_count,confidence,confidence_count) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (lid, "m1", "m2", old_type, "pre-v4 link", 1.0, ts, ts, 0, None, 0),
+        )
+    conn.commit()
+
+    # Apply migration v4
+    _migration_4_revise_link_relation_types(conn)
+    conn.commit()
+
+    # All old rows survived
+    for lid, old_type in old_link_ids:
+        row = conn.execute(
+            "SELECT relation_type FROM memory_links WHERE id=?", (lid,)
+        ).fetchone()
+        assert row is not None, f"link {lid} lost after v4 migration"
+        assert row[0] == old_type, f"expected raw DB value '{old_type}', got '{row[0]}'"
+
+    # New types accepted by the updated CHECK
+    for new_type in ("references", "part_of", "derived_from", "causes"):
+        lid = str(uuid.uuid4())
+        conn.execute(
+            "INSERT INTO memory_links "
+            "(id,source_memory_id,target_memory_id,relation_type,reason,score,"
+            "created_at,updated_at,usage_count,confidence,confidence_count) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (lid, "m1", "m2", new_type, "new type test", 1.0, ts, ts, 0, None, 0),
+        )
+    conn.commit()
+
+    db.close()
+
+
 def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
     """If a migration raises mid-apply, the `with self._conn:` context manager
     must roll back: no _schema_version row gets inserted, and the migration
@@ -247,10 +319,10 @@ def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
     from lorekeeper.services import database as db_module
 
     db = Database(tmp_path / "rollback.db")
-    db.migrate()  # apply v1 + v2 + v3 baseline
-    assert db.current_version() == 3
+    db.migrate()  # apply v1 + v2 + v3 + v4 baseline
+    assert db.current_version() == 4
 
-    # Inject a failing v4 migration into the MIGRATIONS list, then call migrate().
+    # Inject a failing v5 migration into the MIGRATIONS list, then call migrate().
     calls = {"count": 0}
 
     def _failing_migration(conn):
@@ -260,13 +332,13 @@ def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
         raise RuntimeError("simulated migration failure")
 
     original = list(db_module.MIGRATIONS)
-    db_module.MIGRATIONS.append((4, "failing_v4", _failing_migration))
+    db_module.MIGRATIONS.append((5, "failing_v5", _failing_migration))
     try:
         with pytest.raises(RuntimeError, match="simulated migration failure"):
             db.migrate()
 
         # Schema version must NOT have advanced
-        assert db.current_version() == 3
+        assert db.current_version() == 4
 
         # The CREATE TABLE inside the failed migration must have been rolled back
         table = db.conn.execute(
@@ -281,3 +353,33 @@ def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
         # Restore registry so other tests aren't affected
         db_module.MIGRATIONS[:] = original
         db.close()
+
+
+def test_relation_type_literal_matches_types_config():
+    """The RelationType Literal and types.yaml must stay in sync.
+
+    When adding/removing types, update BOTH:
+    1. The RelationType Literal in models.py
+    2. The relation_types list in src/lorekeeper/types.yaml
+
+    This test catches drift between the two.
+    """
+    from typing import get_args
+
+    from lorekeeper.models import RELATION_TYPES, RelationType
+
+    literal_types = frozenset(get_args(RelationType))
+    assert literal_types == RELATION_TYPES, (
+        f"RelationType Literal ({sorted(literal_types)}) differs from "
+        f"types.yaml config ({sorted(RELATION_TYPES)}). "
+        "Update both files to match."
+    )
+
+    # Also verify TYPE_MIGRATION_MAP values are all valid
+    from lorekeeper.models import TYPE_MIGRATION_MAP
+
+    for old_type, new_type in TYPE_MIGRATION_MAP.items():
+        assert new_type in RELATION_TYPES, (
+            f"TYPE_MIGRATION_MAP[{old_type!r}] = {new_type!r} "
+            f"is not a valid relation type (valid: {sorted(RELATION_TYPES)})"
+        )

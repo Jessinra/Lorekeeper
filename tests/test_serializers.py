@@ -31,7 +31,7 @@ def _make_link(**overrides) -> MemoryLink:
         "id": "link-1",
         "source_memory_id": "mem-1",
         "target_memory_id": "mem-2",
-        "relation_type": "related_to",
+        "relation_type": "references",
         "reason": "they share context",
         "created_at": "2026-01-01T00:00:00+00:00",
         "updated_at": "2026-01-02T00:00:00+00:00",
@@ -124,7 +124,7 @@ def test_serialize_memory_link_all_fields():
     link = _make_link()
     result = serialize_memory_link(link)
     assert result["id"] == "link-1"
-    assert result["relation_type"] == "related_to"
+    assert result["relation_type"] == "references"
     assert result["reason"] == "they share context"
     assert result["score"] == 1.0
 

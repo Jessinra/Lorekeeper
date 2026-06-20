@@ -79,7 +79,7 @@ lore_insert({
   links: [{
     source_memory_id: "<new-memory-id-from-step-3>",
     target_memory_id: "<related-existing-memory-id>",
-    relation_type: "related_to",
+    relation_type: "references",
     reason: "Why these are related"
   }]
 })
@@ -89,16 +89,15 @@ Create one link per related memory. **Do not skip this step** — links are what
 
 ### Relation types
 
-| Type          | Use when                                                   |
-| ------------- | ---------------------------------------------------------- |
-| `related_to`  | General topical relationship (default)                     |
-| `used_in`     | New fact is used within the existing memory's context      |
-| `used_for`    | New fact serves a purpose described by the existing memory |
-| `used_by`     | New fact is consumed by the existing memory's concept      |
-| `used_as`     | New fact acts as the existing memory's concept             |
-| `contradicts` | New fact conflicts with the existing memory                |
-| `supersedes`  | New fact replaces or updates the existing memory           |
-| `depends_on`  | New fact requires or builds upon the existing memory       |
+| Type           | Use when                                                    |
+| -------------- | ----------------------------------------------------------- |
+| `references`   | Mentions or cites — clean default for most links            |
+| `depends_on`   | Requires or builds upon another memory                      |
+| `supersedes`   | Newer memory that replaces an older one                     |
+| `contradicts`  | New fact conflicts with the existing memory                 |
+| `part_of`      | Hierarchical composition — child belongs to parent          |
+| `derived_from` | Based on, inferred from, or generalised from another memory |
+| `causes`       | Direct causal relationship                                  |
 
 ### Handling duplicates
 

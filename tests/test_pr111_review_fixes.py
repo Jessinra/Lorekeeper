@@ -120,13 +120,13 @@ def test_insert_link_reraises_non_duplicate_integrity_error(tmp_path):
 
     # First link with explicit id
     fixed_id = str(uuid.uuid4())
-    s.links.insert_link("a", "b", "related_to", "r", id=fixed_id)
+    s.links.insert_link("a", "b", "references", "r", id=fixed_id)
 
     # Now insert a DIFFERENT logical link (different source/target) but with
     # the same `id` — this triggers a PRIMARY KEY IntegrityError, NOT the
     # unique-pair duplicate path. The fix must re-raise this.
     with pytest.raises(sqlite3.IntegrityError):
-        s.links.insert_link("c", "d", "related_to", "r2", id=fixed_id)
+        s.links.insert_link("c", "d", "references", "r2", id=fixed_id)
 
     s.db.close()
 
@@ -143,8 +143,8 @@ def test_insert_link_duplicate_pair_returns_existing(tmp_path):
             created_at=ts, updated_at=ts,
         )
 
-    first = s.links.insert_link("a", "b", "related_to", "first")
-    second = s.links.insert_link("a", "b", "related_to", "second attempt")
+    first = s.links.insert_link("a", "b", "references", "first")
+    second = s.links.insert_link("a", "b", "references", "second attempt")
     # Should return the EXISTING link (same id), not insert a new one
     assert second.id == first.id
     assert second.reason == "first"  # original reason preserved

@@ -1,0 +1,28 @@
+# Lorekeeper link relation types — single source of truth.
+#
+# Adding a new type: add it to `types`, update `migration_map` if old→new
+# mapping is needed, register a migration that calls
+# _rebuild_memory_links_table with the expanded list, and update the
+# RelationType Literal in models.py to keep type hints in sync.
+#
+# Removing a type: remove from `types`, and the next migration rebuilds
+# the DB CHECK to exclude it. Existing rows with that type survive reads
+# (no column rewrite), but new writes will be rejected by the validator.
+
+relation_types:
+  - references
+  - depends_on
+  - supersedes
+  - contradicts
+  - part_of
+  - derived_from
+  - causes
+
+# Read-side migration map: old type strings stored in DB → new canonical type.
+# Applied on every link read. Only needed when renaming types.
+migration_map:
+  related_to: references
+  used_in: part_of
+  used_for: references
+  used_by: depends_on
+  used_as: references

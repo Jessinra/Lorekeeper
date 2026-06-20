@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 
 import structlog
 
-from lorekeeper.models import MemoryLink
+from lorekeeper.models import TYPE_MIGRATION_MAP, MemoryLink
 from lorekeeper.services.database import Database
 
 log = structlog.get_logger()
@@ -137,11 +137,13 @@ class LinkStore:
 
 
 def _row_to_link(row: sqlite3.Row) -> MemoryLink:
+    raw_type = row["relation_type"]
+    normalized_type = TYPE_MIGRATION_MAP.get(raw_type, raw_type)
     return MemoryLink(
         id=row["id"],
         source_memory_id=row["source_memory_id"],
         target_memory_id=row["target_memory_id"],
-        relation_type=row["relation_type"],
+        relation_type=normalized_type,
         reason=row["reason"],
         score=row["score"],
         created_at=row["created_at"],

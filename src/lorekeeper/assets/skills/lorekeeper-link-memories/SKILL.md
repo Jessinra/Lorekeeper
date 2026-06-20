@@ -34,7 +34,7 @@ The agent evaluates candidates itself — it already has an LLM. `lore_recommend
 ## What Makes a Good Link
 
 - **Shared topic/entities**: memories about the same person, project, concept, or codebase
-- **Causal or structural**: `depends_on` for dependencies, `used_in` for implementation details
+- **Causal or structural**: `depends_on` for dependencies, `references` for generic relations
 - **Chronological**: `supersedes` for newer versions replacing older ones
 - **Conflict**: `contradicts` when two memories make conflicting claims about the same thing
 
@@ -52,7 +52,7 @@ mcp_lore_insert(
     links=[{
         "source_memory_id": "<source-id>",
         "target_memory_id": "<target-id>",
-        "relation_type": "related_to",
+        "relation_type": "references",
         "reason": "similar topic about Python web frameworks"
     }]
 )
@@ -60,13 +60,12 @@ mcp_lore_insert(
 
 ## Relation Types
 
-| Type          | Meaning                                  |
-| ------------- | ---------------------------------------- |
-| `related_to`  | General thematic connection (default)    |
-| `used_in`     | Source concept is used in target context |
-| `used_for`    | Source is used for the purpose in target |
-| `used_by`     | Source is used by entity in target       |
-| `used_as`     | Source serves as a role in target        |
-| `contradicts` | Conflicting claims between memories      |
-| `supersedes`  | Source replaces/updates target           |
-| `depends_on`  | Source requires or builds upon target    |
+| Type           | Meaning                                              |
+| -------------- | ---------------------------------------------------- |
+| `references`   | Mentions or cites — clean default for most links     |
+| `depends_on`   | Requires or builds upon another memory               |
+| `supersedes`   | Newer memory that replaces an older one              |
+| `contradicts`  | Conflicting claims between memories                  |
+| `part_of`      | Hierarchical composition — child belongs to parent   |
+| `derived_from` | Based on, inferred from, or generalised from another |
+| `causes`       | Direct causal relationship                           |

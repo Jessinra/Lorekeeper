@@ -202,7 +202,7 @@ def test_list_links_with_data(seeded_client):
     svc_obj.links.insert_link(
         source_memory_id=src_id,
         target_memory_id=tgt_id,
-        relation_type="related_to",
+        relation_type="references",
         reason="test link",
     )
     resp = client.get("/api/links")
@@ -231,7 +231,7 @@ def test_create_link(seeded_client):
         json={
             "source_memory_id": src_id,
             "target_memory_id": tgt_id,
-            "relation_type": "related_to",
+            "relation_type": "references",
             "reason": "because",
         },
     )
@@ -248,7 +248,7 @@ def test_create_link_source_not_found(fresh_client):
         json={
             "source_memory_id": "no-such",
             "target_memory_id": "also-no-such",
-            "relation_type": "related_to",
+            "relation_type": "references",
             "reason": "x",
         },
     )
@@ -277,7 +277,7 @@ def test_delete_link_success(seeded_client):
     link = svc_obj.links.insert_link(
         source_memory_id=src_id,
         target_memory_id=tgt_id,
-        relation_type="related_to",
+        relation_type="references",
         reason="test",
     )
     resp = client.delete(f"/api/links/{link.id}")
