@@ -39,8 +39,11 @@ TYPE_MIGRATION_MAP: dict[str, str] = {
     "related_to": "references",  # catch-all → default
     "used_in":    "part_of",     # "used in X context" → compositional
     "used_for":   "references",  # "used for purpose" → reference
-    "used_by":    "depends_on",  # "A used_by B" (B depends on A) → store as "A depends_on B"
-                               # NOTE: direction inverts — see ticket LKPR-67 for rationale
+    "used_by":    "depends_on",  # LOSSY: A--used_by-->B (B depends on A) →
+                               # mapped as A--depends_on-->B (A depends on B).
+                               # Correct semantic would require source/target swap
+                               # on read. This is a best-effort string-only mapping;
+                               # the ticket (LKPR-67) chose simplicity over perfection.
     "used_as":    "references",  # "used as tool" → reference
 }
 

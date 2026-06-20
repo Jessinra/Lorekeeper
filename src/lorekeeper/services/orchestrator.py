@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 import structlog
 
 from lorekeeper.config import Settings
-from lorekeeper.models import RELATION_TYPES, Memory, MemoryLink
+from lorekeeper.models import RELATION_TYPES, TYPE_MIGRATION_MAP, Memory, MemoryLink
 from lorekeeper.services.config_store import ConfigStore
 from lorekeeper.services.dedup import is_duplicate
 from lorekeeper.services.feedback import (
@@ -682,12 +682,15 @@ class MemoryService:
             if src not in valid_ids or tgt not in valid_ids:
                 links_error += 1
                 continue
+            # Normalise legacy relation types so old dumps restore correctly.
+            raw_rel = lnk.get("relation_type", "references")
+            normalized_rel = TYPE_MIGRATION_MAP.get(raw_rel, raw_rel)
             if dry_run:
                 preview_links.append({
                     "id": lid,
                     "source_memory_id": src,
                     "target_memory_id": tgt,
-                    "relation_type": lnk.get("relation_type", "references"),
+                    "relation_type": normalized_rel,
                     "reason": lnk.get("reason", ""),
                 })
             else:
@@ -696,7 +699,7 @@ class MemoryService:
                         id=lid,
                         source_memory_id=src,
                         target_memory_id=tgt,
-                        relation_type=lnk.get("relation_type", "references"),
+                        relation_type=normalized_rel,
                         reason=lnk.get("reason", ""),
                         score=float(lnk.get("score", 1.0)),
                         created_at=lnk.get("created_at"),

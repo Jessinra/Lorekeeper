@@ -338,10 +338,17 @@ def _migration_4_revise_link_relation_types(conn: sqlite3.Connection) -> None:
     skip the RENAME and proceed from CREATE so a restart recovers cleanly.
 
     Note on executescript(): sqlite3.executescript() issues an implicit COMMIT
-    before running its SQL. This is intentional here — the table rebuild is
-    self-contained and the migration runner (Database.migrate) wraps each
-    migration in its own `with conn:` transaction block, so the implicit commit
-    does not break outer atomicity; the version row insert is a separate step.
+    before running its SQL. This breaks the `with conn:` transaction boundary:
+    the ALTER TABLE RENAME (run before executescript) is committed separately
+    from the CREATE/INSERT/DROP inside executescript. If the script fails, the
+    RENAME is already persisted — which is why the idempotency guard above
+    (checking for memory_links_old) exists: on restart, finding the old table
+    tells us the RENAME happened but the rebuild didn't finish, so we skip
+    the RENAME and go straight to CREATE/INSERT/DROP.
+
+    The outer Database.migrate() wrapper's `with conn:` still exits cleanly
+    (no exception raised by the migration function), and the version row
+    insert is a separate statement outside that block.
     """
     old_exists = conn.execute(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='memory_links_old'"

@@ -99,18 +99,49 @@ def main() -> None:
     shutil.copy2(db_path, backup_path)
 
     # Apply updates inside a single transaction.
+    skipped = 0
     try:
         with conn:
             for old_type, new_type in TYPE_MIGRATION_MAP.items():
-                conn.execute(
-                    "UPDATE memory_links SET relation_type=? WHERE relation_type=?",
+                cursor = conn.execute(
+                    "UPDATE memory_links SET relation_type=? "
+                    "WHERE relation_type=?",
                     (new_type, old_type),
                 )
-        print(f"Done. {total} row(s) updated. Backup at {backup_path}")
+                updated = cursor.rowcount
+                print(f"  {old_type!r:12s} -> {new_type!r:12s}  ({updated} updated)")
+    except sqlite3.IntegrityError as exc:
+        # UNIQUE constraint collision: a link with the target type already
+        # exists for the same (source, target, relation_type) pair.
+        print(f"  UNIQUE collision during update: {exc}")
+        print("  Applying row-by-row fallback (skipping conflicts)...")
+
+        conn.rollback()
+        with conn:
+            for old_type, new_type in TYPE_MIGRATION_MAP.items():
+                rows = conn.execute(
+                    "SELECT id,source_memory_id,target_memory_id "
+                    "FROM memory_links WHERE relation_type=?", (old_type,),
+                ).fetchall()
+                for row in rows:
+                    try:
+                        conn.execute(
+                            "UPDATE memory_links SET relation_type=? "
+                            "WHERE id=?",
+                            (new_type, row["id"]),
+                        )
+                    except sqlite3.IntegrityError:
+                        skipped += 1
+                print(f"  {old_type!r:12s} -> {new_type!r:12s}  done ({skipped} skipped)")
     except Exception as exc:
         print(f"ERROR during update — transaction rolled back: {exc}", file=sys.stderr)
         conn.close()
         sys.exit(1)
+
+    print(f"\nDone. Backup at {backup_path}")
+    if skipped:
+        print(f"  {skipped} row(s) skipped due to UNIQUE constraint conflicts "
+              "(a link with the new type already exists).")
 
     conn.close()
 

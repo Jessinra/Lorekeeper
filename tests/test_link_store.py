@@ -216,63 +216,42 @@ def test_get_memory_rows_dedup(tmp_path):
 def test_read_side_migration_map_normalises_legacy_types(stores):
     """Legacy relation_type strings stored in DB are normalised on read.
 
-    Insert a link row with an old type directly via SQL (bypassing the
-    application-layer validator), then verify _row_to_link maps it to the
-    new canonical type so callers never see the old string.
+    Insert a link row with each legacy type directly via SQL (bypassing the
+    application-layer validator), fetch it back by ID, and assert the exact
+    new canonical type returned — per-type, no overlap ambiguity.
     """
     import uuid
     from datetime import UTC, datetime
 
     ts = datetime.now(UTC).isoformat()
-    link_id = str(uuid.uuid4())
 
-    # Bypass insert_link (which would reject old types) — write raw SQL.
-    stores.db.conn.execute(
-        """
-        INSERT INTO memory_links
-          (id, source_memory_id, target_memory_id, relation_type,
-           reason, score, created_at, updated_at, usage_count,
-           confidence, confidence_count)
-        VALUES (?, 'a', 'b', 'related_to', 'legacy row', 1.0, ?, ?, 0, NULL, 0)
-        """,
-        (link_id, ts, ts),
-    )
-    stores.db.conn.commit()
+    type_pairs: list[tuple[str, str, str]] = [
+        ("related_to", "references", "related spot-check"),
+        ("used_in",    "part_of",    "used_in spot-check"),
+        ("used_for",   "references", "used_for spot-check"),
+        ("used_by",    "depends_on", "used_by spot-check"),
+        ("used_as",    "references", "used_as spot-check"),
+    ]
 
-    fetched = stores.links.get_link(link_id)
-    assert fetched is not None
-    assert fetched.relation_type == "references", (
-        f"expected 'references' after migration map, got '{fetched.relation_type}'"
-    )
-
-    # Spot-check each remaining legacy type → expected new type.
-    legacy_mappings = {
-        "used_in":  "part_of",
-        "used_for": "references",
-        "used_by":  "depends_on",
-        "used_as":  "references",
-    }
-    ts2 = "2026-01-01T00:00:00+00:00"
-    for old_type, _expected_new in legacy_mappings.items():
+    for old_type, expected_new, reason in type_pairs:
         lid = str(uuid.uuid4())
+
+        # Bypass insert_link (which would reject old types) — write raw SQL.
         stores.db.conn.execute(
-            """
-            INSERT INTO memory_links
+            """INSERT INTO memory_links
               (id, source_memory_id, target_memory_id, relation_type,
                reason, score, created_at, updated_at, usage_count,
                confidence, confidence_count)
-            VALUES (?, 'a', 'b', ?, 'legacy', 1.0, ?, ?, 0, NULL, 0)
+            VALUES (?, 'a', 'b', ?, ?, 1.0, ?, ?, 0, NULL, 0)
             """,
-            (lid, old_type, ts2, ts2),
+            (lid, old_type, reason, ts, ts),
         )
-    stores.db.conn.commit()
+        stores.db.conn.commit()
 
-    for old_type, expected_new in legacy_mappings.items():
-        # fetch all links for 'a' and find the one with this old type stored
-        all_links = stores.links.links_for_memory("a")
-        # filter by reason='legacy' and expected new type
-        matched = [lk for lk in all_links if lk.relation_type == expected_new]
-        assert matched, (
-            f"expected a link with relation_type='{expected_new}' "
-            f"(migrated from '{old_type}') in links_for_memory('a')"
+        # Fetch by exact ID and assert the mapped type.
+        fetched = stores.links.get_link(lid)
+        assert fetched is not None, f"link {lid} (old={old_type}) not found"
+        assert fetched.relation_type == expected_new, (
+            f"old='{old_type}' expected='{expected_new}' "
+            f"got='{fetched.relation_type}'"
         )
