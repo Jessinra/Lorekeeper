@@ -185,20 +185,6 @@ Lorekeeper exposes **8 MCP tools** covering the full memory lifecycle:
 
 ---
 
-## Performance
-
-> 📊 **Benchmark results from LKPR-70 coming soon.** Lorekeeper is being benchmarked against agentmemory's published evaluation suite — retrieval precision, context token savings, and search latency at scale. Results will be published here once complete.
-
-Early internal numbers on a 1,000-memory store:
-
-- **Search latency:** ~40–80ms (hybrid pipeline, LanceDB backend)
-- **Duplicate detection:** ~30ms per insert (0.6·semantic + 0.4·keyword threshold)
-- **BM25 index rebuild:** ~10ms at 5k memories
-
-_Full benchmark methodology and reproducible script → [LKPR-70](https://github.com/Jessinra/Lorekeeper/issues/162)_
-
----
-
 ## Dashboard
 
 A local web UI to browse, search, edit, and manage your memory store.
@@ -240,9 +226,9 @@ This isn't a marketing line. Every tool schema, return type, and workflow in Lor
 
 ---
 
-## Setup (Git clone)
+## For Developers
 
-If you prefer to clone the repo instead of pip install (e.g., for development):
+Clone, run from source, or contribute:
 
 ```bash
 git clone https://github.com/Jessinra/Lorekeeper.git
@@ -250,44 +236,22 @@ cd Lorekeeper
 bash scripts/setup.sh
 ```
 
-The setup script:
-
-1. Installs dependencies with `uv sync`
-2. Creates `~/.lorekeeper/` data directory
-3. Installs git hooks (lint + tests enforced on commit)
-4. Registers MCP config in detected agents (Claude Code, Cursor, Hermes)
-5. Installs 5 agent skills for automatic memory workflows
-
-**Prerequisites:** Python 3.11+, `uv` (or pip)
-
----
-
-## Development
-
 ```bash
-# Unit tests (fast — excludes E2E)
+# Tests
 uv run pytest
-
-# E2E dashboard tests (requires Playwright — ~30s, runs a live browser)
-uv run playwright install chromium  # one-time
-uv run pytest tests/e2e/ -m e2e
 
 # Lint
 uv run ruff check src tests
 
+# Type check
+uv run mypy src
+
 # Dashboard dev
 uv sync --extra dashboard
 uv run lorekeeper-dashboard
-
-# Type check (before push)
-uv run mypy src
 ```
 
-Full development guide → `README.md` **Development** section (below).
-
----
-
-## Project Layout
+### Project Layout
 
 ```
 src/lorekeeper/
@@ -297,37 +261,29 @@ src/lorekeeper/
 ├── models.py            # Pydantic models
 ├── dashboard/           # Web UI (FastAPI + uvicorn)
 └── services/
-```
-
-## Configuration
-
-All settings are configured via `LORE_`-prefixed environment variables or the dashboard Config tab.
-
-**Key env vars:**
-
-| Variable                             | Default            | Description                                    |
-| ------------------------------------ | ------------------ | ---------------------------------------------- |
-| `LORE_DATA_DIR`                      | `~/.lorekeeper`    | Data directory                                 |
-| `LORE_EMBEDDING_MODEL`               | `all-MiniLM-L6-v2` | Sentence-transformer model                     |
-| `LORE_SUGGEST_HIGH_CONFIDENCE_SCORE` | `0.85`             | Min weighted score for `confidence='high'` tag |
-| `LORE_SUGGEST_INTERVAL_HOURS`        | `12`               | Sweep interval in hours                        |
-| `LORE_SUGGEST_TTL_DAYS`              | `30`               | TTL for unacted suggestions in days            |
-| `LORE_SUGGEST_POLL_SECONDS`          | `300`              | Scheduler poll interval in seconds             |
-
-Full list in `src/lorekeeper/config.py` and `CLAUDE.md`.
-
-```
-    ├── orchestrator.py  # MemoryService — coordinates all sub-services
+    ├── orchestrator.py  # MemoryService — coordinates sub-services
     ├── memory_engine.py # Vector store abstraction
     ├── lancedb_engine.py# LanceDB backend
-    ├── link_store.py    # SQLite — memories, links, reflections
+    ├── link_store.py    # SQLite — memories, links, suggestions
     ├── keyword_index.py # BM25 index
     ├── search.py        # Hybrid ranking
-    ├── dedup.py         # Duplicate detection
-    ├── feedback.py      # Score delta, EMA, soft-delete
-    ├── link_candidate.py# Link candidate pipeline
-    └── relation_classifier.py # LLM-based relation classifier
+    └── ...
 ```
+
+### Key Configuration
+
+All settings via `LORE_`-prefixed env vars or the dashboard Config tab:
+
+| Variable                      | Default         | Description                                                |
+| ----------------------------- | --------------- | ---------------------------------------------------------- |
+| `LORE_DATA_DIR`               | `~/.lorekeeper` | Data directory (SQLite + vectors)                          |
+| `LORE_NAMESPACE`              | `shared`        | Agent namespace — writes scoped, reads union with `shared` |
+| `LORE_SEARCH_LIMIT`           | `5`             | Default result count from `lore_search`                    |
+| `LORE_LINK_TOP_M`             | `10`            | Max candidates returned by `lore_recommend_links`          |
+| `LORE_LINK_SCORE_THRESHOLD`   | `0.3`           | Minimum score for link candidates to surface               |
+| `LORE_LINK_TEMPORAL_TAU_DAYS` | `30`            | Decay half-life for temporal proximity scoring (days)      |
+
+Full list → `src/lorekeeper/config.py` and `CLAUDE.md`.
 
 ---
 
@@ -354,4 +310,4 @@ Apache-2.0 — see [LICENSE](https://github.com/Jessinra/Lorekeeper/blob/main/LI
 
 _Built by agents, for agents._ [Manifesto](docs/positioning-manifesto.md) · [Strategy](docs/positioning-manifesto.md)
 
-_Last verified: 2026-06-16_
+_Last verified: 2026-06-20_
