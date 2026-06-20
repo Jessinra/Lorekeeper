@@ -17,7 +17,7 @@ from lorekeeper.config import Settings
 from lorekeeper.services.config_store import ConfigStore
 from lorekeeper.services.database import Database
 from lorekeeper.services.keyword_index import KeywordIndex
-from lorekeeper.services.link_store import LinkStore
+from lorekeeper.services.link_store import LinkStore, LinkSuggestionStore
 from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.orchestrator import MemoryService
@@ -30,6 +30,7 @@ class Stores:
     db: Database
     memories: MemoryStore
     links: LinkStore
+    suggestions: LinkSuggestionStore
     reflections: ReflectionStore
     metrics: MetricsStore
     config: ConfigStore
@@ -43,6 +44,7 @@ def build_stores(db_path: Path) -> Stores:
         db=db,
         memories=MemoryStore(db),
         links=LinkStore(db),
+        suggestions=LinkSuggestionStore(db),
         reflections=ReflectionStore(db),
         metrics=MetricsStore(db),
         config=ConfigStore(db),
@@ -60,6 +62,7 @@ def build_service(
         engine,
         stores.memories,
         stores.links,
+        stores.db,
         stores.reflections,
         stores.metrics,
         stores.config,

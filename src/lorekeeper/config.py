@@ -67,6 +67,25 @@ class Settings(BaseSettings):
         default="en_core_web_sm", description="spaCy model for entity overlap"
     )
 
+    # Link suggestion sweep engine (LKPR-99)
+    suggest_high_confidence_score: float = Field(
+        default=0.85,
+        description="Min weighted score for confidence='high' tag"
+        " (LORE_SUGGEST_HIGH_CONFIDENCE_SCORE)",
+    )
+    suggest_interval_hours: int = Field(
+        default=12,
+        description="Sweep interval in hours (LORE_SUGGEST_INTERVAL_HOURS)",
+    )
+    suggest_ttl_days: int = Field(
+        default=30,
+        description="TTL for unacted suggestions in days (LORE_SUGGEST_TTL_DAYS)",
+    )
+    suggest_poll_seconds: int = Field(
+        default=300,
+        description="Scheduler poll interval in seconds (LORE_SUGGEST_POLL_SECONDS)",
+    )
+
     @property
     def lancedb_path(self) -> str:
         return str(self.data_dir / "lancedb")

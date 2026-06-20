@@ -297,6 +297,26 @@ src/lorekeeper/
 ├── models.py            # Pydantic models
 ├── dashboard/           # Web UI (FastAPI + uvicorn)
 └── services/
+```
+
+## Configuration
+
+All settings are configured via `LORE_`-prefixed environment variables or the dashboard Config tab.
+
+**Key env vars:**
+
+| Variable                             | Default            | Description                                    |
+| ------------------------------------ | ------------------ | ---------------------------------------------- |
+| `LORE_DATA_DIR`                      | `~/.lorekeeper`    | Data directory                                 |
+| `LORE_EMBEDDING_MODEL`               | `all-MiniLM-L6-v2` | Sentence-transformer model                     |
+| `LORE_SUGGEST_HIGH_CONFIDENCE_SCORE` | `0.85`             | Min weighted score for `confidence='high'` tag |
+| `LORE_SUGGEST_INTERVAL_HOURS`        | `12`               | Sweep interval in hours                        |
+| `LORE_SUGGEST_TTL_DAYS`              | `30`               | TTL for unacted suggestions in days            |
+| `LORE_SUGGEST_POLL_SECONDS`          | `300`              | Scheduler poll interval in seconds             |
+
+Full list in `src/lorekeeper/config.py` and `CLAUDE.md`.
+
+```
     ├── orchestrator.py  # MemoryService — coordinates all sub-services
     ├── memory_engine.py # Vector store abstraction
     ├── lancedb_engine.py# LanceDB backend

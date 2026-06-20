@@ -75,7 +75,7 @@ def init_service(settings: Settings | None = None) -> MemoryService:
 
     kw = KeywordIndex()
 
-    svc = MemoryService(engine, memories, links, reflections, metrics, config, kw, s)
+    svc = MemoryService(engine, memories, links, db, reflections, metrics, config, kw, s)
     # Bootstrap BM25 from existing memories
     all_mems = list(svc._all_memories(include_deleted=True).values())
     kw.rebuild(all_mems)
@@ -84,6 +84,16 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     # Set guidance injection rate for write responses
     set_rate(s.enc_rate)
     log.info("enc_rate_set", rate=s.enc_rate)
+
+    # Start internal sweep scheduler (LKPR-99)
+    from lorekeeper.scheduler import PeriodicJob
+
+    PeriodicJob(
+        svc, svc.sweep_links, "sweep",
+        interval_hours=svc.settings.suggest_interval_hours,
+        poll_seconds=svc.settings.suggest_poll_seconds,
+    ).start()
+    log.info("sweep_scheduler_started")
 
     _svc = svc
     return svc
