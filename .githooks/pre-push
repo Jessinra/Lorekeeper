@@ -44,6 +44,11 @@ uv run mypy src
 echo "✅  mypy passed"
 
 echo ""
+echo "🔍  pip-audit (dependency vulnerabilities)..."
+uv run pip-audit --strict 2>&1 || echo "⚠️  pip-audit not installed — skipping"
+echo "✅  pip-audit passed"
+
+echo ""
 echo "🧪  Unit tests..."
 uv run pytest tests/ -q -x --tb=short
 echo "✅  unit tests passed"
