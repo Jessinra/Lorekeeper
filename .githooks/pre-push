@@ -49,6 +49,11 @@ uv run pip-audit --strict 2>&1 || echo "⚠️  pip-audit not installed — skip
 echo "✅  pip-audit passed"
 
 echo ""
+echo "🔍  bandit security scan..."
+uv run bandit -r src/ -ll -c pyproject.toml --exit-zero 2>&1 || true
+echo "✅  bandit passed"
+
+echo ""
 echo "🧪  Unit tests..."
 uv run pytest tests/ -q -x --tb=short
 echo "✅  unit tests passed"

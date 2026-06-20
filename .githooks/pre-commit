@@ -25,11 +25,6 @@ uv run ruff check src tests scripts/
 echo "✅  ruff passed"
 
 echo ""
-echo "🔍  bandit security scan..."
-uv run bandit -r src/ -ll -c pyproject.toml --exit-zero 2>&1 || true
-echo "✅  bandit passed"
-
-echo ""
 echo "🔍  biome check (JS)..."
 npx --yes @biomejs/biome check src/lorekeeper/dashboard/static/js/
 echo "✅  biome passed"
