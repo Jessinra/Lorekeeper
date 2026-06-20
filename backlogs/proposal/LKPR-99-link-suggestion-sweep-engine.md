@@ -7,7 +7,6 @@ rice_score: ~
 filed_by: Akane
 github_issue: 231
 filed_date: 2026-06-20
-absorbed: LKPR-67 (link types)
 ---
 
 # [LKPR-99] Link suggestion sweep engine — periodic batch candidate generation with auto-accept
@@ -20,25 +19,9 @@ absorbed: LKPR-67 (link types)
 
 A sweep engine that periodically iterates all memories, runs the existing `LinkCandidateGenerator` scorers, and records candidates to a `link_suggestions` DB table — with auto-accept for high-confidence pairs.
 
-This ticket also **absorbs LKPR-67** (link type revision) since the sweep needs to suggest the new types.
+The sweep uses the new link types defined in LKPR-67 (`references`, `depends_on`, `supersedes`, `contradicts`, `part_of`, `derived_from`, `causes`). LKPR-67 must land first or in parallel.
 
-### 1. New link types (from LKPR-67)
-
-Replace the current 8 ambiguous types with 7 clear ones:
-
-| Type           | Meaning                     | Example                                         |
-| -------------- | --------------------------- | ----------------------------------------------- |
-| `references`   | Mentions or cites           | "Prompt caching" references "Claude API docs"   |
-| `depends_on`   | Requires or builds upon     | "Auth middleware" depends_on "JWT token format" |
-| `supersedes`   | Newer memory replaces older | "v2 API spec" supersedes "v1 API spec"          |
-| `contradicts`  | Content conflicts           | "Benchmark A shows X" contradicts "B shows X"   |
-| `part_of`      | Composition/hierarchy       | "Login page" part_of "Auth module"              |
-| `derived_from` | Based on or inferred from   | "Retention pattern" derived_from "Cohort data"  |
-| `causes`       | Direct causal relationship  | "Rate limit change" causes "Error 429 reports"  |
-
-**Migration:** Read-side mapping for old links (no blocking write migration). Old types map via hardcoded dict (e.g. `related_to` → `references`, `used_in` → `part_of`). Optional write-migration script for users who want to clean their DB.
-
-### 2. `link_suggestions` table
+### 1. `link_suggestions` table
 
 New DB table:
 
@@ -54,7 +37,7 @@ CREATE TABLE IF NOT EXISTS link_suggestions (
   bm25_score        REAL NOT NULL DEFAULT 0,
   entity_score      REAL NOT NULL DEFAULT 0,
   temporal_score    REAL NOT NULL DEFAULT 0,
-  suggested_type    TEXT,                       -- best matching relation type
+  suggested_type    TEXT,                       -- best matching relation type (from LKPR-67 set)
   status            TEXT NOT NULL DEFAULT 'pending'
                     CHECK (status IN ('pending','accepted','rejected')),
   created_at        TEXT NOT NULL,
@@ -66,11 +49,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_suggestions_pair
   ON link_suggestions(source_memory_id, target_memory_id);
 ```
 
-- Unique constraint on canonical pair (always store `min(id1,id2)` as source, `max(id1,id2)` as target to prevent both-direction duplicates)
-- Rejected pairs are kept with `status='rejected'` — future sweeps skip them
-- Accepted pairs are kept briefly (accepted → real link created → suggestion removed)
+- **Uniqueness:** canonical pair ordering — always store `min(id1,id2)` as source, `max(id1,id2)` as target to prevent both-direction duplicates
+- **Rejected** pairs stay with `status='rejected'` — future sweeps skip them
+- **Accepted** pairs are removed after the real link is created
 
-### 3. Sweep algorithm
+### 2. Sweep algorithm
 
 ```
 for each active memory (non-deleted):
@@ -79,49 +62,70 @@ for each active memory (non-deleted):
         if pair already has real link → skip
         if pair previously rejected (status='rejected') → skip
         if candidate already exists as pending → upsert score
-        if candidate.score >= auto_accept_score → create real link, remove suggestion
+        if candidate.score >= auto_accept_score → create real link → remove suggestion
         else → insert as pending
 ```
 
-- Uses the existing `LinkCandidateGenerator` from `link_candidate.py` — already O(n×K), cosine pre-filter avoids O(n²)
+- Uses the existing `LinkCandidateGenerator` from `link_candidate.py` — already O(n×K) thanks to cosine pre-filter (avoids O(n²) brute force)
 - No LLM calls anywhere
 
-### 4. Auto-accept
+### 3. Auto-accept
 
-- Configurable threshold: `LORE_SUGGEST_AUTO_ACCEPT_SCORE` (default 0.85)
-- When auto-accepted: create a real `memory_links` row with the best-matching new relation type, delete the suggestion
-- Relation type selection: the existing scores (cosine, BM25, entity, temporal) could suggest a type — for v1, default to `references` for most, with `depends_on` or `derived_from` when temporal+cosine both high
+- **Threshold:** `LORE_SUGGEST_AUTO_ACCEPT_SCORE` (env config, default 0.85)
+- On auto-accept: create a real `memory_links` row with a relation type, delete suggestion
+- **Type selection heuristics:**
+  - if temporal_score > 0.7 AND cosine_score > 0.8 → `derived_from`
+  - if entity_score > 0.5 AND both spatial/temporal proximity → `part_of`
+  - else → `references` (safe default)
+  - All types are from the LKPR-67 set; the heuristic can be refined later
 
-### 5. Scheduling
+### 4. Scheduling
 
-- Internal cron mechanism (Hermes cron or standalone Python scheduler)
-- Configurable from env: `LORE_SUGGEST_INTERVAL_HOURS` (default 12)
-- Standalone entrypoint: `scripts/sweep-links.py` — callable from cron or systemd timer
-- Auto-expiry: prune suggestions older than `LORE_SUGGEST_TTL_DAYS` (default 30) that were never acted on
+- Internal cron mechanism (standalone Python script, callable from cron/systemd)
+- Env config: `LORE_SUGGEST_INTERVAL_HOURS` (default 12)
+- Entrypoint: `scripts/sweep-links.py`
+- **Auto-expiry:** prune suggestions older than `LORE_SUGGEST_TTL_DAYS` (default 30) that were never acted on
+
+## Data flow summary
+
+```
+Sweep trigger (cron/button)
+         ↓
+LinkCandidateGenerator.generate(memory_id)  ← existing scorers
+         ↓
+   ┌─ score ≥ auto_accept ─→ insert memory_links → delete suggestion
+   │
+   └─ score < auto_accept ─→ insert pending suggestion
+         ↓
+   Agent reviews via MCP (LKPR-100) or dashboard (LKPR-101)
+```
 
 ## Acceptance Criteria
 
-- [ ] `models.py` `RelationType` literal updated to 7 new types
-- [ ] Read-side migration map for old link types; `lore_insert` rejects old types
 - [ ] `link_suggestions` table created via DB migration (version N) with unique pair constraint
-- [ ] `LinkSuggestionStore` in `services/link_store.py` — CRUD for suggestions table
+- [ ] `LinkSuggestionStore` in `services/link_store.py` — full CRUD for suggestions table
 - [ ] Sweep function iterates all active memories, runs `LinkCandidateGenerator`, writes to link_suggestions
-- [ ] Auto-accept: candidates above threshold create real links automatically
-- [ ] Previously rejected pairs excluded from future sweeps
+- [ ] Auto-accept: candidates above `LORE_SUGGEST_AUTO_ACCEPT_SCORE` create real `memory_links` rows automatically
+- [ ] Type selection heuristics suggest appropriate relation type from LKPR-67 set
+- [ ] Previously rejected pairs are excluded from future sweeps (read status='rejected')
+- [ ] Already-linked pairs excluded (real link exists either direction)
+- [ ] Unique pair constraint enforced (canonical ordering, no duplicates)
 - [ ] Executable entrypoint: `scripts/sweep-links.py` for cron/systemd
 - [ ] Config env vars: `LORE_SUGGEST_AUTO_ACCEPT_SCORE`, `LORE_SUGGEST_INTERVAL_HOURS`, `LORE_SUGGEST_TTL_DAYS`
+- [ ] Auto-expiry: suggestions older than TTL are pruned
 - [ ] No LLM calls anywhere in the pipeline
-- [ ] All existing tests pass; new tests for suggestion pipeline
+- [ ] All existing tests pass; new tests for suggestion pipeline (table operations, sweep algorithm, auto-accept logic)
 
 ## Dependencies
 
-- LKPR-58 (smart link candidate pipeline) — already done, provides the scoring engine
+- LKPR-58 (smart link candidate pipeline) — provides the scoring engine (**done**)
+- LKPR-67 (link type revision) — provides the relation types for auto-accept; should land first or simultaneously
 
 ## Required Updates
 
-- **CLAUDE.md**: [ ] Document new link types, suggestion table, sweep scheduling
+- **CLAUDE.md**: [ ] Document suggestion table, sweep scheduling, config vars
 - **README.md**: [ ] Document new config options
 
 ## Notes
 
-Split from LKPR-98 (combined meta-ticket). This is the backend engine only — MCP tools and dashboard UI are separate tickets (LKPR-100, LKPR-101). Absorbs LKPR-67 (link type revision).
+Split from LKPR-98 (combined meta-ticket). This is the backend engine only — MCP tools and dashboard UI are separate tickets (LKPR-100, LKPR-101). Link type revision is its own standalone ticket (LKPR-67) — this sweep engine consumes those types but does not define them.
