@@ -1075,10 +1075,13 @@ class TestSweepLinks:
     from lorekeeper.services.sweep_service import SweepService
 
     def _make_sweeper(self, service):
+        from lorekeeper.services.suggestion_store import LinkSuggestionStore
+
+        self._sug_store = LinkSuggestionStore(service.memories._db)
         return self.SweepService(
             memory_store=service.memories,
             link_store=service.links,
-            suggestion_store=service.suggestions,
+            suggestion_store=self._sug_store,
             link_candidate_generator=service._link_candidate_generator,
             settings=service.settings,
             metrics_store=service.metrics,
@@ -1108,7 +1111,7 @@ class TestSweepLinks:
         stats = sweeper.run()
         assert stats["memories_scanned"] == 4
         assert stats["candidates_generated"] >= 1
-        pending = service.suggestions.all_pending_suggestions()
+        pending = self._sug_store.all_pending_suggestions()
         assert len(pending) >= 1
 
     def test_sweep_creates_no_real_links(self, svc):
@@ -1130,14 +1133,14 @@ class TestSweepLinks:
         )
         service.commit()
         sweeper.run()
-        pending = service.suggestions.all_pending_suggestions()
+        pending = self._sug_store.all_pending_suggestions()
         assert len(pending) >= 1
 
     def test_sweep_skips_rejected_pairs(self, svc):
         service, engine = svc
         sweeper = self._make_sweeper(service)
         ids = self._seed_memories(service, engine)
-        service.suggestions.insert_suggestion(
+        self._sug_store.insert_suggestion(
             source_memory_id=ids[0], target_memory_id=ids[1],
             source_title="", target_title="", weighted_score=0.0,
             status="rejected",

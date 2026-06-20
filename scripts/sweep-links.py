@@ -13,15 +13,16 @@ import sys
 from pathlib import Path
 
 from lorekeeper.config import Settings
-from lorekeeper.services.config_store import ConfigStore
+from lorekeeper.models import Memory
 from lorekeeper.services.database import Database
 from lorekeeper.services.engine_factory import build_engine
 from lorekeeper.services.keyword_index import KeywordIndex
+from lorekeeper.services.link_candidate import LinkCandidateGenerator
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
-from lorekeeper.services.orchestrator import MemoryService
-from lorekeeper.services.reflection_store import ReflectionStore
+from lorekeeper.services.suggestion_store import LinkSuggestionStore
+from lorekeeper.services.sweep_service import SweepService
 
 
 def main() -> int:
@@ -59,35 +60,58 @@ def main() -> int:
 
     memories = MemoryStore(db)
     links = LinkStore(db)
-    reflections = ReflectionStore(db)
     metrics = MetricsStore(db)
-    config = ConfigStore(db)
 
-    kw = KeywordIndex()
-    svc = MemoryService(
-        engine, memories, links, db, reflections, metrics, config, kw, settings
+    # Namespace filter: shared agents see everything
+    ns_filter: list[str] | None = (
+        None if settings.namespace == "shared" else [settings.namespace, "shared"]
     )
 
-    # Bootstrap BM25
-    all_mems = list(svc._all_memories(include_deleted=True).values())
-    kw.rebuild(all_mems)
-    print(f"BM25 rebuilt with {len(all_mems)} memories")
+    # One shared LinkCandidateGenerator (spaCy loaded once)
+    kw = KeywordIndex()
+    link_candidate_generator = LinkCandidateGenerator(
+        engine=engine,
+        memory_store=memories,
+        link_store=links,
+        keyword_index=kw,
+        settings=settings,
+        ns_filter=ns_filter,
+    )
+
+    # Bootstrap BM25 from existing memories
+    all_rows = memories.all_memory_rows(include_deleted=True)
+    mems = [Memory(**dict(r)) for r in all_rows]
+    kw.rebuild(mems)
+    print(f"BM25 rebuilt with {len(mems)} memories")
+
+    # Build SweepService — standalone, no MemoryService coupling
+    suggestions = LinkSuggestionStore(db)
+    sweeper = SweepService(
+        memory_store=memories,
+        link_store=links,
+        suggestion_store=suggestions,
+        link_candidate_generator=link_candidate_generator,
+        settings=settings,
+        metrics_store=metrics,
+        conn=db.conn,
+    )
 
     if args.dry_run:
         print("\nDry-run mode: scanning only, no writes.")
-        all_active = svc._all_memories(include_deleted=False)
-        print(f"Active memories to scan: {len(all_active)}")
+        active_rows = memories.all_memory_rows(include_deleted=False)
+        active_ids = [r["id"] for r in active_rows]
+        print(f"Active memories to scan: {len(active_ids)}")
         total_candidates = 0
-        for mem_id in list(all_active.keys())[:10]:  # sample first 10
+        for mem_id in active_ids[:10]:  # sample first 10
             try:
-                candidates = svc._link_candidate_generator.generate(mem_id)
+                candidates = link_candidate_generator.generate(mem_id)
                 total_candidates += len(candidates)
             except Exception as e:
                 print(f"  {mem_id}: error - {e}")
         print(f"Total candidates (first 10 memories): {total_candidates}")
         print("Dry run complete.")
     else:
-        stats = svc.sweep_links()
+        stats = sweeper.run()
         print("\nSweep complete:")
         for key, value in stats.items():
             print(f"  {key}: {value}")

@@ -63,7 +63,6 @@ def build_service(
         engine,
         stores.memories,
         stores.links,
-        stores.db,
         stores.reflections,
         stores.metrics,
         stores.config,

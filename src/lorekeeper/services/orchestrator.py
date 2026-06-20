@@ -11,7 +11,6 @@ import structlog
 from lorekeeper.config import Settings
 from lorekeeper.models import RELATION_TYPES, TYPE_MIGRATION_MAP, Memory, MemoryLink
 from lorekeeper.services.config_store import ConfigStore
-from lorekeeper.services.database import Database
 from lorekeeper.services.dedup import is_duplicate
 from lorekeeper.services.feedback import (
     apply_score_delta,
@@ -25,7 +24,6 @@ from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.reflection_store import ReflectionStore
 from lorekeeper.services.search import SearchResult, parse_iso_utc, rank_results
-from lorekeeper.services.suggestion_store import LinkSuggestionStore
 
 if TYPE_CHECKING:
     from lorekeeper.services.link_candidate import LinkCandidate, LinkCandidateGenerator
@@ -70,7 +68,6 @@ class MemoryService:
         engine: MemoryEngine,
         memories: MemoryStore,
         links: LinkStore,
-        db: Database,
         reflections: ReflectionStore,
         metrics: MetricsStore,
         config: ConfigStore,
@@ -81,7 +78,6 @@ class MemoryService:
         self._engine = engine
         self.memories = memories
         self.links = links
-        self.suggestions = LinkSuggestionStore(db)
         self.reflections = reflections
         self.metrics = metrics
         self.config = config

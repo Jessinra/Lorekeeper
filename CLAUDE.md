@@ -22,7 +22,7 @@ The canonical `lore_id` UUID lives in Mem0's metadata field. All app logic uses 
 
 ### SQLite store decomposition (LKPR-51)
 
-The SQLite layer is split into a shared `Database` class (owning the connection lifecycle + versioned migrations) and five focused stores, each handling one domain:
+The SQLite layer is split into a shared `Database` class (owning the connection lifecycle + versioned migrations) and six focused stores, each handling one domain:
 
 | Store                 | Owns                                                                              | File                           |
 | --------------------- | --------------------------------------------------------------------------------- | ------------------------------ |
@@ -34,7 +34,7 @@ The SQLite layer is split into a shared `Database` class (owning the connection 
 | `ConfigStore`         | `config_overrides` table                                                          | `services/config_store.py`     |
 | `LinkSuggestionStore` | `link_suggestions` — sweep-generated candidate pairs with scores                  | `services/suggestion_store.py` |
 
-All stores share a single `Database` instance — they receive it via constructor and use its `conn` property. The `MemoryService` orchestrator exposes them as public attributes (`svc.memories`, `svc.links`, `svc.suggestions`, `svc.reflections`, `svc.metrics`, `svc.config`, `svc.settings`).
+All stores share a single `Database` instance — they receive it via constructor and use its `conn` property. The `MemoryService` orchestrator exposes them as public attributes (`svc.memories`, `svc.links`, `svc.reflections`, `svc.metrics`, `svc.config`, `svc.settings`).
 
 **Migrations**: `Database.migrate()` applies entries from the `MIGRATIONS` list in version order, recording applied versions in `_schema_version`. The current `MIGRATIONS[0]` (version 1, `bootstrap_schema_and_fixups`) captures all pre-LKPR-51 schema setup + idempotent fixups. Add new schema changes as `MIGRATIONS.append((N, name, fn))` with strictly-increasing version numbers.
 
