@@ -8,6 +8,7 @@ from lorekeeper.services.database import (
     _migration_1_bootstrap,
     _migration_2_extend_relation_types,
     _migration_4_revise_link_relation_types,
+    _migration_5_add_link_suggestions,
 )
 
 
@@ -20,7 +21,7 @@ def test_fresh_db_starts_at_version_zero(tmp_path):
 def test_migrate_applies_bootstrap_to_fresh_db(tmp_path):
     db = Database(tmp_path / "boot.db")
     db.migrate()
-    assert db.current_version() == 4
+    assert db.current_version() == 5
 
     # All expected tables exist
     tables = {
@@ -31,7 +32,7 @@ def test_migrate_applies_bootstrap_to_fresh_db(tmp_path):
     }
     expected = {
         "memories", "memory_links", "reflections", "sessions",
-        "api_metrics", "config_overrides", "_schema_version",
+        "api_metrics", "config_overrides", "link_suggestions", "_schema_version",
     }
     assert expected.issubset(tables)
     db.close()
@@ -309,6 +310,84 @@ def test_migration_4_revise_link_relation_types_on_populated_db(tmp_path):
     db.close()
 
 
+def test_migration_5_adds_link_suggestions_table(tmp_path):
+    """Migration v5 creates the link_suggestions table with expected schema."""
+    db_path = tmp_path / "m5.db"
+    conn = sqlite3.connect(str(db_path))
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+
+    _migration_1_bootstrap(conn)
+    conn.commit()
+    _migration_2_extend_relation_types(conn)
+    conn.commit()
+    conn.execute(
+        "ALTER TABLE memories ADD COLUMN source_type "
+        "TEXT NOT NULL DEFAULT 'unknown'"
+    )
+    conn.commit()
+
+    # Verify link_suggestions does NOT exist before v5
+    tables = {
+        row[0]
+        for row in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )
+    }
+    assert "link_suggestions" not in tables
+
+    _migration_5_add_link_suggestions(conn)
+    conn.commit()
+
+    tables = {
+        row[0]
+        for row in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )
+    }
+    assert "link_suggestions" in tables
+
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(link_suggestions)")}
+    for c in (
+        "id", "source_memory_id", "target_memory_id", "source_title",
+        "weighted_score", "confidence", "status", "created_at", "updated_at",
+    ):
+        assert c in cols, f"missing column: {c}"
+
+    idx = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='index' "
+        "AND name='idx_suggestions_pair'"
+    ).fetchone()
+    assert idx is not None
+
+    # Idempotency
+    _migration_5_add_link_suggestions(conn)
+    conn.commit()
+
+    # Insert memories for FK constraints
+    ts = "2026-06-20T00:00:00+00:00"
+    for mid in ("m1", "m2"):
+        conn.execute(
+            "INSERT INTO memories (id,title,description,content,"
+            "created_at,updated_at) VALUES (?,?,?,?,?,?)",
+            (mid, f"t-{mid}", "", "c", ts, ts),
+        )
+
+    conn.execute(
+        "INSERT INTO link_suggestions "
+        "(id,source_memory_id,target_memory_id,source_title,target_title,"
+        "weighted_score,confidence,status,created_at,updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?)",
+        ("s1", "m1", "m2", "s", "t", 0.9, "high", "pending", ts, ts),
+    )
+    conn.commit()
+    assert conn.execute(
+        "SELECT COUNT(*) FROM link_suggestions"
+    ).fetchone()[0] == 1
+
+    conn.close()
+
+
 def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
     """If a migration raises mid-apply, the `with self._conn:` context manager
     must roll back: no _schema_version row gets inserted, and the migration
@@ -319,10 +398,10 @@ def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
     from lorekeeper.services import database as db_module
 
     db = Database(tmp_path / "rollback.db")
-    db.migrate()  # apply v1 + v2 + v3 + v4 baseline
-    assert db.current_version() == 4
+    db.migrate()  # apply v1 + v2 + v3 + v4 + v5 baseline
+    assert db.current_version() == 5
 
-    # Inject a failing v5 migration into the MIGRATIONS list, then call migrate().
+    # Inject a failing v6 migration into the MIGRATIONS list, then call migrate().
     calls = {"count": 0}
 
     def _failing_migration(conn):
@@ -332,13 +411,13 @@ def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
         raise RuntimeError("simulated migration failure")
 
     original = list(db_module.MIGRATIONS)
-    db_module.MIGRATIONS.append((5, "failing_v5", _failing_migration))
+    db_module.MIGRATIONS.append((6, "failing_v6", _failing_migration))
     try:
         with pytest.raises(RuntimeError, match="simulated migration failure"):
             db.migrate()
 
         # Schema version must NOT have advanced
-        assert db.current_version() == 4
+        assert db.current_version() == 5
 
         # The CREATE TABLE inside the failed migration must have been rolled back
         table = db.conn.execute(
