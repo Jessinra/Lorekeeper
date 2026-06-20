@@ -116,6 +116,8 @@ dev = [
     "pytest-timeout>=2.3",
     "ruff>=0.15.13",
     "uvicorn[standard]>=0.30",
+    "bandit>=1.7",
+    "pip-audit>=2.7",
 ]
 docs = [
     "mkdocs>=1.6",

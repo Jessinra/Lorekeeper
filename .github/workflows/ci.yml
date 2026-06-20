@@ -50,7 +50,7 @@ jobs:
         run: uv run ruff check src tests scripts/
 
       - name: Bandit security scan
-        run: uv run bandit -r src/ -ll -c pyproject.toml 2>&1 || echo "Bandit not configured — skipping"
+        run: uv run bandit -r src/ -ll -c pyproject.toml --exit-zero 2>&1 || true
 
       - name: Biome JS lint (dashboard)
         run: npx @biomejs/biome check src/lorekeeper/dashboard/static/js/ 2>&1 || echo "No JS changes detected — skipping"

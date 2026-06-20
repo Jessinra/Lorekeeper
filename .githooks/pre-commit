@@ -26,7 +26,7 @@ echo "✅  ruff passed"
 
 echo ""
 echo "🔍  bandit security scan..."
-uv run bandit -r src/ -ll -c pyproject.toml 2>&1 || echo "⚠️  bandit not installed — skipping"
+uv run bandit -r src/ -ll -c pyproject.toml --exit-zero 2>&1 || true
 echo "✅  bandit passed"
 
 echo ""
