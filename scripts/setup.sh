@@ -50,6 +50,18 @@ if [ "$INSTALL_MODE" = "git" ]; then
     info "Dependencies installed (including dashboard extras)"
 fi
 
+# Download spaCy model for entity overlap scoring (both pip and git modes)
+title "Setting up spaCy model..."
+if [ "$INSTALL_MODE" = "git" ]; then
+    uv run --directory "$REPO_DIR" python -m spacy download en_core_web_sm --quiet 2>/dev/null \
+      && info "spaCy model: en_core_web_sm" \
+      || warn "spaCy model download skipped (pip install: python -m spacy download en_core_web_sm)"
+else
+    python3 -m spacy download en_core_web_sm --quiet 2>/dev/null \
+      && info "spaCy model: en_core_web_sm" \
+      || warn "spaCy model download skipped (run: python3 -m spacy download en_core_web_sm)"
+fi
+
 # ── 3. Create data directory ──────────────────────────────────────────────────
 title "Setting up data directory..."
 mkdir -p "$DATA_DIR"
