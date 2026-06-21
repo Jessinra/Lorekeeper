@@ -52,12 +52,16 @@ class PeriodicJob:
         name: str,
         interval_hours: int = 12,
         poll_seconds: int = 300,
+        retry_seconds: int | None = None,
     ) -> None:
         self._config = config
         self._job_fn = job_fn
         self._name = name
         self._interval = timedelta(hours=interval_hours)
         self._poll = poll_seconds
+        self._retry = timedelta(
+            seconds=retry_seconds if retry_seconds is not None else poll_seconds * 2 + 60
+        )
         self._timer_key = f"{name}_next_run_at"
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._loop, daemon=True)
@@ -79,7 +83,16 @@ class PeriodicJob:
                         continue  # Not time yet
 
                 # First run (no key) or timer elapsed
+                #
+                # Set a short retry timer BEFORE running the job.  If the job
+                # crashes, this ensures the next poll skips it and the retry
+                # happens after `retry_seconds` — bounded, never infinite.
+                # If the job succeeds, the timer is overwritten with the full
+                # schedule interval.
+                retry_time = datetime.now(UTC) + self._retry
+                self._config.set_override(self._timer_key, retry_time.isoformat())
                 stats = self._job_fn()
+                # Success — advance to the real schedule
                 next_time = datetime.now(UTC) + self._interval
                 self._config.set_override(self._timer_key, next_time.isoformat())
                 log.info("periodic_job_completed", name=self._name, stats=stats)
