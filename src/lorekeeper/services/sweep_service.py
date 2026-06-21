@@ -61,11 +61,25 @@ class SweepService:
     def run(self) -> dict[str, Any]:
         """Execute one sweep: scan → generate → store → prune.
 
+        Split into two phases to minimise how long the SQLite writer lock is
+        held:
+
+        * **Phase 1 (compute, no write txn):** scan memories and run the
+          candidate generator (embeddings + spaCy NER + BM25 — hundreds of ms
+          each). These are read-only/CPU operations; in WAL mode SELECTs never
+          take the writer lock. We collect the suggestions to write into an
+          in-memory list and tally stats, issuing no INSERT/UPDATE here.
+        * **Phase 2 (write burst):** apply all collected upserts + prune in a
+          single short transaction, then commit. The writer lock is acquired on
+          the first upsert and released on commit — held only for the fast
+          INSERTs, never across the slow generate() calls.
+
         Returns stats dict with keys: memories_scanned, candidates_generated,
         high_confidence, standard, skipped_rejected, skipped_linked, expired_pruned.
         """
         self._increment_metric("lore_sweep")
 
+        # ── Phase 1: read + compute (no writer lock held) ───────────────────
         # Read all active memories
         all_rows = self._memory_store.all_memory_rows(
             include_deleted=False, namespaces=None
@@ -90,6 +104,9 @@ class SweepService:
             "skipped_linked": 0,
             "expired_pruned": 0,
         }
+
+        # Collected upsert payloads — written in the Phase 2 burst.
+        pending_upserts: list[dict[str, Any]] = []
 
         for mem_id in all_mems:
             stats["memories_scanned"] += 1
@@ -117,38 +134,44 @@ class SweepService:
                     else "standard"
                 )
 
-                try:
-                    src_row = all_mems.get(c.source_lore_id)
-                    tgt_row = all_mems.get(c.target_lore_id)
-                    src_title = src_row["title"] if src_row else ""
-                    tgt_title = tgt_row["title"] if tgt_row else ""
+                src_row = all_mems.get(c.source_lore_id)
+                tgt_row = all_mems.get(c.target_lore_id)
+                pending_upserts.append(
+                    {
+                        "source_memory_id": c.source_lore_id,
+                        "target_memory_id": c.target_lore_id,
+                        "source_title": src_row["title"] if src_row else "",
+                        "target_title": tgt_row["title"] if tgt_row else "",
+                        "weighted_score": c.weighted_score,
+                        "cosine_score": c.cosine_score,
+                        "bm25_score": c.bm25_score,
+                        "entity_score": c.entity_score,
+                        "temporal_score": c.temporal_score,
+                        "suggested_type": None,
+                        "confidence": confidence,
+                        "status": "pending",
+                    }
+                )
+                stats["candidates_generated"] += 1
+                if confidence == "high":
+                    stats["high_confidence"] += 1
+                else:
+                    stats["standard"] += 1
 
-                    self._suggestion_store.upsert_suggestion(
-                        source_memory_id=c.source_lore_id,
-                        target_memory_id=c.target_lore_id,
-                        source_title=src_title,
-                        target_title=tgt_title,
-                        weighted_score=c.weighted_score,
-                        cosine_score=c.cosine_score,
-                        bm25_score=c.bm25_score,
-                        entity_score=c.entity_score,
-                        temporal_score=c.temporal_score,
-                        suggested_type=None,
-                        confidence=confidence,
-                        status="pending",
-                    )
-                    stats["candidates_generated"] += 1
-                    if confidence == "high":
-                        stats["high_confidence"] += 1
-                    else:
-                        stats["standard"] += 1
-                except Exception:
-                    log.warning(
-                        "sweep_upsert_failed",
-                        source=c.source_lore_id,
-                        target=c.target_lore_id,
-                        exc_info=True,
-                    )
+        # ── Phase 2: write burst (writer lock held only for this block) ─────
+        # The implicit BEGIN fires on the first upsert; commit() releases the
+        # lock. No slow work happens between them, so the lock is held for
+        # milliseconds, not the whole scan.
+        for payload in pending_upserts:
+            try:
+                self._suggestion_store.upsert_suggestion(**payload)
+            except Exception:
+                log.warning(
+                    "sweep_upsert_failed",
+                    source=payload["source_memory_id"],
+                    target=payload["target_memory_id"],
+                    exc_info=True,
+                )
 
         # Prune expired suggestions
         try:

@@ -53,7 +53,7 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     engine.probe_score_scale()
 
     # Shared SQLite connection + versioned migrations
-    db = Database(s.sqlite_path)
+    db = Database(s.sqlite_path, busy_timeout_ms=s.busy_timeout_ms)
     db.migrate()
 
     # Focused stores all share the same Database connection
@@ -118,7 +118,7 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     from lorekeeper.scheduler import PeriodicJob
     from lorekeeper.services.sweep_service import SweepService
 
-    sweep_db = Database(s.sqlite_path)
+    sweep_db = Database(s.sqlite_path, busy_timeout_ms=s.busy_timeout_ms)
     sweep_memories = MemoryStore(sweep_db)
     sweep_links = LinkStore(sweep_db)
     sweep_suggestions = LinkSuggestionStore(sweep_db)

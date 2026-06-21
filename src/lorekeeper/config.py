@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     data_dir: Path = Field(default=Path.home() / ".lorekeeper")
     log_dir: Path = Field(default=Path.home() / ".lorekeeper" / "logs")
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    busy_timeout_ms: int = Field(
+        default=5000,
+        description="SQLite busy_timeout in ms — wait-for-lock before erroring"
+        " (LORE_BUSY_TIMEOUT_MS)",
+    )
     duplicate_threshold: float = 0.85
 
     # Hybrid search weights (must sum to 1.0)

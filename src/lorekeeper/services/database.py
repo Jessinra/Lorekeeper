@@ -30,7 +30,11 @@ from lorekeeper.models import RELATION_TYPES
 
 log = structlog.get_logger()
 
-_CHECKPOINT_SQL = "PRAGMA wal_checkpoint(TRUNCATE)"
+# PASSIVE never blocks: it checkpoints what it can without an exclusive lock.
+# TRUNCATE needs an exclusive lock it can never get while another MCP server
+# is alive on the same DB, so it would fail under concurrency and let the WAL
+# grow unbounded. PASSIVE is safe for N concurrent processes.
+_CHECKPOINT_SQL = "PRAGMA wal_checkpoint(PASSIVE)"
 
 BASE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS memories (
@@ -477,10 +481,17 @@ class Database:
     transaction (commit per migration).
     """
 
-    def __init__(self, db_path: Path) -> None:
+    def __init__(self, db_path: Path, busy_timeout_ms: int = 5000) -> None:
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(str(db_path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
+        # busy_timeout MUST be set before any other I/O. Every agent spawns its
+        # own MCP server process, and each process opens multiple connections to
+        # the same lorekeeper.db. SQLite's default busy_timeout is 0, so the
+        # first write under contention raises "database is locked" instantly
+        # with no retry. With WAL + busy_timeout, a writer waits-with-backoff
+        # for its turn instead of crashing, and N processes coexist cleanly.
+        self._conn.execute(f"PRAGMA busy_timeout = {int(busy_timeout_ms)}")
         self._conn.execute("PRAGMA journal_mode = WAL")
         self._conn.execute("PRAGMA foreign_keys = ON")
         self._conn.commit()
