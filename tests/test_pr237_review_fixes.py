@@ -139,13 +139,13 @@ def test_sweep_service_created_separately_in_server():
             body_text = "\n".join(source_lines[body_start:body_end])
 
             # Must create a separate LinkSuggestionStore for SweepService
-            assert "suggestions = LinkSuggestionStore(db)" in body_text, (
+            assert "LinkSuggestionStore(sweep_db)" in body_text, (
                 "server.py init_service must create LinkSuggestionStore "
                 "independently for SweepService"
             )
 
             # Must wire SweepService with that store
-            assert "suggestion_store=suggestions" in body_text, (
+            assert "suggestion_store=sweep_suggestions" in body_text, (
                 "server.py must pass the LinkSuggestionStore to SweepService"
             )
 

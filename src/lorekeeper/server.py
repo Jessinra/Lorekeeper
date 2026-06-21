@@ -108,18 +108,40 @@ def init_service(settings: Settings | None = None) -> MemoryService:
 
     # Start internal sweep scheduler (LKPR-99) — standalone SweepService,
     # not coupled to MemoryService internals.
+    #
+    # IMPORTANT: sweep gets its OWN Database + store instances so it never
+    # shares the sqlite3.Connection with the main MCP thread.  Both threads
+    # issuing commit() on the same connection at the same time would corrupt
+    # transactions (Python's sqlite3 provides zero thread synchronisation even
+    # with check_same_thread=False).  WAL mode handles concurrent access at
+    # the database-file level — each thread gets its own connection.
     from lorekeeper.scheduler import PeriodicJob
     from lorekeeper.services.sweep_service import SweepService
 
-    suggestions = LinkSuggestionStore(db)
-    sweep_svc = SweepService(
-        memory_store=memories,
-        link_store=links,
-        suggestion_store=suggestions,
-        link_candidate_generator=link_candidate_generator,
+    sweep_db = Database(s.sqlite_path)
+    sweep_memories = MemoryStore(sweep_db)
+    sweep_links = LinkStore(sweep_db)
+    sweep_suggestions = LinkSuggestionStore(sweep_db)
+    sweep_metrics = MetricsStore(sweep_db)
+
+    from lorekeeper.services.link_candidate import LinkCandidateGenerator
+
+    sweep_generator = LinkCandidateGenerator(
+        engine=engine,
+        memory_store=sweep_memories,
+        link_store=sweep_links,
+        keyword_index=kw,
         settings=s,
-        metrics_store=metrics,
-        conn=db.conn,
+        ns_filter=ns_filter,
+    )
+    sweep_svc = SweepService(
+        memory_store=sweep_memories,
+        link_store=sweep_links,
+        suggestion_store=sweep_suggestions,
+        link_candidate_generator=sweep_generator,
+        settings=s,
+        metrics_store=sweep_metrics,
+        conn=sweep_db.conn,
     )
     PeriodicJob(
         config, sweep_svc.run, "sweep",
