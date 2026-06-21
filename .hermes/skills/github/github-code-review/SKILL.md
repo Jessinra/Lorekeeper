@@ -1,7 +1,7 @@
 ---
 name: github-code-review
 description: "Review PRs: diffs, inline comments via gh or REST."
-version: v1.1.0
+version: v1.2.0
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -293,6 +293,10 @@ When performing a code review (local or PR), systematically check:
 - Input validation on user-facing inputs
 - No SQL injection, XSS, or path traversal
 - Auth/authz checks where needed
+- **SQLite DML has explicit `commit()`** — missing commits pass tests but lose data on crash
+- **Background threads get separate DB connections** — never share across threads
+- **Periodic job timers set BEFORE job** — timer-after-job creates infinite retry storm
+- **Separate `.db` files for independent write workloads** — structural contention otherwise
 
 ### Code Quality
 

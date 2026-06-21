@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-code-reviewer
 description: "Lorekeeper-specific BLOCKER patterns, severity tiers, and review checklist — used when reviewing any PR touching src/lorekeeper/"
-version: 1.0.0
+version: 1.1.0
 author: Diana
 ---
 
@@ -128,6 +128,74 @@ except Exception:
     raise
 ```
 
+### 10. Missing commit() after SQLite DML (IR-002)
+
+```python
+# BLOCKER — DML without commit loses data on process crash
+conn.execute("UPDATE config SET value = ? WHERE key = ?", (val, key))
+
+# CORRECT
+conn.execute("UPDATE config SET value = ? WHERE key = ?", (val, key))
+conn.commit()
+```
+
+**Check:** Every `conn.execute()` that does INSERT, UPDATE, DELETE, or REPLACE must have a
+corresponding `conn.commit()`. The same connection reads its own transaction buffer, so
+missing commits pass tests but lose data on restart.
+
+### 11. Shared sqlite3.Connection across threads (IR-002)
+
+```python
+# BLOCKER — check_same_thread=False removes the guard but not the race
+conn = sqlite3.connect(str(path), check_same_thread=False)
+self.mcp_store = MemoryStore(conn)
+self.sweep_store = MemoryStore(conn)  # different thread!
+
+# CORRECT — each thread gets its own connection
+mcp_conn = sqlite3.connect(str(path))
+sweep_conn = sqlite3.connect(str(path), check_same_thread=False)
+self.mcp_store = MemoryStore(mcp_conn)
+self.sweep_store = MemoryStore(sweep_conn)
+```
+
+**Check:** Background threads (sweep, scheduler, periodic jobs) must always receive their
+own Database instance. Never pass a single connection to ≥2 threads, even with
+`check_same_thread=False`.
+
+### 12. Timer set after job instead of before (IR-002 — infinite retry storm)
+
+```python
+# BLOCKER — if job crashes, timer is never updated → infinite restarts
+result = await self._run_job()
+await self._save_timer(next_run)  # never reached on crash
+
+# CORRECT — set timer before running job
+await self._save_timer(next_run)
+try:
+    result = await self._run_job()
+except Exception:
+    await self._save_timer(next_run + fallback_interval)
+    raise
+```
+
+**Check:** Any periodic job must write its next-run timestamp _before_ executing the
+work, not after. A post-crash fallback (retry in N minutes, not instant) is mandatory.
+
+### 13. Concurrent processes writing to the same SQLite DB (IR-002)
+
+```python
+# BLOCKER — two separate processes both write to lorekeeper.db → contention
+# Server process: writes memories, config to lorekeeper.db
+# Sweep process: writes link_suggestions, metrics to lorekeeper.db ← CONTENTION
+
+# CORRECT — separate DB files for separate workloads
+# Server writes to: lorekeeper.db
+# Sweep writes to: sweep.db (dedicated file, server never touches it)
+```
+
+**Check:** If two independent subsystems both write to SQLite, they must use different
+`.db` files. `busy_timeout` is a band-aid; structural separation eliminates contention.
+
 ## 🟠 MAJOR Review Priorities
 
 Check in this order:
@@ -189,6 +257,10 @@ These indicate misunderstanding of the architecture — flag immediately:
 - Changes to `MIGRATIONS[0]`
 - Importing from `dashboard/` in server code (wrong dep direction)
 - Adding `import requests` to `server.py` — use `httpx` async
+- DML without `commit()` in config_store, memory_store, or any service
+- Shared `sqlite3.Connection` across threads (sweep + MCP)
+- Timer-after-job pattern in scheduler — must be timer-before-job
+- Two subsystems (sweep + server) writing to same `.db` file
 
 ## Review Style Rules
 
