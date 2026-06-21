@@ -41,9 +41,11 @@ class ConfigStore:
             """,
             (key, json.dumps(value), _now()),
         )
+        self._conn.commit()
 
     def delete_override(self, key: str) -> None:
         """Remove a persisted override (falls back to env/default on restart)."""
         self._conn.execute(
             "DELETE FROM config_overrides WHERE key = ?", (key,)
         )
+        self._conn.commit()
