@@ -18,6 +18,7 @@ actually upgrade legacy data — not recreate what BASE_SCHEMA already has.
 
 from __future__ import annotations
 
+import atexit
 import sqlite3
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -28,6 +29,8 @@ import structlog
 from lorekeeper.models import RELATION_TYPES
 
 log = structlog.get_logger()
+
+_CHECKPOINT_SQL = "PRAGMA wal_checkpoint(TRUNCATE)"
 
 BASE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS memories (
@@ -481,6 +484,17 @@ class Database:
         self._conn.execute("PRAGMA journal_mode = WAL")
         self._conn.execute("PRAGMA foreign_keys = ON")
         self._conn.commit()
+
+        # Drain any stale WAL from a previous unclean shutdown (SIGKILL etc.)
+        # so .db-wal and .db-shm files are truncated before we start.
+        rows, pages, *_ = self._conn.execute(_CHECKPOINT_SQL).fetchone()
+        if rows > 0 or pages > 0:
+            log.info("wal_checkpoint_drained", stale_pages=rows + pages)
+
+        # Register atexit handler so the connection closes cleanly on
+        # graceful exit (SIGTERM, normal return), triggering SQLite to
+        # clean up .db-shm / .db-wal.
+        atexit.register(self.close)
 
     @property
     def conn(self) -> sqlite3.Connection:
