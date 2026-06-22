@@ -2,6 +2,8 @@
 id: LKPR-67
 title: Revise link relation types for clarity and coverage
 type: enhancement
+status: S:Done
+priority: P2:medium
 sprint: 4
 rice_score: ~
 filed_by: Akane

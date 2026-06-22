@@ -2,6 +2,8 @@
 id: LKPR-74
 title: Observation type system with semantic icons for search output
 type: feature
+status: S:ready
+priority: P1:high
 sprint: ~
 rice_score: ~
 filed_by: Akane

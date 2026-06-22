@@ -2,9 +2,9 @@
 id: LKPR-96
 title: Landing Page — wire up real links, terminal interactivity, mobile QA, Lighthouse audit
 type: chore
-status: S:ready
+status: S:Done
 priority: P2:medium
-sprint: ~
+sprint: 4
 rice_score: ~
 filed_by: Akane (from Chisa handoff)
 filed_date: 2026-06-15
