@@ -457,9 +457,9 @@ The bar isn't perfection — it's transparency and traceability. If something wa
 
 After every set of changes:
 
-1. Code review — check reuse, quality, efficiency
-2. README consistency — verify config defaults, tool signatures, env var names still match
-3. Commit with `[LKPR-N] type: title` format
+1. **Mandatory self-review loop** — load the `lorekeeper-dev-self-review` skill and run the Reflexion cycle (Actor → Evaluator → Reflector → repeat, max 3 iterations). Self-score each criterion 1-10. PASS requires overall ≥ 8. Do not skip this step.
+2. If PASS → commit with `[LKPR-N] type: title` format
+3. If FAIL after 3 iterations → surface blockers to Akane/Jason. Do not push.
 4. Push to `origin` (GitHub): `git push origin <branch>`
 5. Open a PR and request a reviewer — load the `github-pr-workflow` skill. In short:
    ```bash
