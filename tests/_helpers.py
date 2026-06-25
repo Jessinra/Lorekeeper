@@ -58,7 +58,14 @@ def build_service(
     kw: KeywordIndex,
     settings: Settings,
 ) -> MemoryService:
-    """Construct a MemoryService from a Stores bundle — avoids long arg lists."""
+    """Construct a MemoryService from a Stores bundle — avoids long arg lists.
+
+    Note: ``stores.suggestions`` (LinkSuggestionStore) is intentionally NOT
+    passed to MemoryService.  The suggestion store is managed as a separate
+    module-level singleton in server.py (``_suggestions_store``) so that
+    MemoryService has no dependency on link-suggestion logic.  Handler
+    functions that need it receive it as an explicit parameter.
+    """
     return MemoryService(
         engine,
         stores.memories,

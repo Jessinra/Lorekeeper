@@ -132,6 +132,31 @@ Present a reconciliation report to the user:
 5. `lore_update` with confidence ratings; insert corrections for wrong facts and new memories for uncovered topics.
 6. Present reconciliation report.
 
+## Link Suggestion Review
+
+The background sweep engine continuously generates pending link candidates. Use these tools as part of a reconciliation pass to promote high-confidence links:
+
+1. **`lore_get_suggestions`** — list pending candidates, sorted by `weighted_score` DESC.
+   - Filter by `min_score` (e.g. `0.7`) to surface only high-confidence pairs.
+   - `total_pending` shows total workload without a separate count call.
+2. **`lore_review_suggestion`** — accept or reject in a single batch call.
+   - `action: "accept"` — creates a real `memory_links` row; suggestion retained for audit.
+   - `action: "reject"` — marks the pair as rejected; future sweeps skip it.
+   - Idempotent per item; returns per-ID `status` (`accepted` / `rejected` / `skipped` / `error`).
+
+**Typical flow during a reconciliation session:**
+
+```json
+// 1. Retrieve top candidates
+lore_get_suggestions({ "limit": 20, "min_score": 0.6 })
+
+// 2. Review results; accept clearly correct pairs, reject wrong ones
+lore_review_suggestion({ "suggestion_ids": ["uuid1", "uuid2"], "action": "accept" })
+lore_review_suggestion({ "suggestion_ids": ["uuid3"], "action": "reject" })
+```
+
+Accept suggestions that are contextually correct. Reject suggestions that are coincidental or misleading — this trains the sweep engine to skip bad pairs in future runs.
+
 ## Related Skills
 
 - **[lorekeeper-protocol]** — Orchestrates when to trigger reconciliation.

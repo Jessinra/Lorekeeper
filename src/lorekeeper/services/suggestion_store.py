@@ -157,12 +157,30 @@ class LinkSuggestionStore:
             ).fetchall()
         return [_row_to_suggestion(r) for r in rows]
 
-    def all_pending_suggestions(self) -> list[LinkSuggestion]:
+    def get_pending_suggestions(
+        self, limit: int = 20, min_score: float = 0.0
+    ) -> list[LinkSuggestion]:
+        """Return pending suggestions ordered by weighted_score DESC.
+
+        Args:
+            limit: Maximum number of suggestions to return.
+            min_score: Minimum weighted_score filter (inclusive).
+        """
         rows = self._conn.execute(
-            "SELECT * FROM link_suggestions WHERE status = 'pending' "
-            "ORDER BY weighted_score DESC"
+            """SELECT * FROM link_suggestions
+               WHERE status = 'pending' AND weighted_score >= ?
+               ORDER BY weighted_score DESC
+               LIMIT ?""",
+            (min_score, limit),
         ).fetchall()
         return [_row_to_suggestion(r) for r in rows]
+
+    def count_pending_suggestions(self) -> int:
+        """Total count of all pending suggestions (workload indicator)."""
+        row = self._conn.execute(
+            "SELECT COUNT(*) FROM link_suggestions WHERE status = 'pending'"
+        ).fetchone()
+        return row[0] if row else 0
 
     def update_suggestion_status(
         self, suggestion_id: str, status: str

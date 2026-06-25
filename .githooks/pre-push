@@ -55,11 +55,13 @@ echo "✅  bandit passed"
 
 echo ""
 echo "🧪  Unit tests..."
+ulimit -n 4096 2>/dev/null || true
 uv run pytest tests/ -q -x --tb=short
 echo "✅  unit tests passed"
 
 echo ""
 echo "🎭  E2E tests (Playwright / Chromium)..."
+ulimit -n 4096 2>/dev/null || true
 uv run pytest tests/e2e/ -m e2e -q --tb=short
 echo "✅  E2E passed"
 
