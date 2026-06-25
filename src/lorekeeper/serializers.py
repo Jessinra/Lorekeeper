@@ -18,6 +18,7 @@ from lorekeeper.models import Memory, MemoryLink
 from lorekeeper.services.search import SearchResult
 
 if TYPE_CHECKING:
+    from lorekeeper.models import LinkSuggestion
     from lorekeeper.services.link_candidate import LinkCandidate
 
 
@@ -185,3 +186,22 @@ def serialize_link_candidate(candidate: LinkCandidate) -> dict[str, Any]:
         },
     }
     return result
+
+
+def serialize_suggestion(suggestion: LinkSuggestion) -> dict[str, Any]:
+    """Serialize a LinkSuggestion for MCP response."""
+    return {
+        "id": suggestion.id,
+        "source_memory_id": suggestion.source_memory_id,
+        "source_title": suggestion.source_title,
+        "target_memory_id": suggestion.target_memory_id,
+        "target_title": suggestion.target_title,
+        "weighted_score": round(suggestion.weighted_score, 4),
+        "cosine_score": round(suggestion.cosine_score, 4),
+        "bm25_score": round(suggestion.bm25_score, 4),
+        "entity_score": round(suggestion.entity_score, 4),
+        "temporal_score": round(suggestion.temporal_score, 4),
+        "suggested_type": suggestion.suggested_type,
+        "confidence": suggestion.confidence,
+        "created_at": suggestion.created_at,
+    }

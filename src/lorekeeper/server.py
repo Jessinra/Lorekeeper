@@ -10,6 +10,7 @@ from lorekeeper.serializers import (
     serialize_link_candidate,
     serialize_search_result,
     serialize_search_result_title,
+    serialize_suggestion,
 )
 from lorekeeper.services.config_store import ConfigStore
 from lorekeeper.services.database import Database
@@ -34,6 +35,7 @@ from lorekeeper.services.suggestion_store import LinkSuggestionStore
 log = structlog.get_logger()
 mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
 _svc: MemoryService | None = None
+_suggestions_store: LinkSuggestionStore | None = None
 
 
 def get_service() -> MemoryService:
@@ -41,6 +43,13 @@ def get_service() -> MemoryService:
     if _svc is None:
         raise RuntimeError("MemoryService not initialised — call init_service() first")
     return _svc
+
+
+def get_suggestions_store() -> LinkSuggestionStore:
+    global _suggestions_store
+    if _suggestions_store is None:
+        raise RuntimeError("LinkSuggestionStore not initialised — call init_service() first")
+    return _suggestions_store
 
 
 def init_service(settings: Settings | None = None) -> MemoryService:
@@ -151,6 +160,7 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     log.info("sweep_scheduler_started")
 
     _svc = svc
+    _suggestions_store = LinkSuggestionStore(db)
     return svc
 
 
@@ -577,4 +587,236 @@ async def lore_forget(
         return result
     except Exception:
         log.exception("lore_forget_failed", memory_ids=memory_ids, reason=reason)
+        raise
+
+
+# ---------------------------------------------------------------------------
+# Handler helpers for suggestion tools
+# ---------------------------------------------------------------------------
+
+_MAX_SUGGESTIONS_LIMIT = 100
+_VALID_REVIEW_ACTIONS = {"accept", "reject"}
+
+
+def _handle_get_suggestions(
+    svc: MemoryService,
+    suggestions: LinkSuggestionStore,
+    limit: int = 20,
+    min_score: float = 0.0,
+) -> dict[str, Any]:
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+        raise ValueError("limit must be a positive integer")
+    limit = min(limit, _MAX_SUGGESTIONS_LIMIT)
+    if not (0.0 <= min_score <= 1.0):
+        raise ValueError("min_score must be between 0.0 and 1.0")
+    svc.metrics.increment_metric("lore_get_suggestions")
+    items = suggestions.get_pending_suggestions(limit=limit, min_score=min_score)
+    total = suggestions.count_pending_suggestions()
+    return {
+        "suggestions": [serialize_suggestion(s) for s in items],
+        "count": len(items),
+        "total_pending": total,
+    }
+
+
+def _handle_review_suggestion(
+    svc: MemoryService,
+    suggestions: LinkSuggestionStore,
+    suggestion_ids: list[str],
+    action: str,
+) -> dict[str, Any]:
+    if not suggestion_ids:
+        raise ValueError("suggestion_ids must not be empty")
+    if action not in _VALID_REVIEW_ACTIONS:
+        raise ValueError(
+            f"action must be 'accept' or 'reject', got {action!r}"
+        )
+    cleaned = [sid.strip() for sid in suggestion_ids if sid and sid.strip()]
+    if not cleaned:
+        raise ValueError("suggestion_ids contained only empty strings")
+
+    svc.metrics.increment_metric("lore_review_suggestion")
+
+    results: list[dict[str, Any]] = []
+    accepted = 0
+    rejected = 0
+    skipped = 0
+    errors: list[dict[str, Any]] = []
+
+    for sid in cleaned:
+        try:
+            sug = suggestions.get_suggestion(sid)
+
+            if action == "accept":
+                if sug is None:
+                    skipped += 1
+                    results.append({
+                        "id": sid, "status": "skipped",
+                        "link_id": None,
+                        "message": "Suggestion not found",
+                    })
+                    continue
+                if sug.status == "accepted":
+                    skipped += 1
+                    results.append({
+                        "id": sid, "status": "skipped",
+                        "link_id": None,
+                        "message": "Already accepted",
+                    })
+                    continue
+
+                from lorekeeper.models import RELATION_TYPES
+                rel_type = sug.suggested_type
+                if rel_type not in RELATION_TYPES:
+                    rel_type = "references"
+
+                link = svc.links.insert_link(
+                    source_memory_id=sug.source_memory_id,
+                    target_memory_id=sug.target_memory_id,
+                    relation_type=rel_type,
+                    reason="Accepted from link suggestion sweep",
+                )
+                suggestions.update_suggestion_status(sid, "accepted")
+                accepted += 1
+                results.append({
+                    "id": sid, "status": "accepted",
+                    "link_id": link.id,
+                    "message": "Link created",
+                })
+
+            else:  # action == "reject"
+                if sug is None:
+                    skipped += 1
+                    results.append({
+                        "id": sid, "status": "skipped",
+                        "link_id": None,
+                        "message": "Suggestion not found",
+                    })
+                    continue
+                if sug.status == "rejected":
+                    skipped += 1
+                    results.append({
+                        "id": sid, "status": "skipped",
+                        "link_id": None,
+                        "message": "Already rejected",
+                    })
+                    continue
+
+                suggestions.update_suggestion_status(sid, "rejected")
+                rejected += 1
+                results.append({
+                    "id": sid, "status": "rejected",
+                    "link_id": None,
+                    "message": "Suggestion rejected",
+                })
+
+        except Exception as exc:
+            log.warning("review_suggestion_item_failed", suggestion_id=sid, exc_info=True)
+            errors.append({"id": sid, "error": str(exc)})
+
+    if accepted or rejected:
+        svc._conn.commit()
+
+    return {
+        "results": results,
+        "accepted": accepted,
+        "rejected": rejected,
+        "skipped": skipped,
+        "errors": errors,
+    }
+
+
+# ---------------------------------------------------------------------------
+# MCP tools — suggestion review
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool(name="lore_get_suggestions")
+async def lore_get_suggestions(
+    limit: int = 20,
+    min_score: float = 0.0,
+) -> dict[str, Any]:
+    """Retrieve pending link suggestions for review, sorted by quality score.
+
+    Returns the top candidates from the sweep engine's pending queue.
+    Use ``lore_review_suggestion`` to accept or reject them.
+
+    Args:
+        limit: Max suggestions to return (default 20, capped at 100).
+        min_score: Minimum weighted_score filter, 0.0-1.0 (default 0.0 = all).
+
+    Returns:
+        {
+          "suggestions": [
+            {
+              "id": "uuid",
+              "source_memory_id": "...",
+              "source_title": "...",
+              "target_memory_id": "...",
+              "target_title": "...",
+              "weighted_score": 0.72,
+              "cosine_score": 0.81,
+              "bm25_score": 0.65,
+              "entity_score": 0.30,
+              "temporal_score": 0.55,
+              "suggested_type": "references",
+              "confidence": "standard",
+              "created_at": "2026-06-20T12:00:00"
+            }
+          ],
+          "count": 20,
+          "total_pending": 142
+        }
+    """
+    try:
+        return _handle_get_suggestions(
+            get_service(), get_suggestions_store(), limit=limit, min_score=min_score
+        )
+    except Exception:
+        log.exception("lore_get_suggestions_failed")
+        raise
+
+
+@mcp.tool(name="lore_review_suggestion")
+async def lore_review_suggestion(
+    suggestion_ids: list[str],
+    action: str,
+) -> dict[str, Any]:
+    """Accept or reject one or more link suggestions in a single call.
+
+    Processes each suggestion independently — a failure on one does not block
+    the rest. Suggestion rows are never deleted; status is updated to
+    'accepted' or 'rejected' for audit trail.
+
+    On accept: creates a real ``memory_links`` row using the suggestion's
+    ``suggested_type`` (falls back to ``'references'`` if None or unrecognised).
+
+    On reject: marks the suggestion as rejected. Future sweeps skip this pair.
+
+    Idempotent per item: double-accept and double-reject both return
+    ``status='skipped'`` with an explanatory message.
+
+    Args:
+        suggestion_ids: List of suggestion UUIDs to process (one or many).
+        action: Either ``'accept'`` or ``'reject'``.
+
+    Returns:
+        {
+          "results": [
+            {"id": "uuid", "status": "accepted"|"rejected"|"skipped",
+             "link_id": "uuid"|null, "message": "..."}
+          ],
+          "accepted": int,
+          "rejected": int,
+          "skipped": int,
+          "errors": [{"id": "uuid", "error": "..."}]
+        }
+    """
+    try:
+        return _handle_review_suggestion(
+            get_service(), get_suggestions_store(),
+            suggestion_ids=suggestion_ids, action=action,
+        )
+    except Exception:
+        log.exception("lore_review_suggestion_failed", suggestion_ids=suggestion_ids)
         raise

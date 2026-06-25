@@ -61,14 +61,14 @@ Retrieve pending link suggestions for review.
 
 ### 2. `lore_review_suggestion`
 
-Accept or reject a specific suggestion. Idempotent — calling accept on an already-accepted suggestion returns success (no-op). Rejecting a rejected suggestion is also a no-op.
+Accept or reject one or more suggestions in a single call. Each item is processed independently — a failure on one does not abort the rest. Idempotent per item — calling accept on an already-accepted suggestion returns `status='skipped'`, and double-reject does the same.
 
 **Input:**
 
-- `suggestion_id` (str, required) — the suggestion UUID
+- `suggestion_ids` (list[str], required) — one or more suggestion UUIDs
 - `action` (str, required) — either `"accept"` or `"reject"`
 
-**On accept:** Creates a real `memory_links` row using the candidate's `suggested_type` (from the new Phase 1 type set in LKPR-99), then deletes the suggestion row from `link_suggestions`.
+**On accept:** Creates a real `memory_links` row using the candidate's `suggested_type` (falls back to `'references'` if None or unrecognised). Suggestion row is retained with `status='accepted'` for audit trail (not deleted).
 
 **On reject:** Sets `status='rejected'` on the suggestion. Future sweeps will skip this pair.
 
@@ -76,38 +76,45 @@ Accept or reject a specific suggestion. Idempotent — calling accept on an alre
 
 ```json
 {
-  "success": true,
-  "action": "accept",
-  "link_id": "uuid" | null,  // link id if accepted, null if rejected
-  "message": "Suggestion accepted, link created"
+  "results": [
+    {"id": "uuid", "status": "accepted"|"rejected"|"skipped", "link_id": "uuid"|null, "message": "..."}
+  ],
+  "accepted": 1,
+  "rejected": 0,
+  "skipped": 0,
+  "errors": []
 }
 ```
 
 ### Batch operations
 
-Both tools work on individual suggestions. For batch operations (bulk-accept top-N, bulk-reject all below threshold), the agent calls these in a loop over however many items it can fit in one turn. If batch endpoints prove necessary, they can be added as a follow-up.
+`lore_review_suggestion` accepts a `list[str]` — bulk-accept or bulk-reject any number of suggestions in a single call. Items are processed independently; partial success is reported per-item in `results`.
 
 ### Server-side hooks
 
 - `lore_review_suggestion` increments a `lore_review_suggestion` metric counter
+- `lore_get_suggestions` increments a `lore_get_suggestions` metric counter
 - Errors surface as structured responses, not raw exceptions
+- Suggestion logic lives in `server.py` handler helpers directly — **not routed through `MemoryService`**; `LinkSuggestionStore` is a module-level singleton on `server.py` (same DB, main thread)
 
 ## Acceptance Criteria
 
 - [ ] `lore_get_suggestions` MCP tool implemented with `limit` and `min_score` params
-- [ ] `lore_review_suggestion` MCP tool implemented with `suggestion_id` and `action`
-- [ ] Accept creates a real `memory_links` row and removes suggestion
-- [ ] Reject sets status to `rejected` (no link created)
-- [ ] Idempotent: no-op on double-accept or double-reject
-- [ ] Metric counter incremented on review actions
+- [ ] `lore_review_suggestion` MCP tool implemented with `suggestion_ids` (list[str]) and `action`
+- [ ] Accept creates a real `memory_links` row; suggestion retained with `status='accepted'`
+- [ ] Reject sets status to `rejected` (no link created); suggestion retained for audit
+- [ ] Idempotent: double-accept and double-reject both return `status='skipped'`
+- [ ] Batch: multiple IDs processed independently in one call; partial success supported
+- [ ] Metric counter incremented on both tools
+- [ ] `LinkSuggestionStore` is NOT a member of `MemoryService` — wired separately in `server.py`
 - [ ] All existing tests pass; new tests for both tools (input validation + integration)
+- [ ] `test_handlers.py` restored with all original tests plus `TestSuggestionHandlers`
 - [ ] No LLM calls — pure DB operations
 
 ## Affected Files
 
-- `src/lorekeeper/server.py` — register `lore_get_suggestions` and `lore_review_suggestion` MCP tools
-- `src/lorekeeper/services/orchestrator.py` — `get_suggestions()`, `review_suggestion()` methods
-- `src/lorekeeper/services/link_store.py` — `get_pending_suggestions()`, `accept_suggestion()`, `reject_suggestion()`
+- `src/lorekeeper/server.py` — register MCP tools + standalone handler helpers; module-level `_suggestions_store`
+- `src/lorekeeper/services/suggestion_store.py` — `get_pending_suggestions()`, `update_suggestion_status()`
 - `src/lorekeeper/schemas.py` — input/output schemas for new tools
 - `src/lorekeeper/serializers.py` — suggestion serialization
 - `tests/test_handlers.py` — new test cases
