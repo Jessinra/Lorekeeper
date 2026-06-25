@@ -168,7 +168,7 @@ Cloud services and Docker-based solutions are strong choices for teams or produc
 
 ## MCP Tools
 
-Lorekeeper exposes **8 MCP tools** covering the full memory lifecycle:
+Lorekeeper exposes **10 MCP tools** covering the full memory lifecycle:
 
 | Tool                      | Purpose                                                  |
 | ------------------------- | -------------------------------------------------------- |
@@ -180,6 +180,8 @@ Lorekeeper exposes **8 MCP tools** covering the full memory lifecycle:
 | `lore_reflect`            | End-of-session: extract learnings, auto-save discoveries |
 | `lore_processed_sessions` | Check which sessions are already processed               |
 | `lore_recommend_links`    | Suggest candidate links between related memories         |
+| `lore_get_suggestions`    | List pending link suggestions from the sweep engine      |
+| `lore_review_suggestion`  | Accept or reject one or more link suggestions (batch)    |
 
 **Full API reference → [docs/api-reference.md](docs/api-reference.md)**
 
