@@ -750,6 +750,20 @@ class TestSuggestionHandlers:
         assert result["skipped"] == 1
         assert result["results"][0]["message"] == "Already rejected"
 
+    def test_review_reject_on_accepted_is_skipped(self, suggestion_svc, suggestion_stores):
+        """Rejecting an already-accepted suggestion must be skipped, not overwrite status."""
+        sug = self._make_suggestion(suggestion_stores, status="accepted")
+        result = _handle_review_suggestion(
+            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_ids=[sug.id], action="reject",
+        )
+        assert result["skipped"] == 1
+        assert result["rejected"] == 0
+        assert "accepted" in result["results"][0]["message"].lower()
+        # Status must remain accepted — not flipped to rejected
+        updated = suggestion_stores.suggestions.get_suggestion(sug.id)
+        assert updated.status == "accepted"
+
     def test_review_reject_unknown_id_skipped(self, suggestion_svc, suggestion_stores):
         result = _handle_review_suggestion(
             suggestion_svc, suggestion_stores.suggestions,

@@ -669,13 +669,26 @@ def _handle_review_suggestion(
                 if rel_type not in RELATION_TYPES:
                     rel_type = "references"
 
-                link = svc.links.insert_link(
-                    source_memory_id=sug.source_memory_id,
-                    target_memory_id=sug.target_memory_id,
-                    relation_type=rel_type,
-                    reason="Accepted from link suggestion sweep",
-                )
-                suggestions.update_suggestion_status(sid, "accepted")
+                # Use a savepoint so insert_link + update_suggestion_status are
+                # atomic per item.  If update_suggestion_status fails after the
+                # link row is written, the savepoint rollback prevents a
+                # committed link with no status update.
+                sp = f"accept_{sid.replace('-', '_')}"
+                svc._conn.execute(f"SAVEPOINT {sp}")
+                try:
+                    link = svc.links.insert_link(
+                        source_memory_id=sug.source_memory_id,
+                        target_memory_id=sug.target_memory_id,
+                        relation_type=rel_type,
+                        reason="Accepted from link suggestion sweep",
+                    )
+                    suggestions.update_suggestion_status(sid, "accepted")
+                except Exception:
+                    svc._conn.execute(f"ROLLBACK TO {sp}")
+                    raise
+                else:
+                    svc._conn.execute(f"RELEASE {sp}")
+
                 accepted += 1
                 results.append({
                     "id": sid, "status": "accepted",
@@ -692,12 +705,17 @@ def _handle_review_suggestion(
                         "message": "Suggestion not found",
                     })
                     continue
-                if sug.status == "rejected":
+                if sug.status in ("rejected", "accepted"):
                     skipped += 1
+                    msg = (
+                        "Already rejected"
+                        if sug.status == "rejected"
+                        else "Already accepted (cannot reject)"
+                    )
                     results.append({
                         "id": sid, "status": "skipped",
                         "link_id": None,
-                        "message": "Already rejected",
+                        "message": msg,
                     })
                     continue
 
