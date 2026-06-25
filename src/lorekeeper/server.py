@@ -5,7 +5,7 @@ from fastmcp import FastMCP
 from pydantic import ValidationError
 
 from lorekeeper.config import Settings
-from lorekeeper.models import SOURCE_TYPES, WRITE_SOURCE_TYPES
+from lorekeeper.models import RELATION_TYPES, SOURCE_TYPES, WRITE_SOURCE_TYPES
 from lorekeeper.serializers import (
     serialize_link_candidate,
     serialize_search_result,
@@ -665,7 +665,6 @@ def _handle_review_suggestion(
                     })
                     continue
 
-                from lorekeeper.models import RELATION_TYPES
                 rel_type = sug.suggested_type
                 if rel_type not in RELATION_TYPES:
                     rel_type = "references"
@@ -808,7 +807,7 @@ async def lore_review_suggestion(
     Returns:
         {
           "results": [
-            {"id": "uuid", "status": "accepted"|"rejected"|"skipped",
+            {"id": "uuid", "status": "accepted"|"rejected"|"skipped"|"error",
              "link_id": "uuid"|null, "message": "..."}
           ],
           "accepted": int,
@@ -816,6 +815,12 @@ async def lore_review_suggestion(
           "skipped": int,
           "errors": [{"id": "uuid", "error": "..."}]
         }
+
+        Note: ``status="error"`` is set on a result item when the per-item
+        operation raises an unexpected exception. That item is *also* appended
+        to ``errors[]``. Callers that iterate ``results[*].status`` should
+        treat ``"error"`` as a failure sentinel and consult ``errors[]`` for
+        the exception message.
     """
     try:
         return _handle_review_suggestion(

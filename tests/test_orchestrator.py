@@ -1111,7 +1111,7 @@ class TestSweepLinks:
         stats = sweeper.run()
         assert stats["memories_scanned"] == 4
         assert stats["candidates_generated"] >= 1
-        pending = self._sug_store.all_pending_suggestions()
+        pending = self._sug_store.get_pending_suggestions()
         assert len(pending) >= 1
 
     def test_sweep_creates_no_real_links(self, svc):
@@ -1133,7 +1133,7 @@ class TestSweepLinks:
         )
         service.commit()
         sweeper.run()
-        pending = self._sug_store.all_pending_suggestions()
+        pending = self._sug_store.get_pending_suggestions()
         assert len(pending) >= 1
 
     def test_sweep_skips_rejected_pairs(self, svc):

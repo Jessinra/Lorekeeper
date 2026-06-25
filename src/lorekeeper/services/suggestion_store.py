@@ -182,13 +182,6 @@ class LinkSuggestionStore:
         ).fetchone()
         return row[0] if row else 0
 
-    def all_pending_suggestions(self) -> list[LinkSuggestion]:
-        rows = self._conn.execute(
-            "SELECT * FROM link_suggestions WHERE status = 'pending' "
-            "ORDER BY weighted_score DESC"
-        ).fetchall()
-        return [_row_to_suggestion(r) for r in rows]
-
     def update_suggestion_status(
         self, suggestion_id: str, status: str
     ) -> None:

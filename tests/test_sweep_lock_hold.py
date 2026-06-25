@@ -133,6 +133,6 @@ def test_sweep_still_writes_suggestions(tmp_path: Path) -> None:
     stats = sweep.run()
 
     assert stats["candidates_generated"] == 1
-    pending = stores.suggestions.all_pending_suggestions()
+    pending = stores.suggestions.get_pending_suggestions()
     assert len(pending) == 1
     assert {pending[0].source_memory_id, pending[0].target_memory_id} == {"a", "b"}

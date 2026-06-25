@@ -401,7 +401,9 @@ Accept or reject one or more link suggestions in a single call. Each item is pro
 }
 ```
 
-`status` per item is one of `"accepted"`, `"rejected"`, or `"skipped"`. `link_id` is the created link ID on accept, `null` on reject or skip.
+`status` per item is one of `"accepted"`, `"rejected"`, `"skipped"`, or `"error"`. `link_id` is the created link ID on accept, `null` on reject, skip, or error.
+
+When `status="error"`, the item is also present in `errors[]` with the exception message. Callers iterating `results[*].status` should treat `"error"` as a failure sentinel and cross-reference `errors[]` for details.
 
 ---
 
