@@ -196,6 +196,7 @@ def serialize_suggestion(suggestion: LinkSuggestion) -> dict[str, Any]:
         "source_title": suggestion.source_title,
         "target_memory_id": suggestion.target_memory_id,
         "target_title": suggestion.target_title,
+        "status": suggestion.status,
         "weighted_score": round(suggestion.weighted_score, 4),
         "cosine_score": round(suggestion.cosine_score, 4),
         "bm25_score": round(suggestion.bm25_score, 4),

@@ -53,7 +53,7 @@ def get_suggestions_store() -> LinkSuggestionStore:
 
 
 def init_service(settings: Settings | None = None) -> MemoryService:
-    global _svc
+    global _svc, _suggestions_store
     s = settings or Settings()
     s.data_dir.mkdir(parents=True, exist_ok=True)
 
@@ -609,7 +609,7 @@ def _handle_get_suggestions(
     limit = min(limit, _MAX_SUGGESTIONS_LIMIT)
     if not (0.0 <= min_score <= 1.0):
         raise ValueError("min_score must be between 0.0 and 1.0")
-    svc.metrics.increment_metric("lore_get_suggestions")
+    svc._increment_metric("lore_get_suggestions")
     items = suggestions.get_pending_suggestions(limit=limit, min_score=min_score)
     total = suggestions.count_pending_suggestions()
     return {
@@ -635,7 +635,7 @@ def _handle_review_suggestion(
     if not cleaned:
         raise ValueError("suggestion_ids contained only empty strings")
 
-    svc.metrics.increment_metric("lore_review_suggestion")
+    svc._increment_metric("lore_review_suggestion")
 
     results: list[dict[str, Any]] = []
     accepted = 0
@@ -713,9 +713,14 @@ def _handle_review_suggestion(
         except Exception as exc:
             log.warning("review_suggestion_item_failed", suggestion_id=sid, exc_info=True)
             errors.append({"id": sid, "error": str(exc)})
+            results.append({
+                "id": sid, "status": "error",
+                "link_id": None,
+                "message": str(exc),
+            })
 
     if accepted or rejected:
-        svc._conn.commit()
+        svc.commit()
 
     return {
         "results": results,

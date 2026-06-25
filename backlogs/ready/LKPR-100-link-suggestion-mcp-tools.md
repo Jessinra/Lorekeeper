@@ -115,7 +115,6 @@ Accept or reject one or more suggestions in a single call. Each item is processe
 
 - `src/lorekeeper/server.py` — register MCP tools + standalone handler helpers; module-level `_suggestions_store`
 - `src/lorekeeper/services/suggestion_store.py` — `get_pending_suggestions()`, `update_suggestion_status()`
-- `src/lorekeeper/schemas.py` — input/output schemas for new tools
 - `src/lorekeeper/serializers.py` — suggestion serialization
 - `tests/test_handlers.py` — new test cases
 
