@@ -555,7 +555,8 @@ tr > th:last-child,  tr > td:last-child  { padding-right: 40px; }
   display: flex; gap: 2px; justify-content: flex-end;
   opacity: 0; transition: opacity var(--t);
 }
-.sug-table-wrap tbody tr:hover .row-actions { opacity: 1; }
+.sug-table-wrap tbody tr:hover .row-actions,
+.sug-table-wrap tbody tr:focus-within .row-actions { opacity: 1; }
 .btn-accept, .btn-reject {
   width: 26px; height: 26px;
   display: inline-flex; align-items: center; justify-content: center;

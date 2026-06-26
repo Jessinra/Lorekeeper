@@ -602,6 +602,13 @@ def test_suggestions_batch_accept(suggestion_client):
         assert sug is not None
         assert sug.status == "accepted"
 
+    # Verify memory links were actually created
+    links = _svc.links._conn.execute(
+        "SELECT source_memory_id, target_memory_id FROM memory_links "
+        "WHERE reason = 'Accepted from link suggestion sweep'"
+    ).fetchall()
+    assert len(links) == 2
+
 
 def test_suggestions_batch_reject(suggestion_client):
     client, _svc, _store, sug_ids = suggestion_client

@@ -235,12 +235,15 @@ async function _fetchSuggestionBadge(memoryId) {
 	const badgeContainer = document.getElementById("detail-suggestion-badge");
 	if (!badgeContainer) return;
 	try {
-		const { count } = await api("GET", `/api/suggestions/count?memory_id=${memoryId}`);
+		const { count } = await api(
+			"GET",
+			`/api/suggestions/count?memory_id=${encodeURIComponent(memoryId)}`,
+		);
 		if (count > 0) {
 			badgeContainer.innerHTML = `
-        <div class="suggestion-badge" data-action="suggestions:navigate" data-memory-id="${memoryId}">
+        <button class="suggestion-badge" data-action="suggestions:navigate" data-memory-id="${esc(memoryId)}">
           ${count} pending link suggestion${count !== 1 ? "s" : ""} →
-        </div>`;
+        </button>`;
 		}
 	} catch {
 		// Silently fail — badge is a nice-to-have

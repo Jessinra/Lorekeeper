@@ -60,9 +60,9 @@ def list_suggestions(
 
     # Fetch pending suggestions
     if memory_id:
-        rows = store.get_suggestions_for_memory(memory_id)
+        rows = store.get_suggestions_for_memory(memory_id, status="pending")
     else:
-        rows = store.get_pending_suggestions(limit=200)
+        rows = store.get_pending_suggestions(limit=10_000)
 
     # Sort (Python-side — store doesn't support sort params yet)
     reverse = sort_dir.lower() != "asc"
@@ -101,7 +101,7 @@ def count_suggestions(memory_id: str | None = None) -> dict[str, int]:
     """Return total pending suggestion count, optionally filtered by memory."""
     store = get_suggestions_store()
     if memory_id:
-        rows = store.get_suggestions_for_memory(memory_id)
+        rows = store.get_suggestions_for_memory(memory_id, status="pending")
         return {"count": len(rows)}
     return {"count": store.count_pending_suggestions()}
 

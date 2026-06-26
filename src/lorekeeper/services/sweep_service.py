@@ -12,6 +12,7 @@ Dependencies are explicit at construction time — no coupling to
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import UTC, datetime
 from typing import Any
@@ -185,7 +186,11 @@ class SweepService:
         self._conn.commit()
         self._conn.execute(
             "INSERT OR REPLACE INTO config_overrides (key, value, updated_at) VALUES (?, ?, ?)",
-            ("sweep_last_run_at", datetime.now(UTC).isoformat(), datetime.now(UTC).isoformat()),
+            (
+                "sweep_last_run_at",
+                json.dumps(datetime.now(UTC).isoformat()),
+                datetime.now(UTC).isoformat(),
+            ),
         )
         self._conn.commit()
         log.info("sweep_completed", stats=stats)

@@ -181,6 +181,12 @@
       </thead>
       <tbody id="suggestions-rows"></tbody>
     </table>
+    <div id="suggestions-empty" class="sug-empty" style="display:none">
+      <div class="sug-empty-icon">⊘</div>
+      No pending suggestions
+      <div class="sug-empty-sub">Suggestions appear here after the sweep engine runs</div>
+      <button class="btn btn-ghost btn-sm" data-action="suggestions:load" style="margin-top:12px">↺ Refresh</button>
+    </div>
   </div>
   <div class="sug-pagination" id="suggestions-pagination" style="display:none">
     <span class="page-info" id="suggestions-page-info"></span>

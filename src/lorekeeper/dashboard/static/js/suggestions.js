@@ -59,7 +59,7 @@ document.addEventListener("app:suggestions:sort", (e) => {
 });
 
 document.addEventListener("app:suggestions:select-all", (e) => {
-	const checked = e.detail?.checked ?? false;
+	const checked = e.detail?.checked === true || e.detail?.checked === "true";
 	document.querySelectorAll(".sug-cb").forEach((cb) => {
 		cb.checked = checked;
 	});
@@ -78,6 +78,7 @@ document.addEventListener("app:suggestions:reject-selected", () => {
 
 export async function loadSuggestions() {
 	const container = document.getElementById("suggestions-container");
+	const empty = document.getElementById("suggestions-empty");
 	if (!container) return;
 
 	let url = `/api/suggestions?limit=${PAGE_SIZE}&offset=${_offset}&sort_by=${_sortBy}&sort_dir=${_sortDir}`;
@@ -90,39 +91,32 @@ export async function loadSuggestions() {
 		_renderPagination();
 		_renderCount();
 	} catch (e) {
-		container.innerHTML = `
-      <div class="sug-empty">
-        Failed to load suggestions<br>
-        <span class="sug-empty-sub">${esc(e.message)}</span>
-        <button class="btn btn-ghost btn-sm" data-action="suggestions:load" style="margin-top:12px">Retry</button>
-      </div>`;
+		if (empty) {
+			empty.style.display = "flex";
+			empty.innerHTML = `
+        <div class="sug-empty-icon">⚠</div>
+        Failed to load suggestions
+        <div class="sug-empty-sub">${esc(e.message)}</div>
+        <button class="btn btn-ghost btn-sm" data-action="suggestions:load" style="margin-top:12px">↺ Retry</button>`;
+		}
 	}
 }
 
 function _renderList(items) {
 	const tbody = document.getElementById("suggestions-rows");
+	const empty = document.getElementById("suggestions-empty");
+	const pag = document.getElementById("suggestions-pagination");
 	if (!tbody) return;
 
 	if (items.length === 0) {
 		tbody.innerHTML = "";
-		const container = document.getElementById("suggestions-container");
-		if (container) {
-			container.innerHTML = `
-        <div class="sug-empty">
-          <div class="sug-empty-icon">⊘</div>
-          No pending suggestions
-          <div class="sug-empty-sub">Suggestions appear here after the sweep engine runs</div>
-          <button class="btn btn-ghost btn-sm" data-action="suggestions:load" style="margin-top:12px">↺ Refresh</button>
-        </div>`;
-			// Hide pagination
-			const pag = document.getElementById("suggestions-pagination");
-			if (pag) pag.style.display = "none";
-		}
+		if (empty) empty.style.display = "flex";
+		if (pag) pag.style.display = "none";
 		return;
 	}
 
-	// Show pagination
-	const pag = document.getElementById("suggestions-pagination");
+	// Hide empty state, show pagination
+	if (empty) empty.style.display = "none";
 	if (pag) pag.style.display = "flex";
 
 	// Build rows
@@ -239,27 +233,40 @@ async function _singleAction(sugId, action, row) {
 async function _batchAction(action) {
 	const checked = document.querySelectorAll(".sug-cb:checked");
 	if (checked.length === 0) return;
-	const ids = [...checked].map((cb) => cb.closest("tr").dataset.id);
+	const rows = [...checked].map((cb) => ({
+		row: cb.closest("tr"),
+		id: cb.closest("tr").dataset.id,
+	}));
 
 	// Fade out selected rows
-	checked.forEach((cb) => {
-		cb.closest("tr").classList.add("fade-out");
+	rows.forEach(({ row }) => {
+		row.classList.add("fade-out");
 	});
 
 	try {
 		const result = await api("POST", "/api/suggestions/batch", {
-			suggestion_ids: ids,
+			suggestion_ids: rows.map((r) => r.id),
 			action,
 		});
 		const successCount = action === "accept" ? result.accepted : result.rejected;
+		// Only remove rows that actually succeeded
+		const okayIds = new Set(
+			(result.results || [])
+				.filter((r) => r.status === "accepted" || r.status === "rejected")
+				.map((r) => r.id),
+		);
+		rows.forEach(({ row, id }) => {
+			if (okayIds.has(id)) {
+				row.remove();
+			} else {
+				row.classList.remove("fade-out");
+			}
+		});
 		showToast(
 			action === "accept"
 				? `Accepted ${successCount} suggestion${successCount !== 1 ? "s" : ""}`
 				: `Rejected ${successCount} suggestion${successCount !== 1 ? "s" : ""}`,
 		);
-		checked.forEach((cb) => {
-			cb.closest("tr").remove();
-		});
 		_total = Math.max(0, _total - successCount);
 		_renderCount();
 		_renderPagination();
@@ -268,8 +275,8 @@ async function _batchAction(action) {
 		if (selectAll) selectAll.checked = false;
 	} catch (e) {
 		showToast(e.message, "error");
-		checked.forEach((cb) => {
-			cb.closest("tr").classList.remove("fade-out");
+		rows.forEach(({ row }) => {
+			row.classList.remove("fade-out");
 		});
 	}
 }
