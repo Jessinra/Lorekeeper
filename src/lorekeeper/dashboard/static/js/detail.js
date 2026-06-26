@@ -45,6 +45,15 @@ document.addEventListener("app:detail:copy-id", (e) => {
 	copyId(e.detail.id);
 });
 
+document.addEventListener("app:suggestions:navigate", (e) => {
+	// Import dynamically to avoid circular deps
+	import("./suggestions.js").then((mod) => {
+		mod.setMemoryFilter(e.detail.memoryId);
+		switchTab("suggestions");
+		dispatch("suggestions:load");
+	});
+});
+
 // ── Core ──
 
 export async function selectMemory(id) {
@@ -63,6 +72,9 @@ export async function selectMemory(id) {
 
 	state.setDetailData(data);
 	_renderDetail(data, false);
+
+	// Fetch pending suggestion count and inject badge
+	_fetchSuggestionBadge(m.id);
 }
 
 export function enterEditMode() {
@@ -214,9 +226,31 @@ export function _renderDetail(data, editMode) {
       <span class="id-badge" title="Click to copy ID" data-action="detail:copy-id" data-id="${m.id}">${m.id.slice(0, 8)}…</span>
       ${headerActions}
     </div>
+    <div id="detail-suggestion-badge"></div>
     ${bodyHTML}
     ${linksHTML}
   `;
+}
+
+// ── Pending suggestion badge ──
+
+async function _fetchSuggestionBadge(memoryId) {
+	const badgeContainer = document.getElementById("detail-suggestion-badge");
+	if (!badgeContainer) return;
+	try {
+		const { count } = await api(
+			"GET",
+			`/api/suggestions/count?memory_id=${memoryId}`,
+		);
+		if (count > 0) {
+			badgeContainer.innerHTML = `
+        <div class="suggestion-badge" data-action="suggestions:navigate" data-memory-id="${memoryId}">
+          ${count} pending link suggestion${count !== 1 ? "s" : ""} →
+        </div>`;
+		}
+	} catch {
+		// Silently fail — badge is a nice-to-have
+	}
 }
 
 function _renderGroupedLinks(links, memoryId) {

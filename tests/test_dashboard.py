@@ -466,3 +466,208 @@ def test_get_metrics(fresh_client):
     assert "buckets" in data
     assert "tools" in data
     assert "data" in data
+
+
+# ── Suggestion route tests (LKPR-101) ────────────────────────────────────────
+
+
+def _insert_memory(store, mem_id: str, title: str = "Memory") -> None:
+    from datetime import UTC, datetime
+
+    store.db.conn.execute(
+        "INSERT OR IGNORE INTO memories"
+        " (id, title, content, description, source_type, score,"
+        "  soft_deleted, usage_count, created_at, updated_at)"
+        " VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (
+            mem_id,
+            title,
+            "",
+            "",
+            "observed",
+            5.0,
+            0,
+            0,
+            datetime.now(UTC).isoformat(),
+            datetime.now(UTC).isoformat(),
+        ),
+    )
+    store.db.conn.commit()
+
+
+@pytest.fixture
+def suggestion_client(tmp_path):
+    """Service with 3 memories and 4 seeded suggestions."""
+    store = build_stores(tmp_path / "test_sug.db")
+    engine = FakeEngine()
+
+    # Seed memories (FK constraint for suggestions)
+    mems = {
+        "mem-a": "Auth middleware design",
+        "mem-b": "API authentication flow",
+        "mem-c": "Database schema v3",
+        "mem-d": "SQLite migration plan",
+    }
+    for mid, title in mems.items():
+        _insert_memory(store, mid, title)
+        engine._store[mid] = title
+
+    # Seed suggestions
+    suggestions_data = [
+        ("mem-a", "mem-b", "Auth middleware design", "API authentication flow", 0.92),
+        ("mem-c", "mem-d", "Database schema v3", "SQLite migration plan", 0.78),
+        ("mem-a", "mem-d", "Auth middleware design", "SQLite migration plan", 0.65),
+        ("mem-c", "mem-b", "Database schema v3", "API authentication flow", 0.47),
+    ]
+    sug_ids = []
+    for src, tgt, src_title, tgt_title, score in suggestions_data:
+        sug = store.suggestions.insert_suggestion(
+            source_memory_id=src,
+            target_memory_id=tgt,
+            source_title=src_title,
+            target_title=tgt_title,
+            weighted_score=score,
+        )
+        sug_ids.append(sug.id)
+
+    kw = KeywordIndex()
+    settings = Settings()
+    svc = build_service(store, engine, kw, settings)
+
+    import lorekeeper.server as srv
+
+    srv._svc = svc
+    srv._suggestions_store = store.suggestions
+
+    from lorekeeper.dashboard import app as dash_app
+
+    with patch("lorekeeper.dashboard.app.init_service", return_value=svc):
+        with TestClient(dash_app.app) as client:
+            yield client, svc, store, sug_ids
+
+
+def test_suggestions_list(suggestion_client):
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.get("/api/suggestions")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] == 4
+    assert len(body["items"]) == 4
+    assert body["items"][0]["weighted_score"] >= body["items"][1]["weighted_score"]
+
+
+def test_suggestions_pagination(suggestion_client):
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.get("/api/suggestions?limit=2&offset=0")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] == 4
+    assert len(body["items"]) == 2
+
+
+def test_suggestions_filter_by_memory(suggestion_client):
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.get("/api/suggestions?memory_id=mem-a")
+    assert resp.status_code == 200
+    body = resp.json()
+    for item in body["items"]:
+        assert item["source_memory_id"] == "mem-a"
+
+
+def test_suggestions_count(suggestion_client):
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.get("/api/suggestions/count")
+    assert resp.status_code == 200
+    assert resp.json()["count"] == 4
+
+    resp = client.get("/api/suggestions/count?memory_id=mem-a")
+    assert resp.status_code == 200
+    assert resp.json()["count"] == 2  # mem-a has 2 suggestions
+
+
+def test_suggestions_batch_accept(suggestion_client):
+    client, _svc, _store, sug_ids = suggestion_client
+    resp = client.post(
+        "/api/suggestions/batch",
+        json={"suggestion_ids": [sug_ids[0], sug_ids[1]], "action": "accept"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["accepted"] == 2
+    assert body["rejected"] == 0
+
+    # Verify suggestions are now accepted
+    for sid in sug_ids[:2]:
+        sug = _store.suggestions.get_suggestion(sid)
+        assert sug is not None
+        assert sug.status == "accepted"
+
+
+def test_suggestions_batch_reject(suggestion_client):
+    client, _svc, _store, sug_ids = suggestion_client
+    resp = client.post(
+        "/api/suggestions/batch",
+        json={"suggestion_ids": [sug_ids[2], sug_ids[3]], "action": "reject"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["rejected"] == 2
+
+    for sid in sug_ids[2:4]:
+        sug = _store.suggestions.get_suggestion(sid)
+        assert sug is not None
+        assert sug.status == "rejected"
+
+
+def test_suggestions_batch_not_found(suggestion_client):
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.post(
+        "/api/suggestions/batch",
+        json={"suggestion_ids": ["nonexistent-id"], "action": "accept"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["accepted"] == 0
+    assert len(body["errors"]) >= 1
+    assert "not found" in body["errors"][0]
+
+
+def test_suggestions_batch_invalid_action(suggestion_client):
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.post(
+        "/api/suggestions/batch",
+        json={"suggestion_ids": [], "action": "invalid"},
+    )
+    assert resp.status_code == 422
+
+
+def test_sweep_trigger(suggestion_client):
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.post("/api/sweep/trigger")
+    assert resp.status_code == 200
+    assert resp.json() == {"ok": True}
+
+    # Verify config override was set
+    overrides = _store.config.get_overrides()
+    assert "sweep_next_run_at" in overrides
+
+
+def test_sweep_status(suggestion_client):
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.get("/api/sweep/status")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "last_run_at" in body
+    assert "next_run_at" in body
+
+
+def test_suggestions_invalid_limit(suggestion_client):
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.get("/api/suggestions?limit=999")
+    assert resp.status_code == 422
+
+
+def test_suggestions_negative_offset(suggestion_client):
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.get("/api/suggestions?offset=-1")
+    assert resp.status_code == 422

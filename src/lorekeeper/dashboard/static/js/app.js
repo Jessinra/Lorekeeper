@@ -12,6 +12,7 @@ import "./links.js";
 import "./query.js";
 import "./sessions.js";
 import "./config.js";
+import "./suggestions.js"; // self-registers
 import "./backup.js";
 import "./metrics.js";
 import "./runs.js";
