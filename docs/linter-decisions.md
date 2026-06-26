@@ -57,29 +57,38 @@ Settled during LKPR-25 (2026-05-23). Revisit if the codebase changes significant
 
 ---
 
-## JavaScript/TypeScript — Biome
+## JavaScript — Biome (lint) + Prettier (format)
 
-**Tool**: Biome (`npx @biomejs/biome check src/lorekeeper/dashboard/static/js/`)  
-**Config**: `biome.json`
+**Tool**: Biome lint (`npx @biomejs/biome lint src/lorekeeper/dashboard/static/js/`)  
+**Tool**: Prettier format (`npx prettier@3.5.3 --check src/lorekeeper/dashboard/static/js/**/*.js`)  
+**Config**: `biome.json` + `.prettierrc.json`
 
-### Why Biome over ESLint
+### Why Biome + Prettier instead of one tool
 
-| Criteria        | Biome                    | ESLint                           |
-| --------------- | ------------------------ | -------------------------------- |
-| Zero npm deps   | ✅ Single binary via npx | ❌ Needs `node_modules/` install |
-| Speed           | Fast (Rust)              | Slower                           |
-| Config          | One `biome.json`         | Multiple config files + plugins  |
-| Formatting      | Built-in                 | Needs Prettier                   |
-| JS-only project | ✅ Good fit              | Overkill for plain JS            |
+| Criteria      | Biome (lint only)        | Prettier (format)        |
+| ------------- | ------------------------ | ------------------------ |
+| Zero npm deps | ✅ Single binary via npx | ✅ Single binary via npx |
+| Speed         | Fast (Rust)              | Fast (JS)                |
+| Config        | One `biome.json`         | One `.prettierrc.json`   |
+| Linting       | ✅ Covers all            | ❌ Not applicable        |
+| Formatting    | ✅ Supported             | ✅ More opinionated      |
 
-The dashboard JS is plain browser-side JavaScript (no TypeScript, no build step). Biome covers linting + formatting in one tool with no `package.json` / `node_modules` needed in the repo.
+Previously Biome handled both linting and formatting (`biome check`). The dashboard JS is plain browser-side JavaScript (no TypeScript, no build step). Biome covers linting quickly, and Prettier handles formatting with a stricter, more consistent rule set. Running `biome lint` + `prettier --check` instead of `biome check` avoids conflicts between the two formatters.
 
-### Settings
+### Biome settings
 
 - `recommended: true` — catches common bugs, enforces modern idioms
 - `useIterableCallbackReturn: off` — disabled because `.forEach()` callbacks that don't return are idiomatic DOM manipulation code (not a bug)
 - `indentStyle: tab` — consistent with existing codebase
 - `quoteStyle: double` — consistent with existing code
+
+### Prettier settings (`.prettierrc.json`)
+
+- `printWidth: 100` — matches the repo's readability target
+- `useTabs: true`, `tabWidth: 4` — matches existing codebase
+- `semi: true`, `singleQuote: false` — consistent with existing code
+- `trailingComma: all` — cleaner diffs
+- Markdown override: `useTabs: false`, `tabWidth: 2`, `proseWrap: preserve`
 
 ---
 
@@ -114,9 +123,9 @@ The repo's markdown pain is mostly mechanical formatting drift: tables, list spa
 The hook runs:
 
 1. `uv run ruff check src tests` — Python lint
-2. `npx --yes @biomejs/biome check src/lorekeeper/dashboard/static/js/` — JS lint
-3. `while IFS= read -r -d '' f; do [ -f "$f" ] && printf '%s\0' "$f"; done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve` — Markdown formatting check
-4. `uv run pytest tests/ -q --tb=short` — test suite
+2. `npx --yes @biomejs/biome lint src/lorekeeper/dashboard/static/js/` — JS lint (Biome)
+3. `npx --yes prettier@3.5.3 --check "src/lorekeeper/dashboard/static/js/**/*.js"` — JS formatting (Prettier)
+4. `npx --yes prettier@3.5.3 --check "*.md"` — Markdown formatting (Prettier)
 
 **mypy is not in the hook** (see note above). Run it manually before pushing: `uv run mypy src`.
 

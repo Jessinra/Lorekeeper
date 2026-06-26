@@ -220,9 +220,7 @@ async function _singleAction(sugId, action, row) {
 		const item = result.results?.[0];
 		if (item?.status === "accepted" || item?.status === "rejected") {
 			showToast(
-				action === "accept"
-					? "Suggestion accepted — link created"
-					: "Suggestion rejected",
+				action === "accept" ? "Suggestion accepted — link created" : "Suggestion rejected",
 			);
 			row.remove();
 			_total = Math.max(0, _total - 1);
@@ -253,8 +251,7 @@ async function _batchAction(action) {
 			suggestion_ids: ids,
 			action,
 		});
-		const successCount =
-			action === "accept" ? result.accepted : result.rejected;
+		const successCount = action === "accept" ? result.accepted : result.rejected;
 		showToast(
 			action === "accept"
 				? `Accepted ${successCount} suggestion${successCount !== 1 ? "s" : ""}`

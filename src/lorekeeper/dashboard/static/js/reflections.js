@@ -21,8 +21,7 @@ function renderReflections() {
 	const totalSessions = refs.reduce((s, r) => s + (r.session_count ?? 0), 0);
 
 	document.getElementById("ref-met-total").textContent = refs.length || "—";
-	document.getElementById("ref-met-sessions").textContent =
-		totalSessions || "—";
+	document.getElementById("ref-met-sessions").textContent = totalSessions || "—";
 	document.getElementById("ref-met-last").textContent = refs.length
 		? fmtDate(refs[0].created_at)
 		: "—";

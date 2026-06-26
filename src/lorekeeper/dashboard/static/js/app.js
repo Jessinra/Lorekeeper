@@ -80,10 +80,7 @@ function init() {
 		if (e.key === "Escape") {
 			dispatch("memories:clear-filter");
 		}
-		if (
-			e.key === "/" &&
-			!["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
-		) {
+		if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
 			const tab = document.getElementById("tab-memories");
 			if (tab.classList.contains("active")) {
 				e.preventDefault();
@@ -96,9 +93,7 @@ function init() {
 	initBackup();
 
 	// Wire the Refresh button directly to triggerRefresh (includes spinner, timer reset)
-	document
-		.getElementById("btn-refresh-memories")
-		.addEventListener("click", triggerRefresh);
+	document.getElementById("btn-refresh-memories").addEventListener("click", triggerRefresh);
 
 	// Bootstrap the memories tab sort headers and load data
 	updateSortHeaders("th-", state.memSort, [

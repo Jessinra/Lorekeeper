@@ -13,9 +13,7 @@ import { getTab } from "./tab-registry.js";
  * save): modules call dispatch() directly.
  */
 export function dispatch(name, detail = {}) {
-	document.dispatchEvent(
-		new CustomEvent(`app:${name}`, { detail, bubbles: true }),
-	);
+	document.dispatchEvent(new CustomEvent(`app:${name}`, { detail, bubbles: true }));
 }
 
 // ── Tab switching via registry ──

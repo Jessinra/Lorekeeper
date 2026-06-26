@@ -25,16 +25,23 @@ uv run ruff check src tests scripts/
 echo "✅  ruff passed"
 
 echo ""
-echo "🔍  biome check (JS)..."
-npx --yes @biomejs/biome check src/lorekeeper/dashboard/static/js/
-echo "✅  biome passed"
+echo "🔍  biome lint (JS)..."
+npx --yes @biomejs/biome lint src/lorekeeper/dashboard/static/js/
+echo "✅  biome lint passed"
+
+echo ""
+echo "🔍  prettier check (JS)..."
+while IFS= read -r -d '' f; do
+  [ -f "$f" ] && printf '%s\0' "$f"
+done < <(git ls-files -z 'src/lorekeeper/dashboard/static/js/**/*.js') | xargs -0 npx --yes prettier@3.5.3 --check
+echo "✅  prettier JS passed"
 
 echo ""
 echo "🔍  prettier check (Markdown)..."
 while IFS= read -r -d '' f; do
   [ -f "$f" ] && printf '%s\0' "$f"
-done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check --prose-wrap preserve
-echo "✅  prettier passed"
+done < <(git ls-files -z '*.md') | xargs -0 npx --yes prettier@3.5.3 --check
+echo "✅  prettier markdown passed"
 
 echo ""
 echo "🔍  MCP tool documentation check..."

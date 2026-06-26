@@ -12,9 +12,7 @@ document.addEventListener("app:backup:export", () => triggerExport());
 document.addEventListener("app:backup:confirm-import", () => confirmImport());
 
 export function initBackup() {
-	document
-		.getElementById("import-file")
-		.addEventListener("change", onImportFileChosen);
+	document.getElementById("import-file").addEventListener("change", onImportFileChosen);
 }
 
 let _stagedFile = null;

@@ -51,10 +51,7 @@ const _todayLocal = (() => {
 export function isToday(iso) {
 	if (!iso) return false;
 	const d = new Date(iso);
-	return (
-		`${d.getFullYear()}-${_pad(d.getMonth() + 1)}-${_pad(d.getDate())}` ===
-		_todayLocal
-	);
+	return `${d.getFullYear()}-${_pad(d.getMonth() + 1)}-${_pad(d.getDate())}` === _todayLocal;
 }
 
 export function clientSort(data, field, dir) {

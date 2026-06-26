@@ -68,9 +68,7 @@ export function renderLinks() {
 	let filtered = state.allLinks;
 	if (_relationFilter) {
 		if (_relationFilter === "auto_linked") {
-			filtered = filtered.filter((l) =>
-				l.reason?.startsWith("auto-linked from"),
-			);
+			filtered = filtered.filter((l) => l.reason?.startsWith("auto-linked from"));
 		} else {
 			filtered = filtered.filter((l) => l.relation_type === _relationFilter);
 		}
