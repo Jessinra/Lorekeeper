@@ -109,68 +109,68 @@ export function _renderDetail(data, editMode) {
 	const bodyHTML = `
     <div class="detail-grid">
       ${
-			editMode
-				? field(
-						"Title",
-						`<div class="field-value fv-prominent">${esc(m.title)}</div>`,
-						`<input type="text" id="d-title" value="${esc(m.title)}">`,
-						"span-2",
-					)
-				: ""
-		}
+				editMode
+					? field(
+							"Title",
+							`<div class="field-value fv-prominent">${esc(m.title)}</div>`,
+							`<input type="text" id="d-title" value="${esc(m.title)}">`,
+							"span-2",
+						)
+					: ""
+			}
       ${field(
-			"Description",
-			m.description
-				? `<div class="field-value fv-secondary">${esc(m.description)}</div>`
-				: `<div class="field-value fv-empty">—</div>`,
-			`<input type="text" id="d-description" value="${esc(m.description ?? "")}">`,
-			"span-2",
-		)}
+				"Description",
+				m.description
+					? `<div class="field-value fv-secondary">${esc(m.description)}</div>`
+					: `<div class="field-value fv-empty">—</div>`,
+				`<input type="text" id="d-description" value="${esc(m.description ?? "")}">`,
+				"span-2",
+			)}
       ${field(
-			"Content",
-			`<div class="field-value fv-content">${esc(m.content)}</div>`,
-			`<textarea id="d-content" rows="8">${esc(m.content)}</textarea>`,
-			"span-2",
-		)}
+				"Content",
+				`<div class="field-value fv-content">${esc(m.content)}</div>`,
+				`<textarea id="d-content" rows="8">${esc(m.content)}</textarea>`,
+				"span-2",
+			)}
       ${field(
-			"Namespace",
-			`<div class="field-value"><span class="ns-badge">${esc(m.namespace ?? "shared")}</span></div>`,
-			`<div class="field-value"><span class="ns-badge">${esc(m.namespace ?? "shared")}</span></div>`,
-		)}
+				"Namespace",
+				`<div class="field-value"><span class="ns-badge">${esc(m.namespace ?? "shared")}</span></div>`,
+				`<div class="field-value"><span class="ns-badge">${esc(m.namespace ?? "shared")}</span></div>`,
+			)}
       ${field(
-			"Score",
-			`<div class="field-value"><span class="score-badge ${scoreClass(m.score)}">${fmt2(m.score)}</span></div>`,
-			`<input type="number" id="d-score" value="${fmt2(m.score)}" min="0" max="10" step="0.01">`,
-		)}
+				"Score",
+				`<div class="field-value"><span class="score-badge ${scoreClass(m.score)}">${fmt2(m.score)}</span></div>`,
+				`<input type="number" id="d-score" value="${fmt2(m.score)}" min="0" max="10" step="0.01">`,
+			)}
       ${field(
-			"Confidence / Samples",
-			`<div class="field-value">${conf} / ${m.confidence_count}</div>`,
-			`<div class="field-value">${conf} / ${m.confidence_count}</div>`,
-		)}
+				"Confidence / Samples",
+				`<div class="field-value">${conf} / ${m.confidence_count}</div>`,
+				`<div class="field-value">${conf} / ${m.confidence_count}</div>`,
+			)}
       ${field(
-			"Usage count",
-			`<div class="field-value">${m.usage_count}</div>`,
-			`<div class="field-value">${m.usage_count}</div>`,
-		)}
+				"Usage count",
+				`<div class="field-value">${m.usage_count}</div>`,
+				`<div class="field-value">${m.usage_count}</div>`,
+			)}
       ${field(
-			"Status",
-			`<div class="field-value">${m.soft_deleted ? '<span class="badge badge-deleted">soft deleted</span>' : "Active"}</div>`,
-			`<div class="field-value">${m.soft_deleted ? '<span class="badge badge-deleted">soft deleted</span>' : "Active"}</div>`,
-		)}
+				"Status",
+				`<div class="field-value">${m.soft_deleted ? '<span class="badge badge-deleted">soft deleted</span>' : "Active"}</div>`,
+				`<div class="field-value">${m.soft_deleted ? '<span class="badge badge-deleted">soft deleted</span>' : "Active"}</div>`,
+			)}
       ${field(
-			"Updated",
-			`<div class="field-value">${fmtDate(m.updated_at)}</div>`,
-			`<div class="field-value">${fmtDate(m.updated_at)}</div>`,
-		)}
+				"Updated",
+				`<div class="field-value">${fmtDate(m.updated_at)}</div>`,
+				`<div class="field-value">${fmtDate(m.updated_at)}</div>`,
+			)}
       ${field(
-			"Created",
-			`<div class="field-value">${fmtDate(m.created_at)}</div>`,
-			`<div class="field-value">${fmtDate(m.created_at)}</div>`,
-		)}
+				"Created",
+				`<div class="field-value">${fmtDate(m.created_at)}</div>`,
+				`<div class="field-value">${fmtDate(m.created_at)}</div>`,
+			)}
     </div>
     ${
-		editMode
-			? `
+			editMode
+				? `
     <div class="action-bar">
       <button class="btn-primary" data-action="detail:save" data-id="${m.id}">Save</button>
       <button class="btn-secondary" data-action="detail:cancel-edit">Cancel</button>
@@ -181,8 +181,8 @@ export function _renderDetail(data, editMode) {
       <button class="btn-danger" data-action="detail:hard-delete" data-id="${m.id}" data-testid="detail-hard-delete">Hard Delete</button>
     </div>
     `
-			: ""
-	}
+				: ""
+		}
   `;
 
 	const linksHTML = `
@@ -198,9 +198,12 @@ export function _renderDetail(data, editMode) {
           <select id="link-target">
             <option value="">Target memory…</option>
             ${state.allMemories
-				.filter((x) => x.id !== m.id)
-				.map((x) => `<option value="${x.id}">${esc(x.title.slice(0, 70))}</option>`)
-				.join("")}
+							.filter((x) => x.id !== m.id)
+							.map(
+								(x) =>
+									`<option value="${x.id}">${esc(x.title.slice(0, 70))}</option>`,
+							)
+							.join("")}
           </select>
           <select id="link-relation">
             <option value="related_to">related_to</option>
@@ -326,7 +329,12 @@ export async function toggleSoftDelete(id, current) {
 }
 
 export async function confirmDelete(id) {
-	if (!confirm("Hard-delete this memory and all its links? This cannot be undone.")) return;
+	if (
+		!confirm(
+			"Hard-delete this memory and all its links? This cannot be undone.",
+		)
+	)
+		return;
 	try {
 		await api("DELETE", `/api/memories/${id}`);
 		showToast("Deleted");

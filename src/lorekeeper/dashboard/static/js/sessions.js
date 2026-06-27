@@ -2,7 +2,13 @@
 import { api } from "./api.js";
 import { updateSortHeaders } from "./memories.js";
 import { registerTab } from "./tab-registry.js";
-import { clientSort, esc, fmtDatePlus8, fmtRelative, htmlSection } from "./utils.js";
+import {
+	clientSort,
+	esc,
+	fmtDatePlus8,
+	fmtRelative,
+	htmlSection,
+} from "./utils.js";
 
 // ── Self-register ──
 
@@ -21,7 +27,9 @@ document.addEventListener("app:sessions:filter-task", (e) => {
 document.addEventListener("app:sessions:filter-session-id", (e) => {
 	filterBySessionId(e.detail.value);
 });
-document.addEventListener("app:sessions:toggle-date-sort", () => toggleDateSort());
+document.addEventListener("app:sessions:toggle-date-sort", () =>
+	toggleDateSort(),
+);
 document.addEventListener("app:sessions:clear-session-id", () => {
 	const input = document.getElementById("sess-id-search");
 	if (input) input.value = "";
@@ -56,7 +64,8 @@ function renderSessions() {
 		(_hideStubs ? nonStubs : all).filter(
 			(s) =>
 				(!_filterTask || s.task_type === _filterTask) &&
-				(!_filterSessId || (s.session_id || "").toLowerCase().includes(sessIdLower)),
+				(!_filterSessId ||
+					(s.session_id || "").toLowerCase().includes(sessIdLower)),
 		),
 		"reviewed_at",
 		_sortDate,
@@ -143,7 +152,9 @@ function renderRow(s, i) {
 			(s.what_was_done.length > 130 ? "…" : "")
 		: '<span class="sess-stub-label">stub</span>';
 
-	const dateStr = s.reviewed_at ? fmtDatePlus8(s.reviewed_at) : esc(s.session_date || "");
+	const dateStr = s.reviewed_at
+		? fmtDatePlus8(s.reviewed_at)
+		: esc(s.session_date || "");
 	const relStr = s.reviewed_at ? fmtRelative(s.reviewed_at) : "";
 
 	return `

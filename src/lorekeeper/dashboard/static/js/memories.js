@@ -2,7 +2,14 @@
 import { api } from "./api.js";
 import * as state from "./state.js";
 import { registerTab } from "./tab-registry.js";
-import { clientSort, esc, fmt2, fmtDate, isToday, scoreClass } from "./utils.js";
+import {
+	clientSort,
+	esc,
+	fmt2,
+	fmtDate,
+	isToday,
+	scoreClass,
+} from "./utils.js";
 
 // ── Self-register ──
 
@@ -20,7 +27,9 @@ document.addEventListener("app:refresh", () => loadMemories());
 
 document.addEventListener("app:memories:clear-filter", () => clearFilter());
 
-document.addEventListener("app:memories:toggle-deleted", () => toggleShowDeleted());
+document.addEventListener("app:memories:toggle-deleted", () =>
+	toggleShowDeleted(),
+);
 
 document.addEventListener("app:memories:time-filter", (e) => {
 	const daysStr = e.detail.days;
@@ -51,7 +60,9 @@ export function toggleShowDeleted() {
 }
 
 export async function loadMemories() {
-	state.setAllMemories(await api("GET", `/api/memories?include_deleted=${state.showDeleted}`));
+	state.setAllMemories(
+		await api("GET", `/api/memories?include_deleted=${state.showDeleted}`),
+	);
 	_populateNamespaceFilter();
 	updateStats();
 	renderList();
@@ -61,7 +72,9 @@ export async function loadMemories() {
 export function _populateNamespaceFilter() {
 	const sel = document.getElementById("ns-filter");
 	const current = sel.value;
-	const namespaces = [...new Set(state.allMemories.map((m) => m.namespace ?? "shared"))].sort();
+	const namespaces = [
+		...new Set(state.allMemories.map((m) => m.namespace ?? "shared")),
+	].sort();
 	sel.innerHTML =
 		`<option value="">All namespaces</option>` +
 		namespaces
@@ -84,10 +97,15 @@ export function setNamespaceFilter(ns) {
 
 export function updateStats() {
 	const active = state.allMemories.filter((m) => !m.soft_deleted);
-	const avgScore = active.length ? active.reduce((s, m) => s + m.score, 0) / active.length : null;
+	const avgScore = active.length
+		? active.reduce((s, m) => s + m.score, 0) / active.length
+		: null;
 	const totalUses = active.reduce((s, m) => s + m.usage_count, 0);
 	const lastUpdated = active.length
-		? fmtDate(active.reduce((a, b) => (a.updated_at > b.updated_at ? a : b)).updated_at)
+		? fmtDate(
+				active.reduce((a, b) => (a.updated_at > b.updated_at ? a : b))
+					.updated_at,
+			)
 		: "—";
 
 	document.getElementById("met-total").textContent = active.length;
@@ -144,7 +162,11 @@ export function setTimeFilter(_btn, days) {
 
 export function setMemSort(field) {
 	state.memSort.dir =
-		state.memSort.field === field ? (state.memSort.dir === "desc" ? "asc" : "desc") : "desc";
+		state.memSort.field === field
+			? state.memSort.dir === "desc"
+				? "asc"
+				: "desc"
+			: "desc";
 	state.memSort.field = field;
 	updateSortHeaders("th-", state.memSort, [
 		"title",
@@ -164,7 +186,8 @@ export function updateSortHeaders(prefix, sort, fields) {
 		if (!th) return;
 		const arrow = th.querySelector(".sort-arrow");
 		th.classList.toggle("sort-active", sort.field === f);
-		arrow.textContent = sort.field === f ? (sort.dir === "desc" ? " ↓" : " ↑") : "";
+		arrow.textContent =
+			sort.field === f ? (sort.dir === "desc" ? " ↓" : " ↑") : "";
 	});
 }
 
@@ -180,14 +203,18 @@ export function renderList() {
 		: state.allMemories;
 
 	if (state.namespaceFilter) {
-		filtered = filtered.filter((m) => (m.namespace ?? "shared") === state.namespaceFilter);
+		filtered = filtered.filter(
+			(m) => (m.namespace ?? "shared") === state.namespaceFilter,
+		);
 	}
 
 	if (state.timeFilterDays !== null) {
 		const cutoff = new Date();
 		cutoff.setDate(cutoff.getDate() - state.timeFilterDays);
 		cutoff.setHours(0, 0, 0, 0);
-		filtered = filtered.filter((m) => m.created_at && new Date(m.created_at) >= cutoff);
+		filtered = filtered.filter(
+			(m) => m.created_at && new Date(m.created_at) >= cutoff,
+		);
 	}
 
 	const countLabel =
@@ -198,7 +225,8 @@ export function renderList() {
 
 	// ── Empty states ────────────────────────────────────────────────────────
 	if (filtered.length === 0) {
-		const hasFilter = ft || state.timeFilterDays !== null || state.namespaceFilter;
+		const hasFilter =
+			ft || state.timeFilterDays !== null || state.namespaceFilter;
 		let msg;
 		if (state.allMemories.length === 0) {
 			msg = `<tr data-testid="mem-empty-state">

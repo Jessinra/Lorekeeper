@@ -108,7 +108,9 @@ function renderMetrics({ buckets, tools, data }) {
 		if (!grid[localDate][localHour]) grid[localDate][localHour] = {};
 		for (const tool of tools) {
 			const c = data[bucket]?.[tool] ?? 0;
-			if (c) grid[localDate][localHour][tool] = (grid[localDate][localHour][tool] ?? 0) + c;
+			if (c)
+				grid[localDate][localHour][tool] =
+					(grid[localDate][localHour][tool] ?? 0) + c;
 		}
 	}
 
@@ -164,7 +166,9 @@ function buildGrid(dates, tools, grid, singleTool) {
 		}
 	}
 
-	const col = singleTool ? (TOOL_COLORS[singleTool] ?? DEFAULT_COLOR) : COMBINED_COLOR;
+	const col = singleTool
+		? (TOOL_COLORS[singleTool] ?? DEFAULT_COLOR)
+		: COMBINED_COLOR;
 
 	// ── Hour header row (labels at 00, 06, 12, 18) ──
 	const headerWrap = document.createElement("div");

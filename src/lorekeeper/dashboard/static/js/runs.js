@@ -30,10 +30,17 @@ export async function loadRuns(force = false) {
 function renderRuns() {
 	const runs = _runs;
 
-	const totalInserted = runs.reduce((s, r) => s + (r.lore_inserted?.length ?? 0), 0);
-	const totalUpdated = runs.reduce((s, r) => s + (r.lore_updated?.length ?? 0), 0);
+	const totalInserted = runs.reduce(
+		(s, r) => s + (r.lore_inserted?.length ?? 0),
+		0,
+	);
+	const totalUpdated = runs.reduce(
+		(s, r) => s + (r.lore_updated?.length ?? 0),
+		0,
+	);
 	document.getElementById("run-met-total").textContent = runs.length || "—";
-	document.getElementById("run-met-inserted").textContent = totalInserted || "—";
+	document.getElementById("run-met-inserted").textContent =
+		totalInserted || "—";
 	document.getElementById("run-met-updated").textContent = totalUpdated || "—";
 	document.getElementById("run-met-last").textContent = runs.length
 		? fmtDate(runs[0].completed_at)
@@ -83,12 +90,12 @@ function renderRow(r, i) {
       <td class="col-topics" title="${esc(topics)}">${esc(topics)}</td>
     </tr>
     ${
-		hasDetail
-			? `<tr id="${detId}" class="run-detail-row hidden">
+			hasDetail
+				? `<tr id="${detId}" class="run-detail-row hidden">
       <td colspan="7"><div class="run-detail-body">${insList}${updList}${delList}</div></td>
     </tr>`
-			: ""
-	}
+				: ""
+		}
   `;
 }
 
