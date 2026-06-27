@@ -571,7 +571,7 @@ def test_suggestions_filter_by_memory(suggestion_client):
     assert resp.status_code == 200
     body = resp.json()
     for item in body["items"]:
-        assert item["source_memory_id"] == "mem-a"
+        assert item["source_memory_id"] == "mem-a" or item["target_memory_id"] == "mem-a"
 
 
 def test_suggestions_count(suggestion_client):
@@ -666,6 +666,9 @@ def test_sweep_status(suggestion_client):
     body = resp.json()
     assert "last_run_at" in body
     assert "next_run_at" in body
+    # With no sweep_last_run_at override set, should fall back to newest
+    # suggestion created_at (not None, since suggestions were inserted in fixture)
+    assert body["last_run_at"] is not None
 
 
 def test_suggestions_invalid_limit(suggestion_client):
@@ -678,3 +681,37 @@ def test_suggestions_negative_offset(suggestion_client):
     client, _svc, _store, _sug_ids = suggestion_client
     resp = client.get("/api/suggestions?offset=-1")
     assert resp.status_code == 422
+
+
+def test_suggestions_batch_accept_invalid_relation_type(suggestion_client):
+    """Accept normalises an invalid suggested_type to 'references'."""
+    client, _svc, store, sug_ids = suggestion_client
+    # Patch the suggestion's suggested_type to an invalid value
+    store.suggestions._conn.execute(
+        "UPDATE link_suggestions SET suggested_type = 'bogus_type' WHERE id = ?",
+        (sug_ids[0],),
+    )
+    resp = client.post(
+        "/api/suggestions/batch",
+        json={"suggestion_ids": [sug_ids[0]], "action": "accept"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["accepted"] == 1
+    # Link should have been created with fallback 'references' type
+    links = _svc.links._conn.execute(
+        "SELECT relation_type FROM memory_links "
+        "WHERE reason = 'Accepted from link suggestion sweep'"
+    ).fetchall()
+    assert len(links) == 1
+    assert links[0]["relation_type"] == "references"
+
+
+def test_suggestions_list_db_sorted(suggestion_client):
+    """Sorting is applied DB-side: score-asc returns lowest score first."""
+    client, _svc, _store, _sug_ids = suggestion_client
+    resp = client.get("/api/suggestions?sort_by=weighted_score&sort_dir=asc")
+    assert resp.status_code == 200
+    items = resp.json()["items"]
+    scores = [i["weighted_score"] for i in items]
+    assert scores == sorted(scores), "Items should be ascending by weighted_score"

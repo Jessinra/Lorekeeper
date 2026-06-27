@@ -23,9 +23,10 @@ document.addEventListener("app:suggestions:load", () => loadSuggestions());
 document.addEventListener("app:suggestions:refresh", () => loadSuggestions());
 
 document.addEventListener("app:suggestions:navigate", (e) => {
+	// Only update filter state here — switchTab() in detail.js fires
+	// loadSuggestions() via the tab registry, so no duplicate fetch.
 	_memoryFilter = e.detail.memoryId || null;
 	_offset = 0;
-	loadSuggestions();
 });
 
 document.addEventListener("app:suggestions:prev-page", () => {
@@ -135,8 +136,8 @@ function _renderList(items) {
       </td>
       <td class="col-actions">
         <div class="row-actions">
-          <button class="btn-accept" title="Accept suggestion" data-sug-id="${esc(s.id)}">✓</button>
-          <button class="btn-reject" title="Reject suggestion" data-sug-id="${esc(s.id)}">✗</button>
+          <button type="button" class="btn-accept" aria-label="Accept suggestion" data-sug-id="${esc(s.id)}">✓</button>
+          <button type="button" class="btn-reject" aria-label="Reject suggestion" data-sug-id="${esc(s.id)}">✗</button>
         </div>
       </td>
     </tr>`,

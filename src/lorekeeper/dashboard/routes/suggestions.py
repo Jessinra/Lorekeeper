@@ -8,6 +8,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from lorekeeper.models import RELATION_TYPES
 from lorekeeper.server import get_service, get_suggestions_store
 
 router = APIRouter()
@@ -48,30 +49,41 @@ def list_suggestions(
     """List pending suggestions with pagination."""
     store = get_suggestions_store()
 
-    if limit < 1 or limit > 200:
+    if limit < 1 or limit > 500:
         raise HTTPException(
             status_code=422,
-            detail="limit must be between 1 and 200",
+            detail="limit must be between 1 and 500",
         )
     if offset < 0:
         raise HTTPException(
             status_code=422, detail="offset must be non-negative"
         )
 
-    # Fetch pending suggestions
+    # Validate sort params (whitelist to prevent SQL injection)
+    if sort_by not in ("weighted_score", "created_at"):
+        sort_by = "weighted_score"
+    order = "ASC" if sort_dir.lower() == "asc" else "DESC"
+
+    # Use COUNT query for accurate total (avoids loading all rows into Python),
+    # then fetch only the requested page with DB-side sorting.
     if memory_id:
-        rows = store.get_suggestions_for_memory(memory_id, status="pending")
+        total = store.count_pending_suggestions_for_memory(memory_id)
+        page = store.get_suggestions_for_memory_paged(
+            memory_id,
+            status="pending",
+            sort_by=sort_by,
+            sort_dir=order,
+            limit=limit,
+            offset=offset,
+        )
     else:
-        rows = store.get_pending_suggestions(limit=10_000)
-
-    # Sort (Python-side — store doesn't support sort params yet)
-    reverse = sort_dir.lower() != "asc"
-    if sort_by in ("weighted_score", "created_at"):
-        rows.sort(key=lambda r: getattr(r, sort_by, 0) or 0, reverse=reverse)
-
-    # Paginate
-    total = len(rows)
-    page = rows[offset: offset + limit]
+        total = store.count_pending_suggestions()
+        page = store.get_pending_suggestions(
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_dir=order,
+        )
 
     return {
         "items": [
@@ -101,8 +113,7 @@ def count_suggestions(memory_id: str | None = None) -> dict[str, int]:
     """Return total pending suggestion count, optionally filtered by memory."""
     store = get_suggestions_store()
     if memory_id:
-        rows = store.get_suggestions_for_memory(memory_id, status="pending")
-        return {"count": len(rows)}
+        return {"count": store.count_pending_suggestions_for_memory(memory_id)}
     return {"count": store.count_pending_suggestions()}
 
 
@@ -138,11 +149,18 @@ def batch_suggestions(body: BatchAction) -> BatchResponse:
                 continue
 
             if action == "accept":
-                # Create a real memory link
+                # Validate suggested_type before inserting the link
+                relation_type = suggestion.suggested_type or "references"
+                if relation_type not in RELATION_TYPES:
+                    relation_type = "references"
+
+                # Both operations share the same connection — SQLite's implicit
+                # transaction means they either both commit (via svc.commit()
+                # at the end) or both roll back on exception.
                 svc.links.insert_link(
                     source_memory_id=suggestion.source_memory_id,
                     target_memory_id=suggestion.target_memory_id,
-                    relation_type=suggestion.suggested_type or "references",
+                    relation_type=relation_type,
                     reason="Accepted from link suggestion sweep",
                 )
                 store.update_suggestion_status(sid, "accepted")
@@ -195,22 +213,15 @@ def trigger_sweep() -> dict[str, bool]:
 def sweep_status() -> dict[str, str | None]:
     """Return last and next sweep run timestamps."""
     svc = get_service()
+    store = get_suggestions_store()
     overrides = svc.config.get_overrides()
     last_run = overrides.get("sweep_last_run_at")
     next_run = overrides.get("sweep_next_run_at")
 
-    # If no last_run recorded but next_run exists, infer last_run
-    if not last_run and next_run:
-        try:
-            nxt = datetime.fromisoformat(str(next_run))
-            interval = float(
-                getattr(svc.settings, "suggest_interval_hours", 12)
-            )
-            from datetime import timedelta
-
-            last_run = (nxt - timedelta(hours=interval)).isoformat()
-        except (ValueError, TypeError):
-            pass
+    # If no last_run recorded, use the newest suggestion's created_at as a
+    # proxy — that's the most recent time the sweep produced output.
+    if not last_run:
+        last_run = store.get_newest_suggestion_created_at()
 
     return {
         "last_run_at": str(last_run) if last_run else None,

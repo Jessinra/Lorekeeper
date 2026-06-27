@@ -46,11 +46,12 @@ document.addEventListener("app:detail:copy-id", (e) => {
 });
 
 document.addEventListener("app:suggestions:navigate", (e) => {
-	// Import dynamically to avoid circular deps
+	// Import dynamically to avoid circular deps.
+	// switchTab("suggestions") already calls loadSuggestions() via the tab
+	// registry — no extra dispatch needed.
 	import("./suggestions.js").then((mod) => {
 		mod.setMemoryFilter(e.detail.memoryId);
 		switchTab("suggestions");
-		dispatch("suggestions:load");
 	});
 });
 
