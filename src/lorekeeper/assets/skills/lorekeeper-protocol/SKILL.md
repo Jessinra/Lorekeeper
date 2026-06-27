@@ -305,3 +305,23 @@ Returns array of session IDs already reflected.
 ```
 
 Soft-deletes memories. Use for cleanup in Phase 4.
+
+### `lore_recommend_links`
+
+```json
+{
+  "lore_id": "<uuid>",
+  "top_k": 10
+}
+```
+
+Returns scored link candidates for a source memory. Never writes — call `lore_insert` with `links=[]` to confirm. See `lorekeeper-link-memories` skill for full workflow.
+
+## Related Skills
+
+- **[lorekeeper-memorize]** — Phase 3: capture mid-session discoveries with lore_remember.
+- **[lorekeeper-search]** — Phase 1: search past memories at session start.
+- **[lorekeeper-reconcile]** — Phase 4: reconcile and fact-check memories periodically.
+- **[lorekeeper-link-memories]** — Full workflow for `lore_recommend_links` and link management.
+- **[recursive-self-improvement]** — The identity layer driving _why_ and _when_ to use this protocol.
+- **[reflect]** — The daily cron complement: exports sessions, deduplicates, and calls lore_reflect.
