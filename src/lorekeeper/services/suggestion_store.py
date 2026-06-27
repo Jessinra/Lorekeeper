@@ -158,21 +158,62 @@ class LinkSuggestionStore:
         return [_row_to_suggestion(r) for r in rows]
 
     def get_pending_suggestions(
-        self, limit: int = 20, min_score: float = 0.0
+        self,
+        limit: int = 20,
+        offset: int = 0,
+        min_score: float = 0.0,
+        sort_by: str = "weighted_score",
+        sort_dir: str = "DESC",
     ) -> list[LinkSuggestion]:
-        """Return pending suggestions ordered by weighted_score DESC.
+        """Return pending suggestions with DB-side sort and pagination.
 
         Args:
             limit: Maximum number of suggestions to return.
+            offset: Number of rows to skip (for pagination).
             min_score: Minimum weighted_score filter (inclusive).
+            sort_by: Column to sort by — ``weighted_score`` or ``created_at``.
+            sort_dir: ``ASC`` or ``DESC``.
         """
+        # Whitelist to prevent SQL injection
+        col = sort_by if sort_by in ("weighted_score", "created_at") else "weighted_score"
+        direction = "DESC" if sort_dir.upper() != "ASC" else "ASC"
         rows = self._conn.execute(
-            """SELECT * FROM link_suggestions
+            f"""SELECT * FROM link_suggestions
                WHERE status = 'pending' AND weighted_score >= ?
-               ORDER BY weighted_score DESC
-               LIMIT ?""",
-            (min_score, limit),
+               ORDER BY {col} {direction}
+               LIMIT ? OFFSET ?""",
+            (min_score, limit, offset),
         ).fetchall()
+        return [_row_to_suggestion(r) for r in rows]
+
+    def get_suggestions_for_memory_paged(
+        self,
+        memory_id: str,
+        status: str | None = None,
+        sort_by: str = "weighted_score",
+        sort_dir: str = "DESC",
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[LinkSuggestion]:
+        """Return suggestions for a memory with DB-side sort and pagination."""
+        col = sort_by if sort_by in ("weighted_score", "created_at") else "weighted_score"
+        direction = "DESC" if sort_dir.upper() != "ASC" else "ASC"
+        if status:
+            rows = self._conn.execute(
+                f"""SELECT * FROM link_suggestions
+                   WHERE (source_memory_id = ? OR target_memory_id = ?) AND status = ?
+                   ORDER BY {col} {direction}
+                   LIMIT ? OFFSET ?""",
+                (memory_id, memory_id, status, limit, offset),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                f"""SELECT * FROM link_suggestions
+                   WHERE source_memory_id = ? OR target_memory_id = ?
+                   ORDER BY {col} {direction}
+                   LIMIT ? OFFSET ?""",
+                (memory_id, memory_id, limit, offset),
+            ).fetchall()
         return [_row_to_suggestion(r) for r in rows]
 
     def count_pending_suggestions(self) -> int:
@@ -181,6 +222,22 @@ class LinkSuggestionStore:
             "SELECT COUNT(*) FROM link_suggestions WHERE status = 'pending'"
         ).fetchone()
         return row[0] if row else 0
+
+    def count_pending_suggestions_for_memory(self, memory_id: str) -> int:
+        """Count pending suggestions involving a specific memory."""
+        row = self._conn.execute(
+            "SELECT COUNT(*) FROM link_suggestions "
+            "WHERE (source_memory_id = ? OR target_memory_id = ?) AND status = 'pending'",
+            (memory_id, memory_id),
+        ).fetchone()
+        return row[0] if row else 0
+
+    def get_newest_suggestion_created_at(self) -> str | None:
+        """Return the created_at of the most recently inserted suggestion, or None."""
+        row = self._conn.execute(
+            "SELECT created_at FROM link_suggestions ORDER BY created_at DESC LIMIT 1"
+        ).fetchone()
+        return row[0] if row else None
 
     def update_suggestion_status(
         self, suggestion_id: str, status: str

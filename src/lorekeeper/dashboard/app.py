@@ -16,6 +16,7 @@ from lorekeeper.dashboard.routes import (
     metrics,
     reflections,
     search,
+    suggestions,
 )
 from lorekeeper.server import init_service
 
@@ -77,3 +78,4 @@ app.include_router(config.router)
 app.include_router(reflections.router)
 app.include_router(backup.router)
 app.include_router(metrics.router)
+app.include_router(suggestions.router)

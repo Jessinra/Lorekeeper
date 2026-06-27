@@ -186,6 +186,32 @@ export const CFG_FIELDS = {
 			desc: "Sentence-transformers model for semantic search",
 		},
 	],
+	sweep: [
+		{
+			key: "suggest_interval_hours",
+			env: "LORE_SUGGEST_INTERVAL_HOURS",
+			label: "Sweep interval",
+			desc: "Hours between automatic sweeps",
+			step: 1,
+			type: "int",
+		},
+		{
+			key: "suggest_high_confidence_score",
+			env: "LORE_SUGGEST_HIGH_CONFIDENCE_SCORE",
+			label: "High confidence threshold",
+			desc: "Min weighted score for 'high confidence' tag",
+			step: 0.01,
+			type: "float",
+		},
+		{
+			key: "suggest_ttl_days",
+			env: "LORE_SUGGEST_TTL_DAYS",
+			label: "Suggestion TTL",
+			desc: "Days before unactioned suggestions expire",
+			step: 1,
+			type: "int",
+		},
+	],
 };
 
 let _cfgOriginal = {};
@@ -212,6 +238,17 @@ export function onCfgChange() {
 
 document.addEventListener("app:config:change", () => onCfgChange());
 
+document.addEventListener("app:sweep:trigger", async () => {
+	try {
+		await api("POST", "/api/sweep/trigger");
+		showToast("Sweep triggered — will run within ~5 minutes");
+		// Refresh status display
+		_loadSweepStatus();
+	} catch (e) {
+		showToast(e.message, "error");
+	}
+});
+
 export async function loadConfig() {
 	let cfg;
 	try {
@@ -237,6 +274,44 @@ export async function loadConfig() {
 	document.getElementById("cfg-readonly").innerHTML = CFG_FIELDS.readonly
 		.map((f) => _cfgRow(f, cfg[f.key], true))
 		.join("");
+
+	// Sweep config section
+	document.getElementById("cfg-sweep").innerHTML = CFG_FIELDS.sweep
+		.map((f) => _cfgRow(f, cfg[f.key] ?? "", false))
+		.join("");
+
+	// Fetch sweep status asynchronously
+	_loadSweepStatus();
+}
+
+async function _loadSweepStatus() {
+	try {
+		const status = await api("GET", "/api/sweep/status");
+		const roEl = document.getElementById("cfg-sweep-readonly");
+		if (roEl) {
+			roEl.innerHTML = `
+        <div class="config-row" style="padding:6px 0;border-bottom:none">
+          <div class="config-row-info">
+            <div class="config-key" style="font-weight:400;color:var(--muted)">Last sweep</div>
+          </div>
+          <div class="config-val"><span style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted)">${status.last_run_at ? esc(`${status.last_run_at.replace("T", " ").split(".")[0]} UTC`) : "—"}</span></div>
+        </div>
+        <div class="config-row" style="padding:6px 0;border-bottom:none">
+          <div class="config-row-info">
+            <div class="config-key" style="font-weight:400;color:var(--muted)">Next sweep</div>
+          </div>
+          <div class="config-val"><span style="font-family:'SF Mono',monospace;font-size:12px;color:var(--muted)">${status.next_run_at ? esc(`${status.next_run_at.replace("T", " ").split(".")[0]} UTC`) : "—"}</span></div>
+        </div>`;
+		}
+		const actionsEl = document.getElementById("cfg-sweep-actions");
+		if (actionsEl) {
+			actionsEl.innerHTML = `
+        <button class="btn btn-primary btn-sm" data-action="sweep:trigger">Run Sweep Now</button>
+        <span style="font-size:12px;color:var(--subtle)">Non-blocking — completes within ~5 min</span>`;
+		}
+	} catch {
+		// Sweep status is a nice-to-have
+	}
 }
 
 export async function saveConfig() {
@@ -246,6 +321,7 @@ export async function saveConfig() {
 		CFG_FIELDS.quality,
 		CFG_FIELDS.limits,
 		CFG_FIELDS.auto_link,
+		CFG_FIELDS.sweep,
 	]) {
 		for (const f of group) {
 			const el = document.getElementById(`cfg-${f.key}`);

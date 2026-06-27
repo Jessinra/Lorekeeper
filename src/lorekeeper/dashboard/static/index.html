@@ -21,6 +21,7 @@
   <button class="tab"        data-tab="detail"   data-testid="tab-detail">Detail</button>
   <button class="tab"        data-tab="links"    data-testid="tab-links">Links</button>
   <button class="tab"        data-tab="query"    data-testid="tab-query">Query</button>
+  <button class="tab"        data-tab="suggestions" data-testid="tab-suggestions">Suggestions</button>
   <button class="tab"        data-tab="sessions" data-testid="tab-sessions">Sessions</button>
   <button class="tab"        data-tab="config"   data-testid="tab-config">Config</button>
   <button class="tab"        data-tab="backup"   data-testid="tab-backup">Backup</button>
@@ -147,6 +148,55 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════
+     Tab: Suggestions
+═════════════════════════════════════════════════════ -->
+<div id="tab-suggestions" class="tab-pane">
+  <div class="sug-toolbar" id="suggestions-header">
+    <span class="sug-count" id="suggestions-count">0 pending</span>
+    <label class="sug-select-all">
+      <input type="checkbox" id="suggestions-select-all" data-change="suggestions:select-all"> Select all
+    </label>
+    <span class="sug-divider"></span>
+    <button class="btn btn-sm btn-primary" id="suggestions-accept-selected" data-action="suggestions:accept-selected" disabled>Accept Selected</button>
+    <button class="btn btn-sm btn-outline" id="suggestions-reject-selected" data-action="suggestions:reject-selected" disabled>Reject Selected</button>
+    <span class="toolbar-spacer"></span>
+    <select class="sort-select" data-change="suggestions:sort">
+      <option value="score-desc">Score ↓</option>
+      <option value="score-asc">Score ↑</option>
+      <option value="newest">Newest</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" data-action="suggestions:load" title="Refresh" aria-label="Refresh suggestions">↺</button>
+  </div>
+  <div class="sug-table-wrap" id="suggestions-container">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-cb"></th>
+          <th>Source</th>
+          <th class="col-arrow"></th>
+          <th>Target</th>
+          <th class="col-score">Score</th>
+          <th class="col-actions"></th>
+        </tr>
+      </thead>
+      <tbody id="suggestions-rows"></tbody>
+    </table>
+    <div id="suggestions-empty" class="sug-empty" style="display:none">
+      <div class="sug-empty-icon">⊘</div>
+      No pending suggestions
+      <div class="sug-empty-sub">Suggestions appear here after the sweep engine runs</div>
+      <button class="btn btn-ghost btn-sm" data-action="suggestions:load" style="margin-top:12px">↺ Refresh</button>
+    </div>
+  </div>
+  <div class="sug-pagination" id="suggestions-pagination" style="display:none">
+    <span class="page-info" id="suggestions-page-info"></span>
+    <div style="flex:1"></div>
+    <button class="page-btn" id="suggestions-prev" data-action="suggestions:prev-page" disabled>‹ Prev</button>
+    <button class="page-btn" id="suggestions-next" data-action="suggestions:next-page">Next ›</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
      Tab: Sessions
 ═════════════════════════════════════════════════════ -->
 <div id="tab-sessions" class="tab-pane">
@@ -250,6 +300,12 @@
     <div class="config-section">
       <div class="config-section-title">AUTO-LINK</div>
       <div id="cfg-auto-link"></div>
+    </div>
+    <div class="config-section">
+      <div class="config-section-title">SWEEP</div>
+      <div id="cfg-sweep"></div>
+      <div id="cfg-sweep-readonly" style="margin-top:8px"></div>
+      <div id="cfg-sweep-actions" style="margin-top:12px"></div>
     </div>
     <div class="config-section">
       <div class="config-section-title">Read-only <span style="font-weight:400;text-transform:none;letter-spacing:0">(requires restart to change)</span></div>

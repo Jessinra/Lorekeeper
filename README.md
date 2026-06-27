@@ -198,15 +198,37 @@ lorekeeper-dashboard
 
 Seven tabs:
 
-| Tab          | What it does                                                             |
-| ------------ | ------------------------------------------------------------------------ |
-| **Memories** | Sortable table with live filter — title, score, confidence, usage, dates |
-| **Detail**   | Edit a memory's content, manage its links, soft-delete or hard-delete    |
-| **Links**    | Browse the knowledge graph — source → relation → target                  |
-| **Query**    | Ad-hoc semantic + keyword searches with per-result score breakdown       |
-| **Sessions** | All processed agent sessions with extracted learnings                    |
-| **Config**   | Live tuning of search weights, quality thresholds, limits                |
-| **Backup**   | Export/import memories as JSON with dedup preview                        |
+| Tab             | What it does                                                                                       |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| **Memories**    | Sortable table with live filter — title, score, confidence, usage, dates                           |
+| **Detail**      | Edit a memory's content, manage its links, soft-delete or hard-delete                              |
+| **Links**       | Browse the knowledge graph — source → relation → target                                            |
+| **Query**       | Ad-hoc semantic + keyword searches with per-result score breakdown                                 |
+| **Sessions**    | All processed agent sessions with extracted learnings                                              |
+| **Config**      | Live tuning of search weights, quality thresholds, limits                                          |
+| **Backup**      | Export/import memories as JSON with dedup preview                                                  |
+| **Suggestions** | Review AI-generated link candidates from the sweep engine — accept or reject one-by-one or in bulk |
+
+### Suggestions Tab
+
+The **Suggestions** tab surfaces link candidates generated automatically by the background sweep engine. Each candidate is a pair of memories the engine considers related, scored by cosine similarity, BM25 keyword overlap, entity co-occurrence, and temporal proximity.
+
+**Workflow:**
+
+1. The sweep engine runs on a configurable interval (`LORE_SUGGEST_INTERVAL_HOURS`, default `12`).
+2. Candidates appear in the Suggestions tab, sorted by score (highest first).
+3. Click **✓** (or select multiple rows + **Accept Selected**) to create a permanent link between the two memories.
+4. Click **✗** (or **Reject Selected**) to dismiss — rejected pairs are never re-surfaced by future sweeps.
+5. Use **Trigger Sweep** on the Config tab to run the sweep immediately instead of waiting for the interval.
+
+**Sweep configuration** (via `LORE_`-prefixed env vars or the Config tab):
+
+| Setting                       | Default | Description                                   |
+| ----------------------------- | ------- | --------------------------------------------- |
+| `LORE_SUGGEST_INTERVAL_HOURS` | `12`    | How often the sweep runs (hours)              |
+| `LORE_SUGGEST_MIN_SCORE`      | `0.55`  | Minimum weighted score to surface a candidate |
+| `LORE_SUGGEST_MAX_CANDIDATES` | `500`   | Maximum candidates per sweep run              |
+| `LORE_SUGGEST_TTL_DAYS`       | `30`    | Days before unreviewed suggestions are pruned |
 
 ![Lorekeeper Query tab — hybrid search with scores](docs/assets/dashboard-query-tab.png)
 
