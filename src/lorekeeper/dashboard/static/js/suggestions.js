@@ -251,7 +251,8 @@ async function _batchAction(action) {
 			suggestion_ids: rows.map((r) => r.id),
 			action,
 		});
-		const successCount = action === "accept" ? result.accepted : result.rejected;
+		const successCount =
+			action === "accept" ? result.accepted : result.rejected;
 		// Only remove rows that actually succeeded
 		const okayIds = new Set(
 			(result.results || [])
