@@ -8,7 +8,7 @@ sprint: ~
 rice_score: ~
 filed_by: Diana (Jason)
 filed_date: 2026-06-30
-github_issue: 0
+github_issue: 251
 ---
 
 # [LKPR-103] Codebase cleanup — remove dead ABC, extract handlers, consolidate tests
