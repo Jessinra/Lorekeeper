@@ -259,6 +259,13 @@ class LinkSuggestionStore:
         ).fetchall()
         return {(r["source_memory_id"], r["target_memory_id"]) for r in rows}
 
+    def pending_pairs(self) -> set[tuple[str, str]]:
+        rows = self._conn.execute(
+            "SELECT source_memory_id, target_memory_id FROM link_suggestions "
+            "WHERE status = 'pending'"
+        ).fetchall()
+        return {(r["source_memory_id"], r["target_memory_id"]) for r in rows}
+
     def prune_expired(self, ttl_days: int) -> int:
         cutoff = datetime.now(UTC) - timedelta(days=ttl_days)
         cursor = self._conn.execute(

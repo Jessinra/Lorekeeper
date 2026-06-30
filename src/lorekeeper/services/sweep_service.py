@@ -88,8 +88,9 @@ class SweepService:
         )
         all_mems = {r["id"]: r for r in all_rows}
 
-        # Pre-load rejection and link sets
+        # Pre-load rejection, pending, and link sets
         rejected = self._suggestion_store.rejected_pairs()
+        pending = self._suggestion_store.pending_pairs()
         all_links = self._link_store.all_links()
         linked_pairs: set[tuple[str, str]] = set()
         for lnk in all_links:
@@ -103,6 +104,7 @@ class SweepService:
             "high_confidence": 0,
             "standard": 0,
             "skipped_rejected": 0,
+            "skipped_pending": 0,
             "skipped_linked": 0,
             "expired_pruned": 0,
         }
@@ -123,11 +125,18 @@ class SweepService:
                     continue
 
                 pair = (c.source_lore_id, c.target_lore_id)
+                # Normalize to canonical order for DB pair matching
+                canonical = self._suggestion_store._canonical(
+                    c.source_lore_id, c.target_lore_id
+                )
                 if pair in linked_pairs:
                     stats["skipped_linked"] += 1
                     continue
-                if pair in rejected:
+                if canonical in rejected:
                     stats["skipped_rejected"] += 1
+                    continue
+                if canonical in pending:
+                    stats["skipped_pending"] += 1
                     continue
 
                 confidence = (
