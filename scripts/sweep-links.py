@@ -15,8 +15,8 @@ from pathlib import Path
 from lorekeeper.config import Settings
 from lorekeeper.models import Memory
 from lorekeeper.services.database import Database
-from lorekeeper.services.engine_factory import build_engine
 from lorekeeper.services.keyword_index import KeywordIndex
+from lorekeeper.services.lancedb_engine import LanceDBEngine
 from lorekeeper.services.link_candidate import LinkCandidateGenerator
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_store import MemoryStore
@@ -51,7 +51,7 @@ def main() -> int:
     print(f"Dry run:  {args.dry_run}")
 
     # Build engine via factory (handles abstract class)
-    engine = build_engine(settings.lancedb_path, settings.embedding_model)
+    engine = LanceDBEngine(settings.lancedb_path, settings.embedding_model)
     engine.probe_score_scale()
 
     # Build stores

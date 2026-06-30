@@ -18,8 +18,8 @@ from lorekeeper.services.feedback import (
     should_soft_delete,
 )
 from lorekeeper.services.keyword_index import KeywordIndex
+from lorekeeper.services.lancedb_engine import LanceDBEngine
 from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.memory_engine import MemoryEngine
 from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.reflection_store import ReflectionStore
@@ -65,7 +65,7 @@ class MemoryService:
 
     def __init__(
         self,
-        engine: MemoryEngine,
+        engine: LanceDBEngine,
         memories: MemoryStore,
         links: LinkStore,
         reflections: ReflectionStore,
