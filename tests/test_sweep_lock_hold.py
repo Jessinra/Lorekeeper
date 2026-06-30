@@ -276,14 +276,20 @@ def test_sweep_service_created_separately_in_server():
                 "server.py must pass the LinkSuggestionStore to SweepService"
             )
 
-            # Must NOT pass suggestions to MemoryService
-            assert "MemoryService(" in body_text
-            for line in source_lines[body_start:body_end]:
-                if "MemoryService(" in line:
-                    assert "suggestions" not in line, (
-                        "MemoryService constructor call must not receive "
-                        "the suggestions store"
-                    )
+            # Must NOT pass suggestions to MemoryService — use AST to check
+            memory_calls = [
+                call
+                for call in ast.walk(node)
+                if isinstance(call, ast.Call)
+                and isinstance(call.func, ast.Name)
+                and call.func.id == "MemoryService"
+            ]
+            assert memory_calls, "Expected init_service to construct MemoryService"
+            for call in memory_calls:
+                assert all(kw.arg != "suggestions" for kw in call.keywords), (
+                    "MemoryService constructor call must not receive "
+                    "the suggestions store"
+                )
             return
 
     pytest.fail("Could not find init_service function in server.py")
