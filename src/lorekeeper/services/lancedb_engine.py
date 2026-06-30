@@ -4,13 +4,11 @@ from typing import Any, cast
 import numpy as np
 import structlog
 
-from lorekeeper.services.memory_engine import MemoryEngine
-
 log = structlog.get_logger()
 
 
-class LanceDBEngine(MemoryEngine):
-    """MemoryEngine-compatible backend using LanceDB directly.
+class LanceDBEngine:
+    """LanceDB vector store backend — sole vector backend for Lorekeeper.
 
     Uses sentence-transformers for embeddings and LanceDB for vector storage.
     No Mem0, no Chroma — clean concurrent multi-process access.

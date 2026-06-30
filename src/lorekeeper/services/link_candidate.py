@@ -13,8 +13,8 @@ import structlog
 if TYPE_CHECKING:
     from lorekeeper.config import Settings
     from lorekeeper.services.keyword_index import KeywordIndex
+    from lorekeeper.services.lancedb_engine import LanceDBEngine
     from lorekeeper.services.link_store import LinkStore
-    from lorekeeper.services.memory_engine import MemoryEngine
     from lorekeeper.services.memory_store import MemoryStore
 
 log = structlog.get_logger()
@@ -34,7 +34,7 @@ class LinkCandidate:
 class CosineScorer:
     """Cosine similarity using stored embeddings from the vector engine."""
 
-    def __init__(self, engine: MemoryEngine) -> None:
+    def __init__(self, engine: LanceDBEngine) -> None:
         self._engine = engine
 
     def score_batch(self, source_id: str, candidate_ids: list[str]) -> dict[str, float]:
@@ -168,7 +168,7 @@ class LinkCandidateGenerator:
 
     def __init__(
         self,
-        engine: MemoryEngine,
+        engine: LanceDBEngine,
         memory_store: MemoryStore,
         link_store: LinkStore,
         keyword_index: KeywordIndex,

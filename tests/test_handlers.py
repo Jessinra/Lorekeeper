@@ -5,12 +5,20 @@ Validates that input validation happens early — before reaching the orchestrat
 import pytest
 
 from lorekeeper.config import Settings
-from lorekeeper.server import (
-    _handle_get_suggestions,
-    _handle_insert,
-    _handle_recommend_links,
-    _handle_review_suggestion,
-    _handle_search,
+from lorekeeper.handlers import (
+    handle_get_suggestions as _handle_get_suggestions,
+)
+from lorekeeper.handlers import (
+    handle_insert as _handle_insert,
+)
+from lorekeeper.handlers import (
+    handle_recommend_links as _handle_recommend_links,
+)
+from lorekeeper.handlers import (
+    handle_review_suggestion as _handle_review_suggestion,
+)
+from lorekeeper.handlers import (
+    handle_search as _handle_search,
 )
 from lorekeeper.services.keyword_index import KeywordIndex
 from tests._helpers import build_service, build_stores
