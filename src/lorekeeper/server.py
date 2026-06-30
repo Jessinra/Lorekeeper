@@ -165,8 +165,6 @@ def init_service(settings: Settings | None = None) -> MemoryService:
 
 
 # ── MCP tool registration ────────────────────────────────────────────────────
-# MCP tool registration
-# ---------------------------------------------------------------------------
 
 @mcp.tool(name="lore_search")
 async def lore_search(

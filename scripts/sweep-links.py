@@ -50,7 +50,7 @@ def main() -> int:
     print(f"Data dir: {data_dir}")
     print(f"Dry run:  {args.dry_run}")
 
-    # Build engine via factory (handles abstract class)
+    # Build engine directly — no factory needed after LKPR-103 (ABC removed)
     engine = LanceDBEngine(settings.lancedb_path, settings.embedding_model)
     engine.probe_score_scale()
 

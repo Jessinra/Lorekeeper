@@ -140,6 +140,9 @@ def test_sweep_still_writes_suggestions(tmp_path: Path) -> None:
     assert stats["candidates_generated"] == 1
     pending = stores.suggestions.get_pending_suggestions()
     assert len(pending) == 1
+    assert {pending[0].source_memory_id, pending[0].target_memory_id} == {"a", "b"}
+
+
 def test_sweep_links_script_dry_run(tmp_path):
     """scripts/sweep-links.py --dry-run must complete without error.
 
