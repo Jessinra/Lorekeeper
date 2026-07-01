@@ -120,7 +120,7 @@ def handle_review_suggestion(
                 if rel_type not in RELATION_TYPES:
                     rel_type = "references"
 
-                # insert_link + update_suggestion_status are atomic per item
+# insert_link + update_suggestion_status are atomic per item
                 # via SuggestionService.accept_one's Database.transaction()
                 # SAVEPOINT. If update_suggestion_status fails after the
                 # link row is written, the rollback prevents a committed
