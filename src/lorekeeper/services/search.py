@@ -3,8 +3,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
+from lorekeeper.domains.link.models import MemoryLink
+from lorekeeper.domains.memory.models import Memory
 from lorekeeper.infra.settings import Settings
-from lorekeeper.models import Memory, MemoryLink
 
 # Valid sort_by values for lore_search.
 VALID_SORT_BY: frozenset[str] = frozenset({"relevance", "recent", "frequent"})

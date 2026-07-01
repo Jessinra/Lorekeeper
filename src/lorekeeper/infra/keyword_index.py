@@ -1,6 +1,6 @@
 from rank_bm25 import BM25Okapi
 
-from lorekeeper.models import Memory
+from lorekeeper.domains.memory.models import Memory
 
 
 def _tokenize(text: str) -> list[str]:

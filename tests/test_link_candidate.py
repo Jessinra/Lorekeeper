@@ -61,7 +61,7 @@ def _insert_memory(service, title: str, content: str) -> str:
 
 def _rebuild_kw(service) -> None:
     """Populate the keyword index with current memories."""
-    from lorekeeper.models import Memory
+    from lorekeeper.domains.memory.models import Memory
     all_rows = service.memories.all_memory_rows()
     mems = []
     for r in all_rows:
@@ -457,9 +457,9 @@ def test_recommend_links_does_not_surface_foreign_namespace_candidates(tmp_path)
     scoped to 'agent-a'. recommend_links on the agent-a memory must return no
     candidates because the only other memory is owned by 'agent-b'.
     """
+    from lorekeeper.domains.link.repository import LinkStore
+    from lorekeeper.domains.memory.repository import MemoryStore
     from lorekeeper.infra.database import Database
-    from lorekeeper.services.link_store import LinkStore
-    from lorekeeper.services.memory_store import MemoryStore
 
     db = Database(tmp_path / "ns.db")
     db.migrate()
@@ -519,9 +519,9 @@ def test_generator_excludes_soft_deleted_candidates(tmp_path):
     import uuid
     from datetime import UTC, datetime
 
+    from lorekeeper.domains.link.repository import LinkStore
+    from lorekeeper.domains.memory.repository import MemoryStore
     from lorekeeper.infra.database import Database
-    from lorekeeper.services.link_store import LinkStore
-    from lorekeeper.services.memory_store import MemoryStore
 
     db = Database(tmp_path / "sd.db")
     db.migrate()
@@ -580,9 +580,9 @@ def test_generator_candidates_sorted_by_score_descending(tmp_path):
     import uuid
     from datetime import UTC, datetime
 
+    from lorekeeper.domains.link.repository import LinkStore
+    from lorekeeper.domains.memory.repository import MemoryStore
     from lorekeeper.infra.database import Database
-    from lorekeeper.services.link_store import LinkStore
-    from lorekeeper.services.memory_store import MemoryStore
 
     db = Database(tmp_path / "sort.db")
     db.migrate()

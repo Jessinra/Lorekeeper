@@ -14,11 +14,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from lorekeeper.models import Memory, MemoryLink
+from lorekeeper.domains.link.models import MemoryLink
+from lorekeeper.domains.memory.models import Memory
 from lorekeeper.services.search import SearchResult
 
 if TYPE_CHECKING:
-    from lorekeeper.models import LinkSuggestion
+    from lorekeeper.domains.suggestion.models import LinkSuggestion
     from lorekeeper.services.link_candidate import LinkCandidate
 
 

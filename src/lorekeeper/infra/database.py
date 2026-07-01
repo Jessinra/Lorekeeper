@@ -26,7 +26,7 @@ from pathlib import Path
 
 import structlog
 
-from lorekeeper.models import RELATION_TYPES
+from lorekeeper.domains.link.models import RELATION_TYPES
 
 log = structlog.get_logger()
 
