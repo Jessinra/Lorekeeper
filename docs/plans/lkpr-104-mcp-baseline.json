@@ -1,0 +1,474 @@
+{
+  "lore_forget": {
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "memory_ids": {
+          "description": "List of lore_ids to forget. Must not be empty.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "reason": {
+          "default": "unspecified",
+          "description": "Why this memory is being forgotten. One of:\n``\"duplicate\"``, ``\"hallucinated\"``, ``\"outdated\"``,\n``\"expired\"``, ``\"unspecified\"``.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "memory_ids"
+      ],
+      "type": "object"
+    }
+  },
+  "lore_get_suggestions": {
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "default": 20,
+          "description": "Max suggestions to return (default 20, capped at 100).",
+          "type": "integer"
+        },
+        "min_score": {
+          "default": 0.0,
+          "description": "Minimum weighted_score filter, 0.0-1.0 (default 0.0 = all).",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "lore_insert": {
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "force": {
+          "default": false,
+          "type": "boolean"
+        },
+        "links": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "memories": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    }
+  },
+  "lore_processed_sessions": {
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    }
+  },
+  "lore_recommend_links": {
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "lore_id": {
+          "type": "string"
+        },
+        "top_k": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "lore_id"
+      ],
+      "type": "object"
+    }
+  },
+  "lore_reflect": {
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "auto_insert": {
+          "default": true,
+          "description": "When True (default), automatically inserts each item in\n``factual_discoveries`` (score 7.0) and ``lessons_learnt`` (score 8.0)\nas standalone memories. Duplicate-guarded. Returns created IDs in\n``memories_created``.",
+          "type": "boolean"
+        },
+        "decisions": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Key decisions made, with rationale."
+        },
+        "factual_discoveries": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "New facts to record \u2014 stored as bullet text in the\nreflection. Also auto-inserted as memories when ``auto_insert=True``."
+        },
+        "good_patterns": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Patterns that worked well and should be repeated."
+        },
+        "lessons_learnt": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "List of lessons to propagate to future sessions."
+        },
+        "memory_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "IDs of existing memories this reflection relates to."
+        },
+        "session_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISO date string (e.g. ``\"2026-06-02\"``). Defaults to today."
+        },
+        "session_id": {
+          "description": "Unique session identifier (required).",
+          "type": "string"
+        },
+        "summary": {
+          "description": "Short summary of what happened in the session (required).",
+          "type": "string"
+        },
+        "task_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional category for the session (e.g. ``\"build\"``,\n``\"debug\"``, ``\"review\"``, ``\"design\"``)."
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Domain or topic area (e.g. ``\"lore_search refactor\"``)."
+        },
+        "user_profile_updates": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Updates about the user's preferences or context."
+        },
+        "what_was_done": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Longer narrative of the work completed."
+        }
+      },
+      "required": [
+        "session_id",
+        "summary"
+      ],
+      "type": "object"
+    }
+  },
+  "lore_remember": {
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "source_type": {
+          "default": "observed",
+          "description": "Provenance tag for this memory. Defaults to ``'observed'``\n(extracted from conversation). Other values: ``'inferred'``,\n``'user_stated'``, ``'consolidated'``, ``'injected'``.",
+          "type": "string"
+        },
+        "thought": {
+          "description": "The fact or observation to store verbatim.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "thought"
+      ],
+      "type": "object"
+    }
+  },
+  "lore_review_suggestion": {
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "description": "Either ``'accept'`` or ``'reject'``.",
+          "type": "string"
+        },
+        "suggestion_ids": {
+          "description": "List of suggestion UUIDs to process (one or many).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "suggestion_ids",
+        "action"
+      ],
+      "type": "object"
+    }
+  },
+  "lore_search": {
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "created_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISO 8601 UTC timestamp. Only return memories created on\nor after this time (e.g. ``'2026-06-04T00:00:00'``). UTC only;\nnon-UTC offsets raise a validation error."
+        },
+        "format": {
+          "default": "full",
+          "description": "``'full'`` (default) returns complete memory objects with\nrelevance scores. ``'title'`` returns compact ``{id, title, score}``\ndicts \u2014 lower token cost for listing before a targeted fetch.",
+          "type": "string"
+        },
+        "ids": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When set, returns these specific lore_ids directly from SQL,\nbypassing the search pipeline. Silently skips unknown IDs. Pair\nwith ``format='title'`` for a two-step list-then-fetch workflow.\nMax 50 IDs (configurable via ``max_search_ids``)."
+        },
+        "include_deleted": {
+          "default": false,
+          "description": "Include soft-deleted memories (default False).",
+          "type": "boolean"
+        },
+        "include_links": {
+          "default": true,
+          "description": "Attach memory links to results (default True; forced off\nin ``format='title'`` mode since links add tokens with no gain).",
+          "type": "boolean"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Max results to return (default from settings)."
+        },
+        "min_score": {
+          "default": 0.1,
+          "description": "Minimum combined_score threshold (default 0.1).",
+          "type": "number"
+        },
+        "query": {
+          "default": "",
+          "description": "Search text. Required unless ``ids`` is set.",
+          "type": "string"
+        },
+        "refine_from": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Restrict search candidates to these lore_ids (configurable\ncap, default 200 via ``LORE_MAX_REFINE_FROM_IDS``)."
+        },
+        "sort_by": {
+          "default": "relevance",
+          "description": "``'relevance'`` (default) ranks by hybrid score when the search\npipeline runs. In ``ids`` lookup mode there is no scoring, so\n``'relevance'`` preserves the caller-provided ``ids`` order instead.\n``'recent'`` sorts by ``updated_at DESC``. ``'frequent'`` sorts by\n``usage_count DESC``. Composes with timestamp filters.",
+          "type": "string"
+        },
+        "source_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional provenance filter. When set, only return memories\nwith this exact source_type. One of: ``observed``, ``inferred``,\n``user_stated``, ``consolidated``, ``injected``, ``unknown``."
+        },
+        "updated_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISO 8601 UTC timestamp. Only return memories updated on\nor after this time. Composes with ``created_after`` and all other\nfilters."
+        }
+      },
+      "type": "object"
+    }
+  },
+  "lore_update": {
+    "input_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "link_feedback": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "memory_feedback": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    }
+  }
+}
