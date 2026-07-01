@@ -4,8 +4,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from lorekeeper.domains.link.models import RelationType
-from lorekeeper.serializers import serialize_memory_link
 from lorekeeper.server import get_service
+from lorekeeper.shared.serializers import serialize_memory_link
 
 router = APIRouter()
 

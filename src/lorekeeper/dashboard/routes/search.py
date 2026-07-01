@@ -3,8 +3,8 @@ from typing import Any
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from lorekeeper.serializers import serialize_search_result
 from lorekeeper.server import get_service
+from lorekeeper.shared.serializers import serialize_search_result
 
 router = APIRouter()
 

@@ -10,7 +10,14 @@ import structlog
 
 from lorekeeper.domains.link.models import RELATION_TYPES, TYPE_MIGRATION_MAP, MemoryLink
 from lorekeeper.domains.link.repository import LinkStore
+from lorekeeper.domains.memory.dedup import is_duplicate
+from lorekeeper.domains.memory.feedback import (
+    apply_score_delta,
+    compute_running_confidence,
+    should_soft_delete,
+)
 from lorekeeper.domains.memory.models import Memory
+from lorekeeper.domains.memory.ranking import SearchResult, parse_iso_utc, rank_results
 from lorekeeper.domains.memory.repository import MemoryStore
 from lorekeeper.domains.reflection.repository import ReflectionStore
 from lorekeeper.infra.keyword_index import KeywordIndex
@@ -18,16 +25,9 @@ from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
 from lorekeeper.platform.config.repository import ConfigStore
 from lorekeeper.platform.metrics.repository import MetricsStore
-from lorekeeper.services.dedup import is_duplicate
-from lorekeeper.services.feedback import (
-    apply_score_delta,
-    compute_running_confidence,
-    should_soft_delete,
-)
-from lorekeeper.services.search import SearchResult, parse_iso_utc, rank_results
 
 if TYPE_CHECKING:
-    from lorekeeper.services.link_candidate import LinkCandidate, LinkCandidateGenerator
+    from lorekeeper.domains.suggestion.candidate import LinkCandidate, LinkCandidateGenerator
 
 log = structlog.get_logger()
 
@@ -99,7 +99,7 @@ class MemoryService:
         if link_candidate_generator is not None:
             self._link_candidate_generator = link_candidate_generator
         else:
-            from lorekeeper.services.link_candidate import LinkCandidateGenerator
+            from lorekeeper.domains.suggestion.candidate import LinkCandidateGenerator
 
             self._link_candidate_generator = LinkCandidateGenerator(
                 engine=self._engine,
@@ -1004,7 +1004,7 @@ class MemoryService:
             top_k: Override max candidates (default: settings.link_top_m).
         """
         self._increment_metric("lore_recommend_links")
-        from lorekeeper.services.link_candidate import LinkCandidateGenerator
+        from lorekeeper.domains.suggestion.candidate import LinkCandidateGenerator
 
         effective = self.settings
         if top_k is not None:

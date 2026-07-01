@@ -2,8 +2,8 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
-from lorekeeper.serializers import serialize_reflection, serialize_session
 from lorekeeper.server import get_service
+from lorekeeper.shared.serializers import serialize_reflection, serialize_session
 
 router = APIRouter()
 

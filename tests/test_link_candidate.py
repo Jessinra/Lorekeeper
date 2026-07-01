@@ -7,9 +7,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from lorekeeper.infra.keyword_index import KeywordIndex
-from lorekeeper.infra.settings import Settings
-from lorekeeper.services.link_candidate import (
+from lorekeeper.domains.suggestion.candidate import (
     BM25Scorer,
     CosineScorer,
     EntityOverlapScorer,
@@ -17,6 +15,8 @@ from lorekeeper.services.link_candidate import (
     LinkCandidateGenerator,
     TemporalProximityScorer,
 )
+from lorekeeper.infra.keyword_index import KeywordIndex
+from lorekeeper.infra.settings import Settings
 from tests._helpers import build_service, build_stores
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -373,7 +373,7 @@ def test_generator_logs_warning_on_missing_source(tmp_path):
     settings = Settings()
     eng = FakeVectorEngine()
     gen = LinkCandidateGenerator(eng, stores.memories, stores.links, kw, settings)  # type: ignore[arg-type]
-    with patch("lorekeeper.services.link_candidate.log.warning") as mock_warn:
+    with patch("lorekeeper.domains.suggestion.candidate.log.warning") as mock_warn:
         gen.generate("nope")
         assert mock_warn.called
         args, _ = mock_warn.call_args

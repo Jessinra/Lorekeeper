@@ -1,7 +1,7 @@
 import pytest
 
+from lorekeeper.domains.memory.dedup import dedup_score, is_duplicate
 from lorekeeper.infra.settings import Settings
-from lorekeeper.services.dedup import dedup_score, is_duplicate
 
 S = Settings()
 
