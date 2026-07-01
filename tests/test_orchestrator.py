@@ -1072,7 +1072,7 @@ def test_ids_sort_by_recent_malformed_updated_at_does_not_crash(svc):
 class TestSweepLinks:
     """Sweep algorithm tests (LKPR-99) — uses SweepService + FakeEngine + real SQLite."""
 
-    from lorekeeper.services.sweep_service import SweepService
+    from lorekeeper.domains.suggestion.sweep import SweepService
 
     def _make_sweeper(self, service):
         from lorekeeper.domains.suggestion.repository import LinkSuggestionStore

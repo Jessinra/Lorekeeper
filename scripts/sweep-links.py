@@ -15,14 +15,14 @@ from pathlib import Path
 from lorekeeper.domains.link.repository import LinkStore
 from lorekeeper.domains.memory.models import Memory
 from lorekeeper.domains.memory.repository import MemoryStore
+from lorekeeper.domains.suggestion.candidate import LinkCandidateGenerator
 from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
+from lorekeeper.domains.suggestion.sweep import SweepService
 from lorekeeper.infra.database import Database
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
 from lorekeeper.platform.metrics.repository import MetricsStore
-from lorekeeper.services.link_candidate import LinkCandidateGenerator
-from lorekeeper.services.sweep_service import SweepService
 
 
 def main() -> int:

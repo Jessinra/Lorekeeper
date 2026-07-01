@@ -22,7 +22,8 @@ from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
 from lorekeeper.platform.config.repository import ConfigStore
 from lorekeeper.platform.metrics.repository import MetricsStore
-from lorekeeper.services.encouragement import (
+from lorekeeper.services.orchestrator import MemoryService
+from lorekeeper.shared.encouragement import (
     for_forget,
     for_insert,
     for_reflect,
@@ -30,7 +31,6 @@ from lorekeeper.services.encouragement import (
     for_update,
     set_rate,
 )
-from lorekeeper.services.orchestrator import MemoryService
 
 log = structlog.get_logger()
 mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
@@ -91,7 +91,7 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     )
 
     # LKPR-58: instantiate LinkCandidateGenerator once so spaCy model is only loaded once.
-    from lorekeeper.services.link_candidate import LinkCandidateGenerator
+    from lorekeeper.domains.suggestion.candidate import LinkCandidateGenerator
 
     link_candidate_generator = LinkCandidateGenerator(
         engine=engine,
@@ -124,8 +124,8 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     # transactions (Python's sqlite3 provides zero thread synchronisation even
     # with check_same_thread=False).  WAL mode handles concurrent access at
     # the database-file level — each thread gets its own connection.
+    from lorekeeper.domains.suggestion.sweep import SweepService
     from lorekeeper.infra.scheduler import PeriodicJob
-    from lorekeeper.services.sweep_service import SweepService
 
     sweep_db = Database(s.sqlite_path, busy_timeout_ms=s.busy_timeout_ms)
     sweep_memories = MemoryStore(sweep_db)
@@ -133,7 +133,7 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     sweep_suggestions = LinkSuggestionStore(sweep_db)
     sweep_metrics = MetricsStore(sweep_db)
 
-    from lorekeeper.services.link_candidate import LinkCandidateGenerator
+    from lorekeeper.domains.suggestion.candidate import LinkCandidateGenerator
 
     sweep_generator = LinkCandidateGenerator(
         engine=engine,

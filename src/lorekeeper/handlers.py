@@ -16,13 +16,13 @@ import structlog
 
 from lorekeeper.domains.link.models import RELATION_TYPES
 from lorekeeper.domains.memory.models import SOURCE_TYPES, WRITE_SOURCE_TYPES
-from lorekeeper.serializers import (
+from lorekeeper.domains.memory.ranking import VALID_SORT_BY, parse_filter_dt
+from lorekeeper.shared.serializers import (
     serialize_link_candidate,
     serialize_search_result,
     serialize_search_result_title,
     serialize_suggestion,
 )
-from lorekeeper.services.search import VALID_SORT_BY, parse_filter_dt
 
 if TYPE_CHECKING:
     from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
