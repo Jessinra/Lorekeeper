@@ -3,8 +3,8 @@ Tests for LKPR-60 (_all_memories cache) and LKPR-54 (lore_forget).
 """
 import pytest
 
-from lorekeeper.config import Settings
-from lorekeeper.services.keyword_index import KeywordIndex
+from lorekeeper.infra.keyword_index import KeywordIndex
+from lorekeeper.infra.settings import Settings
 from tests._helpers import build_service, build_stores
 
 

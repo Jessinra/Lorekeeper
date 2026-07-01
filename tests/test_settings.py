@@ -1,4 +1,4 @@
-from lorekeeper.config import Settings
+from lorekeeper.infra.settings import Settings
 
 
 def test_namespace_defaults_to_shared():

@@ -11,8 +11,8 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from lorekeeper.config import Settings
-from lorekeeper.services.keyword_index import KeywordIndex
+from lorekeeper.infra.keyword_index import KeywordIndex
+from lorekeeper.infra.settings import Settings
 from lorekeeper.services.orchestrator import MemoryService
 from tests._helpers import build_service, build_stores
 

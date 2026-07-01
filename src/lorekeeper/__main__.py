@@ -2,8 +2,8 @@ import argparse
 import importlib.metadata
 import sys
 
-from lorekeeper.config import Settings
-from lorekeeper.logging_setup import configure_logging
+from lorekeeper.infra.logging_setup import configure_logging
+from lorekeeper.infra.settings import Settings
 from lorekeeper.server import init_service, mcp
 
 

@@ -4,7 +4,6 @@ import structlog
 from fastmcp import FastMCP
 from pydantic import ValidationError
 
-from lorekeeper.config import Settings
 from lorekeeper.handlers import (
     handle_get_suggestions,
     handle_insert,
@@ -12,9 +11,12 @@ from lorekeeper.handlers import (
     handle_review_suggestion,
     handle_search,
 )
+from lorekeeper.infra.database import Database
+from lorekeeper.infra.keyword_index import KeywordIndex
+from lorekeeper.infra.search_engine import LanceDBEngine
+from lorekeeper.infra.settings import Settings
 from lorekeeper.models import WRITE_SOURCE_TYPES
 from lorekeeper.services.config_store import ConfigStore
-from lorekeeper.services.database import Database
 from lorekeeper.services.encouragement import (
     for_forget,
     for_insert,
@@ -23,8 +25,6 @@ from lorekeeper.services.encouragement import (
     for_update,
     set_rate,
 )
-from lorekeeper.services.keyword_index import KeywordIndex
-from lorekeeper.services.lancedb_engine import LanceDBEngine
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore
@@ -124,7 +124,7 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     # transactions (Python's sqlite3 provides zero thread synchronisation even
     # with check_same_thread=False).  WAL mode handles concurrent access at
     # the database-file level — each thread gets its own connection.
-    from lorekeeper.scheduler import PeriodicJob
+    from lorekeeper.infra.scheduler import PeriodicJob
     from lorekeeper.services.sweep_service import SweepService
 
     sweep_db = Database(s.sqlite_path, busy_timeout_ms=s.busy_timeout_ms)

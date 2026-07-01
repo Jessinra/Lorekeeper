@@ -1,6 +1,6 @@
 import pytest
 
-from lorekeeper.config import Settings
+from lorekeeper.infra.settings import Settings
 from lorekeeper.services.feedback import (
     apply_score_delta,
     compute_running_confidence,

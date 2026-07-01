@@ -17,8 +17,8 @@ from datetime import UTC, datetime
 
 import structlog
 
+from lorekeeper.infra.database import Database
 from lorekeeper.models import TYPE_MIGRATION_MAP, MemoryLink
-from lorekeeper.services.database import Database
 
 log = structlog.get_logger()
 

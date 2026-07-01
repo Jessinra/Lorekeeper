@@ -5,7 +5,7 @@ Each job persists its next-run timestamp in ``config_overrides`` under the key
 
 Adding a new periodic job in ``server.py``::
 
-    from lorekeeper.scheduler import PeriodicJob
+    from lorekeeper.infra.scheduler import PeriodicJob
 
     PeriodicJob(config, job_fn, "sweep",
                 interval_hours=12, poll_seconds=300).start()

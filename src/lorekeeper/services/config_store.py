@@ -9,7 +9,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from lorekeeper.services.database import Database
+from lorekeeper.infra.database import Database
 
 
 def _now() -> str:

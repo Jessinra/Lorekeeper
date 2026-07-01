@@ -1,6 +1,6 @@
 import pytest
 
-from lorekeeper.config import Settings
+from lorekeeper.infra.settings import Settings
 from lorekeeper.services.dedup import dedup_score, is_duplicate
 
 S = Settings()

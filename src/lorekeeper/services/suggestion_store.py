@@ -11,8 +11,8 @@ import sqlite3
 import uuid
 from datetime import UTC, datetime, timedelta
 
+from lorekeeper.infra.database import Database
 from lorekeeper.models import LinkSuggestion
-from lorekeeper.services.database import Database
 
 
 def _now() -> str:

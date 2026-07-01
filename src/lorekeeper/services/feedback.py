@@ -1,4 +1,4 @@
-from lorekeeper.config import Settings
+from lorekeeper.infra.settings import Settings
 
 
 def compute_running_confidence(

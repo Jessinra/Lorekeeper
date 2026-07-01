@@ -10,7 +10,7 @@ from __future__ import annotations
 import sqlite3
 from typing import cast
 
-from lorekeeper.services.database import Database
+from lorekeeper.infra.database import Database
 
 _SESSION_UPSERT_SQL = """
     INSERT INTO sessions

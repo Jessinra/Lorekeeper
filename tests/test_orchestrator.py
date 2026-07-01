@@ -4,8 +4,8 @@ Uses real SQLite (via the focused stores from build_stores()) and a fake MemoryE
 """
 import pytest
 
-from lorekeeper.config import Settings
-from lorekeeper.services.keyword_index import KeywordIndex
+from lorekeeper.infra.keyword_index import KeywordIndex
+from lorekeeper.infra.settings import Settings
 from lorekeeper.services.orchestrator import MemoryService
 from tests._helpers import build_service, build_stores
 

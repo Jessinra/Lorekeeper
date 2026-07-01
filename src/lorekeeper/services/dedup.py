@@ -1,4 +1,4 @@
-from lorekeeper.config import Settings
+from lorekeeper.infra.settings import Settings
 
 
 def dedup_score(semantic: float, keyword: float) -> float:

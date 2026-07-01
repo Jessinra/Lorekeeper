@@ -2,7 +2,7 @@
 
 import sqlite3
 
-from lorekeeper.services.database import (
+from lorekeeper.infra.database import (
     MIGRATIONS,
     Database,
     _migration_1_bootstrap,
@@ -395,7 +395,7 @@ def test_migrate_rolls_back_on_failure_and_does_not_record_version(tmp_path):
     """
     import pytest
 
-    from lorekeeper.services import database as db_module
+    from lorekeeper.infra import database as db_module
 
     db = Database(tmp_path / "rollback.db")
     db.migrate()  # apply v1 + v2 + v3 + v4 + v5 baseline

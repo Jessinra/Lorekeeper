@@ -7,8 +7,8 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from lorekeeper.config import Settings
-from lorekeeper.services.keyword_index import KeywordIndex
+from lorekeeper.infra.keyword_index import KeywordIndex
+from lorekeeper.infra.settings import Settings
 from lorekeeper.services.link_candidate import (
     BM25Scorer,
     CosineScorer,
@@ -457,7 +457,7 @@ def test_recommend_links_does_not_surface_foreign_namespace_candidates(tmp_path)
     scoped to 'agent-a'. recommend_links on the agent-a memory must return no
     candidates because the only other memory is owned by 'agent-b'.
     """
-    from lorekeeper.services.database import Database
+    from lorekeeper.infra.database import Database
     from lorekeeper.services.link_store import LinkStore
     from lorekeeper.services.memory_store import MemoryStore
 
@@ -519,7 +519,7 @@ def test_generator_excludes_soft_deleted_candidates(tmp_path):
     import uuid
     from datetime import UTC, datetime
 
-    from lorekeeper.services.database import Database
+    from lorekeeper.infra.database import Database
     from lorekeeper.services.link_store import LinkStore
     from lorekeeper.services.memory_store import MemoryStore
 
@@ -580,7 +580,7 @@ def test_generator_candidates_sorted_by_score_descending(tmp_path):
     import uuid
     from datetime import UTC, datetime
 
-    from lorekeeper.services.database import Database
+    from lorekeeper.infra.database import Database
     from lorekeeper.services.link_store import LinkStore
     from lorekeeper.services.memory_store import MemoryStore
 

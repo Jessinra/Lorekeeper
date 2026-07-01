@@ -4,7 +4,6 @@ Validates that input validation happens early — before reaching the orchestrat
 """
 import pytest
 
-from lorekeeper.config import Settings
 from lorekeeper.handlers import (
     handle_get_suggestions as _handle_get_suggestions,
 )
@@ -20,7 +19,8 @@ from lorekeeper.handlers import (
 from lorekeeper.handlers import (
     handle_search as _handle_search,
 )
-from lorekeeper.services.keyword_index import KeywordIndex
+from lorekeeper.infra.keyword_index import KeywordIndex
+from lorekeeper.infra.settings import Settings
 from tests._helpers import build_service, build_stores
 
 
