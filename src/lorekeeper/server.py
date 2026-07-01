@@ -4,18 +4,17 @@ import structlog
 from fastmcp import FastMCP
 from pydantic import ValidationError
 
+from lorekeeper.api.mcp.handlers.memory_handlers import handle_insert, handle_search
+from lorekeeper.api.mcp.handlers.suggestion_handlers import (
+    handle_get_suggestions,
+    handle_recommend_links,
+    handle_review_suggestion,
+)
 from lorekeeper.domains.link.repository import LinkStore
 from lorekeeper.domains.memory.models import WRITE_SOURCE_TYPES
 from lorekeeper.domains.memory.repository import MemoryStore
 from lorekeeper.domains.reflection.repository import ReflectionStore
 from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
-from lorekeeper.handlers import (
-    handle_get_suggestions,
-    handle_insert,
-    handle_recommend_links,
-    handle_review_suggestion,
-    handle_search,
-)
 from lorekeeper.infra.database import Database
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.search_engine import LanceDBEngine
