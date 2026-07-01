@@ -16,11 +16,11 @@ from typing import TYPE_CHECKING, Any
 
 from lorekeeper.domains.link.models import MemoryLink
 from lorekeeper.domains.memory.models import Memory
-from lorekeeper.services.search import SearchResult
+from lorekeeper.domains.memory.ranking import SearchResult
 
 if TYPE_CHECKING:
+    from lorekeeper.domains.suggestion.candidate import LinkCandidate
     from lorekeeper.domains.suggestion.models import LinkSuggestion
-    from lorekeeper.services.link_candidate import LinkCandidate
 
 
 def serialize_memory(

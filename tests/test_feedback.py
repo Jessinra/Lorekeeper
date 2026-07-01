@@ -1,11 +1,11 @@
 import pytest
 
-from lorekeeper.infra.settings import Settings
-from lorekeeper.services.feedback import (
+from lorekeeper.domains.memory.feedback import (
     apply_score_delta,
     compute_running_confidence,
     should_soft_delete,
 )
+from lorekeeper.infra.settings import Settings
 
 S = Settings()
 

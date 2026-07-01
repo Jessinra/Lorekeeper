@@ -21,10 +21,10 @@ import structlog
 
 from lorekeeper.domains.link.repository import LinkStore
 from lorekeeper.domains.memory.repository import MemoryStore
+from lorekeeper.domains.suggestion.candidate import LinkCandidateGenerator
 from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
 from lorekeeper.infra.settings import Settings
 from lorekeeper.platform.metrics.repository import MetricsStore
-from lorekeeper.services.link_candidate import LinkCandidateGenerator
 
 log = structlog.get_logger()
 

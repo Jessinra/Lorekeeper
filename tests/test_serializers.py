@@ -5,13 +5,13 @@ with truncation, exclusion, rounding, and edge cases.
 """
 from lorekeeper.domains.link.models import MemoryLink
 from lorekeeper.domains.memory.models import Memory
-from lorekeeper.serializers import (
+from lorekeeper.domains.memory.ranking import SearchResult
+from lorekeeper.shared.serializers import (
     serialize_memory,
     serialize_memory_link,
     serialize_search_result,
     serialize_search_result_title,
 )
-from lorekeeper.services.search import SearchResult
 
 
 def _make_memory(**overrides) -> Memory:

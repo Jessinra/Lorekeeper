@@ -5,8 +5,8 @@ Tests the pure rank_results function — no database, no orchestrator.
 import pytest
 
 from lorekeeper.domains.memory.models import Memory
+from lorekeeper.domains.memory.ranking import _parse_iso_utc, rank_results
 from lorekeeper.infra.settings import Settings
-from lorekeeper.services.search import _parse_iso_utc, rank_results
 
 S = Settings()
 

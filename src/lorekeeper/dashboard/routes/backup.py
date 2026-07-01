@@ -6,8 +6,8 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 
 from lorekeeper.domains.memory.models import Memory
-from lorekeeper.serializers import serialize_memory, serialize_memory_link
 from lorekeeper.server import get_service
+from lorekeeper.shared.serializers import serialize_memory, serialize_memory_link
 
 router = APIRouter()
 

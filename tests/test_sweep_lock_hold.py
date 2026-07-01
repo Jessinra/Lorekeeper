@@ -15,9 +15,9 @@ from pathlib import Path
 
 import pytest
 
+from lorekeeper.domains.suggestion.sweep import SweepService
 from lorekeeper.infra.database import Database
 from lorekeeper.infra.settings import Settings
-from lorekeeper.services.sweep_service import SweepService
 from tests._helpers import build_stores
 
 
