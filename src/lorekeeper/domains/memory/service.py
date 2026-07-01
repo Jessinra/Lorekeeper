@@ -476,7 +476,7 @@ class MemoryWriteService:
             if existing_by_title:
                 return {"duplicate": {
                     "input_title": title,
-                    "existing_memory": dict(existing_by_title),
+                    "existing_memory": row_to_memory(existing_by_title).model_dump(),
                     "similarity": 1.0,
                 }}
 
@@ -491,7 +491,7 @@ class MemoryWriteService:
                     if existing_row:
                         return {"duplicate": {
                             "input_title": title,
-                            "existing_memory": dict(existing_row),
+                            "existing_memory": row_to_memory(existing_row).model_dump(),
                             "similarity": round(0.6 * sem + 0.4 * kw, 4),
                         }}
 
@@ -560,6 +560,18 @@ class MemoryWriteService:
                 if link is None:
                     errors.append({"id": lid, "error": "not found"})
                     continue
+
+                # Enforce namespace scope: verify both endpoints are accessible
+                if svc._ns_filter is not None:
+                    source_row = svc.memories.get_memory_row(
+                        link.source_memory_id, namespaces=svc._ns_filter
+                    )
+                    target_row = svc.memories.get_memory_row(
+                        link.target_memory_id, namespaces=svc._ns_filter
+                    )
+                    if source_row is None or target_row is None:
+                        errors.append({"id": lid, "error": "not found"})
+                        continue
 
                 new_score = apply_score_delta(
                     link.score, useful, confidence, svc.settings

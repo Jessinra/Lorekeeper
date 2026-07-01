@@ -132,7 +132,7 @@ class ReflectionService:
                         skipped += 1
                         log.warning(
                             "reflect_auto_insert_failed",
-                            text=str(text)[:80],
+                            text_length=len(text),
                             relation=relation,
                             exc_info=True,
                         )

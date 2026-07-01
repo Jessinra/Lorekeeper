@@ -22,12 +22,13 @@ class LinkService:
     def insert_one_link(self, lnk: dict[str, Any]) -> dict[str, Any]:
         svc = self._svc
         self.validate_relation_type(lnk.get("relation_type", ""))
+        raw_score = lnk.get("score", 1.0)
         link = svc.links.insert_link(
             source_memory_id=lnk["source_memory_id"],
             target_memory_id=lnk["target_memory_id"],
             relation_type=lnk["relation_type"],
-            reason=lnk["reason"],
-            score=float(lnk.get("score", 1.0)),
+            reason=lnk.get("reason", ""),
+            score=float(raw_score) if raw_score is not None else 1.0,
         )
         return {
             "id": link.id,

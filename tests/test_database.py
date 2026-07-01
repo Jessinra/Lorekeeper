@@ -462,3 +462,95 @@ def test_relation_type_literal_matches_types_config():
             f"TYPE_MIGRATION_MAP[{old_type!r}] = {new_type!r} "
             f"is not a valid relation type (valid: {sorted(RELATION_TYPES)})"
         )
+
+
+def test_transaction_commits_on_success(tmp_path):
+    """Database.transaction() RELEASEs the SAVEPOINT on success.
+
+    Changes made inside the block should be visible after the block exits.
+    """
+    db = Database(tmp_path / "tx_commit.db")
+    db.migrate()
+    ts = "2026-01-01T00:00:00+00:00"
+
+    db.conn.execute(
+        "INSERT INTO memories (id,title,description,content,created_at,updated_at)"
+        " VALUES (?,?,?,?,?,?)",
+        ("m1", "test", "desc", "content", ts, ts),
+    )
+    with db.transaction():
+        db.conn.execute(
+            "UPDATE memories SET title=? WHERE id=?",
+            ("updated", "m1"),
+        )
+
+    row = db.conn.execute(
+        "SELECT title FROM memories WHERE id='m1'"
+    ).fetchone()
+    assert row[0] == "updated"
+    db.close()
+
+
+def test_transaction_rolls_back_on_exception(tmp_path):
+    """Database.transaction() ROLLBACKs the SAVEPOINT on exception.
+
+    Changes made inside the block must be undone, and the exception must
+    propagate to the caller.
+    """
+
+    db = Database(tmp_path / "tx_rollback.db")
+    db.migrate()
+    ts = "2026-01-01T00:00:00+00:00"
+
+    db.conn.execute(
+        "INSERT INTO memories (id,title,description,content,created_at,updated_at)"
+        " VALUES (?,?,?,?,?,?)",
+        ("m2", "keep", "desc", "content", ts, ts),
+    )
+    try:
+        with db.transaction():
+            db.conn.execute(
+                "UPDATE memories SET title=? WHERE id=?",
+                ("should-not-persist", "m2"),
+            )
+            raise RuntimeError("simulated failure inside savepoint")
+    except RuntimeError:
+        pass  # expected
+
+    row = db.conn.execute(
+        "SELECT title FROM memories WHERE id='m2'"
+    ).fetchone()
+    assert row[0] == "keep", "SP rollback did not undo the update"
+    db.close()
+
+
+def test_transaction_nests_safely_with_outer_tx(tmp_path):
+    """Database.transaction() using SAVEPOINT (not BEGIN) allows nesting.
+
+    An outer manual BEGIN/COMMIT should not conflict with the inner savepoint.
+    """
+    db = Database(tmp_path / "tx_nest.db")
+    db.migrate()
+    ts = "2026-01-01T00:00:00+00:00"
+
+    db.conn.execute("BEGIN")
+    for mid in ("a", "b"):
+        db.conn.execute(
+            "INSERT INTO memories (id,title,description,content,created_at,updated_at)"
+            " VALUES (?,?,?,?,?,?)",
+            (mid, f"nested-{mid}", "", "c", ts, ts),
+        )
+
+    with db.transaction():
+        db.conn.execute(
+            "UPDATE memories SET description=? WHERE id=?",
+            ("changed-inside-savepoint", "a"),
+        )
+
+    db.conn.commit()
+
+    row = db.conn.execute(
+        "SELECT description FROM memories WHERE id='a'"
+    ).fetchone()
+    assert row[0] == "changed-inside-savepoint"
+    db.close()

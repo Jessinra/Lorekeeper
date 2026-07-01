@@ -72,7 +72,9 @@ class ImportService:
                         soft_deleted=bool(m.get("soft_deleted", False)),
                         confidence=m.get("confidence"),
                         confidence_count=int(m.get("confidence_count", 0)),
+                        last_used=m.get("last_used"),
                         namespace=m.get("namespace", svc._namespace),
+                        source_type=m.get("source_type", "observed"),
                     )
                 except Exception as e:
                     errors.append(f"memory {mid}: {e}")
@@ -128,6 +130,7 @@ class ImportService:
                 except Exception as e:
                     errors.append(f"link {lid}: {e}")
                     continue
+            existing_link_ids.add(lid)
             links_inserted += 1
 
         if not dry_run and links_inserted:
