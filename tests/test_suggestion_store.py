@@ -131,6 +131,21 @@ class TestLinkSuggestionStore:
         assert ("a", "b") in rejected
         assert ("a", "c") not in rejected
 
+    def test_pending_pairs(self, stores):
+        stores.suggestions.insert_suggestion(
+            source_memory_id="a", target_memory_id="b",
+            source_title="A", target_title="B", weighted_score=0.5,
+            status="pending",
+        )
+        stores.suggestions.insert_suggestion(
+            source_memory_id="a", target_memory_id="c",
+            source_title="A", target_title="C", weighted_score=0.5,
+            status="rejected",
+        )
+        pending = stores.suggestions.pending_pairs()
+        assert ("a", "b") in pending
+        assert ("a", "c") not in pending
+
     def test_prune_expired(self, stores):
         from datetime import UTC, datetime, timedelta
 

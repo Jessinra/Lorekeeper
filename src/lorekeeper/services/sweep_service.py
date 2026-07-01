@@ -77,7 +77,8 @@ class SweepService:
           INSERTs, never across the slow generate() calls.
 
         Returns stats dict with keys: memories_scanned, candidates_generated,
-        high_confidence, standard, skipped_rejected, skipped_linked, expired_pruned.
+        high_confidence, standard, skipped_rejected, skipped_pending, skipped_linked,
+        expired_pruned.
         """
         self._increment_metric("lore_sweep")
 
@@ -88,14 +89,17 @@ class SweepService:
         )
         all_mems = {r["id"]: r for r in all_rows}
 
-        # Pre-load rejection and link sets
+        # Pre-load rejection, pending, and link sets
         rejected = self._suggestion_store.rejected_pairs()
+        pending = self._suggestion_store.pending_pairs()
         all_links = self._link_store.all_links()
         linked_pairs: set[tuple[str, str]] = set()
         for lnk in all_links:
-            src, tgt = lnk.source_memory_id, lnk.target_memory_id
-            linked_pairs.add((src, tgt))
-            linked_pairs.add((tgt, src))
+            linked_pairs.add(
+                LinkSuggestionStore.canonical_pair(
+                    lnk.source_memory_id, lnk.target_memory_id
+                )
+            )
 
         stats: dict[str, Any] = {
             "memories_scanned": 0,
@@ -103,6 +107,7 @@ class SweepService:
             "high_confidence": 0,
             "standard": 0,
             "skipped_rejected": 0,
+            "skipped_pending": 0,
             "skipped_linked": 0,
             "expired_pruned": 0,
         }
@@ -122,12 +127,18 @@ class SweepService:
                 if c.weighted_score < self._settings.link_score_threshold:
                     continue
 
-                pair = (c.source_lore_id, c.target_lore_id)
-                if pair in linked_pairs:
+                # Normalize to canonical order for DB pair-set membership checks
+                canonical = LinkSuggestionStore.canonical_pair(
+                    c.source_lore_id, c.target_lore_id
+                )
+                if canonical in linked_pairs:
                     stats["skipped_linked"] += 1
                     continue
-                if pair in rejected:
+                if canonical in rejected:
                     stats["skipped_rejected"] += 1
+                    continue
+                if canonical in pending:
+                    stats["skipped_pending"] += 1
                     continue
 
                 confidence = (

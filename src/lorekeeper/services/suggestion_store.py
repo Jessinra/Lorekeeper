@@ -29,8 +29,14 @@ class LinkSuggestionStore:
     # ── Pair ordering ───────────────────────────────────────────────────────
 
     @staticmethod
-    def _canonical(a: str, b: str) -> tuple[str, str]:
+    def canonical_pair(a: str, b: str) -> tuple[str, str]:
+        """Normalize a pair to canonical (min, max) order.
+
+        Used by SweepService for DB pair-set membership checks.
+        """
         return (a, b) if a < b else (b, a)
+
+    _canonical = canonical_pair  # backward-compat alias
 
     # ── CRUD ────────────────────────────────────────────────────────────────
 
@@ -256,6 +262,13 @@ class LinkSuggestionStore:
         rows = self._conn.execute(
             "SELECT source_memory_id, target_memory_id FROM link_suggestions "
             "WHERE status = 'rejected'"
+        ).fetchall()
+        return {(r["source_memory_id"], r["target_memory_id"]) for r in rows}
+
+    def pending_pairs(self) -> set[tuple[str, str]]:
+        rows = self._conn.execute(
+            "SELECT source_memory_id, target_memory_id FROM link_suggestions "
+            "WHERE status = 'pending'"
         ).fetchall()
         return {(r["source_memory_id"], r["target_memory_id"]) for r in rows}
 

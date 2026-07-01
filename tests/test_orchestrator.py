@@ -1149,6 +1149,23 @@ class TestSweepLinks:
         stats = sweeper.run()
         assert stats["skipped_rejected"] >= 1
 
+    def test_sweep_skips_pending_pairs(self, svc):
+        service, engine = svc
+        sweeper = self._make_sweeper(service)
+        ids = self._seed_memories(service, engine)
+        sug = self._sug_store.insert_suggestion(
+            source_memory_id=ids[0], target_memory_id=ids[1],
+            source_title="", target_title="", weighted_score=0.0,
+            status="pending",
+        )
+        original_id = sug.id
+        service.commit()
+        stats = sweeper.run()
+        assert stats["skipped_pending"] >= 1
+        still = self._sug_store.get_suggestion(original_id)
+        assert still is not None
+        assert still.status == "pending"
+
     def test_sweep_stats_structure(self, svc):
         service, engine = svc
         sweeper = self._make_sweeper(service)
@@ -1156,7 +1173,7 @@ class TestSweepLinks:
         stats = sweeper.run()
         expected = {
             "memories_scanned", "candidates_generated", "high_confidence",
-            "standard", "skipped_rejected", "skipped_linked", "expired_pruned",
+            "standard", "skipped_rejected", "skipped_pending", "skipped_linked", "expired_pruned",
         }
         assert set(stats.keys()) == expected
 
