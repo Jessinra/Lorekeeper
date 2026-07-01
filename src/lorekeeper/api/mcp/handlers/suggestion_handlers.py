@@ -3,13 +3,10 @@
 Extracted from handlers.py (LKPR-104 Phase 6a). Input sanitization and
 validation happen here, before reaching the domain service.
 
-Note: handle_review_suggestion still reaches into svc._conn directly for the
-per-item SAVEPOINT (accept path) — this is the same transaction-boundary
-violation flagged for dashboard/routes/suggestions.py. Fixing it is deferred
-to Phase 6b (a behavior-preserving bug fix, kept separate from this
-mechanical handler split) — it will route through
-SuggestionService.accept_batch()/reject_batch() using Database.transaction()
-instead.
+LKPR-104 Phase 6b: the accept path routes through
+``SuggestionService.accept_one()``, which owns the insert_link +
+update_suggestion_status transaction boundary via ``Database.transaction()``
+— no more direct ``svc._conn`` SAVEPOINT reach-through here.
 """
 
 from __future__ import annotations
@@ -123,25 +120,17 @@ def handle_review_suggestion(
                 if rel_type not in RELATION_TYPES:
                     rel_type = "references"
 
-                # Use a savepoint so insert_link + update_suggestion_status are
-                # atomic per item.  If update_suggestion_status fails after the
-                # link row is written, the savepoint rollback prevents a
-                # committed link with no status update.
-                sp = f"accept_{sid.replace('-', '_')}"
-                svc._conn.execute(f"SAVEPOINT {sp}")
-                try:
-                    link = svc.links.insert_link(
-                        source_memory_id=sug.source_memory_id,
-                        target_memory_id=sug.target_memory_id,
-                        relation_type=rel_type,
-                        reason="Accepted from link suggestion sweep",
-                    )
-                    suggestions.update_suggestion_status(sid, "accepted")
-                except Exception:
-                    svc._conn.execute(f"ROLLBACK TO {sp}")
-                    raise
-                else:
-                    svc._conn.execute(f"RELEASE {sp}")
+                # insert_link + update_suggestion_status are atomic per item
+                # via SuggestionService.accept_one's Database.transaction()
+                # SAVEPOINT. If update_suggestion_status fails after the
+                # link row is written, the rollback prevents a committed
+                # link with no status update.
+                link = svc.suggestion_service.accept_one(
+                    suggestions,
+                    sug,
+                    rel_type,
+                    "Accepted from link suggestion sweep",
+                )
 
                 accepted += 1
                 results.append({
