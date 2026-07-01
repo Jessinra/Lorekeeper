@@ -6,7 +6,7 @@ import sqlite3
 from datetime import UTC, datetime
 from typing import cast
 
-from lorekeeper.services.database import Database
+from lorekeeper.infra.database import Database
 
 
 def _now() -> str:

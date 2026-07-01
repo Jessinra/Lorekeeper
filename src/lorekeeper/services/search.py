@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from lorekeeper.config import Settings
+from lorekeeper.infra.settings import Settings
 from lorekeeper.models import Memory, MemoryLink
 
 # Valid sort_by values for lore_search.

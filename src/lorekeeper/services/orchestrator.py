@@ -8,7 +8,9 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 
-from lorekeeper.config import Settings
+from lorekeeper.infra.keyword_index import KeywordIndex
+from lorekeeper.infra.search_engine import LanceDBEngine
+from lorekeeper.infra.settings import Settings
 from lorekeeper.models import RELATION_TYPES, TYPE_MIGRATION_MAP, Memory, MemoryLink
 from lorekeeper.services.config_store import ConfigStore
 from lorekeeper.services.dedup import is_duplicate
@@ -17,8 +19,6 @@ from lorekeeper.services.feedback import (
     compute_running_confidence,
     should_soft_delete,
 )
-from lorekeeper.services.keyword_index import KeywordIndex
-from lorekeeper.services.lancedb_engine import LanceDBEngine
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_store import MemoryStore
 from lorekeeper.services.metrics_store import MetricsStore

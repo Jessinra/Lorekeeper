@@ -11,9 +11,9 @@ import numpy as np
 import structlog
 
 if TYPE_CHECKING:
-    from lorekeeper.config import Settings
-    from lorekeeper.services.keyword_index import KeywordIndex
-    from lorekeeper.services.lancedb_engine import LanceDBEngine
+    from lorekeeper.infra.keyword_index import KeywordIndex
+    from lorekeeper.infra.search_engine import LanceDBEngine
+    from lorekeeper.infra.settings import Settings
     from lorekeeper.services.link_store import LinkStore
     from lorekeeper.services.memory_store import MemoryStore
 

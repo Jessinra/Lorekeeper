@@ -5,8 +5,8 @@ import tempfile
 
 import pytest
 
-from lorekeeper.config import Settings
-from lorekeeper.services.lancedb_engine import LanceDBEngine
+from lorekeeper.infra.search_engine import LanceDBEngine
+from lorekeeper.infra.settings import Settings
 
 
 @pytest.fixture(scope="module")

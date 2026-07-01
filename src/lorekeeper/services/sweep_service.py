@@ -19,7 +19,7 @@ from typing import Any
 
 import structlog
 
-from lorekeeper.config import Settings
+from lorekeeper.infra.settings import Settings
 from lorekeeper.services.link_candidate import LinkCandidateGenerator
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_store import MemoryStore

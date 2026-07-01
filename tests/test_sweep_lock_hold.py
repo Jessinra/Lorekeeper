@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from lorekeeper.config import Settings
-from lorekeeper.services.database import Database
+from lorekeeper.infra.database import Database
+from lorekeeper.infra.settings import Settings
 from lorekeeper.services.sweep_service import SweepService
 from tests._helpers import build_stores
 
@@ -222,8 +222,8 @@ def test_memory_service_has_no_suggestions_attr(tmp_path):
     Regression: PR #237 set self.suggestions = LinkSuggestionStore(db)
     on MemoryService, but no MemoryService method used it.
     """
-    from lorekeeper.config import Settings
-    from lorekeeper.services.keyword_index import KeywordIndex
+    from lorekeeper.infra.keyword_index import KeywordIndex
+    from lorekeeper.infra.settings import Settings
     from tests._helpers import build_service, build_stores
 
     engine = FakeEngine()
