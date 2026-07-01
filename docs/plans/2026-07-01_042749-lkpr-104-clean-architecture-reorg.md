@@ -41,7 +41,7 @@ repo; revisit if the rule gets violated twice).
 
 ## Target tree (end state, post Phase 7)
 
-```
+```text
 src/lorekeeper/
 ├── domains/
 │   ├── memory/

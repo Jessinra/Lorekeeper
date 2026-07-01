@@ -34,10 +34,11 @@ reflection are all interleaved in one orchestrator class and one `models.py`).
 
 ## Solution
 
-Reorganize into Clean Architecture rings crossed with DDD vertical slices, executed
-as 7 phases — each phase its own PR, tests green at every gate, zero MCP API
-surface change throughout. Full design rationale and target tree:
-`docs/plans/2026-07-01-lkpr-104-clean-architecture-reorg.md`.
+Reorganize into Clean Architecture rings crossed with DDD vertical slices,
+executed as a phased rollout (Phase 0 through Phase 7, with Phase 6 split
+into 6a/6b) — each checkpoint its own PR, tests green at every gate, zero
+MCP API surface change throughout. Full design rationale and target tree:
+`docs/plans/2026-07-01_042749-lkpr-104-clean-architecture-reorg.md`.
 
 Rings (outer -> inner dependency direction, inner ring depends on nothing outer):
 
