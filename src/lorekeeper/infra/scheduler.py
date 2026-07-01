@@ -23,11 +23,12 @@ from __future__ import annotations
 import threading
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
-from lorekeeper.services.config_store import ConfigStore
+if TYPE_CHECKING:
+    from lorekeeper.services.config_store import ConfigStore
 
 log = structlog.get_logger()
 
