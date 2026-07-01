@@ -639,6 +639,37 @@ def test_suggestions_batch_not_found(suggestion_client):
     assert "not found" in body["errors"][0]
 
 
+def test_suggestions_batch_accept_rolls_back_link_if_status_update_fails(suggestion_client):
+    """LKPR-104 Phase 6b: accept_one's Database.transaction() SAVEPOINT must
+    cover insert_link + update_suggestion_status atomically. If the status
+    update fails, the link insert must be rolled back too — not left as an
+    orphaned link with no corresponding accepted suggestion.
+    """
+    client, _svc, _store, sug_ids = suggestion_client
+
+    def _boom(*args, **kwargs):
+        raise RuntimeError("simulated status update failure")
+
+    _store.suggestions.update_suggestion_status = _boom
+
+    resp = client.post(
+        "/api/suggestions/batch",
+        json={"suggestion_ids": [sug_ids[0]], "action": "accept"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["accepted"] == 0
+    assert len(body["errors"]) == 1
+
+    links = _svc.links._conn.execute(
+        "SELECT * FROM memory_links WHERE reason = 'Accepted from link suggestion sweep'"
+    ).fetchall()
+    assert links == []
+
+    sug = _store.suggestions.get_suggestion(sug_ids[0])
+    assert sug.status == "pending"
+
+
 def test_suggestions_batch_invalid_action(suggestion_client):
     client, _svc, _store, _sug_ids = suggestion_client
     resp = client.post(

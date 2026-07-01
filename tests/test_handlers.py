@@ -816,3 +816,37 @@ class TestSuggestionHandlers:
         )
         assert result["accepted"] == 1
         assert result["results"][0]["link_id"] is not None
+
+    # ── LKPR-104 Phase 6b: accept_one atomicity ──────────────────────────────
+
+    def test_review_accept_rolls_back_link_if_status_update_fails(
+        self, suggestion_svc, suggestion_stores
+    ):
+        """If update_suggestion_status fails after insert_link succeeds, the
+        link insert must be rolled back too — accept_one's Database.transaction()
+        SAVEPOINT must cover both steps atomically, not just log-and-continue.
+        """
+        sug = self._make_suggestion(suggestion_stores)
+
+        def _boom(*args, **kwargs):
+            raise RuntimeError("simulated status update failure")
+
+        suggestion_stores.suggestions.update_suggestion_status = _boom
+
+        result = _handle_review_suggestion(
+            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_ids=[sug.id], action="accept",
+        )
+
+        assert result["accepted"] == 0
+        assert result["errors"][0]["id"] == sug.id
+        assert "simulated status update failure" in result["errors"][0]["error"]
+
+        # The link must NOT exist — insert_link's write should have been
+        # rolled back by the same SAVEPOINT that failed on the status update.
+        assert suggestion_svc.links.all_links() == []
+        # Suggestion status must remain pending — not left half-accepted.
+        stored = suggestion_stores.db.conn.execute(
+            "SELECT status FROM link_suggestions WHERE id = ?", (sug.id,)
+        ).fetchone()
+        assert stored["status"] == "pending"

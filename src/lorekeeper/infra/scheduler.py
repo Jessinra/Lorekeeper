@@ -90,12 +90,20 @@ class PeriodicJob:
                 # happens after `retry_seconds` — bounded, never infinite.
                 # If the job succeeds, the timer is overwritten with the full
                 # schedule interval.
+                #
+                # LKPR-104 Phase 6b: ConfigStore.set_override() no longer
+                # commits internally — the caller owns the transaction
+                # boundary. Commit explicitly here so the retry timer
+                # survives a crash (IR-002 lesson: every DML needs an
+                # explicit commit or the write is lost on process exit).
                 retry_time = datetime.now(UTC) + self._retry
                 self._config.set_override(self._timer_key, retry_time.isoformat())
+                self._config.commit()
                 stats = self._job_fn()
                 # Success — advance to the real schedule
                 next_time = datetime.now(UTC) + self._interval
                 self._config.set_override(self._timer_key, next_time.isoformat())
+                self._config.commit()
                 log.info("periodic_job_completed", name=self._name, stats=stats)
             except Exception:
                 log.exception("periodic_job_failed", name=self._name)

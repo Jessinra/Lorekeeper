@@ -154,25 +154,16 @@ def batch_suggestions(body: BatchAction) -> BatchResponse:
                 if relation_type not in RELATION_TYPES:
                     relation_type = "references"
 
-                # Use a SAVEPOINT per item so insert_link +
-                # update_suggestion_status are atomic.  If either operation
-                # fails the savepoint rolls back just this item — already-
+                # insert_link + update_suggestion_status are atomic per item
+                # via SuggestionService.accept_one's Database.transaction()
+                # SAVEPOINT — a failure rolls back just this item, already-
                 # committed items in the same batch are unaffected.
-                sp = f"accept_{sid.replace('-', '_')}"
-                svc._conn.execute(f"SAVEPOINT {sp}")
-                try:
-                    svc.links.insert_link(
-                        source_memory_id=suggestion.source_memory_id,
-                        target_memory_id=suggestion.target_memory_id,
-                        relation_type=relation_type,
-                        reason="Accepted from link suggestion sweep",
-                    )
-                    store.update_suggestion_status(sid, "accepted")
-                except Exception:
-                    svc._conn.execute(f"ROLLBACK TO {sp}")
-                    raise
-                else:
-                    svc._conn.execute(f"RELEASE {sp}")
+                svc.suggestion_service.accept_one(
+                    store,
+                    suggestion,
+                    relation_type,
+                    "Accepted from link suggestion sweep",
+                )
                 results.append(
                     BatchResultItem(
                         id=sid,
