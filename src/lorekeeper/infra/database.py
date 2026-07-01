@@ -609,5 +609,5 @@ class Database:
         except Exception:
             self._conn.execute(f"ROLLBACK TO {sp}")
             raise
-        else:
+        finally:
             self._conn.execute(f"RELEASE {sp}")

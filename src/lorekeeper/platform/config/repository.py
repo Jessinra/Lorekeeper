@@ -3,9 +3,11 @@
 Stores dashboard-edited config values that survive process restarts.
 
 LKPR-104 Phase 6b: transaction control (commit) is the caller's
-responsibility, not the repository's — every call site below already
-calls ``svc.commit()`` (or, for the scheduler's timer writes, relies
-on the next mutation's commit) after invoking these methods.
+responsibility, not the repository's — callers that need persistence
+must call either their broader facade ``commit()`` or
+``ConfigStore.commit()`` after invoking these methods. The
+scheduler's ``PeriodicJob`` calls ``ConfigStore.commit()``
+explicitly after each timer write.
 """
 
 from __future__ import annotations

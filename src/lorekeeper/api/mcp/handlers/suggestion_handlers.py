@@ -36,7 +36,7 @@ def handle_recommend_links(
     if not lore_id or not lore_id.strip():
         raise ValueError("lore_id is required")
     if top_k is not None:
-        if not isinstance(top_k, int) or top_k < 1:
+        if not isinstance(top_k, int) or isinstance(top_k, bool) or top_k < 1:
             raise ValueError("top_k must be a positive integer")
         top_k = min(top_k, 50)  # hard cap
     candidates = svc.recommend_links(
@@ -120,7 +120,7 @@ def handle_review_suggestion(
                 if rel_type not in RELATION_TYPES:
                     rel_type = "references"
 
-# insert_link + update_suggestion_status are atomic per item
+                # insert_link + update_suggestion_status are atomic per item
                 # via SuggestionService.accept_one's Database.transaction()
                 # SAVEPOINT. If update_suggestion_status fails after the
                 # link row is written, the rollback prevents a committed

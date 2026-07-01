@@ -661,10 +661,9 @@ def test_suggestions_batch_accept_rolls_back_link_if_status_update_fails(suggest
     assert body["accepted"] == 0
     assert len(body["errors"]) == 1
 
-    links = _svc.links._conn.execute(
-        "SELECT * FROM memory_links WHERE reason = 'Accepted from link suggestion sweep'"
-    ).fetchall()
-    assert links == []
+    links = _svc.links.all_links()
+    sweep_links = [lnk for lnk in links if lnk.reason == "Accepted from link suggestion sweep"]
+    assert sweep_links == []
 
     sug = _store.suggestions.get_suggestion(sug_ids[0])
     assert sug.status == "pending"
