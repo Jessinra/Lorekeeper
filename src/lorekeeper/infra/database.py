@@ -20,7 +20,9 @@ from __future__ import annotations
 
 import atexit
 import sqlite3
-from collections.abc import Callable
+import uuid
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -585,3 +587,27 @@ class Database:
 
     def close(self) -> None:
         self._conn.close()
+
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        """UnitOfWork context manager — wraps a block in a SAVEPOINT.
+
+        On success, RELEASEs the savepoint (folding its changes into the
+        caller's outer transaction). On exception, ROLLBACK TO the savepoint
+        (undoing only this block's changes) and re-raises.
+
+        Uses a SAVEPOINT (not BEGIN/COMMIT) so callers can nest this inside
+        an already-open transaction without conflicting with sqlite3's
+        implicit transaction handling. Replaces the ad-hoc
+        ``conn.execute(f"SAVEPOINT {sp}")`` pattern duplicated across
+        dashboard routes and handlers.
+        """
+        sp = f"sp_{uuid.uuid4().hex}"
+        self._conn.execute(f"SAVEPOINT {sp}")
+        try:
+            yield
+        except Exception:
+            self._conn.execute(f"ROLLBACK TO {sp}")
+            raise
+        else:
+            self._conn.execute(f"RELEASE {sp}")
