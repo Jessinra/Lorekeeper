@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from lorekeeper.models import Memory
+from lorekeeper.domains.memory.models import Memory
 from lorekeeper.serializers import serialize_memory, serialize_memory_link
 from lorekeeper.server import get_service
 

@@ -1,7 +1,7 @@
 import pytest
 
+from lorekeeper.domains.memory.models import Memory
 from lorekeeper.infra.keyword_index import KeywordIndex
-from lorekeeper.models import Memory
 
 
 def _mem(id: str, title: str, description: str = "", content: str = "") -> Memory:

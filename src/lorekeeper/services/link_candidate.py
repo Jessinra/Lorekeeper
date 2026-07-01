@@ -11,11 +11,11 @@ import numpy as np
 import structlog
 
 if TYPE_CHECKING:
+    from lorekeeper.domains.link.repository import LinkStore
+    from lorekeeper.domains.memory.repository import MemoryStore
     from lorekeeper.infra.keyword_index import KeywordIndex
     from lorekeeper.infra.search_engine import LanceDBEngine
     from lorekeeper.infra.settings import Settings
-    from lorekeeper.services.link_store import LinkStore
-    from lorekeeper.services.memory_store import MemoryStore
 
 log = structlog.get_logger()
 

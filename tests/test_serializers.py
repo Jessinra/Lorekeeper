@@ -3,7 +3,8 @@
 Covers serialize_memory, serialize_memory_link, and serialize_search_result
 with truncation, exclusion, rounding, and edge cases.
 """
-from lorekeeper.models import Memory, MemoryLink
+from lorekeeper.domains.link.models import MemoryLink
+from lorekeeper.domains.memory.models import Memory
 from lorekeeper.serializers import (
     serialize_memory,
     serialize_memory_link,

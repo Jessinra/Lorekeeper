@@ -1075,7 +1075,7 @@ class TestSweepLinks:
     from lorekeeper.services.sweep_service import SweepService
 
     def _make_sweeper(self, service):
-        from lorekeeper.services.suggestion_store import LinkSuggestionStore
+        from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
 
         self._sug_store = LinkSuggestionStore(service.memories._db)
         return self.SweepService(

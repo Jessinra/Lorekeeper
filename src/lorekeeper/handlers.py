@@ -14,7 +14,8 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 
-from lorekeeper.models import RELATION_TYPES, SOURCE_TYPES, WRITE_SOURCE_TYPES
+from lorekeeper.domains.link.models import RELATION_TYPES
+from lorekeeper.domains.memory.models import SOURCE_TYPES, WRITE_SOURCE_TYPES
 from lorekeeper.serializers import (
     serialize_link_candidate,
     serialize_search_result,
@@ -24,8 +25,8 @@ from lorekeeper.serializers import (
 from lorekeeper.services.search import VALID_SORT_BY, parse_filter_dt
 
 if TYPE_CHECKING:
+    from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
     from lorekeeper.services.orchestrator import MemoryService
-    from lorekeeper.services.suggestion_store import LinkSuggestionStore
 
 log = structlog.get_logger()
 

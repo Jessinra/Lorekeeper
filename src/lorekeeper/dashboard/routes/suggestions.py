@@ -8,7 +8,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from lorekeeper.models import RELATION_TYPES
+from lorekeeper.domains.link.models import RELATION_TYPES
 from lorekeeper.server import get_service, get_suggestions_store
 
 router = APIRouter()

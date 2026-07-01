@@ -12,16 +12,16 @@ import argparse
 import sys
 from pathlib import Path
 
+from lorekeeper.domains.link.repository import LinkStore
+from lorekeeper.domains.memory.models import Memory
+from lorekeeper.domains.memory.repository import MemoryStore
+from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
 from lorekeeper.infra.database import Database
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
-from lorekeeper.models import Memory
 from lorekeeper.platform.metrics.repository import MetricsStore
 from lorekeeper.services.link_candidate import LinkCandidateGenerator
-from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.memory_store import MemoryStore
-from lorekeeper.services.suggestion_store import LinkSuggestionStore
 from lorekeeper.services.sweep_service import SweepService
 
 

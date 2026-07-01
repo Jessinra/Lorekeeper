@@ -445,7 +445,7 @@ def test_relation_type_literal_matches_types_config():
     """
     from typing import get_args
 
-    from lorekeeper.models import RELATION_TYPES, RelationType
+    from lorekeeper.domains.link.models import RELATION_TYPES, RelationType
 
     literal_types = frozenset(get_args(RelationType))
     assert literal_types == RELATION_TYPES, (
@@ -455,7 +455,7 @@ def test_relation_type_literal_matches_types_config():
     )
 
     # Also verify TYPE_MIGRATION_MAP values are all valid
-    from lorekeeper.models import TYPE_MIGRATION_MAP
+    from lorekeeper.domains.link.models import TYPE_MIGRATION_MAP
 
     for old_type, new_type in TYPE_MIGRATION_MAP.items():
         assert new_type in RELATION_TYPES, (

@@ -8,10 +8,14 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 
+from lorekeeper.domains.link.models import RELATION_TYPES, TYPE_MIGRATION_MAP, MemoryLink
+from lorekeeper.domains.link.repository import LinkStore
+from lorekeeper.domains.memory.models import Memory
+from lorekeeper.domains.memory.repository import MemoryStore
+from lorekeeper.domains.reflection.repository import ReflectionStore
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
-from lorekeeper.models import RELATION_TYPES, TYPE_MIGRATION_MAP, Memory, MemoryLink
 from lorekeeper.platform.config.repository import ConfigStore
 from lorekeeper.platform.metrics.repository import MetricsStore
 from lorekeeper.services.dedup import is_duplicate
@@ -20,9 +24,6 @@ from lorekeeper.services.feedback import (
     compute_running_confidence,
     should_soft_delete,
 )
-from lorekeeper.services.link_store import LinkStore
-from lorekeeper.services.memory_store import MemoryStore
-from lorekeeper.services.reflection_store import ReflectionStore
 from lorekeeper.services.search import SearchResult, parse_iso_utc, rank_results
 
 if TYPE_CHECKING:

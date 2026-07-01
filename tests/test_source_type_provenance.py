@@ -12,12 +12,12 @@ import sqlite3
 
 import pytest
 
+from lorekeeper.domains.memory.models import SOURCE_TYPES, WRITE_SOURCE_TYPES
 from lorekeeper.handlers import handle_insert as _handle_insert
 from lorekeeper.handlers import handle_search as _handle_search
 from lorekeeper.infra.database import _migration_3_add_source_type
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
-from lorekeeper.models import SOURCE_TYPES, WRITE_SOURCE_TYPES
 from tests._helpers import build_service, build_stores
 
 
