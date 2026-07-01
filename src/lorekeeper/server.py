@@ -16,7 +16,8 @@ from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
 from lorekeeper.models import WRITE_SOURCE_TYPES
-from lorekeeper.services.config_store import ConfigStore
+from lorekeeper.platform.config.repository import ConfigStore
+from lorekeeper.platform.metrics.repository import MetricsStore
 from lorekeeper.services.encouragement import (
     for_forget,
     for_insert,
@@ -27,7 +28,6 @@ from lorekeeper.services.encouragement import (
 )
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_store import MemoryStore
-from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.services.reflection_store import ReflectionStore
 from lorekeeper.services.suggestion_store import LinkSuggestionStore

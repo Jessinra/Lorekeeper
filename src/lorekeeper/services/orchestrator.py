@@ -12,7 +12,8 @@ from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
 from lorekeeper.models import RELATION_TYPES, TYPE_MIGRATION_MAP, Memory, MemoryLink
-from lorekeeper.services.config_store import ConfigStore
+from lorekeeper.platform.config.repository import ConfigStore
+from lorekeeper.platform.metrics.repository import MetricsStore
 from lorekeeper.services.dedup import is_duplicate
 from lorekeeper.services.feedback import (
     apply_score_delta,
@@ -21,7 +22,6 @@ from lorekeeper.services.feedback import (
 )
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_store import MemoryStore
-from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.reflection_store import ReflectionStore
 from lorekeeper.services.search import SearchResult, parse_iso_utc, rank_results
 

@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Any
 import structlog
 
 if TYPE_CHECKING:
-    from lorekeeper.services.config_store import ConfigStore
+    from lorekeeper.platform.config.repository import ConfigStore
 
 log = structlog.get_logger()
 

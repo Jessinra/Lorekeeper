@@ -20,10 +20,10 @@ from typing import Any
 import structlog
 
 from lorekeeper.infra.settings import Settings
+from lorekeeper.platform.metrics.repository import MetricsStore
 from lorekeeper.services.link_candidate import LinkCandidateGenerator
 from lorekeeper.services.link_store import LinkStore
 from lorekeeper.services.memory_store import MemoryStore
-from lorekeeper.services.metrics_store import MetricsStore
 from lorekeeper.services.suggestion_store import LinkSuggestionStore
 
 log = structlog.get_logger()
