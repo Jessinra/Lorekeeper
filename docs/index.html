@@ -1,0 +1,1533 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Self-improving memory for AI agents — open-source MCP server">
+      
+      
+      
+        <link rel="canonical" href="https://jessinra.github.io/Lorekeeper/docs/">
+      
+      
+      
+        <link rel="next" href="quickstart/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Lorekeeper</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/extra.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#why-lorekeeper" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="Lorekeeper" class="md-header__button md-logo" aria-label="Lorekeeper" data-md-component="logo">
+      
+  <img src="assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Lorekeeper
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Jessinra/Lorekeeper" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Jessinra/Lorekeeper
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="Lorekeeper" class="md-nav__button md-logo" aria-label="Lorekeeper" data-md-component="logo">
+      
+  <img src="assets/logo.svg" alt="logo">
+
+    </a>
+    Lorekeeper
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Jessinra/Lorekeeper" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Jessinra/Lorekeeper
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-lorekeeper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Lorekeeper
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use Cases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#staying-in-context-across-sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Staying in context across sessions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#one-memory-pool-multiple-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One memory pool, multiple agents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-session-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-session debugging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#project-onboarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project onboarding
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#who-its-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who It's For
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-compares" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Compares
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCP Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dashboard
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dashboard">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#suggestions-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suggestions Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-by-agents-for-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built by Agents, For Agents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#for-developers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For Developers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For Developers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project Layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        License
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="positioning-manifesto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="growth-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-lorekeeper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Lorekeeper
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use Cases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#staying-in-context-across-sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Staying in context across sessions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#one-memory-pool-multiple-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One memory pool, multiple agents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cross-session-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-session debugging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#project-onboarding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project onboarding
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#who-its-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who It's For
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-compares" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How It Compares
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCP Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dashboard
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dashboard">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#suggestions-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suggestions Tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-by-agents-for-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built by Agents, For Agents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#for-developers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For Developers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="For Developers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project Layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        License
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p align="center">
+  <img src="assets/logo.svg" width="180" alt="Lorekeeper">
+</p>
+
+<h1 align="center">Lorekeeper</h1>
+
+<p align="center">
+  <strong>Self-improving memory for AI agents. One command, no cloud, no config.</strong>
+</p>
+
+<p><a href="https://jessinra.github.io/Lorekeeper/"><img alt="docs" src="https://img.shields.io/badge/docs-lorekeeper.dev-blue" /></a></p>
+<blockquote>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>lorekeeper-mcp<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>lorekeeper<span class="w"> </span>setup<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>lorekeeper
+</code></pre></div>
+<p>Your agent remembers across sessions — and the memory gets <strong>better, not just bigger.</strong>
+Local. No API keys. No sign-up. <strong>Free to run forever.</strong></p>
+</blockquote>
+<hr />
+<h2 id="why-lorekeeper">Why Lorekeeper</h2>
+<p>Every AI agent session starts blank. You re-explain context, re-state preferences, re-teach patterns — every single time.</p>
+<p>Files like <code>CLAUDE.md</code> and <code>.cursorrules</code> help, but they're hand-maintained, can't search themselves, and grow stale. Cloud services work, but your session data leaves your machine and you're paying per API call. Libraries are powerful, but you're writing the integration yourself.</p>
+<p>Lorekeeper is a different shape: <strong>a local MCP server you <code>pip install</code> once.</strong> It connects to your existing agents, stores memories in SQLite on your own disk, and starts improving with every session:</p>
+<div class="highlight"><pre><span></span><code>Agent uses a memory → rates it useful or not →
+scores adjust automatically → weak memories decay →
+strong memories surface more often → search gets sharper
+</code></pre></div>
+<p>A fresh install and a six-month-old install are <strong>genuinely different products.</strong> The longer you use it, the less noise you get — and the more your agents feel like they actually know your codebase.</p>
+<hr />
+<h2 id="quick-start">Quick Start</h2>
+<p>3 minutes, zero configuration:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Install</span>
+pip<span class="w"> </span>install<span class="w"> </span>lorekeeper-mcp
+
+<span class="c1"># 2. Configure your agents (auto-detects Hermes, Claude Code, Cursor)</span>
+lorekeeper<span class="w"> </span>setup
+
+<span class="c1"># 3. Start the MCP server</span>
+lorekeeper
+</code></pre></div>
+<p><code>lorekeeper setup</code> scans for installed agents and injects the MCP entry, agent prompt, and bundled skills automatically. Use <code>--check</code> to preview without writing. Run <code>lorekeeper --help</code> or <code>lorekeeper --version</code> to verify the install.</p>
+<p>Then ask your agent:</p>
+<blockquote>
+<p><em>"Remember that I prefer <code>curl -vX GET</code> for debugging endpoints."</em></p>
+</blockquote>
+<p>It calls <code>lore_remember</code> → memory stored. Next session:</p>
+<blockquote>
+<p><em>"What's my preferred debug command?"</em></p>
+</blockquote>
+<p>It calls <code>lore_search</code> → memory retrieved. ✅</p>
+<p><strong>Full walkthrough → <a href="quickstart/">docs/quickstart.md</a></strong></p>
+<hr />
+<h2 id="features">Features</h2>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Hybrid search</strong></td>
+<td>Semantic vectors + BM25 keyword + time-decay + usage frequency + memory score — all ranked by a weighted formula</td>
+</tr>
+<tr>
+<td><strong>Self-improving</strong></td>
+<td><code>lore_update</code> feedback adjusts scores. Bad memories fade (&lt;2 confidence + not useful → soft-delete). Good ones rise.</td>
+</tr>
+<tr>
+<td><strong>Auto-linking</strong></td>
+<td>New memories are automatically linked to their closest semantic neighbor. A lightweight knowledge graph forms without effort.</td>
+</tr>
+<tr>
+<td><strong>Duplicate detection</strong></td>
+<td>New inserts are checked against existing memories. Near-identical content is blocked (override with <code>force=true</code>).</td>
+</tr>
+<tr>
+<td><strong>Dashboard</strong></td>
+<td>Full web UI — browse, search, edit, delete. Seven tabs including backup/restore with dedup preview.</td>
+</tr>
+<tr>
+<td><strong>Universal MCP</strong></td>
+<td>Works with Claude Code, Cursor, Hermes, Copilot, OpenCode — any MCP-compatible agent.</td>
+</tr>
+<tr>
+<td><strong>Local-first</strong></td>
+<td>Your data stays on your machine. SQLite + LanceDB. No cloud dependency, no API keys.</td>
+</tr>
+<tr>
+<td><strong>Namespaces</strong></td>
+<td>Multiple agents share one store with isolated namespaces. Writes go to your namespace; reads include the shared pool.</td>
+</tr>
+<tr>
+<td><strong>Reflection</strong></td>
+<td>Agents auto-extract learnings from sessions. Discoveries and lessons become searchable memories.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="use-cases">Use Cases</h2>
+<h3 id="staying-in-context-across-sessions">Staying in context across sessions</h3>
+<p>You set up your auth layer on Monday. Wednesday, a different agent starts fresh with no idea. With Lorekeeper, it already knows the middleware path, the token format, and which test covers the edge case — because you told it once.</p>
+<div class="highlight"><pre><span></span><code>&quot;Remember that our JWT uses jose middleware in src/middleware/auth.ts
+ and refresh tokens expire in 7 days.&quot;
+→ lore_remember stores it
+→ Every future session, on any agent: already in context
+</code></pre></div>
+<h3 id="one-memory-pool-multiple-agents">One memory pool, multiple agents</h3>
+<p>Claude Code for review, Cursor for implementation, Hermes for planning — they shouldn't each start from zero. Lorekeeper namespaces let them share one store. One agent's discovery becomes every agent's knowledge.</p>
+<div class="highlight"><pre><span></span><code>→ Engineer agent notes a performance quirk in the search service
+→ lore_remember stores it under the shared namespace
+→ PM agent surfaces it during sprint planning
+→ No briefing, no copy-paste
+</code></pre></div>
+<h3 id="cross-session-debugging">Cross-session debugging</h3>
+<p>You fixed a subtle CORS bug three weeks ago and your agent helped. Neither of you remembers the details.</p>
+<div class="highlight"><pre><span></span><code>&quot;What did we figure out about the CORS issue?&quot;
+→ lore_search returns the root cause, the fix, and the context around it
+</code></pre></div>
+<h3 id="project-onboarding">Project onboarding</h3>
+<p>New repo, new agent session. Instead of re-explaining the architecture, you run a few <code>lore_remember</code> calls after the first session. The next session — and every agent after it — starts with the right foundation.</p>
+<div class="highlight"><pre><span></span><code>&quot;Remember: the payment service requires X-Idempotency-Key on all POST requests.&quot;
+→ Claude Code, Cursor, and Codex all read from the same store
+</code></pre></div>
+<hr />
+<h2 id="who-its-for">Who It's For</h2>
+<p><strong>You, if you use:</strong></p>
+<ul>
+<li>Claude Code and want it to remember project context between sessions</li>
+<li>Cursor and want persistent agent memory</li>
+<li>Hermes, OpenCode, Codex CLI, Copilot CLI, or any MCP-compatible agent</li>
+<li>Multiple agents and want them to share knowledge</li>
+</ul>
+<p><strong>Not for you yet, if:</strong></p>
+<ul>
+<li>You need team RBAC, audit logs, or SSO (coming post-beta)</li>
+<li>You're building a consumer AI app (we're agent-first, not API-first)</li>
+<li>You don't use AI coding agents (Lorekeeper is an MCP tool)</li>
+</ul>
+<hr />
+<h2 id="how-it-compares">How It Compares</h2>
+<p>There are great tools in this space — each makes different trade-offs. Here's where Lorekeeper sits:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>File-based</th>
+<th>Cloud services</th>
+<th>Docker servers</th>
+<th>Library (Mem0)</th>
+<th>agentmemory (Node)</th>
+<th><strong>Lorekeeper</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Setup</strong></td>
+<td>Built-in</td>
+<td>API key + cloud config</td>
+<td><code>docker compose</code></td>
+<td>Write integration code</td>
+<td><code>npx agentmemory</code></td>
+<td><strong><code>pip install</code></strong></td>
+</tr>
+<tr>
+<td><strong>Data</strong></td>
+<td>Local</td>
+<td>Cloud</td>
+<td>Local</td>
+<td>Your call</td>
+<td>Local</td>
+<td><strong>Local</strong></td>
+</tr>
+<tr>
+<td><strong>Search</strong></td>
+<td>grep</td>
+<td>Vector</td>
+<td>Vector</td>
+<td>Vector</td>
+<td>Hybrid</td>
+<td><strong>Hybrid + time-decay + usage + score</strong></td>
+</tr>
+<tr>
+<td><strong>Self-improving</strong></td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>✅ Quality loop</strong></td>
+</tr>
+<tr>
+<td><strong>Knowledge graph</strong></td>
+<td>❌</td>
+<td>Paid</td>
+<td>❌</td>
+<td>Paid</td>
+<td>❌</td>
+<td><strong>✅ Free auto-link</strong></td>
+</tr>
+<tr>
+<td><strong>Dashboard</strong></td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>Viewer</td>
+<td><strong>✅ Full web UI</strong></td>
+</tr>
+<tr>
+<td><strong>Dependencies</strong></td>
+<td>None</td>
+<td>~300MB</td>
+<td>~2GB</td>
+<td>~1.4GB</td>
+<td>~200MB</td>
+<td><strong>~1.4GB</strong> (embeddings)</td>
+</tr>
+<tr>
+<td><strong>Built by agents</strong></td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>✅ Dogfooded daily</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Cloud services and Docker-based solutions are strong choices for teams or production apps. Lorekeeper is optimised for the other end: solo developers and agent workflows where <strong>zero ops, zero cloud, and a self-improving store</strong> matter most.</p>
+<blockquote>
+<p><strong>Dependency note:</strong> ~1.4GB is from the sentence-transformers embedding model (PyTorch). This is the same weight class as any local embedding solution. We're honest about it.</p>
+</blockquote>
+<hr />
+<h2 id="mcp-tools">MCP Tools</h2>
+<p>Lorekeeper exposes <strong>10 MCP tools</strong> covering the full memory lifecycle:</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lore_search</code></td>
+<td>Hybrid semantic + keyword search with relevance scores</td>
+</tr>
+<tr>
+<td><code>lore_remember</code></td>
+<td>Fast one-shot memory save (auto-titles, auto-links)</td>
+</tr>
+<tr>
+<td><code>lore_insert</code></td>
+<td>Bulk structured insert with custom scores and links</td>
+</tr>
+<tr>
+<td><code>lore_update</code></td>
+<td>Feedback loop — rate memories, drive quality</td>
+</tr>
+<tr>
+<td><code>lore_forget</code></td>
+<td>Soft-delete wrong or outdated memories</td>
+</tr>
+<tr>
+<td><code>lore_reflect</code></td>
+<td>End-of-session: extract learnings, auto-save discoveries</td>
+</tr>
+<tr>
+<td><code>lore_processed_sessions</code></td>
+<td>Check which sessions are already processed</td>
+</tr>
+<tr>
+<td><code>lore_recommend_links</code></td>
+<td>Suggest candidate links between related memories</td>
+</tr>
+<tr>
+<td><code>lore_get_suggestions</code></td>
+<td>List pending link suggestions from the sweep engine</td>
+</tr>
+<tr>
+<td><code>lore_review_suggestion</code></td>
+<td>Accept or reject one or more link suggestions (batch)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Full API reference → <a href="api-reference/">docs/api-reference.md</a></strong></p>
+<hr />
+<h2 id="dashboard">Dashboard</h2>
+<p>A local web UI to browse, search, edit, and manage your memory store.</p>
+<div class="highlight"><pre><span></span><code>lorekeeper-dashboard
+<span class="c1"># → http://127.0.0.1:7777</span>
+</code></pre></div>
+<p>Seven tabs:</p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Memories</strong></td>
+<td>Sortable table with live filter — title, score, confidence, usage, dates</td>
+</tr>
+<tr>
+<td><strong>Detail</strong></td>
+<td>Edit a memory's content, manage its links, soft-delete or hard-delete</td>
+</tr>
+<tr>
+<td><strong>Links</strong></td>
+<td>Browse the knowledge graph — source → relation → target</td>
+</tr>
+<tr>
+<td><strong>Query</strong></td>
+<td>Ad-hoc semantic + keyword searches with per-result score breakdown</td>
+</tr>
+<tr>
+<td><strong>Sessions</strong></td>
+<td>All processed agent sessions with extracted learnings</td>
+</tr>
+<tr>
+<td><strong>Config</strong></td>
+<td>Live tuning of search weights, quality thresholds, limits</td>
+</tr>
+<tr>
+<td><strong>Backup</strong></td>
+<td>Export/import memories as JSON with dedup preview</td>
+</tr>
+<tr>
+<td><strong>Suggestions</strong></td>
+<td>Review AI-generated link candidates from the sweep engine — accept or reject one-by-one or in bulk</td>
+</tr>
+</tbody>
+</table>
+<h3 id="suggestions-tab">Suggestions Tab</h3>
+<p>The <strong>Suggestions</strong> tab surfaces link candidates generated automatically by the background sweep engine. Each candidate is a pair of memories the engine considers related, scored by cosine similarity, BM25 keyword overlap, entity co-occurrence, and temporal proximity.</p>
+<p><strong>Workflow:</strong></p>
+<ol>
+<li>The sweep engine runs on a configurable interval (<code>LORE_SUGGEST_INTERVAL_HOURS</code>, default <code>12</code>).</li>
+<li>Candidates appear in the Suggestions tab, sorted by score (highest first).</li>
+<li>Click <strong>✓</strong> (or select multiple rows + <strong>Accept Selected</strong>) to create a permanent link between the two memories.</li>
+<li>Click <strong>✗</strong> (or <strong>Reject Selected</strong>) to dismiss — rejected pairs are never re-surfaced by future sweeps.</li>
+<li>Use <strong>Trigger Sweep</strong> on the Config tab to run the sweep immediately instead of waiting for the interval.</li>
+</ol>
+<p><strong>Sweep configuration</strong> (via <code>LORE_</code>-prefixed env vars or the Config tab):</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LORE_SUGGEST_INTERVAL_HOURS</code></td>
+<td><code>12</code></td>
+<td>How often the sweep runs (hours)</td>
+</tr>
+<tr>
+<td><code>LORE_SUGGEST_MIN_SCORE</code></td>
+<td><code>0.55</code></td>
+<td>Minimum weighted score to surface a candidate</td>
+</tr>
+<tr>
+<td><code>LORE_SUGGEST_MAX_CANDIDATES</code></td>
+<td><code>500</code></td>
+<td>Maximum candidates per sweep run</td>
+</tr>
+<tr>
+<td><code>LORE_SUGGEST_TTL_DAYS</code></td>
+<td><code>30</code></td>
+<td>Days before unreviewed suggestions are pruned</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Lorekeeper Query tab — hybrid search with scores" src="assets/dashboard-query-tab.png" /></p>
+<hr />
+<h2 id="built-by-agents-for-agents">Built by Agents, For Agents</h2>
+<p>Lorekeeper is developed <em>using</em> AI agents — Claude Code, Hermes, and our own agent team. The development cycle is itself a working demo of what it does:</p>
+<div class="highlight"><pre><span></span><code>agent builds a feature → uses Lorekeeper to capture what it learned →
+searches those memories next session →
+builds the next feature with the context already there
+</code></pre></div>
+<p>This isn't a marketing line. Every tool schema, return type, and workflow in Lorekeeper was shaped by agents using it daily — not by humans reading specs. When something was annoying to use, we changed it. When search returned noise, we tuned the weights. The product is what it is because the agents that build it depend on it.</p>
+<blockquote>
+<p>The agentic development loop documented in this repo is how we actually work — and it's what Lorekeeper is designed to support for you.</p>
+</blockquote>
+<hr />
+<h2 id="for-developers">For Developers</h2>
+<p>Clone, run from source, or contribute:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Jessinra/Lorekeeper.git
+<span class="nb">cd</span><span class="w"> </span>Lorekeeper
+bash<span class="w"> </span>scripts/setup.sh
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Tests</span>
+uv<span class="w"> </span>run<span class="w"> </span>pytest
+
+<span class="c1"># Lint</span>
+uv<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>src<span class="w"> </span>tests
+
+<span class="c1"># Type check</span>
+uv<span class="w"> </span>run<span class="w"> </span>mypy<span class="w"> </span>src
+
+<span class="c1"># Dashboard dev</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dashboard
+uv<span class="w"> </span>run<span class="w"> </span>lorekeeper-dashboard
+</code></pre></div>
+<h3 id="project-layout">Project Layout</h3>
+<div class="highlight"><pre><span></span><code>src/lorekeeper/
+├── __main__.py          # Entrypoint — init_service() + mcp.run(stdio)
+├── server.py            # FastMCP tool definitions (8 tools)
+├── config.py            # Settings (pydantic-settings, LORE_ prefix)
+├── models.py            # Pydantic models
+├── dashboard/           # Web UI (FastAPI + uvicorn)
+└── services/
+    ├── orchestrator.py  # MemoryService — coordinates sub-services
+    ├── memory_engine.py # Vector store abstraction
+    ├── lancedb_engine.py# LanceDB backend
+    ├── link_store.py    # SQLite — memories, links, suggestions
+    ├── keyword_index.py # BM25 index
+    ├── search.py        # Hybrid ranking
+    └── ...
+</code></pre></div>
+<h3 id="key-configuration">Key Configuration</h3>
+<p>All settings via <code>LORE_</code>-prefixed env vars or the dashboard Config tab:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LORE_DATA_DIR</code></td>
+<td><code>~/.lorekeeper</code></td>
+<td>Data directory (SQLite + vectors)</td>
+</tr>
+<tr>
+<td><code>LORE_NAMESPACE</code></td>
+<td><code>shared</code></td>
+<td>Agent namespace — writes scoped, reads union with <code>shared</code></td>
+</tr>
+<tr>
+<td><code>LORE_SEARCH_LIMIT</code></td>
+<td><code>5</code></td>
+<td>Default result count from <code>lore_search</code></td>
+</tr>
+<tr>
+<td><code>LORE_LINK_TOP_M</code></td>
+<td><code>10</code></td>
+<td>Max candidates returned by <code>lore_recommend_links</code></td>
+</tr>
+<tr>
+<td><code>LORE_LINK_SCORE_THRESHOLD</code></td>
+<td><code>0.3</code></td>
+<td>Minimum score for link candidates to surface</td>
+</tr>
+<tr>
+<td><code>LORE_LINK_TEMPORAL_TAU_DAYS</code></td>
+<td><code>30</code></td>
+<td>Decay half-life for temporal proximity scoring (days)</td>
+</tr>
+</tbody>
+</table>
+<p>Full list → <code>src/lorekeeper/config.py</code> and <code>CLAUDE.md</code>.</p>
+<hr />
+<h2 id="performance">Performance</h2>
+<p>All 500 LongMemEval-S questions, default hybrid weights (sem=0.45, kw=0.30):</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>Latency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>R@1</strong></td>
+<td><strong>84.6%</strong></td>
+<td>32.9 ms/query</td>
+</tr>
+<tr>
+<td><strong>R@3</strong></td>
+<td><strong>93.6%</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>R@5</strong></td>
+<td><strong>96.6%</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>R@10</strong></td>
+<td><strong>98.8%</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Full per-category breakdown → <a href="https://github.com/Jessinra/Lorekeeper/blob/main/docs/research/2026-06-11-retrieval-benchmark-results.md">docs/research/2026-06-11-retrieval-benchmark-results.md</a></p>
+<hr />
+<h2 id="license">License</h2>
+<p>Apache-2.0 — see <a href="https://github.com/Jessinra/Lorekeeper/blob/main/LICENSE">LICENSE</a>.</p>
+<hr />
+<p><em>Built by agents, for agents.</em> <a href="positioning-manifesto/">Manifesto</a> · <a href="positioning-manifesto/">Strategy</a></p>
+<p><em>Last verified: 2026-06-20</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Jessinra Kai &mdash; Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Jessinra/Lorekeeper" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "content.code.copy"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

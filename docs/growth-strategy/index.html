@@ -1,0 +1,2278 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Self-improving memory for AI agents — open-source MCP server">
+      
+      
+      
+        <link rel="canonical" href="https://jessinra.github.io/Lorekeeper/docs/growth-strategy/">
+      
+      
+        <link rel="prev" href="../positioning-manifesto/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Roadmap - Lorekeeper</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#lorekeeper-growth-strategy-10-1000-1000000-agents" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Lorekeeper" class="md-header__button md-logo" aria-label="Lorekeeper" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Lorekeeper
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Roadmap
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Jessinra/Lorekeeper" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Jessinra/Lorekeeper
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Lorekeeper" class="md-nav__button md-logo" aria-label="Lorekeeper" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    Lorekeeper
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Jessinra/Lorekeeper" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Jessinra/Lorekeeper
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../positioning-manifesto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#current-baseline-june-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Baseline (June 2026)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current Baseline (June 2026)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#north-star" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        North Star
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#market-context-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Market Context (2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-a-beta-validation-10-100-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase A: Beta Validation (10 → 100 Users)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase A: Beta Validation (10 → 100 Users)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-10-user-product" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The 10-User Product
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-path-what-must-ship-for-beta-launch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Path — What Must Ship for Beta Launch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distribution-plan-beta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distribution Plan (Beta)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#success-criteria-phase-a-exit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Criteria (Phase A Exit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-build-phase-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What NOT to Build (Phase A)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-b-team-tier-shared-server-1000-10000-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase B: Team Tier — Shared Server (1,000 → 10,000 Users)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase B: Team Tier — Shared Server (1,000 → 10,000 Users)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-product-at-team-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Product at Team Scale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-differentiates-at-team-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Differentiates at Team Scale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-path-what-ships-for-phase-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Path — What Ships for Phase B
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distribution-plan-phase-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distribution Plan (Phase B)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#growth-mechanics-phase-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Growth Mechanics (Phase B)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#success-criteria-phase-b-exit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Criteria (Phase B Exit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#revenue-consideration-phase-b-stack-as-option-dont-charge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Revenue Consideration (Phase B — Stack as Option, Don't Charge)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-c-platform-ecosystem-1000000-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase C: Platform &amp; Ecosystem (1,000,000 Agents)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase C: Platform &amp; Ecosystem (1,000,000 Agents)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-market-shift-phase-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Market Shift (Phase C)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-differentiates-at-1m-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Differentiates at 1M Agents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architectural-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Evolution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-ships-in-phase-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Ships in Phase C
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#business-model-phase-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Business Model (Phase C)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distribution-plan-phase-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distribution Plan (Phase C)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#competitive-positioning-at-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Competitive Positioning at Scale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#success-criteria-phase-c-exit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Criteria (Phase C Exit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-register" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Register
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#milestone-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Milestone Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-funnel-math" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A: Funnel Math
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix A: Funnel Math">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#projected-conversion-at-each-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Projected conversion at each phase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-drives-each-phases-growth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What drives each phase's growth
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-competitive-landscape-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B: Competitive Landscape Updates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix B: Competitive Landscape Updates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#direct-mcp-memory-servers-current-june-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Direct MCP Memory Servers (Current — June 2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#funded-competitors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Funded Competitors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-c-key-design-principles-maintain-across-all-phases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix C: Key Design Principles (Maintain Across All Phases)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#current-baseline-june-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Baseline (June 2026)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current Baseline (June 2026)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#north-star" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        North Star
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#market-context-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Market Context (2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-a-beta-validation-10-100-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase A: Beta Validation (10 → 100 Users)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase A: Beta Validation (10 → 100 Users)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-10-user-product" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The 10-User Product
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-path-what-must-ship-for-beta-launch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Path — What Must Ship for Beta Launch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distribution-plan-beta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distribution Plan (Beta)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#success-criteria-phase-a-exit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Criteria (Phase A Exit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-build-phase-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What NOT to Build (Phase A)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-b-team-tier-shared-server-1000-10000-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase B: Team Tier — Shared Server (1,000 → 10,000 Users)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase B: Team Tier — Shared Server (1,000 → 10,000 Users)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-product-at-team-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Product at Team Scale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-differentiates-at-team-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Differentiates at Team Scale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-path-what-ships-for-phase-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Path — What Ships for Phase B
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distribution-plan-phase-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distribution Plan (Phase B)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#growth-mechanics-phase-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Growth Mechanics (Phase B)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#success-criteria-phase-b-exit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Criteria (Phase B Exit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#revenue-consideration-phase-b-stack-as-option-dont-charge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Revenue Consideration (Phase B — Stack as Option, Don't Charge)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-c-platform-ecosystem-1000000-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase C: Platform &amp; Ecosystem (1,000,000 Agents)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase C: Platform &amp; Ecosystem (1,000,000 Agents)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-market-shift-phase-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Market Shift (Phase C)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-differentiates-at-1m-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Differentiates at 1M Agents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architectural-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architectural Evolution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-ships-in-phase-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Ships in Phase C
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#business-model-phase-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Business Model (Phase C)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distribution-plan-phase-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distribution Plan (Phase C)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#competitive-positioning-at-scale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Competitive Positioning at Scale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#success-criteria-phase-c-exit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Success Criteria (Phase C Exit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-register" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Register
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#milestone-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Milestone Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-a-funnel-math" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix A: Funnel Math
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix A: Funnel Math">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#projected-conversion-at-each-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Projected conversion at each phase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-drives-each-phases-growth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What drives each phase's growth
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-b-competitive-landscape-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix B: Competitive Landscape Updates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix B: Competitive Landscape Updates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#direct-mcp-memory-servers-current-june-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Direct MCP Memory Servers (Current — June 2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#funded-competitors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Funded Competitors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-c-key-design-principles-maintain-across-all-phases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix C: Key Design Principles (Maintain Across All Phases)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="lorekeeper-growth-strategy-10-1000-1000000-agents">Lorekeeper Growth Strategy: 10 → 1,000 → 1,000,000 Agents</h1>
+<blockquote>
+<p><em>How Lorekeeper evolves from a beta-stage memory server for a handful of agent builders into the universal memory layer for a million agents — without betraying local-first, self-improving values.</em></p>
+</blockquote>
+<hr />
+<h2 id="current-baseline-june-2026">Current Baseline (June 2026)</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GitHub stars</td>
+<td>~tens (pre-beta)</td>
+<td>Own repo</td>
+</tr>
+<tr>
+<td>PyPI installs</td>
+<td>~few</td>
+<td>Manual tracking</td>
+</tr>
+<tr>
+<td>Active users</td>
+<td>~1-3 (Jason + agents)</td>
+<td>Dogfooding</td>
+</tr>
+<tr>
+<td>MCP tools</td>
+<td>8 core</td>
+<td><code>lore_search</code>, <code>lore_remember</code>, <code>lore_insert</code>, <code>lore_update</code>, <code>lore_forget</code>, <code>lore_recommend_links</code>, <code>lore_reflect</code>, <code>lore_processed_sessions</code></td>
+</tr>
+<tr>
+<td>Tests</td>
+<td>266 unit + E2E</td>
+<td><code>uv run pytest</code></td>
+</tr>
+<tr>
+<td>Dashboard</td>
+<td>Functional web UI</td>
+<td>Port 7777</td>
+</tr>
+<tr>
+<td>Data store</td>
+<td>SQLite + Chroma/LanceDB</td>
+<td>~1.4GB embed model</td>
+</tr>
+<tr>
+<td>Backlog</td>
+<td>~15 active proposals</td>
+<td><code>backlogs/</code></td>
+</tr>
+<tr>
+<td>Marketing</td>
+<td>README marketing pass done (LKPR-71)</td>
+<td>Screenshots, use-cases, benchmarks</td>
+</tr>
+<tr>
+<td>Positioning</td>
+<td>Manifesto written</td>
+<td><code>docs/positioning-manifesto.md</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="north-star">North Star</h3>
+<blockquote>
+<p><strong>A team's agents get smarter together about their specific context — without sharing anything with strangers.</strong></p>
+</blockquote>
+<p>Not a general-purpose knowledge base. Not a Wikipedia for agents. <strong>Your fleet, your codebase, your project, your team</strong> — every agent's feedback loop cross-pollinates quality signals inside your namespace. Memory that 10 agents on your team have marked useful for "deploy pipeline" surfaces higher for the 11th agent asking about deploys. The collective gets sharper without anyone manually curating.</p>
+<h3 id="market-context-2026">Market Context (2026)</h3>
+<ul>
+<li><strong>4.2M weekly active Claude Code users</strong> — 131K GitHub stars, writes 4% of all public GitHub commits</li>
+<li><strong>4.7M GitHub Copilot paid subscribers</strong> — $2B ARR</li>
+<li><strong>Cursor at $60B valuation</strong> — $2B ARR</li>
+<li><strong>MCP ecosystem: 97M monthly SDK downloads</strong>, 9,600+ server records. Growing 232% per 6 months</li>
+<li><strong>Memory server category exploded</strong> — claude-mem (46K★), agentmemory (21.7K★), MemPalace (41K★), sqlite-memory, Neural Memory</li>
+<li><strong>mem0: 55K★, $24M raised, 14M+ PyPI downloads, 186M API calls/quarter</strong> — the funded incumbent</li>
+<li><strong>$6-9.5B total AI coding tool market (2026)</strong>, 22% CAGR</li>
+</ul>
+<hr />
+<h2 id="phase-a-beta-validation-10-100-users">Phase A: Beta Validation (10 → 100 Users)</h2>
+<p><strong>Goal:</strong> Prove people want self-improving local memory for their agents. Fix the friction that kills the first impression. Get to 100 GitHub stars and 10 weekly active users.</p>
+<p><strong>Estimated duration:</strong> 4-6 weeks from beta launch.</p>
+<h3 id="the-10-user-product">The 10-User Product</h3>
+<p><strong>Who these users are:</strong> Fellow agent builders, open-source tinkerers, Claude Code / Cursor power users who already use or build memory servers. They'll try anything that promises "one command." They're technically generous — they'll file issues, not just leave.</p>
+<p><strong>What differentiates at 10 users:</strong> Technical quality + zero friction. Early adopters compare architecture, not marketing. They want to see:</p>
+<ul>
+<li>Does the search actually work?</li>
+<li>Is the feedback loop real?</li>
+<li>Can I look under the hood?</li>
+</ul>
+<h3 id="critical-path-what-must-ship-for-beta-launch">Critical Path — What Must Ship for Beta Launch</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Feature</th>
+<th>Why</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td><code>lorekeeper setup</code> auto-detect + inject for Claude Code, Cursor, Copilot, Hermes, Codex</td>
+<td>Without this, the user has to manually edit config files. kills conversion.</td>
+<td>Our memory says "empty dashboard + no pip install are biggest friction points"</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td><code>uvx lorekeeper</code> ephemeral zero-install mode</td>
+<td>Show a friend with a single command. No git clone, no pip.</td>
+<td>Memory: "uvx lorekeeper is a high-impact distribution vector"</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td>Seed prompt on first run</td>
+<td>On first install, show a paste-able prompt that populates ~10 seed memories instantly. Empty state kills retention.</td>
+<td>LKPR-55 done</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>Dashboard empty state (fixed)</td>
+<td>Fresh install shouldn't show blank panels. Show "this is what memories look like" sample.</td>
+<td>LKPR-56 in progress</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>README marketing pass</td>
+<td>Screenshots, use-cases, benchmark table, 3-second sell.</td>
+<td>LKPR-71 done</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>Benchmark eval script</td>
+<td>"Lorekeeper saved X tokens vs raw context" — reproducible, verifiable claims.</td>
+<td>LKPR-70 in progress</td>
+</tr>
+</tbody>
+</table>
+<h3 id="distribution-plan-beta">Distribution Plan (Beta)</h3>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Action</th>
+<th>Expected Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Hacker News launch</strong></td>
+<td>Write launch post: "Show HN: Lorekeeper — self-improving AI agent memory, one command"</td>
+<td>500-2K stars in 48h, drives initial traffic</td>
+</tr>
+<tr>
+<td><strong>GitHub Trending</strong></td>
+<td>Time launch for HN + X virality simultaneously</td>
+<td>"Day 5 on GitHub Trending All Languages" is the pattern (agentmemory did this)</td>
+</tr>
+<tr>
+<td><strong>Reddit</strong></td>
+<td>Post comparison on r/ClaudeAI, r/MCP, r/Python. "How Lorekeeper's feedback loop handles memory decay"</td>
+<td>Lower direct conversion, starts discussions</td>
+</tr>
+<tr>
+<td><strong>MCP Registry</strong></td>
+<td>List Lorekeeper on <code>mcpservers.org</code>, <code>awesome-mcp-servers</code>, <code>mcpmarket.com</code></td>
+<td>Discoverability from every MCP client</td>
+</tr>
+<tr>
+<td><strong>agentmemory mem0 claude-mem comparison</strong></td>
+<td>"What Lorekeeper does that agentmemory can't" — the feedback loop. Published on X + blog.</td>
+<td>The "X% fewer tokens" comparative framing worked for agentmemory (21.7K stars)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="success-criteria-phase-a-exit">Success Criteria (Phase A Exit)</h3>
+<div class="highlight"><pre><span></span><code>- 100 GitHub stars
+- 10 weekly active users (WAU)
+- &lt; 5% crash rate on install
+- &lt; 30s median time from pip install to first memory
+- 3+ issues filed by external users (signals engagement)
+</code></pre></div>
+<h3 id="what-not-to-build-phase-a">What NOT to Build (Phase A)</h3>
+<ul>
+<li>Multi-user features (wait for validation)</li>
+<li>Cloud sync (contradicts local-first values at this stage)</li>
+<li>Plugin system (too far ahead)</li>
+<li>Enterprise features (wrong audience)</li>
+<li>More MCP tools (8 is fine — resist bloat)</li>
+</ul>
+<hr />
+<h2 id="phase-b-team-tier-shared-server-1000-10000-users">Phase B: Team Tier — Shared Server (1,000 → 10,000 Users)</h2>
+<p><strong>Goal:</strong> Move from "cool project" to "engineering team essential." Ship the team shared server — one Lorekeeper instance serving a team's entire agent fleet. Establish the bottom-up PLG motion (individual → team → org). Get to 1,000 GitHub stars and first team-tier revenue.</p>
+<p><strong>This is the critical transition.</strong> The product thesis shifts from "memory for your agent" to "memory for your team's agents." The knowledge that matters most — internal service quirks, deployment gotchas, undocumented APIs — is never written down. At team scale, Lorekeeper propagates it automatically across the team's agent fleet.</p>
+<p><strong>Estimated duration:</strong> 3-6 months after beta launch.</p>
+<h3 id="the-product-at-team-scale">The Product at Team Scale</h3>
+<p>Engineer A's Claude Code discovers that payment-service silently drops requests with unicode idempotency keys → stores the memory → Engineer B's Cursor agent surfaces it next day when touching the same service. Nobody briefed B. Nobody wrote a Confluence doc. The knowledge propagated on its own.</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Offering</th>
+<th>Auth</th>
+<th>Data Model</th>
+<th>First Customer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Individual</strong> (current)</td>
+<td>pip install, single namespace</td>
+<td>None</td>
+<td>Local SQLite + vector</td>
+<td>Solo devs</td>
+</tr>
+<tr>
+<td><strong>Team</strong> (Phase B)</td>
+<td>Shared server per team</td>
+<td>Token auth (LKPR-39)</td>
+<td>Namespaced: <code>{team}/shared</code>, <code>{team}/{engineer}</code></td>
+<td>5–50 person teams</td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-differentiates-at-team-scale">What Differentiates at Team Scale</h3>
+<p>Competitors at this scale: mem0 (library, needs integration), claude-mem (single-user Node), agentmemory (single-user, Node), Zep (cloud, expensive for teams).</p>
+<p>Lorekeeper's edge: <strong>Your team's agents get smarter together about your specific codebase — without sharing anything externally.</strong> No competitor offers cross-agent quality signal inside a team namespace.</p>
+<h3 id="critical-path-what-ships-for-phase-b">Critical Path — What Ships for Phase B</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Feature</th>
+<th>Ticket</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td>Token / namespace auth</td>
+<td>LKPR-39</td>
+<td>Enterprise gate. No team will use a shared server with plain env var scoping. Also unblocks CI/CD + remote deployment. Build this before any team-tier marketing.</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td>Provenance tagging</td>
+<td>LKPR-18</td>
+<td>Metadata foundation for trust in shared namespaces. Agents need to know "who discovered this" to calibrate whether to trust an org-shared memory.</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td>Org namespaces</td>
+<td>LKPR-40</td>
+<td><code>{team}/shared</code> visible by all team agents, <code>{team}/{engineer}</code> private. Isolates project/team/personal memories.</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>Multi-reader, controlled-writer</td>
+<td>Extends LKPR-39/40</td>
+<td>10 agents read the shared KB, 2 write. Trust per namespace per agent.</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>Herd memory awareness</td>
+<td>New</td>
+<td><code>lore_search</code> shows "3 agents in your namespace also found this relevant" — social proof from within your team</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>Memory health dashboard tab</td>
+<td>New</td>
+<td>Which memories are active vs. stale? Hit rate per agent? Where are agents forgetting?</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>Self-hosted deployment docs</td>
+<td>New (gap)</td>
+<td>Dockerfile + Helm chart + deployment guide. Orgs won't send internal data to an external server.</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>Memory quality governance</td>
+<td>New (gap)</td>
+<td>Write permissions + quality gates for shared namespaces. Auto-flag low-confidence memories before they propagate to org/shared.</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>Import/export</td>
+<td>LKPR-53 / LKPR-68</td>
+<td>Migrate from mem0, claude-mem, JSON, markdown</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Build order:</strong> LKPR-39 (token auth) → LKPR-40 (namespaces) → LKPR-18 (provenance) → quality governance → deployment docs. Ship team server as MVP after LKPR-39 + LKPR-40. Everything else is polish.</p>
+<p><strong>What to deprioritize (Phase B):</strong></p>
+<ul>
+<li>Plugin system (ecosystem depends on critical mass — not yet)</li>
+<li>Cloud sync (still pure local-first)</li>
+<li>Multi-instance federation (sharding is a Phase C problem)</li>
+</ul>
+<h3 id="distribution-plan-phase-b">Distribution Plan (Phase B)</h3>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Tactic</th>
+<th>Why This Works Now</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Comparative benchmarks</strong></td>
+<td>"Lorekeeper vs agentmemory vs mem0: retrieval accuracy over 100 sessions"</td>
+<td>With 100 users, you have real data. Publish reproducible benchmarks. agentmemory did this — worked.</td>
+</tr>
+<tr>
+<td><strong>Technical blog posts</strong></td>
+<td>"How we built a self-improving memory loop" (deep architecture post on dev.to)</td>
+<td>Developers at this scale read architecture blogs. The feedback loop is interesting enough to write about.</td>
+</tr>
+<tr>
+<td><strong>YouTube setup demo</strong></td>
+<td>2-min video: pip install → agent config → first memory → dashboard. No talking, just screen.</td>
+<td>Visual proof converts. "Show, don't tell."</td>
+</tr>
+<tr>
+<td><strong>Agent-specific setup guides</strong></td>
+<td>"Lorekeeper for [Claude Code / Cursor / Hermes / Copilot / Codex]" — one dedicated guide per agent</td>
+<td>SEO surface area. Users search "memory for Claude Code" not "MCP memory server"</td>
+</tr>
+<tr>
+<td><strong>Reddit FAQ farming</strong></td>
+<td>Answer "what memory server should I use" questions on r/claudeai, r/mcp, r/cursor with calm, informed comparisons</td>
+<td>Long-tail conversions. Be the helpful answer, not the ad.</td>
+</tr>
+<tr>
+<td><strong>Open-source contribution workflow</strong></td>
+<td>Label issues <code>good-first-issue</code>, <code>help-wanted</code>. Accept PRs.</td>
+<td>Community ownership drives retention.</td>
+</tr>
+<tr>
+<td><strong>X/Twitter virality thread</strong></td>
+<td>"Thread: 4 months of building an agent memory server that improves itself" — narrative arc</td>
+<td>Human story of building (Jason's story) resonates more than product features</td>
+</tr>
+</tbody>
+</table>
+<h3 id="growth-mechanics-phase-b">Growth Mechanics (Phase B)</h3>
+<p><strong>The viral loop that makes this phase work:</strong></p>
+<div class="highlight"><pre><span></span><code>Developer installs Lorekeeper
+  → Agent remembers better
+  → Developer sees improvement in daily work
+  → Team member asks &quot;how is your agent so fast?&quot;
+  → pip install lorekeeper-mcp (referral, no effort)
+  → Shared namespace makes team memory compound
+</code></pre></div>
+<p><strong>Network effects kick in at this scale:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>User-Level</th>
+<th>Team-Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Memory quality</td>
+<td>Improves with use (feedback loop)</td>
+<td>Improves faster (more agents → more feedback → more refinement)</td>
+</tr>
+<tr>
+<td>Retrieval accuracy</td>
+<td>Good</td>
+<td>Better — shared context disambiguates</td>
+</tr>
+<tr>
+<td>Knowledge completeness</td>
+<td>What one agent learned</td>
+<td>What the whole team learned</td>
+</tr>
+<tr>
+<td>Switching cost</td>
+<td>Low (single user)</td>
+<td>High (team context is in the memory)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="success-criteria-phase-b-exit">Success Criteria (Phase B Exit)</h3>
+<div class="highlight"><pre><span></span><code>- 1,000 GitHub stars
+- 1,000 pip installs/month
+- 100 weekly active users (WAU)
+- 5+ teams using shared namespace server (self-hosted)
+- Team server MVP shipped: LKPR-39 (auth) + LKPR-40 (namespaces)
+- &lt; 1% uninstall rate per 30 days
+- 30+ closed issues from external users
+- 5+ external contributors (PRs accepted)
+- Retrieval accuracy benchmark: 85%+ precision@5 (up from baseline)
+</code></pre></div>
+<h3 id="revenue-consideration-phase-b-stack-as-option-dont-charge">Revenue Consideration (Phase B — Stack as Option, Don't Charge)</h3>
+<p>At team scale, the bottom-up PLG motion is the engine:</p>
+<div class="highlight"><pre><span></span><code>Engineer installs personally (free)
+  → &quot;My agent is noticeably better than my colleague&#39;s&quot;
+  → Colleague installs
+  → Small team of 5 wants shared server
+  → First team-tier evaluation
+</code></pre></div>
+<p><strong>Do not charge individuals.</strong> The individual free tier is the acquisition channel. If a team offers to pay for early-access team features (token auth, shared namespace), take it as a design partnership — the learnings are worth more than the money.</p>
+<p>Pricing anchoring for when team tier ships: $50/seat/month (benchmark: Confluence $5, Notion $10, Datadog $15; agent memory is more specialized than a wiki, less critical than monitoring — revisit when selling).</p>
+<hr />
+<h2 id="phase-c-platform-ecosystem-1000000-agents">Phase C: Platform &amp; Ecosystem (1,000,000 Agents)</h2>
+<p><strong>Goal:</strong> Become the default memory layer for AI agents — the "Wikipedia of agent experience." Transition from open-source project to sustainable platform. 50,000+ GitHub stars. 10,000+ WAU.</p>
+<p><strong>Estimated duration:</strong> 12-24 months after beta launch.</p>
+<h3 id="the-market-shift-phase-c">The Market Shift (Phase C)</h3>
+<p>At this scale, the world looks different:</p>
+<ul>
+<li><strong>AI agents are not a novelty</strong> — they handle 20%+ of an engineer's workload (industry projection for 2027)</li>
+<li><strong>Every developer runs 5+ agents</strong> — coding, PM, testing, documentation, design</li>
+<li><strong>Every team runs 20+ agents</strong> — multiple devs, multiple workflows, one shared context</li>
+<li><strong>"MCP" is no longer a niche protocol</strong> — it's the standard, like HTTP for LLMs</li>
+<li><strong>Enterprise is buying</strong> — Fortune 500 teams need compliant, auditable agent memory</li>
+<li><strong>Platform memory is the lock-in</strong> — Anthropic, OpenAI, Google are building closed memory into their agent platforms</li>
+</ul>
+<h3 id="what-differentiates-at-1m-agents">What Differentiates at 1M Agents</h3>
+<p>The question shifts from "does it work?" to "does my entire agent fleet get smarter together?"</p>
+<p><strong>Lorekeeper's edge: Cross-agent quality signal within your namespace.</strong> A memory that 10 agents on your team have rated useful for "deploy pipeline" surfaces higher for the 11th agent — even if that agent has never seen it before. The collective quality signal bootstraps new agents into the team's context instantly.</p>
+<p>This is NOT generic internet knowledge ("strangers sharing facts"). It's <strong>your agents, your codebase, your team's patterns</strong> — cross-pollinated inside your namespace. No competitor can offer this because:</p>
+<ul>
+<li><strong>Single-user memory servers</strong> (claude-mem, agentmemory) — only one agent, no signal to aggregate</li>
+<li><strong>Cloud services</strong> (Zep, mem0 Cloud) — they have the data but they'd sell it as generic knowledge, not your team's signal</li>
+<li><strong>File-based</strong> (CLAUDE.md) — manual curation, doesn't scale</li>
+<li><strong>Platform built-in</strong> (Anthropic, OpenAI) — locked to one provider, can't aggregate across your heterogeneous fleet</li>
+</ul>
+<p>Lorekeeper already has the infrastructure: <code>lore_update</code>, score drift, confidence EMA. The missing piece is an <strong>opt-in cross-agent score aggregation layer</strong> — anonymized within your namespace, privacy-preserving, zero-config.</p>
+<h3 id="architectural-evolution">Architectural Evolution</h3>
+<p><strong>The 1M-agent product looks nothing like the beta product:</strong></p>
+<div class="highlight"><pre><span></span><code>                    Phase A                        Phase C
+                    ───────                        ───────
+Data model          Single SQLite                  Sharded + Replicated
+Vector store        Local Chroma/LanceDB           Federated vector index
+Search              Single-threaded                Distributed, sub-ms
+                  No caching                     Multi-tier cache (L1: local, L2: namespace, L3: federation)
+Security            None (single user)            RBAC + audit + E2EE
+Deployment          pip install                    pip + Helm chart + Kubernetes operator
+Sync                None                           Multi-device E2EE sync
+Federation          None                           Opt-in knowledge sharing across instances
+Plugin system       None                           3rd-party memory processors
+Business model      Free                           Free core + paid sync + enterprise
+</code></pre></div>
+<h3 id="what-ships-in-phase-c">What Ships in Phase C</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Why</th>
+<th>Design Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sub-millisecond search</strong></td>
+<td>1M concurrent queries requires a completely different search path. Shard by namespace, cache hot memories in LMDB/RocksDB, write-behind merge.</td>
+<td>Must degrade gracefully for single-user installs — no architectural bifurcation</td>
+</tr>
+<tr>
+<td><strong>Multi-device E2EE sync</strong></td>
+<td>Users run agents on laptop + CI server + cloud VM. Memories must follow them.</td>
+<td>End-to-end encrypted, zero-knowledge server. Sync via existing file (git!), not proprietary cloud</td>
+</tr>
+<tr>
+<td><strong>Federated knowledge</strong></td>
+<td>"What do 10K agents know about deploying Kubernetes?" Aggregate patterns without exposing individual memories. Differential privacy on aggregate queries.</td>
+<td>Opt-in only. Anonymized. Can be disabled entirely.</td>
+</tr>
+<tr>
+<td><strong>Plugin ecosystem</strong></td>
+<td>Third-party memory processors: image→text extraction, structured log analysis, compliance filters.</td>
+<td>Sandboxed WASM plugins. MCP tools register themselves.</td>
+</tr>
+<tr>
+<td><strong>Memory marketplace</strong></td>
+<td>Curated knowledge packs: "Rust compilation errors," "AWS IAM patterns," "ML training gotchas." Published by domain experts.</td>
+<td>Free marketplace, optional paid packs.</td>
+</tr>
+<tr>
+<td><strong>Consensus-based correction</strong></td>
+<td>When 100 agents mark a memory as outdated, auto-demote it. Self-healing without human curation.</td>
+<td>Threshold-based, configurable by namespace.</td>
+</tr>
+<tr>
+<td><strong>Enterprise tier</strong></td>
+<td>SSO, audit logs, retention policies, compliance reports, usage analytics dashboard.</td>
+<td>API-compatible with core. Bolt-on, not fork.</td>
+</tr>
+<tr>
+<td><strong>Helm chart + Kubernetes operator</strong></td>
+<td>Enterprise teams running 100+ agents in CI/CD pipelines need orchestrated deployment.</td>
+<td>Stateless server + persistent volume. Scale horizontally.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="business-model-phase-c">Business Model (Phase C)</h3>
+<p><strong>The Obsidian playbook:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Price</th>
+<th>Features</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Free (Core)</strong></td>
+<td>$0</td>
+<td>Local-first MCP server, all 8 tools, dashboard, feedback loop, namespace isolation. Same as Phase B. Forever.</td>
+</tr>
+<tr>
+<td><strong>Sync</strong></td>
+<td>$4-8/mo</td>
+<td>Multi-device E2EE sync. Memories follow your agents across machines.</td>
+</tr>
+<tr>
+<td><strong>Team</strong></td>
+<td>$15-30/seat/mo</td>
+<td>Shared team memory, RBAC, health dashboard, admin controls, priority support.</td>
+</tr>
+<tr>
+<td><strong>Enterprise</strong></td>
+<td>Custom</td>
+<td>SSO, audit logs, compliance, SLA, Helm chart, dedicated support, on-prem deployment.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Revenue projections at 1M agents:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>% of Users</th>
+<th>Count</th>
+<th>Monthly Revenue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Free</td>
+<td>90%</td>
+<td>900K agents (180K users)</td>
+<td>$0</td>
+</tr>
+<tr>
+<td>Sync</td>
+<td>7%</td>
+<td>70K agents (14K users)</td>
+<td>$56K-$112K</td>
+</tr>
+<tr>
+<td>Team</td>
+<td>2.5%</td>
+<td>25K agents (5K users)</td>
+<td>$75K-$150K</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>0.5%</td>
+<td>5K agents (1K users)</td>
+<td>$50K-$100K+</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td></td>
+<td><strong>1M agents</strong></td>
+<td><strong>$181K-$362K/mo → $2.2M-$4.3M ARR</strong></td>
+</tr>
+</tbody>
+</table>
+<p>At Obsidian's margins (7-person team, zero meetings), ~$3M ARR is a very comfortable business.</p>
+<h3 id="distribution-plan-phase-c">Distribution Plan (Phase C)</h3>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Tactic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MCP protocol standard meetings</strong></td>
+<td>Lorekeeper maintainer participates in MCP working groups. Influence protocol direction to favor memory federation.</td>
+</tr>
+<tr>
+<td><strong>Enterprise sales</strong></td>
+<td>Targeted outreach to Fortune 500 AI platform teams. "Your agents shouldn't forget everything every session."</td>
+</tr>
+<tr>
+<td><strong>Conference talks</strong></td>
+<td>Submit talks about the feedback loop, federation architecture, and "what we learned running memory for 1M agents."</td>
+</tr>
+<tr>
+<td><strong>Academic publishing</strong></td>
+<td>Paper on agent memory quality benchmarks. Federated knowledge graph for agent collectives.</td>
+</tr>
+<tr>
+<td><strong>Ecosystem partnerships</strong></td>
+<td>Claude Code, Cursor, Hermes, Codex all bundle Lorekeeper setup as recommended memory layer.</td>
+</tr>
+<tr>
+<td><strong>Marketplace curation</strong></td>
+<td>Top knowledge packs get promoted. Domain experts become Lorekeeper advocates.</td>
+</tr>
+<tr>
+<td><strong>Cloud marketplace</strong></td>
+<td>AWS/GCP/Azure marketplace listing for managed Lorekeeper (enterprise path of least resistance).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="competitive-positioning-at-scale">Competitive Positioning at Scale</h3>
+<table>
+<thead>
+<tr>
+<th>Competitor</th>
+<th>Position</th>
+<th>Lorekeeper's Angle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Anthropic built-in memory</strong></td>
+<td>Locked to Claude ecosystem</td>
+<td>"Your memory shouldn't fire your other agents. Lorekeeper works with every agent."</td>
+</tr>
+<tr>
+<td><strong>OpenAI memory</strong></td>
+<td>Locked to ChatGPT/Codex</td>
+<td>Same argument. Multi-agent, multi-provider.</td>
+</tr>
+<tr>
+<td><strong>mem0 Cloud</strong></td>
+<td>Cloud-dependent</td>
+<td>"Your data stays local. Sync is optional, not required."</td>
+</tr>
+<tr>
+<td><strong>Zep</strong></td>
+<td>Cloud, expensive</td>
+<td>"Free for what Zep charges for. And we get better with use."</td>
+</tr>
+<tr>
+<td><strong>agentmemory</strong></td>
+<td>Single-user Node</td>
+<td>"Python-native, team-ready. And the feedback loop is real."</td>
+</tr>
+</tbody>
+</table>
+<h3 id="success-criteria-phase-c-exit">Success Criteria (Phase C Exit)</h3>
+<div class="highlight"><pre><span></span><code>- 50,000+ GitHub stars
+- 10,000+ weekly active users
+- 1,000,000+ active agent instances
+- 50+ community plugins in marketplace
+- $2M+ ARR from sync/team/enterprise
+- 80%+ market awareness among AI-coded developers
+- MCP protocol co-maintainer status
+</code></pre></div>
+<hr />
+<h2 id="risk-register">Risk Register</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Phase</th>
+<th>Likelihood</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Anthropic/OpenAI ship free built-in memory</strong></td>
+<td>B-C</td>
+<td>High</td>
+<td>Multi-agent + local-first moat. Their memory is locked to their ecosystem. Ours works with every agent.</td>
+</tr>
+<tr>
+<td><strong>Agent framework ships its own memory</strong></td>
+<td>B</td>
+<td>Medium</td>
+<td>Stay MCP-protocol-aligned. Frameworks come and go, protocol is durable.</td>
+</tr>
+<tr>
+<td><strong>Tensor size grows linearly with users</strong></td>
+<td>B-C</td>
+<td>Medium</td>
+<td>Sharding + federation. Single-user install stays fast. Scale cost is the namespace operator's concern.</td>
+</tr>
+<tr>
+<td><strong>Embedding model dependency (1.4GB) blocks adoption</strong></td>
+<td>A</td>
+<td>Medium</td>
+<td>Phase B feature: make embedding model optional (use lightweight or cloud embedding). Talk about it honestly — own the trade-off.</td>
+</tr>
+<tr>
+<td><strong>Competitor clones feedback loop</strong></td>
+<td>B-C</td>
+<td>Low-Medium</td>
+<td>The loop requires the whole system: hybrid search, score drift, confidence EMA, soft-delete, dedup, auto-link. Cloning one piece without all of them is worse than not having it.</td>
+</tr>
+<tr>
+<td><strong>Enterprise wants cloud-only compliance</strong></td>
+<td>C</td>
+<td>Medium</td>
+<td>Always support fully air-gapped deployment. Sync and federation are optional. Core server works with no network.</td>
+</tr>
+<tr>
+<td><strong>MCP protocol evolves in incompatible direction</strong></td>
+<td>A-C</td>
+<td>Low</td>
+<td>We're MCP-native. Protocol evolution is our platform getting better. Track working groups, contribute early.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="milestone-summary">Milestone Summary</h2>
+<div class="highlight"><pre><span></span><code>                    Phase A (Now → Jul 2026)       Phase B (Jul 2026 → Jan 2027)   Phase C (2027-2028)
+                    ─────────────────────────       ─────────────────────────     ──────────────────
+Product             Individual (free)               Team server (self-hosted)      Org platform (managed + enterprise)
+Stars               100                             1,000                           50,000
+WAU                 10                              100                             10,000
+Agent instances     ~50                             ~5,000                          1,000,000
+Revenue             $0                              $0 (design partnerships)        $2-4M ARR
+Team size           1-2                             design partners (2-4 eng)       6-8 eng
+Key metric          Days to first memory            Teams using shared server       Network effects
+Biggest risk        Empty dashboard kills            Auth scope creep delaying       Competitor platform lock-in
+                     onboarding                      team server ship
+Key gate            Beta launch                     LKPR-39 (token auth)            First $500K enterprise deal
+                                                     + LKPR-40 (namespaces)
+Build order                                         LKPR-39 → LKPR-40 →             Governance → admin → deployment
+                                                     LKPR-18 → governance            docs → enterprise features
+</code></pre></div>
+<hr />
+<h2 id="appendix-a-funnel-math">Appendix A: Funnel Math</h2>
+<h3 id="projected-conversion-at-each-phase">Projected conversion at each phase</h3>
+<div class="highlight"><pre><span></span><code>                                   Phase A          Phase B          Phase C
+                                   ────────         ────────         ────────
+GitHub visitors/mo                 5,000            50,000           500,000
+→ Stars (5% conversion)           250              2,500            25,000
+→ pip installs (20% of stars)     50               500              5,000
+→ First use (40%)                 20               200              2,000
+→ WAU (30% of first use)          6                60               600
+</code></pre></div>
+<h3 id="what-drives-each-phases-growth">What drives each phase's growth</h3>
+<ul>
+<li><strong>Phase A:</strong> HN launch + GitHub Trending + MCP Registry listings</li>
+<li><strong>Phase B:</strong> Technical blog posts + agent-specific guides + Reddit + word of mouth from 100 users</li>
+<li><strong>Phase C:</strong> Ecosystem partnerships + enterprise sales + conference talks + marketplace effects</li>
+</ul>
+<hr />
+<h2 id="appendix-b-competitive-landscape-updates">Appendix B: Competitive Landscape Updates</h2>
+<h3 id="direct-mcp-memory-servers-current-june-2026">Direct MCP Memory Servers (Current — June 2026)</h3>
+<table>
+<thead>
+<tr>
+<th>Product</th>
+<th>Stars</th>
+<th>Stage</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>claude-mem</td>
+<td>~46K</td>
+<td>v13+</td>
+<td>Node.js/Bun, lifecycle hooks</td>
+</tr>
+<tr>
+<td>agentmemory</td>
+<td>~21.7K</td>
+<td>Active</td>
+<td>TypeScript, viral growth, Product Hunt</td>
+</tr>
+<tr>
+<td>MemPalace</td>
+<td>~41K</td>
+<td>Fastest growth</td>
+<td>Doubled in 2 months</td>
+</tr>
+<tr>
+<td>sqlite-memory</td>
+<td>New</td>
+<td>Launched Jun 2026</td>
+<td>Markdown-based</td>
+</tr>
+<tr>
+<td>Neural Memory</td>
+<td>—</td>
+<td>Active</td>
+<td>28 tools, spreading activation</td>
+</tr>
+<tr>
+<td><strong>Lorekeeper</strong></td>
+<td><strong>&lt; 10</strong></td>
+<td><strong>Pre-beta</strong></td>
+<td><strong>Python, feedback loop, dashboard</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="funded-competitors">Funded Competitors</h3>
+<table>
+<thead>
+<tr>
+<th>Product</th>
+<th>Funding</th>
+<th>Stage</th>
+<th>Threat Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mem0</td>
+<td>$24M (Series A)</td>
+<td>55K★, 14M downloads</td>
+<td>Medium — library, not product</td>
+</tr>
+<tr>
+<td>Zep</td>
+<td>$15M+</td>
+<td>Enterprise memory</td>
+<td>Low — cloud-only, expensive</td>
+</tr>
+<tr>
+<td>Anthropic built-in</td>
+<td>Infinite</td>
+<td>Beta</td>
+<td>High — ecosystem lock-in risk</td>
+</tr>
+<tr>
+<td>OpenAI built-in</td>
+<td>Infinite</td>
+<td>Alpha</td>
+<td>High — same</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix-c-key-design-principles-maintain-across-all-phases">Appendix C: Key Design Principles (Maintain Across All Phases)</h2>
+<ol>
+<li><strong>Local-first never optional</strong> — Cloud features are add-ons, never requirements</li>
+<li><strong>One command install</strong> stays the default path forever</li>
+<li><strong>The feedback loop is the moat</strong> — protect it at all costs. No feature may degrade search quality</li>
+<li><strong>8 MCP tools, ±2</strong> — resist tool bloat. Every new tool must prove necessity</li>
+<li><strong>Ratings degrade</strong> — automatic downranking of unused/unhelpful memories. No manual cleanup needed</li>
+<li><strong>No vendor lock-in</strong> — export to JSON/markdown/sqlite. Running Lorekeeper shouldn't be irreversible</li>
+<li><strong>Dogfood everything</strong> — if we don't use it, don't ship it</li>
+</ol>
+<hr />
+<p><em>Written June 2026. Based on 17-source market research, competitor analysis, 36 marketing skill patterns, and the existing positioning manifesto at <code>docs/positioning-manifesto.md</code>.</em></p>
+<p><em>This is a living document. Update after every major milestone.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Jessinra Kai &mdash; Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Jessinra/Lorekeeper" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
