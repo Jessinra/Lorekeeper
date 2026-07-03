@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body{margin:0;background:#f9f9fb;color:#1a1a2e;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  *{box-sizing:border-box;}
+  .lk-rail-item{width:58px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 8px;border:none;background:transparent;border-radius:8px;color:#6b7280;font-size:10.5px;font-weight:500;position:relative;cursor:pointer;}
+  .lk-rail-item svg{width:19px;height:19px;}
+  .lk-rail-item:hover{background:#f4f4f6;color:#1a1a2e;}
+  .lk-rail-item.active{background:#f1edff;color:#7c5cff;font-weight:600;}
+  .seg{display:inline-flex;background:#eeeef4;border-radius:9px;padding:3px;gap:2px;}
+  .seg button{border:none;background:transparent;font-size:13px;font-weight:500;padding:7px 16px;border-radius:7px;color:#6b7280;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+  .seg button.on{background:#fff;color:#1a1a2e;box-shadow:0 1px 2px rgba(20,20,30,.08);font-weight:600;}
+  .seg .badge{background:#c9c9d6;color:#fff;font-size:10px;min-width:16px;height:16px;border-radius:8px;text-align:center;line-height:16px;padding:0 4px;font-weight:600;}
+  .seg button.on .badge{background:#7c5cff;}
+  .cbx{width:16px;height:16px;accent-color:#7c5cff;cursor:pointer;flex-shrink:0;}
+  .iconb{width:34px;height:34px;border-radius:8px;border:1px solid #e6e6ee;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#6b7280;}
+  .iconb.acc:hover{background:#ecfdf3;border-color:#16a34a;color:#16a34a;}
+  .iconb.rej:hover{background:#fef2f2;border-color:#dc2626;color:#dc2626;}
+  .iconb.sm{width:30px;height:30px;}
+  .card:hover{border-color:#dcdce6;}
+  .mtable{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
+  .mtable th{text-align:left;color:#9ca3af;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:14px 12px;border-bottom:1px solid #eeeef3;white-space:nowrap;}
+  .mtable th.sortable{cursor:pointer;user-select:none;}
+  .mtable th.sortable:hover{color:#3f3f52;}
+  .mtable th .sc{display:inline-block;width:0;overflow:hidden;vertical-align:middle;margin-left:4px;color:#7c5cff;font-size:9px;opacity:0;}
+  .mtable th.sorted .sc{width:auto;opacity:1;}
+  .mtable td{padding:12px;border-bottom:1px solid #f1f1f6;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mtable td:last-child{overflow:visible;text-overflow:clip;}
+  .mtable tbody tr:last-child td{border-bottom:none;}
+  .mtable tbody tr:hover{background:#faf9fc;}
+  .mtable tbody tr.sel{background:#f6f2ff;}
+  .relpill{border-radius:6px;padding:2px 9px;font-size:12px;font-weight:600;}
+  .pg-nav:hover{background:#f4f4f6;}
+  .tbtn{border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:500;color:#3f3f52;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .tbtn:hover{background:#f4f4f6;}
+  .selbar-btn{border-radius:7px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;}
+  .rv-drawer{position:fixed;top:0;right:0;height:100vh;width:440px;max-width:92vw;background:#fff;border-left:1px solid #e6e6ee;box-shadow:-12px 0 40px rgba(20,20,40,.1);transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);z-index:60;overflow-y:auto;}
+  .rv-drawer.open{transform:translateX(0);}
+  .rv-scrim{position:fixed;inset:0;background:rgba(20,20,35,.28);opacity:0;pointer-events:none;transition:opacity .2s;z-index:55;}
+  .rv-scrim.open{opacity:1;pointer-events:auto;}
+  #s-body tbody tr,#st-body tr{cursor:pointer;}
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="19" r="2.5"/><path d="M7 7.3L10.2 16.5M17 7.3L13.8 16.5M7.5 6H16.5"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h16v12l-3 4H7l-3-4V4z"/><path d="M4 12h5l2 3h2l2-3h5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M12 20V4M20 20v-7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0115.4-6.4M21 12a9 9 0 01-15.4 6.4"/><path d="M3 3v6h6M21 21v-6h-6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></symbol>
+  <symbol id="i-pgl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></symbol>
+  <symbol id="i-pgr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
+</defs></svg>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#7c5cff"/><g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M26 30h48v26l-9 12H35l-9-12V30z"/><path d="M42 47l6 6 12-12"/></g></svg></template>
+<div id="rev-root" style="display:flex;min-height:100vh;">
+
+  <nav aria-label="Primary" style="width:76px;flex-shrink:0;background:#fff;border-right:1px solid #e6e6ee;display:flex;flex-direction:column;align-items:center;padding:16px 0 12px;position:fixed;top:0;bottom:0;left:0;z-index:40;">
+    <div style="width:36px;height:36px;border-radius:8px;background:#7c5cff;color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:24px;"><svg style="width:20px;height:20px"><use href="#i-shield"/></svg></div>
+    <div style="display:flex;flex-direction:column;gap:2px;width:100%;align-items:center;">
+      <button class="lk-rail-item"><svg><use href="#i-home"/></svg>Home</button>
+      <button class="lk-rail-item"><svg><use href="#i-grid"/></svg>Memories</button>
+      <button class="lk-rail-item"><svg><use href="#i-network"/></svg>Links</button>
+      <button class="lk-rail-item active"><svg><use href="#i-inbox"/></svg>Review<span style="position:absolute;top:2px;right:6px;background:#dc2626;color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:999px;text-align:center;line-height:15px;padding:0 3px;">8</span></button>
+      <button class="lk-rail-item"><svg><use href="#i-clock"/></svg>Sessions</button><button class="lk-rail-item"><svg><use href="#i-bar"></use></svg>Metrics</button>
+    </div>
+    <div style="flex:1"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:12px;border-top:1px solid #e6e6ee;width:100%;margin-top:12px;">
+      <button class="lk-rail-item"><svg><use href="#i-gear"/></svg>Settings</button>
+      <span style="width:7px;height:7px;border-radius:50%;background:#16a34a;margin-top:1px;"></span>
+    </div>
+  </nav>
+
+  <div style="flex:1;min-width:0;margin-left:76px;display:flex;flex-direction:column;">
+
+    <div style="height:60px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid #e6e6ee;background:#fff;position:sticky;top:0;z-index:30;">
+      <div style="font-size:14px;color:#9ca3af;display:flex;gap:6px;align-items:center;">Lorekeeper <span>/</span> <span style="color:#1a1a2e;font-weight:600;">Review</span></div>
+      <button style="display:flex;align-items:center;gap:8px;border:1px solid #e6e6ee;background:#f9f9fb;border-radius:6px;padding:8px 10px;color:#9ca3af;font-size:13px;width:230px;cursor:pointer;">
+        <svg style="width:15px;height:15px;flex-shrink:0"><use href="#i-search"/></svg><span style="flex:1;text-align:left;">Search or jump to…</span>
+        <span style="display:flex;gap:3px;"><kbd style="background:#fff;border:1px solid #e6e6ee;border-radius:4px;font-size:10.5px;padding:1px 5px;color:#6b7280;">⌘</kbd><kbd style="background:#fff;border:1px solid #e6e6ee;border-radius:4px;font-size:10.5px;padding:1px 5px;color:#6b7280;">K</kbd></span>
+      </button>
+    </div>
+
+    <div style="padding:26px 32px 44px;max-width:1120px;width:100%;">
+      <div style="margin-bottom:18px;">
+        <h1 style="font-size:24px;font-weight:700;margin:0;">Review Inbox</h1>
+        <p style="font-size:13px;color:#6b7280;margin:6px 0 0;">Triage auto-recommended links and stale memories from the nightly sweep.</p>
+      </div>
+      <div class="seg" id="rev-toggle" style="margin-bottom:20px;"><button class="on" data-view="sugg">Link suggestions <span class="badge" id="b-sugg">5,284</span></button><button data-view="stale">Stale memories <span class="badge" id="b-stale">37</span></button></div>
+
+      <!-- ============ SUGGESTIONS ============ -->
+      <div id="view-sugg">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+          <div id="s-selinfo" style="display:flex;align-items:center;gap:12px;">
+            <span id="s-count" style="font-size:13px;color:#6b7280;"><strong style="color:#1a1a2e;font-weight:600;">5,284</strong> pending suggestions</span>
+          </div>
+          <span id="s-bulk" style="display:none;align-items:center;gap:8px;">
+            <span id="s-selcount" style="font-size:13px;font-weight:600;color:#6a46f5;"></span>
+            <button id="s-acc" class="selbar-btn" style="background:#ecfdf3;color:#16a34a;border-color:#bbf0cd;"><svg style="width:14px;height:14px"><use href="#i-check"/></svg>Accept</button>
+            <button id="s-rej" class="selbar-btn" style="background:#fef2f2;color:#dc2626;border-color:#f6cccc;"><svg style="width:14px;height:14px"><use href="#i-x"/></svg>Reject</button>
+          </span>
+          <span style="flex:1"></span>
+          <select id="s-sort" class="tbtn" style="padding-right:30px;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#9ca3af 50%),linear-gradient(135deg,#9ca3af 50%,transparent 50%);background-position:calc(100% - 14px) center,calc(100% - 9px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;"><option value="score-desc">Sort: Score ↓</option><option value="score-asc">Sort: Score ↑</option><option value="newest">Sort: Newest</option></select>
+          <button class="tbtn" data-toast="Suggestions refreshed."><svg style="width:14px;height:14px;color:#6b7280"><use href="#i-refresh"/></svg>Refresh</button>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e6e6ee;border-radius:14px;overflow:hidden;">
+          <div style="overflow-x:auto;">
+            <table class="mtable">
+              <thead><tr>
+                <th style="width:44px;padding-left:18px;"><input class="cbx" type="checkbox" id="s-all"></th>
+                <th class="sortable" data-sk="source">Source<span class="sc"></span></th>
+                <th class="sortable" data-sk="rel" style="width:118px;">Relation<span class="sc"></span></th>
+                <th class="sortable" data-sk="target">Target<span class="sc"></span></th>
+                <th class="sortable" data-sk="score" style="width:96px;">Score<span class="sc"></span></th>
+                <th style="width:104px;padding-right:16px;"></th>
+              </tr></thead>
+              <tbody id="s-body"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-top:1px solid #eeeef3;flex-wrap:wrap;">
+            <span id="s-range" style="font-size:12.5px;color:#9ca3af;">1–50 of 5,284</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button class="pg-nav" data-tbl="s" data-step="-1" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid #e6e6ee;background:#fff;border-radius:8px;cursor:pointer;color:#3f3f52;"><svg style="width:15px;height:15px"><use href="#i-pgl"/></svg></button>
+              <div id="s-pages" style="display:flex;align-items:center;justify-content:center;min-width:96px;"></div>
+              <button class="pg-nav" data-tbl="s" data-step="1" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid #e6e6ee;background:#fff;border-radius:8px;cursor:pointer;color:#3f3f52;"><svg style="width:15px;height:15px"><use href="#i-pgr"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ STALE ============ -->
+      <div id="view-stale" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+          <span id="st-count" style="font-size:13px;color:#6b7280;"><strong style="color:#1a1a2e;font-weight:600;">37</strong> memories unused in the past 30 days</span>
+          <span id="st-bulk" style="display:none;align-items:center;gap:8px;">
+            <span id="st-selcount" style="font-size:13px;font-weight:600;color:#6a46f5;"></span>
+            <button id="st-refresh" class="selbar-btn" style="background:#f1edff;color:#6a46f5;border-color:#d6c9ff;"><svg style="width:14px;height:14px"><use href="#i-refresh"/></svg>Refresh</button>
+            <button id="st-del" class="selbar-btn" style="background:#fef2f2;color:#dc2626;border-color:#f6cccc;"><svg style="width:14px;height:14px"><use href="#i-trash"/></svg>Delete</button>
+          </span>
+          <span style="flex:1"></span>
+          <select id="st-sort" class="tbtn" style="padding-right:30px;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#9ca3af 50%),linear-gradient(135deg,#9ca3af 50%,transparent 50%);background-position:calc(100% - 14px) center,calc(100% - 9px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;"><option value="idle-desc">Sort: Most idle</option><option value="score-asc">Sort: Score ↑</option><option value="score-desc">Sort: Score ↓</option></select>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e6e6ee;border-radius:14px;overflow:hidden;">
+          <div style="overflow-x:auto;">
+            <table class="mtable">
+              <thead><tr>
+                <th style="width:44px;padding-left:18px;"><input class="cbx" type="checkbox" id="st-all"></th>
+                <th class="sortable" data-sk="title">Memory<span class="sc"></span></th>
+                <th class="sortable" data-sk="ns" style="width:88px;">NS<span class="sc"></span></th>
+                <th class="sortable" data-sk="score" style="width:80px;">Score<span class="sc"></span></th>
+                <th class="sortable" data-sk="idle" style="width:120px;">Last used<span class="sc"></span></th>
+                <th style="width:168px;padding-right:16px;"></th>
+              </tr></thead>
+              <tbody id="st-body"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-top:1px solid #eeeef3;flex-wrap:wrap;">
+            <span id="st-range" style="font-size:12.5px;color:#9ca3af;">1–37 of 37</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button class="pg-nav" data-tbl="st" data-step="-1" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid #e6e6ee;background:#fff;border-radius:8px;cursor:pointer;color:#3f3f52;"><svg style="width:15px;height:15px"><use href="#i-pgl"/></svg></button>
+              <div id="st-pages" style="display:flex;align-items:center;justify-content:center;min-width:96px;"></div>
+              <button class="pg-nav" data-tbl="st" data-step="1" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid #e6e6ee;background:#fff;border-radius:8px;cursor:pointer;color:#3f3f52;"><svg style="width:15px;height:15px"><use href="#i-pgr"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- detail drawer (suggestion link / stale memory) -->
+  <div id="rv-scrim" class="rv-scrim"></div>
+  <div id="rv-drawer" class="rv-drawer">
+    <div style="padding:24px 26px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid #eeeef3;">
+        <div id="rv-dtitle" style="font-size:15px;font-weight:700;">Details</div>
+        <button id="rv-close" style="border:none;background:transparent;color:#9ca3af;padding:6px;border-radius:7px;cursor:pointer;flex-shrink:0;"><svg style="width:16px;height:16px"><use href="#i-x"/></svg></button>
+      </div>
+      <div id="rv-body"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1120,&quot;height&quot;:700}}">
+class Component extends DCLogic {
+  componentDidMount(){ this.wire(); }
+  toast(msg){
+    const t=document.createElement('div');t.textContent=msg;
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:11px 20px;border-radius:9px;font:600 13px/1 -apple-system,system-ui,sans-serif;box-shadow:0 10px 28px rgba(0,0,0,.22);z-index:200;opacity:0;transition:opacity .16s;';
+    document.body.appendChild(t);requestAnimationFrame(()=>t.style.opacity='1');
+    setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),220);},1800);
+  }
+  data(){
+    const relC={references:'#d97706',contradicts:'#dc2626',supersedes:'#7c5cff',duplicate_of:'#92400e',used_by:'#16a34a'};
+    const S=[
+      ['Redis caching strategy for search results','references','MCP transport handshake timeout patterns',9.1,'2h'],
+      ['Concurrent agent session handling','references','Token bucket vs fixed window comparison',8.4,'2h'],
+      ['Command palette fuzzy match scoring','used_by','API rate limiting patterns for concurrent agents',8.8,'5h'],
+      ['FastAPI middleware ordering rules','references','Vector embedding cache invalidation logic',7.7,'5h'],
+      ['Local Redis config for cache warmup','references','Redis caching strategy for search results',7.4,'8h'],
+      ['Backup rotation script maintenance','references','Namespace strategy for multi-tenant memories',7.1,'8h'],
+      ['API rate limiting patterns for concurrent agents','contradicts','Token bucket vs fixed window comparison',6.5,'11h'],
+      ['Review inbox triage pattern notes','references','Command palette fuzzy match scoring',6.2,'13h'],
+      ['Namespace strategy for multi-tenant memories','supersedes','Lorekeeper sweep engine confidence floor',5.9,'1d'],
+      ['Graph layout node sizing logic','references','Suggestion sweep accuracy audit notes',5.1,'1d'],
+      ['Old spike: GraphQL gateway for aggregation','duplicate_of','FastAPI middleware ordering rules',3.2,'2d'],
+      ['Team onboarding checklist','references','Project conventions file — v3',2.6,'2d'],
+    ].map((a,i)=>({id:'s'+i,source:a[0],rel:a[1],target:a[2],score:a[3],age:a[4],_i:i}));
+    const ST=[
+      ['Vector embedding cache invalidation logic','infra',5.8,31],
+      ['Team onboarding checklist','default',5.2,34],
+      ['Suggestion sweep accuracy audit notes','default',5.9,37],
+      ['Namespace strategy for multi-tenant memories','archive',6.7,41],
+      ['Local Redis config for cache warmup','infra',8.1,44],
+      ['Graph layout node sizing logic','dev',6.4,52],
+      ['Project conventions file — v3','default',7.5,63],
+      ['Old spike: GraphQL gateway for aggregation','archive',2.1,120],
+    ].map((a,i)=>({id:'st'+i,title:a[0],ns:a[1],score:a[2],idle:a[3],_i:i}));
+    const mem=(ns,score,desc,content)=>({ns,score,desc,content});
+    this.MEM={
+      'API rate limiting patterns for concurrent agents':mem('default',9.2,'Token-bucket based limiter shared across agent sessions hitting the same MCP tool.','Use a token bucket keyed by (agent_id, tool_name). Refill rate should track the tool\u2019s upstream rate limit, not a fixed global value. Falls back to fixed-window when Redis is unavailable.'),
+      'Redis caching strategy for search results':mem('default',7.1,'TTL + cosine-similarity cache key for hybrid search responses.','Cache key is a hash of (query embedding rounded to 3dp, namespace, min_score). TTL 10 minutes. Invalidate on any memory update within that namespace.'),
+      'MCP transport handshake timeout patterns':mem('infra',7.9,'Handshake retries and backoff for stdio/SSE transports.','First attempt: 2s timeout. Backoff x1.8 up to 3 retries. Log a warning (not error) on retry 1-2; escalate to error on final failure.'),
+      'Token bucket vs fixed window comparison':mem('dev',8.4,'Benchmark notes comparing the two rate-limit strategies under bursty load.','Token bucket smooths bursts better; fixed window is simpler but allows 2x burst at window boundaries. Chose token bucket for the MCP gateway.'),
+      'FastAPI middleware ordering rules':mem('dev',6.9,'Order matters: auth before rate-limit, rate-limit before logging.','Middleware stack (outer to inner): CORS \u2192 Auth \u2192 RateLimit \u2192 RequestLogging \u2192 route handlers. RateLimit before Auth leaks limiter state to unauthenticated callers.'),
+      'Vector embedding cache invalidation logic':mem('infra',5.8,'When to recompute embeddings vs reuse cached vectors.','Recompute only if content or title changed. Description-only edits reuse the existing embedding to save cost, flagged with embedding_stale=false.'),
+      'Concurrent agent session handling':mem('default',6.2,'Isolating memory writes when multiple agents share a namespace.','Each session gets a write-ahead buffer; commits are serialized per namespace to avoid duplicate auto-link races.'),
+      'Local Redis config for cache warmup':mem('infra',8.1,'Docker compose snippet + warmup script.','maxmemory 512mb, maxmemory-policy allkeys-lru. Warmup script preloads the top 200 memories by usage_count on boot.'),
+      'Project conventions file \u2014 v3':mem('default',7.5,'House style for this repo.','Prefer composition over inheritance. No default exports. Tests colocated with source.'),
+      'Team onboarding checklist':mem('default',5.2,'First-week setup steps for new engineers.','1. Clone repo. 2. Run setup.sh. 3. Request DB access. 4. Pair on first PR.'),
+      'Namespace strategy for multi-tenant memories':mem('archive',6.7,'Superseded by per-tenant DB approach.','Originally namespaced by prefix string; replaced because prefix collisions caused cross-tenant leakage risk.'),
+      'Command palette fuzzy match scoring':mem('dev',8.7,'Scoring function for the \u2318K search.','Score = 0.6*prefix_match + 0.3*subsequence_match + 0.1*recency. Case-insensitive, diacritic-insensitive.'),
+      'Lorekeeper sweep engine confidence floor':mem('default',7.3,'Minimum weighted_score before a link suggestion surfaces in the Review inbox.','Floor is 0.75 weighted_score by default (auto_link_threshold). Lower floors flood the review queue with noise.'),
+      'Graph layout node sizing logic':mem('dev',6.4,'Node radius scales with usage_count, capped.','radius = 8 + min(usage_count, 40) * 0.35. Prevents mega-hub nodes from dominating the layout.'),
+      'Suggestion sweep accuracy audit notes':mem('default',5.9,'Sampled 50 accepted links, 6 were judged wrong in hindsight.','Most false positives were references mislabeled where contradicts was more accurate.'),
+      'Backup rotation script maintenance':mem('infra',8.9,'Keeps last 14 daily backups, prunes older.','Runs at 03:00 local time via cron. Uses the /api/export endpoint internally, same format as manual export.'),
+      'Review inbox triage pattern notes':mem('dev',7.6,'Keyboard-first triage beats mouse-only for >20 items/day.','Y/N shortcuts cut average triage time per suggestion from ~9s to ~3s in informal testing.'),
+      'Old spike: GraphQL gateway for aggregation':mem('archive',2.1,'Abandoned \u2014 REST + BFF pattern was simpler for this scale.','Kept for historical context only; do not resurrect without re-checking whether N+1 query issues were ever solved.'),
+    };
+    this.nsC={default:'#7c5cff',dev:'#16a34a',infra:'#9ca3af',archive:'#d97706'};
+    this.relC=relC; this.S=S; this.ST=ST;
+    this.sortS={k:'score',dir:-1}; this.sortST={k:'idle',dir:-1};
+    this.sTotal=5284; this.stTotal=37; this.per=50;
+  }
+  sortList(list,st){
+    const k=st.k,dir=st.dir;
+    const val=(x)=>{ if(k==='source')return x.source.toLowerCase(); if(k==='target')return x.target.toLowerCase(); if(k==='rel')return x.rel; if(k==='title')return x.title.toLowerCase(); if(k==='ns')return x.ns; if(k==='newest')return x._i; return x[k]; };
+    const txt=['source','target','rel','title','ns'].includes(k);
+    return [...list].sort((a,b)=>{const va=val(a),vb=val(b);return (txt?String(va).localeCompare(String(vb)):va-vb)*dir;});
+  }
+  markHeaders(view,st){
+    const root=document.getElementById('rev-root');
+    root.querySelectorAll('#'+view+' .mtable th.sortable').forEach(h=>{
+      const on=h.dataset.sk===st.k; h.classList.toggle('sorted',on);
+      const c=h.querySelector('.sc'); if(c) c.textContent=on?(st.dir>0?'▲':'▼'):''; h.style.color=on?'#7c5cff':'';
+    });
+  }
+  renderSugg(){
+    const root=document.getElementById('rev-root'), relC=this.relC, self=this;
+    let list=this.sortList(this.S,this.sortS);
+    this.markHeaders('view-sugg',this.sortS);
+    root.querySelector('#s-body').innerHTML=list.map(x=>{
+      const sc=x.score>=7?['#ecfdf3','#16a34a']:x.score>=5?['#fef6e7','#d97706']:['#fef2f2','#dc2626'];
+      return `<tr data-id="${x.id}"><td style="padding-left:18px;"><input class="cbx s-cb" type="checkbox"></td>`+
+        `<td style="font-weight:500;">${x.source}</td>`+
+        `<td><span class="relpill" style="background:#f1f1f6;color:${relC[x.rel]};">${x.rel}</span></td>`+
+        `<td style="font-weight:500;">${x.target}</td>`+
+        `<td><span style="background:${sc[0]};color:${sc[1]};border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">${x.score.toFixed(1)}</span></td>`+
+        `<td style="text-align:right;padding-right:16px;overflow:visible;"><span style="display:inline-flex;gap:6px;"><button class="iconb acc sm" data-acc="${x.id}" title="Accept"><svg style="width:14px;height:14px"><use href="#i-check"/></svg></button><button class="iconb rej sm" data-rej="${x.id}" title="Reject"><svg style="width:14px;height:14px"><use href="#i-x"/></svg></button></span></td></tr>`;
+    }).join('');
+    root.querySelectorAll('#s-body .s-cb').forEach(cb=>{ cb.addEventListener('click',e=>e.stopPropagation()); cb.addEventListener('change',()=>{ cb.closest('tr').classList.toggle('sel',cb.checked); self.selSugg(); }); });
+    root.querySelectorAll('#s-body [data-acc]').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); self.removeSugg([b.dataset.acc]); self.toast('Link accepted.'); }));
+    root.querySelectorAll('#s-body [data-rej]').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); self.removeSugg([b.dataset.rej]); self.toast('Suggestion rejected.'); }));
+    root.querySelectorAll('#s-body tr').forEach(tr=>tr.addEventListener('click',()=>self.openSugg(tr.dataset.id)));
+    this.selSugg();
+    this.pager('s', this.sTotal);
+  }
+  selSugg(){
+    const root=document.getElementById('rev-root');
+    const cbs=[...root.querySelectorAll('#s-body .s-cb')], sel=cbs.filter(c=>c.checked).length;
+    root.querySelector('#s-all').checked=cbs.length>0&&sel===cbs.length;
+    root.querySelector('#s-bulk').style.display=sel?'inline-flex':'none';
+    root.querySelector('#s-selinfo').style.display=sel?'none':'flex';
+    root.querySelector('#s-selcount').textContent=sel+' selected';
+  }
+  removeSugg(ids){
+    this.S=this.S.filter(x=>!ids.includes(x.id));
+    this.sTotal=Math.max(0,this.sTotal-ids.length);
+    document.getElementById('rev-root').querySelector('#b-sugg').textContent=this.sTotal.toLocaleString();
+    document.getElementById('rev-root').querySelector('#s-count').innerHTML='<strong style="color:#1a1a2e;font-weight:600;">'+this.sTotal.toLocaleString()+'</strong> pending suggestions';
+    this.renderSugg();
+  }
+  renderStale(){
+    const root=document.getElementById('rev-root'), nsC={default:'#7c5cff',dev:'#16a34a',infra:'#9ca3af',archive:'#d97706'}, self=this;
+    let list=this.sortList(this.ST,this.sortST);
+    this.markHeaders('view-stale',this.sortST);
+    root.querySelector('#st-body').innerHTML=list.map(x=>{
+      const sc=x.score>=7?['#ecfdf3','#16a34a']:x.score>=5?['#fef6e7','#d97706']:['#fef2f2','#dc2626'];
+      return `<tr data-id="${x.id}"><td style="padding-left:18px;"><input class="cbx st-cb" type="checkbox"></td>`+
+        `<td style="font-weight:500;">${x.title}</td>`+
+        `<td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:${nsC[x.ns]}"></span><span style="font-size:11.5px;color:#9ca3af;">${x.ns}</span></span></td>`+
+        `<td><span style="background:${sc[0]};color:${sc[1]};border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">${x.score.toFixed(1)}</span></td>`+
+        `<td style="color:#9ca3af;">${x.idle}d ago</td>`+
+        `<td style="text-align:right;padding-right:16px;overflow:visible;"><span style="display:inline-flex;gap:6px;"><button class="tbtn" data-refresh="${x.id}" style="padding:5px 10px;"><svg style="width:13px;height:13px;color:#6b7280"><use href="#i-refresh"/></svg>Refresh</button><button class="iconb rej sm" data-del="${x.id}" title="Delete"><svg style="width:14px;height:14px"><use href="#i-trash"/></svg></button></span></td></tr>`;
+    }).join('');
+    root.querySelectorAll('#st-body .st-cb').forEach(cb=>{ cb.addEventListener('click',e=>e.stopPropagation()); cb.addEventListener('change',()=>{ cb.closest('tr').classList.toggle('sel',cb.checked); self.selStale(); }); });
+    root.querySelectorAll('#st-body [data-refresh]').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); self.refreshStale([b.dataset.refresh]); }));
+    root.querySelectorAll('#st-body [data-del]').forEach(b=>b.addEventListener('click',e=>{ e.stopPropagation(); self.removeStale([b.dataset.del]); self.toast('Memory deleted.'); }));
+    root.querySelectorAll('#st-body tr').forEach(tr=>tr.addEventListener('click',()=>self.openStale(tr.dataset.id)));
+    this.selStale();
+    this.pager('st', this.stTotal);
+  }
+  selStale(){
+    const root=document.getElementById('rev-root');
+    const cbs=[...root.querySelectorAll('#st-body .st-cb')], sel=cbs.filter(c=>c.checked).length;
+    root.querySelector('#st-all').checked=cbs.length>0&&sel===cbs.length;
+    root.querySelector('#st-bulk').style.display=sel?'inline-flex':'none';
+    root.querySelector('#st-selcount').textContent=sel+' selected';
+  }
+  refreshStale(ids){
+    // "refresh" = mark used today: drop from the stale list
+    this.ST=this.ST.filter(x=>!ids.includes(x.id));
+    this.stTotal=Math.max(0,this.stTotal-ids.length);
+    this.updateStaleCount();
+    this.renderStale();
+    this.toast(ids.length>1?ids.length+' memories refreshed.':'Memory refreshed — marked used today.');
+  }
+  removeStale(ids){
+    this.ST=this.ST.filter(x=>!ids.includes(x.id));
+    this.stTotal=Math.max(0,this.stTotal-ids.length);
+    this.updateStaleCount();
+    this.renderStale();
+  }
+  updateStaleCount(){
+    const root=document.getElementById('rev-root');
+    root.querySelector('#b-stale').textContent=this.stTotal;
+    root.querySelector('#st-count').innerHTML='<strong style="color:#1a1a2e;font-weight:600;">'+this.stTotal+'</strong> memories unused in the past 30 days';
+  }
+  pager(tbl,total){
+    const root=document.getElementById('rev-root'), per=this.per, pageCount=Math.max(1,Math.ceil(total/per));
+    let page=this['_pg_'+tbl]||1; if(page>pageCount)page=pageCount; this['_pg_'+tbl]=page;
+    const start=total?((page-1)*per+1):0, end=Math.min(page*per,total);
+    root.querySelector('#'+tbl+'-range').textContent=start+'–'+end+' of '+total.toLocaleString();
+    root.querySelector('#'+tbl+'-pages').innerHTML='<span style="font-size:13px;color:#3f3f52;white-space:nowrap;">Page <strong style="font-weight:600;">'+page+'</strong> of '+pageCount+'</span>';
+    root.querySelectorAll('.pg-nav[data-tbl="'+tbl+'"]').forEach(b=>{
+      const step=+b.dataset.step, disabled=(step<0&&page===1)||(step>0&&page===pageCount);
+      b.style.cursor=disabled?'not-allowed':'pointer'; b.style.color=disabled?'#c2c2cf':'#3f3f52';
+      b.onclick=()=>{ if(disabled)return; this['_pg_'+tbl]=Math.min(pageCount,Math.max(1,page+step)); this.pager(tbl,total); };
+    });
+  }
+  wire(){
+    const root=document.getElementById('rev-root'); if(!root||this._w) return; this._w=true;
+    const self=this;
+    this.data();
+    this.renderSugg();
+    this.renderStale();
+    // tab toggle
+    root.querySelectorAll('#rev-toggle button').forEach(b=>b.addEventListener('click',()=>{
+      root.querySelectorAll('#rev-toggle button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+      const v=b.dataset.view;
+      root.querySelector('#view-sugg').style.display=v==='sugg'?'':'none';
+      root.querySelector('#view-stale').style.display=v==='stale'?'':'none';
+    }));
+    // suggestions: select-all, bulk, sort
+    root.querySelector('#s-all').addEventListener('change',e=>{ root.querySelectorAll('#s-body .s-cb').forEach(cb=>{cb.checked=e.target.checked;cb.closest('tr').classList.toggle('sel',e.target.checked);}); self.selSugg(); });
+    root.querySelector('#s-acc').addEventListener('click',()=>{ const ids=self.selIds('s'); if(!ids.length)return; self.removeSugg(ids); self.toast(ids.length+' links accepted.'); });
+    root.querySelector('#s-rej').addEventListener('click',()=>{ const ids=self.selIds('s'); if(!ids.length)return; self.removeSugg(ids); self.toast(ids.length+' suggestions rejected.'); });
+    root.querySelector('#s-sort').addEventListener('change',e=>{ const v=e.target.value; self.sortS=v==='score-asc'?{k:'score',dir:1}:v==='newest'?{k:'newest',dir:1}:{k:'score',dir:-1}; self.renderSugg(); });
+    // stale: select-all, bulk, sort
+    root.querySelector('#st-all').addEventListener('change',e=>{ root.querySelectorAll('#st-body .st-cb').forEach(cb=>{cb.checked=e.target.checked;cb.closest('tr').classList.toggle('sel',e.target.checked);}); self.selStale(); });
+    root.querySelector('#st-refresh').addEventListener('click',()=>{ const ids=self.selIds('st'); if(ids.length) self.refreshStale(ids); });
+    root.querySelector('#st-del').addEventListener('click',()=>{ const ids=self.selIds('st'); if(!ids.length)return; self.removeStale(ids); self.toast(ids.length+' memories deleted.'); });
+    root.querySelector('#st-sort').addEventListener('change',e=>{ const v=e.target.value; self.sortST=v==='score-asc'?{k:'score',dir:1}:v==='score-desc'?{k:'score',dir:-1}:{k:'idle',dir:-1}; self.renderStale(); });
+    // header sorting
+    root.querySelectorAll('#view-sugg .mtable th.sortable').forEach(h=>h.addEventListener('click',()=>{ const k=h.dataset.sk; self.sortS={k,dir:self.sortS.k===k?-self.sortS.dir:(k==='score'?-1:1)}; self.renderSugg(); }));
+    root.querySelectorAll('#view-stale .mtable th.sortable').forEach(h=>h.addEventListener('click',()=>{ const k=h.dataset.sk; self.sortST={k,dir:self.sortST.k===k?-self.sortST.dir:(k==='score'||k==='idle'?-1:1)}; self.renderStale(); }));
+    // drawer close
+    root.querySelector('#rv-close').addEventListener('click',()=>self.closeDrawer());
+    root.querySelector('#rv-scrim').addEventListener('click',()=>self.closeDrawer());
+    // remaining toasts
+    root.querySelectorAll('[data-toast]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();self.toast(b.getAttribute('data-toast'));}));
+  }
+  selIds(tbl){ const root=document.getElementById('rev-root'); return [...root.querySelectorAll('#'+tbl+'-body .'+tbl+'-cb')].filter(c=>c.checked).map(c=>c.closest('tr').dataset.id); }
+  memCard(title,role){
+    const m=this.MEM[title]||{ns:'default',score:0,desc:'',content:''}, nsC=this.nsC;
+    const sc=m.score>=7?['#ecfdf3','#16a34a']:m.score>=5?['#fef6e7','#d97706']:['#fef2f2','#dc2626'];
+    return `<div style="border:1px solid #ececf3;border-radius:12px;padding:16px;">`+
+      `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:9px;">${role}</div>`+
+      `<div style="font-size:15px;font-weight:700;line-height:1.35;color:#1a1a2e;">${title}</div>`+
+      `<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;">`+
+        `<span style="display:inline-flex;align-items:center;gap:6px;background:#f6f6f9;border-radius:999px;padding:4px 10px;font-size:11px;color:#6b7280;"><span style="width:7px;height:7px;border-radius:50%;background:${nsC[m.ns]}"></span>${m.ns}</span>`+
+        `<span style="background:${sc[0]};color:${sc[1]};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">score ${m.score.toFixed(1)}</span>`+
+      `</div>`+
+      `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#b0b0bd;margin:16px 0 5px;">Description</div>`+
+      `<div style="font-size:12.5px;line-height:1.55;color:#3f3f52;">${m.desc}</div>`+
+      `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#b0b0bd;margin:14px 0 5px;">Content</div>`+
+      `<div style="font-size:12.5px;line-height:1.55;color:#3f3f52;background:#f8f8fb;border:1px solid #f0f0f5;border-radius:8px;padding:10px 12px;">${m.content}</div>`+
+      `</div>`;
+  }
+  openSugg(id){
+    const root=document.getElementById('rev-root'), x=this.S.find(r=>r.id===id); if(!x) return;
+    const relC=this.relC, self=this;
+    root.querySelector('#rv-dtitle').textContent='Suggested link';
+    root.querySelector('#rv-body').innerHTML=
+      `<div style="height:16px;"></div>`+
+      this.memCard(x.source,'Source')+
+      `<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 0;"><svg style="width:20px;height:20px;color:#c2c2cf;transform:rotate(90deg)"><use href="#i-arrow"/></svg><span style="background:#f1f1f6;color:${relC[x.rel]};border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;">${x.rel}</span></div>`+
+      this.memCard(x.target,'Target')+
+      `<div style="display:flex;gap:10px;margin-top:18px;">`+
+        `<div style="flex:1;background:#f8f8fb;border:1px solid #f0f0f5;border-radius:10px;padding:11px 14px;"><div style="font-size:11px;color:#9ca3af;">Suggestion score</div><div style="font-size:18px;font-weight:700;color:#1a1a2e;margin-top:2px;">${x.score.toFixed(1)}</div></div>`+
+        `<div style="flex:1;background:#f8f8fb;border:1px solid #f0f0f5;border-radius:10px;padding:11px 14px;"><div style="font-size:11px;color:#9ca3af;">Detected</div><div style="font-size:18px;font-weight:700;color:#1a1a2e;margin-top:2px;">${x.age} ago</div></div>`+
+      `</div>`+
+      `<div style="display:flex;gap:8px;margin-top:20px;">`+
+        `<button id="rv-acc" class="selbar-btn" style="flex:1;justify-content:center;background:#16a34a;color:#fff;padding:10px;"><svg style="width:15px;height:15px"><use href="#i-check"/></svg>Accept link</button>`+
+        `<button id="rv-rej" class="selbar-btn" style="flex:1;justify-content:center;background:#fff;color:#dc2626;border-color:#f0c9c9;padding:10px;"><svg style="width:15px;height:15px"><use href="#i-x"/></svg>Reject</button>`+
+      `</div>`;
+    root.querySelector('#rv-acc').addEventListener('click',()=>{ self.closeDrawer(); self.removeSugg([id]); self.toast('Link accepted.'); });
+    root.querySelector('#rv-rej').addEventListener('click',()=>{ self.closeDrawer(); self.removeSugg([id]); self.toast('Suggestion rejected.'); });
+    this.openDrawer();
+  }
+  openStale(id){
+    const root=document.getElementById('rev-root'), x=this.ST.find(r=>r.id===id); if(!x) return;
+    const m=this.MEM[x.title]||{ns:x.ns,score:x.score,desc:'',content:''}, nsC=this.nsC, self=this;
+    const sc=x.score>=7?['#ecfdf3','#16a34a']:x.score>=5?['#fef6e7','#d97706']:['#fef2f2','#dc2626'];
+    root.querySelector('#rv-dtitle').textContent='Memory details';
+    root.querySelector('#rv-body').innerHTML=
+      `<div style="font-size:17px;font-weight:700;line-height:1.35;margin:18px 0 12px;">${x.title}</div>`+
+      `<div style="display:flex;gap:7px;flex-wrap:wrap;">`+
+        `<span style="display:inline-flex;align-items:center;gap:6px;background:#f6f6f9;border-radius:999px;padding:4px 10px;font-size:11px;color:#6b7280;"><span style="width:7px;height:7px;border-radius:50%;background:${nsC[x.ns]}"></span>${x.ns}</span>`+
+        `<span style="background:${sc[0]};color:${sc[1]};border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">score ${x.score.toFixed(1)}</span>`+
+        `<span style="background:#fef2f2;color:#dc2626;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;">idle ${x.idle}d</span>`+
+      `</div>`+
+      `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#b0b0bd;margin:20px 0 5px;">Description</div>`+
+      `<div style="font-size:13px;line-height:1.6;color:#3f3f52;">${m.desc}</div>`+
+      `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#b0b0bd;margin:16px 0 5px;">Content</div>`+
+      `<div style="font-size:13px;line-height:1.6;color:#3f3f52;background:#f8f8fb;border:1px solid #f0f0f5;border-radius:8px;padding:11px 13px;">${m.content}</div>`+
+      `<div style="display:flex;gap:8px;margin-top:22px;padding-top:16px;border-top:1px solid #eeeef3;">`+
+        `<button id="rv-refresh" class="selbar-btn" style="flex:1;justify-content:center;background:#f1edff;color:#6a46f5;border-color:#d6c9ff;padding:10px;"><svg style="width:15px;height:15px"><use href="#i-refresh"/></svg>Refresh</button>`+
+        `<button id="rv-del" class="selbar-btn" style="flex:1;justify-content:center;background:#fff;color:#dc2626;border-color:#f0c9c9;padding:10px;"><svg style="width:15px;height:15px"><use href="#i-trash"/></svg>Delete</button>`+
+      `</div>`;
+    root.querySelector('#rv-refresh').addEventListener('click',()=>{ self.closeDrawer(); self.refreshStale([id]); });
+    root.querySelector('#rv-del').addEventListener('click',()=>{ self.closeDrawer(); self.removeStale([id]); self.toast('Memory deleted.'); });
+    this.openDrawer();
+  }
+  openDrawer(){ const root=document.getElementById('rev-root'); root.querySelector('#rv-drawer').classList.add('open'); root.querySelector('#rv-scrim').classList.add('open'); }
+  closeDrawer(){ const root=document.getElementById('rev-root'); root.querySelector('#rv-drawer').classList.remove('open'); root.querySelector('#rv-scrim').classList.remove('open'); }
+  renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

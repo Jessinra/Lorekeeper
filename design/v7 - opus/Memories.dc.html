@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body{margin:0;background:#f9f9fb;color:#1a1a2e;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  *{box-sizing:border-box;}
+  .lk-rail-item{width:58px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 8px;border:none;background:transparent;border-radius:8px;color:#6b7280;font-size:10.5px;font-weight:500;position:relative;cursor:pointer;}
+  .lk-rail-item svg{width:19px;height:19px;}
+  .lk-rail-item:hover{background:#f4f4f6;color:#1a1a2e;}
+  .lk-rail-item.active{background:#f1edff;color:#7c5cff;font-weight:600;}
+  .mtable{width:100%;border-collapse:collapse;font-size:13px;}
+  .mtable th{text-align:left;color:#9ca3af;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:16px 14px 12px;border-bottom:1px solid #eeeef3;white-space:nowrap;}
+  .mtable th.sortable{cursor:pointer;user-select:none;}
+  .mtable th.sortable:hover{color:#3f3f52;}
+  .mtable th.mt-c.sortable,.mtable th.mt-r.sortable{ }
+  .mtable th .sc{display:inline-block;width:0;overflow:hidden;vertical-align:middle;margin-left:4px;color:#7c5cff;font-size:9px;opacity:0;transition:opacity .12s;}
+  .mtable th.sorted .sc{width:auto;opacity:1;}
+  .mtable th.mt-r .sc,.mtable th.mt-c .sc{margin-left:3px;}
+  .mtable td{padding:13px 14px;border-bottom:1px solid #f1f1f6;vertical-align:middle;}
+  .mtable tbody tr{cursor:pointer;transition:background .1s;}
+  .mtable tbody tr:hover{background:#faf9fc;}
+  .mt-r{text-align:right;}
+  .mt-c{text-align:center;}
+  .chip{border:1px solid #e6e6ee;background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;color:#3f3f52;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+  .chip:hover{border-color:#d6d6e0;}
+  .chip.on{background:#f1edff;border-color:#c9b8ff;color:#6a46f5;font-weight:600;}
+  .chip .n{color:#9ca3af;font-weight:500;}
+  .chip.on .n{color:#8b6ff5;}
+  .tbtn{border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:500;color:#3f3f52;display:inline-flex;align-items:center;gap:7px;cursor:pointer;white-space:nowrap;}
+  .tbtn:hover{background:#f4f4f6;}
+  .tbtn.on{background:#f1edff;border-color:#c9b8ff;color:#6a46f5;}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:460px;max-width:92vw;background:#fff;border-left:1px solid #e6e6ee;box-shadow:-12px 0 40px rgba(20,20,40,.1);transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);z-index:60;overflow-y:auto;}
+  .drawer.open{transform:translateX(0);}
+  .scrim{position:fixed;inset:0;background:rgba(20,20,35,.28);opacity:0;pointer-events:none;transition:opacity .2s;z-index:55;}
+  .scrim.open{opacity:1;pointer-events:auto;}
+  .lk-search:focus{outline:none;border-color:#7c5cff;box-shadow:0 0 0 3px rgba(124,92,255,.16);}
+  .d-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;margin:18px 0 6px;padding-left:0;transition:padding .12s;}
+  .d-fld{width:100%;font-family:inherit;font-size:13px;line-height:1.6;color:#1a1a2e;padding:0;border:1px solid transparent;border-radius:9px;background:transparent;box-sizing:border-box;resize:none;overflow:hidden;transition:border-color .12s,background .12s,padding .12s;-webkit-text-fill-color:#1a1a2e;}
+  .d-title-fld{font-size:17px;font-weight:700;line-height:1.35;color:#1a1a2e;-webkit-text-fill-color:#1a1a2e;padding:0;}
+  #mem-drawer:not(.editing) select.d-fld{background-image:none;}
+  #mem-drawer.editing .d-lbl{padding-left:12px;}
+  #mem-drawer.editing .d-fld{border-color:#e6e6ee;background:#fff;padding:10px 12px;cursor:text;}
+  #mem-drawer.editing .d-title-fld{padding:8px 12px;}
+  #mem-drawer.editing .d-fld:focus{outline:none;border-color:#7c5cff;box-shadow:0 0 0 3px rgba(124,92,255,.16);}
+  #mem-drawer.editing select.d-fld,#mem-drawer.editing .d-num{cursor:pointer;}
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="19" r="2.5"/><path d="M7 7.3L10.2 16.5M17 7.3L13.8 16.5M7.5 6H16.5"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h16v12l-3 4H7l-3-4V4z"/><path d="M4 12h5l2 3h2l2-3h5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M12 20V4M20 20v-7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0115.4-6.4M21 12a9 9 0 01-15.4 6.4"/><path d="M3 3v6h6M21 21v-6h-6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 005.66 0l2-2a4 4 0 00-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 00-5.66 0l-2 2a4 4 0 005.66 5.66l1-1"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+</defs></svg>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#7c5cff"/><g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"><rect x="26" y="30" width="48" height="7" rx="3"/><rect x="26" y="47" width="48" height="7" rx="3"/><rect x="26" y="64" width="34" height="7" rx="3"/></g></svg></template>
+<div id="mem-root" style="display:flex;min-height:100vh;">
+
+  <nav aria-label="Primary" style="width:76px;flex-shrink:0;background:#fff;border-right:1px solid #e6e6ee;display:flex;flex-direction:column;align-items:center;padding:16px 0 12px;position:fixed;top:0;bottom:0;left:0;z-index:40;">
+    <div style="width:36px;height:36px;border-radius:8px;background:#7c5cff;color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:24px;"><svg style="width:20px;height:20px"><use href="#i-shield"/></svg></div>
+    <div style="display:flex;flex-direction:column;gap:2px;width:100%;align-items:center;">
+      <button class="lk-rail-item"><svg><use href="#i-home"/></svg>Home</button>
+      <button class="lk-rail-item active"><svg><use href="#i-grid"/></svg>Memories</button>
+      <button class="lk-rail-item"><svg><use href="#i-network"/></svg>Graph</button>
+      <button class="lk-rail-item"><svg><use href="#i-inbox"/></svg>Review<span style="position:absolute;top:2px;right:6px;background:#dc2626;color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:999px;text-align:center;line-height:15px;padding:0 3px;">8</span></button>
+      <button class="lk-rail-item"><svg><use href="#i-clock"/></svg>Sessions</button><button class="lk-rail-item"><svg><use href="#i-bar"></use></svg>Metrics</button>
+    </div>
+    <div style="flex:1"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:12px;border-top:1px solid #e6e6ee;width:100%;margin-top:12px;">
+      <button class="lk-rail-item"><svg><use href="#i-gear"/></svg>Settings</button>
+      <span style="width:7px;height:7px;border-radius:50%;background:#16a34a;margin-top:1px;"></span>
+    </div>
+  </nav>
+
+  <div style="flex:1;min-width:0;margin-left:76px;display:flex;flex-direction:column;">
+
+    <div style="height:60px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid #e6e6ee;background:#fff;position:sticky;top:0;z-index:30;">
+      <div style="font-size:14px;color:#9ca3af;display:flex;gap:6px;align-items:center;">Lorekeeper <span>/</span> <span style="color:#1a1a2e;font-weight:600;">Memories</span></div>
+      <button style="display:flex;align-items:center;gap:8px;border:1px solid #e6e6ee;background:#f9f9fb;border-radius:6px;padding:8px 10px;color:#9ca3af;font-size:13px;width:230px;cursor:pointer;">
+        <svg style="width:15px;height:15px;flex-shrink:0"><use href="#i-search"/></svg><span style="flex:1;text-align:left;">Search or jump to…</span>
+        <span style="display:flex;gap:3px;"><kbd style="background:#fff;border:1px solid #e6e6ee;border-radius:4px;font-size:10.5px;padding:1px 5px;color:#6b7280;">⌘</kbd><kbd style="background:#fff;border:1px solid #e6e6ee;border-radius:4px;font-size:10.5px;padding:1px 5px;color:#6b7280;">K</kbd></span>
+      </button>
+    </div>
+
+    <div style="padding:24px 32px 40px;max-width:1280px;width:100%;">
+
+      <!-- toolbar -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+        <div style="position:relative;flex:1;min-width:280px;">
+          <svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#9ca3af"><use href="#i-search"/></svg>
+          <input class="lk-search" type="text" placeholder="Search memories by title, content, or ID…" style="width:100%;border:1px solid #e6e6ee;border-radius:9px;padding:10px 14px 10px 38px;font-size:13px;background:#fff;">
+        </div>
+        <select style="border:1px solid #e6e6ee;border-radius:9px;padding:10px 34px 10px 12px;font-size:13px;background:#fff;color:#3f3f52;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#9ca3af 50%),linear-gradient(135deg,#9ca3af 50%,transparent 50%);background-position:calc(100% - 16px) center,calc(100% - 11px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;cursor:pointer;"><option>All namespaces</option><option>default</option><option>dev</option><option>infra</option><option>archive</option></select>
+        <button class="tbtn" data-toast="Deleted memories toggled.">Show deleted</button>
+        <button class="tbtn" data-toast="Memories refreshed." style="padding:9px;"><svg style="width:16px;height:16px;color:#6b7280"><use href="#i-refresh"/></svg></button>
+        <button data-toast="New-memory composer would open here." class="tbtn" style="background:#7c5cff;border-color:#7c5cff;color:#fff;"><svg style="width:14px;height:14px"><use href="#i-plus"/></svg>New</button>
+      </div>
+
+      <!-- filter chips -->
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="chip on" data-filter="all">All <span class="n">3,248</span></button>
+        <button class="chip" data-filter="review">Needs review <span class="n">14</span></button>
+        <button class="chip" data-filter="highconf">High confidence <span class="n">1,902</span></button>
+        <button class="chip" data-filter="stale">Stale &gt;30d <span class="n">37</span></button>
+        <span style="flex:1"></span>
+        <span id="mem-count" style="font-size:12.5px;color:#9ca3af;">Showing 1–50 of 3,248 memories</span>
+      </div>
+
+      <!-- table card -->
+      <div style="background:#fff;border:1px solid #e6e6ee;border-radius:14px;overflow:hidden;position:relative;">
+                <div style="overflow-x:auto;">
+        <table class="mtable">
+          <thead>
+            <tr>
+              <th class="sortable" data-sk="title" style="padding-left:18px;">Title<span class="sc"></span></th>
+              <th class="sortable" data-sk="ns" style="width:70px;">NS<span class="sc"></span></th>
+              <th class="sortable mt-c" data-sk="score" style="width:64px;">Score<span class="sc"></span></th>
+              <th class="sortable mt-r" data-sk="conf" style="width:60px;">Conf<span class="sc"></span></th>
+              <th class="sortable mt-r" data-sk="uses" style="width:56px;">Uses<span class="sc"></span></th>
+              <th class="sortable mt-r" data-sk="links" style="width:58px;">Links<span class="sc"></span></th>
+              <th class="sortable mt-r" data-sk="updated" style="width:90px;padding-right:20px;">Updated<span class="sc"></span></th>
+            </tr>
+          </thead>
+          <tbody id="mem-body">
+            <tr data-conf="87" data-ns="default" data-desc="Token-bucket based limiter shared across agent sessions hitting the same MCP tool." data-content="Use a token bucket keyed by (agent_id, tool_name). Refill rate should track the tool's upstream rate limit, not a fixed global value. Falls back to fixed-window when Redis is unavailable." data-links="2" data-score="9.2" data-uses="47" data-updated="6h ago">
+              <td style="font-weight:500;padding-left:18px;">API rate limiting patterns for concurrent agents</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#7c5cff;"></span><span style="font-size:11.5px;color:#9ca3af;">default</span></span></td>
+              <td class="mt-c"><span style="background:#ecfdf3;color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">9.2</span></td>
+              <td class="mt-r">87%</td><td class="mt-r">47</td><td class="mt-r">2</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">6h ago</td>
+            </tr>
+            <tr data-conf="72" data-ns="default" data-desc="TTL + cosine-similarity cache key for hybrid search responses." data-content="Cache key is a hash of (query embedding rounded to 3dp, namespace, min_score). TTL 10 minutes. Invalidate on any memory update within that namespace." data-links="1" data-score="7.1" data-uses="11" data-updated="6h ago">
+              <td style="font-weight:500;padding-left:18px;">Redis caching strategy for search results</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#7c5cff;"></span><span style="font-size:11.5px;color:#9ca3af;">default</span></span></td>
+              <td class="mt-c"><span style="background:#ecfdf3;color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">7.1</span></td>
+              <td class="mt-r">72%</td><td class="mt-r">11</td><td class="mt-r">1</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">6h ago</td>
+            </tr>
+            <tr data-conf="81" data-ns="infra" data-desc="Handshake retries and backoff for stdio/SSE transports." data-content="First attempt: 2s timeout. Backoff x1.8 up to 3 retries. Log a warning (not error) on retry 1-2; escalate to error on final failure." data-links="1" data-score="7.9" data-uses="28" data-updated="1d ago">
+              <td style="font-weight:500;padding-left:18px;">MCP transport handshake timeout patterns</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#9ca3af;"></span><span style="font-size:11.5px;color:#9ca3af;">infra</span></span></td>
+              <td class="mt-c"><span style="background:#ecfdf3;color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">7.9</span></td>
+              <td class="mt-r">81%</td><td class="mt-r">28</td><td class="mt-r">1</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">1d ago</td>
+            </tr>
+            <tr data-conf="90" data-ns="dev" data-desc="Benchmark notes comparing the two rate-limit strategies under bursty load." data-content="Token bucket smooths bursts better; fixed window is simpler but allows 2x burst at window boundaries. Chose token bucket for the MCP gateway." data-links="2" data-score="8.4" data-uses="19" data-updated="1d ago">
+              <td style="font-weight:500;padding-left:18px;">Token bucket vs fixed window comparison</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;"></span><span style="font-size:11.5px;color:#9ca3af;">dev</span></span></td>
+              <td class="mt-c"><span style="background:#ecfdf3;color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">8.4</span></td>
+              <td class="mt-r">90%</td><td class="mt-r">19</td><td class="mt-r">2</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">1d ago</td>
+            </tr>
+            <tr data-conf="68" data-ns="dev" data-desc="Order matters: auth before rate-limit, rate-limit before logging." data-content="Middleware stack (outer to inner): CORS -> Auth -> RateLimit -> RequestLogging -> route handlers. Getting RateLimit before Auth leaks limiter state to unauthenticated callers." data-links="2" data-score="6.9" data-uses="22" data-updated="2d ago">
+              <td style="font-weight:500;padding-left:18px;">FastAPI middleware ordering rules</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;"></span><span style="font-size:11.5px;color:#9ca3af;">dev</span></span></td>
+              <td class="mt-c"><span style="background:#fef6e7;color:#d97706;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">6.9</span></td>
+              <td class="mt-r">68%</td><td class="mt-r">22</td><td class="mt-r">2</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">2d ago</td>
+            </tr>
+            <tr data-conf="61" data-ns="infra" data-stale="1" data-desc="When to recompute embeddings vs reuse cached vectors." data-content="Recompute only if content or title changed. Description-only edits reuse the existing embedding to save cost, flagged with embedding_stale=false." data-links="1" data-score="5.8" data-uses="9" data-updated="2d ago">
+              <td style="font-weight:500;padding-left:18px;">Vector embedding cache invalidation logic</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#9ca3af;"></span><span style="font-size:11.5px;color:#9ca3af;">infra</span></span></td>
+              <td class="mt-c"><span style="background:#fef6e7;color:#d97706;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">5.8</span></td>
+              <td class="mt-r">61%</td><td class="mt-r">9</td><td class="mt-r">1</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">2d ago</td>
+            </tr>
+            <tr data-conf="65" data-ns="default" data-desc="Isolating memory writes when multiple agents share a namespace." data-content="Each session gets a write-ahead buffer; commits are serialized per namespace to avoid duplicate auto-link races." data-links="1" data-score="6.2" data-uses="14" data-updated="3d ago">
+              <td style="font-weight:500;padding-left:18px;">Concurrent agent session handling</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#7c5cff;"></span><span style="font-size:11.5px;color:#9ca3af;">default</span></span></td>
+              <td class="mt-c"><span style="background:#fef6e7;color:#d97706;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">6.2</span></td>
+              <td class="mt-r">65%</td><td class="mt-r">14</td><td class="mt-r">1</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">3d ago</td>
+            </tr>
+            <tr data-conf="84" data-ns="infra" data-desc="Docker compose snippet + warmup script." data-content="maxmemory 512mb, maxmemory-policy allkeys-lru. Warmup script preloads the top 200 memories by usage_count on boot." data-links="0" data-score="8.1" data-uses="33" data-updated="3d ago">
+              <td style="font-weight:500;padding-left:18px;">Local Redis config for cache warmup</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#9ca3af;"></span><span style="font-size:11.5px;color:#9ca3af;">infra</span></span></td>
+              <td class="mt-c"><span style="background:#ecfdf3;color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">8.1</span></td>
+              <td class="mt-r">84%</td><td class="mt-r">33</td><td class="mt-r">0</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">3d ago</td>
+            </tr>
+            <tr data-conf="76" data-ns="default" data-desc="House style for this repo." data-content="Prefer composition over inheritance. No default exports. Tests colocated with source." data-links="0" data-score="7.5" data-uses="17" data-updated="4d ago">
+              <td style="font-weight:500;padding-left:18px;">Project conventions file — v3</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#7c5cff;"></span><span style="font-size:11.5px;color:#9ca3af;">default</span></span></td>
+              <td class="mt-c"><span style="background:#ecfdf3;color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">7.5</span></td>
+              <td class="mt-r">76%</td><td class="mt-r">17</td><td class="mt-r">0</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">4d ago</td>
+            </tr>
+            <tr data-conf="55" data-ns="default" data-stale="1" data-desc="First-week setup steps for new engineers." data-content="1. Clone repo. 2. Run setup.sh. 3. Request DB access. 4. Pair on first PR." data-links="0" data-score="5.2" data-uses="6" data-updated="5d ago">
+              <td style="font-weight:500;padding-left:18px;">Team onboarding checklist</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#7c5cff;"></span><span style="font-size:11.5px;color:#9ca3af;">default</span></span></td>
+              <td class="mt-c"><span style="background:#fef6e7;color:#d97706;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">5.2</span></td>
+              <td class="mt-r">55%</td><td class="mt-r">6</td><td class="mt-r">0</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">5d ago</td>
+            </tr>
+            <tr data-conf="70" data-ns="archive" data-stale="1" data-desc="Superseded by per-tenant DB approach." data-content="Originally namespaced by prefix string; replaced because prefix collisions caused cross-tenant leakage risk." data-links="1" data-score="6.7" data-uses="21" data-updated="6d ago">
+              <td style="font-weight:500;padding-left:18px;">Namespace strategy for multi-tenant memories</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#d97706;"></span><span style="font-size:11.5px;color:#9ca3af;">archive</span></span></td>
+              <td class="mt-c"><span style="background:#fef6e7;color:#d97706;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">6.7</span></td>
+              <td class="mt-r">70%</td><td class="mt-r">21</td><td class="mt-r">1</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">6d ago</td>
+            </tr>
+            <tr data-conf="88" data-ns="dev" data-desc="Scoring function for the ⌘K search." data-content="Score = 0.6*prefix_match + 0.3*subsequence_match + 0.1*recency. Case-insensitive, diacritic-insensitive." data-links="1" data-score="8.7" data-uses="25" data-updated="7h ago">
+              <td style="font-weight:500;padding-left:18px;">Command palette fuzzy match scoring</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;"></span><span style="font-size:11.5px;color:#9ca3af;">dev</span></span></td>
+              <td class="mt-c"><span style="background:#ecfdf3;color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">8.7</span></td>
+              <td class="mt-r">88%</td><td class="mt-r">25</td><td class="mt-r">1</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">7h ago</td>
+            </tr>
+            <tr data-conf="74" data-ns="default" data-desc="Minimum weighted_score before a link suggestion surfaces in the Review inbox." data-content="Floor is 0.75 weighted_score by default (auto_link_threshold). Lower floors flood the review queue with noise." data-links="1" data-score="7.3" data-uses="15" data-updated="9h ago">
+              <td style="font-weight:500;padding-left:18px;">Lorekeeper sweep engine confidence floor</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#7c5cff;"></span><span style="font-size:11.5px;color:#9ca3af;">default</span></span></td>
+              <td class="mt-c"><span style="background:#ecfdf3;color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">7.3</span></td>
+              <td class="mt-r">74%</td><td class="mt-r">15</td><td class="mt-r">1</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">9h ago</td>
+            </tr>
+            <tr data-conf="63" data-ns="dev" data-desc="Node radius scales with usage_count, capped." data-content="radius = 8 + min(usage_count, 40) * 0.35. Prevents mega-hub nodes from dominating the layout." data-links="0" data-score="6.4" data-uses="8" data-updated="1d ago">
+              <td style="font-weight:500;padding-left:18px;">Graph layout node sizing logic</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;"></span><span style="font-size:11.5px;color:#9ca3af;">dev</span></span></td>
+              <td class="mt-c"><span style="background:#fef6e7;color:#d97706;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">6.4</span></td>
+              <td class="mt-r">63%</td><td class="mt-r">8</td><td class="mt-r">0</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">1d ago</td>
+            </tr>
+            <tr data-conf="59" data-ns="default" data-stale="1" data-desc="Sampled 50 accepted links, 6 were judged wrong in hindsight." data-content="Most false positives were references mislabeled where contradicts was more accurate." data-links="0" data-score="5.9" data-uses="4" data-updated="4d ago">
+              <td style="font-weight:500;padding-left:18px;">Suggestion sweep accuracy audit notes</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#7c5cff;"></span><span style="font-size:11.5px;color:#9ca3af;">default</span></span></td>
+              <td class="mt-c"><span style="background:#fef6e7;color:#d97706;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">5.9</span></td>
+              <td class="mt-r">59%</td><td class="mt-r">4</td><td class="mt-r">0</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">4d ago</td>
+            </tr>
+            <tr data-conf="92" data-ns="infra" data-desc="Keeps last 14 daily backups, prunes older." data-content="Runs at 03:00 local time via cron. Uses the /api/export endpoint internally, same format as manual export." data-links="0" data-score="8.9" data-uses="31" data-updated="11h ago">
+              <td style="font-weight:500;padding-left:18px;">Backup rotation script maintenance</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#9ca3af;"></span><span style="font-size:11.5px;color:#9ca3af;">infra</span></span></td>
+              <td class="mt-c"><span style="background:#ecfdf3;color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">8.9</span></td>
+              <td class="mt-r">92%</td><td class="mt-r">31</td><td class="mt-r">0</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">11h ago</td>
+            </tr>
+            <tr data-conf="78" data-ns="dev" data-desc="Keyboard-first triage beats mouse-only for >20 items/day." data-content="Y/N shortcuts cut average triage time per suggestion from ~9s to ~3s in informal testing." data-links="0" data-score="7.6" data-uses="12" data-updated="1d ago">
+              <td style="font-weight:500;padding-left:18px;">Review inbox triage pattern notes</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;"></span><span style="font-size:11.5px;color:#9ca3af;">dev</span></span></td>
+              <td class="mt-c"><span style="background:#ecfdf3;color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">7.6</span></td>
+              <td class="mt-r">78%</td><td class="mt-r">12</td><td class="mt-r">0</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">1d ago</td>
+            </tr>
+            <tr data-conf="30" data-ns="archive" data-stale="1" data-desc="Abandoned — REST + BFF pattern was simpler for this scale." data-content="Kept for historical context only; do not resurrect without re-checking whether N+1 query issues were ever solved." data-links="1" data-score="2.1" data-uses="1" data-updated="34d ago">
+              <td style="font-weight:500;padding-left:18px;">Old spike: GraphQL gateway for aggregation</td>
+              <td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:#d97706;"></span><span style="font-size:11.5px;color:#9ca3af;">archive</span></span></td>
+              <td class="mt-c"><span style="background:#fef2f2;color:#dc2626;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;">2.1</span></td>
+              <td class="mt-r">30%</td><td class="mt-r">1</td><td class="mt-r">1</td><td class="mt-r" style="color:#9ca3af;padding-right:20px;">34d ago</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <div id="mem-pager" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-top:1px solid #eeeef3;flex-wrap:wrap;">
+          <span id="mem-range" style="font-size:12.5px;color:#9ca3af;">1–50 of 3,248</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button class="pg-nav" data-step="-1" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid #e6e6ee;background:#fff;border-radius:8px;color:#9ca3af;cursor:not-allowed;"><svg style="width:15px;height:15px;transform:rotate(90deg)"><use href="#i-chevron"/></svg></button>
+            <div id="mem-pages" style="display:flex;align-items:center;justify-content:center;min-width:96px;"></div>
+            <button class="pg-nav" data-step="1" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid #e6e6ee;background:#fff;border-radius:8px;color:#3f3f52;cursor:pointer;"><svg style="width:15px;height:15px;transform:rotate(-90deg)"><use href="#i-chevron"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- detail drawer -->
+  <div id="mem-scrim" class="scrim"></div>
+  <div id="mem-drawer" class="drawer">
+    <div style="padding:24px 26px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid #eeeef3;">
+        <input id="d-title-edit" class="d-fld d-title-fld" type="text" readonly style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span id="d-readonly-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;background:#f1f1f6;border-radius:999px;padding:4px 9px;"><svg style="width:11px;height:11px"><use href="#i-lock"/></svg>Read-only</span>
+          <span id="d-editing-badge" style="display:none;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#7c5cff;background:#f1edff;border-radius:999px;padding:4px 9px;">Editing</span>
+          <button id="d-close" style="border:none;background:transparent;color:#9ca3af;font-size:16px;padding:6px;border-radius:7px;cursor:pointer;line-height:1;"><svg style="width:16px;height:16px"><use href="#i-x"/></svg></button>
+        </div>
+      </div>
+
+      <!-- read-only stats (both modes) -->
+      <div id="d-meta" style="display:flex;gap:7px;flex-wrap:wrap;margin:16px 0 4px;"></div>
+
+      <div style="display:flex;gap:14px;">
+        <div style="flex:1;"><div class="d-lbl">Namespace</div>
+          <select id="d-ns-edit" class="d-fld" disabled style="appearance:none;-webkit-appearance:none;">
+            <option value="default">default</option><option value="dev">dev</option><option value="infra">infra</option><option value="archive">archive</option>
+          </select>
+        </div>
+        <div style="width:120px;flex-shrink:0;"><div class="d-lbl">Score</div>
+          <input id="d-score-edit" class="d-fld d-num" type="number" min="0" max="10" step="0.1" readonly>
+        </div>
+      </div>
+
+      <div class="d-lbl">Description</div>
+      <textarea id="d-desc-edit" class="d-fld" readonly rows="2"></textarea>
+      <div class="d-lbl">Content</div>
+      <textarea id="d-content-edit" class="d-fld" readonly rows="4"></textarea>
+
+      <!-- danger zone (edit only) -->
+      <div id="d-danger" style="display:none;margin-top:24px;padding-top:20px;border-top:1px solid #eeeef3;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+          <div style="min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:#1a1a2e;">Delete this memory</div>
+            <div style="font-size:12px;color:#9ca3af;margin-top:2px;line-height:1.45;">Soft-delete is recoverable from the deleted view. Permanent delete can't be undone.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;">
+            <button id="d-soft" style="border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:500;color:#3f3f52;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg style="width:14px;height:14px;color:#9ca3af"><use href="#i-archive"/></svg>Soft-delete</button>
+            <button id="d-hard" data-confirm="hard" style="border:1px solid #f0c9c9;background:#fff;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;color:#dc2626;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg style="width:14px;height:14px"><use href="#i-trash"/></svg>Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- footer -->
+      <div style="display:flex;gap:8px;margin-top:24px;padding-top:16px;border-top:1px solid #eeeef3;">
+        <div id="d-foot-view" style="display:flex;gap:8px;width:100%;">
+          <button data-toast="Copied memory ID to clipboard." style="border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;color:#3f3f52;cursor:pointer;">Copy ID</button>
+          <span style="flex:1"></span>
+          <button id="d-edit-btn" style="border:none;background:#7c5cff;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:7px;"><svg style="width:14px;height:14px"><use href="#i-edit"/></svg>Edit memory</button>
+        </div>
+        <div id="d-foot-edit" style="display:none;gap:8px;width:100%;">
+          <button id="d-cancel" style="border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;color:#1a1a2e;cursor:pointer;">Cancel</button>
+          <span style="flex:1"></span>
+          <button id="d-save" style="border:none;background:#7c5cff;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:7px;"><svg style="width:14px;height:14px"><use href="#i-check"/></svg>Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- confirm dialog -->
+  <div id="cf-scrim" style="position:fixed;inset:0;background:rgba(20,20,35,.4);opacity:0;pointer-events:none;transition:opacity .16s;z-index:70;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div id="cf-box" style="width:400px;max-width:100%;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(20,20,40,.28);padding:24px;transform:translateY(8px);transition:transform .16s;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <span id="cf-ic" style="width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"><svg style="width:19px;height:19px"><use href="#i-trash"/></svg></span>
+        <div id="cf-title" style="font-size:16px;font-weight:700;color:#1a1a2e;"></div>
+      </div>
+      <div id="cf-body" style="font-size:13px;line-height:1.55;color:#6b7280;"></div>
+      <div id="cf-name" style="font-size:13px;font-weight:600;color:#1a1a2e;background:#f6f6f9;border:1px solid #ececf3;border-radius:8px;padding:9px 12px;margin-top:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+      <div style="display:flex;gap:8px;margin-top:20px;">
+        <button id="cf-cancel" style="flex:1;border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:500;color:#1a1a2e;cursor:pointer;">Cancel</button>
+        <button id="cf-ok" style="flex:1;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:860}}">
+class Component extends DCLogic {
+  componentDidMount(){ this.wire(); }
+  toast(msg){
+    const t=document.createElement('div');t.textContent=msg;
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:11px 20px;border-radius:9px;font:600 13px/1 -apple-system,system-ui,sans-serif;box-shadow:0 10px 28px rgba(0,0,0,.22);z-index:200;opacity:0;transition:opacity .16s;';
+    document.body.appendChild(t);requestAnimationFrame(()=>t.style.opacity='1');
+    setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),220);},1800);
+  }
+  wire(){
+    const root=document.getElementById('mem-root'); if(!root||this._w) return; this._w=true;
+    const self=this;
+    root.querySelectorAll('[data-toast]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();self.toast(b.getAttribute('data-toast'));}));
+
+    const rows=[...root.querySelectorAll('#mem-body tr')];
+    rows.forEach(r=>r.addEventListener('click',()=>self.openDrawer(r)));
+
+    // filter chips
+    root.querySelectorAll('.chip[data-filter]').forEach(c=>c.addEventListener('click',()=>{
+      root.querySelectorAll('.chip[data-filter]').forEach(x=>x.classList.remove('on')); c.classList.add('on');
+      const f=c.getAttribute('data-filter'); let shown=0;
+      rows.forEach(r=>{
+        let ok=true;
+        if(f==='review') ok=+r.dataset.conf<70;
+        else if(f==='highconf') ok=+r.dataset.conf>=85;
+        else if(f==='stale') ok=r.dataset.stale==='1';
+        r.style.display=ok?'':'none'; if(ok)shown++;
+      });
+      root.querySelector('#mem-count').textContent=shown+' of 3,248 memories';
+    }));
+
+    // pagination (50 per page)
+    const per=50, totalItems=3248, pageCount=Math.ceil(totalItems/per);
+    let page=1;
+    const pagesWrap=root.querySelector('#mem-pages');
+    const renderPager=()=>{
+      const start=(page-1)*per+1, end=Math.min(page*per,totalItems);
+      root.querySelector('#mem-range').textContent=start+'–'+end+' of '+totalItems.toLocaleString();
+      const cnt=root.querySelector('#mem-count'); if(cnt) cnt.textContent='Showing '+start+'–'+end+' of '+totalItems.toLocaleString()+' memories';
+      pagesWrap.innerHTML='<span style="font-size:13px;color:#3f3f52;white-space:nowrap;">Page <strong style="font-weight:600;">'+page+'</strong> of '+pageCount+'</span>';
+      root.querySelectorAll('.pg-nav').forEach(b=>{
+        const step=+b.dataset.step, disabled=(step<0&&page===1)||(step>0&&page===pageCount);
+        b.style.cursor=disabled?'not-allowed':'pointer'; b.style.color=disabled?'#c2c2cf':'#3f3f52';
+        b.onclick=()=>{ if(disabled)return; page=Math.min(pageCount,Math.max(1,page+step)); renderPager(); };
+      });
+    };
+    renderPager();
+
+    // column sorting
+    const body=root.querySelector('#mem-body');
+    const parseUpdated=t=>{ const m=/(\d+)\s*([hdmw])/.exec(t||''); if(!m) return 0; const n=+m[1]; const u=m[2]; return n*(u==='m'?1/60:u==='h'?1:u==='d'?24:u==='w'?168:1); };
+    const sortVal=(r,k)=>{
+      if(k==='title') return r.children[0].textContent.trim().toLowerCase();
+      if(k==='ns') return (r.dataset.ns||'').toLowerCase();
+      if(k==='updated') return parseUpdated(r.dataset.updated);
+      return parseFloat(r.dataset[k]||0)||0;
+    };
+    let sortKey=null, sortDir=1;
+    const headers=[...root.querySelectorAll('.mtable th.sortable')];
+    const applySort=()=>{
+      headers.forEach(h=>{
+        const on=h.dataset.sk===sortKey; h.classList.toggle('sorted',on);
+        const c=h.querySelector('.sc'); if(c) c.textContent=on?(sortDir>0?'▲':'▼'):'';
+        h.style.color=on?'#7c5cff':'';
+      });
+      const rows=[...body.querySelectorAll('tr')];
+      const txt=(sortKey==='title'||sortKey==='ns');
+      rows.sort((a,b)=>{ const va=sortVal(a,sortKey),vb=sortVal(b,sortKey); return (txt?String(va).localeCompare(String(vb)):va-vb)*sortDir; });
+      rows.forEach(r=>body.appendChild(r));
+    };
+    headers.forEach(h=>h.addEventListener('click',()=>{
+      const k=h.dataset.sk;
+      if(sortKey===k){ sortDir*=-1; } else { sortKey=k; sortDir=(k==='title'||k==='ns')?1:-1; }
+      applySort();
+    }));
+
+    // drawer close + edit-mode toggle
+    root.querySelector('#d-close').addEventListener('click',()=>self.closeDrawer());
+    root.querySelector('#mem-scrim').addEventListener('click',()=>self.closeDrawer());
+    root.querySelector('#d-edit-btn').addEventListener('click',()=>self.setMode(true));
+    root.querySelector('#d-cancel').addEventListener('click',()=>{ if(self._row) self.openDrawer(self._row); else self.setMode(false); });
+    root.querySelector('#d-save').addEventListener('click',()=>{ self.setMode(false); self.toast('Memory saved'); });
+    ['#d-desc-edit','#d-content-edit'].forEach(s=>{ const el=root.querySelector(s); if(el) el.addEventListener('input',()=>self.autosize(el)); });
+    // soft-delete acts immediately; hard delete confirms
+    root.querySelector('#d-soft').addEventListener('click',()=>{ self.closeDrawer(); self.toast('Memory soft-deleted.'); });
+    root.querySelectorAll('#mem-drawer [data-confirm]').forEach(b=>b.addEventListener('click',()=>self.confirmDelete(b.getAttribute('data-confirm'))));
+    root.querySelector('#cf-cancel').addEventListener('click',()=>self.closeConfirm());
+    root.querySelector('#cf-scrim').addEventListener('click',e=>{ if(e.target===root.querySelector('#cf-scrim')) self.closeConfirm(); });
+  }
+  autosize(el){ if(!el) return; el.style.height='auto'; el.style.height=(el.scrollHeight)+'px'; }
+  setFieldsEditable(edit){
+    const root=document.getElementById('mem-root');
+    const flds=[...root.querySelectorAll('#mem-drawer .d-fld')];
+    flds.forEach(el=>{
+      if(edit){ el.removeAttribute('readonly'); }
+      else { el.setAttribute('readonly','readonly'); }
+      const isTitle=el.classList.contains('d-title-fld');
+      if(isTitle){
+        // title stays a heading in view, becomes a boxed field in edit
+        el.style.border=edit?'1px solid #e6e6ee':'1px solid transparent';
+        el.style.background=edit?'#fff':'transparent';
+        el.style.padding=edit?'8px 12px':'0';
+        el.style.color='#1a1a2e'; el.style.webkitTextFillColor='#1a1a2e';
+        el.style.cursor=edit?'text':'default';
+      } else {
+        // other fields: disabled-looking box in view, active box in edit
+        el.style.border=edit?'1px solid #e6e6ee':'1px solid #ececf3';
+        el.style.background=edit?'#fff':'#f6f6f9';
+        el.style.padding='10px 12px';
+        el.style.color=edit?'#1a1a2e':'#8a8a99';
+        el.style.webkitTextFillColor=edit?'#1a1a2e':'#8a8a99';
+        el.style.cursor=edit?(el.tagName==='SELECT'?'pointer':'text'):'default';
+      }
+    });
+    const ns=root.querySelector('#d-ns-edit'); if(ns){ ns.disabled=!edit; ns.style.backgroundImage=edit?'linear-gradient(45deg,transparent 50%,#9ca3af 50%),linear-gradient(135deg,#9ca3af 50%,transparent 50%)':'none'; ns.style.backgroundPosition='calc(100% - 16px) center,calc(100% - 11px) center'; ns.style.backgroundSize='5px 5px,5px 5px'; ns.style.backgroundRepeat='no-repeat'; }
+    root.querySelectorAll('#mem-drawer .d-lbl').forEach(l=>l.style.paddingLeft='0');
+  }
+  setMode(edit){
+    const root=document.getElementById('mem-root'), drawer=root.querySelector('#mem-drawer');
+    drawer.classList.toggle('editing',edit);
+    root.querySelector('#d-editing-badge').style.display=edit?'inline-flex':'none';
+    root.querySelector('#d-readonly-badge').style.display=edit?'none':'inline-flex';
+    root.querySelector('#d-danger').style.display=edit?'block':'none';
+    root.querySelector('#d-foot-view').style.display=edit?'none':'flex';
+    root.querySelector('#d-foot-edit').style.display=edit?'flex':'none';
+    this.setFieldsEditable(edit);
+    ['#d-desc-edit','#d-content-edit'].forEach(s=>this.autosize(root.querySelector(s)));
+    if(edit) root.querySelector('#d-title-edit').focus();
+  }
+  openDrawer(r){
+    const root=document.getElementById('mem-root');
+    this._row=r;
+    root.querySelector('#d-title-edit').value=r.children[0].textContent;
+    root.querySelector('#d-desc-edit').value=r.dataset.desc;
+    root.querySelector('#d-content-edit').value=r.dataset.content;
+    root.querySelector('#d-score-edit').value=r.dataset.score;
+    root.querySelector('#d-ns-edit').value=r.dataset.ns;
+    const chip=(l,v)=>`<span style="background:#f1f1f6;border-radius:999px;padding:4px 10px;font-size:11px;color:#6b7280;">${l}: <strong style="color:#1a1a2e;font-weight:600;">${v}</strong></span>`;
+    root.querySelector('#d-meta').innerHTML=chip('conf',r.dataset.conf+'%')+chip('uses',r.dataset.uses)+chip('links',r.dataset.links)+chip('updated',r.dataset.updated);
+    this.setMode(false);
+    root.querySelector('#mem-drawer').classList.add('open');
+    root.querySelector('#mem-scrim').classList.add('open');
+    // fit textareas once visible
+    requestAnimationFrame(()=>{ ['#d-desc-edit','#d-content-edit'].forEach(s=>this.autosize(root.querySelector(s))); });
+  }
+  closeDrawer(){
+    const root=document.getElementById('mem-root');
+    root.querySelector('#mem-drawer').classList.remove('open');
+    root.querySelector('#mem-scrim').classList.remove('open');
+    this.setMode(false);
+  }
+  confirmDelete(kind){
+    const root=document.getElementById('mem-root'), self=this;
+    const name=root.querySelector('#d-title-edit').value||'this memory';
+    const soft=kind==='soft';
+    root.querySelector('#cf-title').textContent=soft?'Soft-delete memory?':'Delete permanently?';
+    root.querySelector('#cf-body').innerHTML=soft
+      ? 'It will be hidden from search but stays recoverable from the deleted view.'
+      : 'This removes the memory and all its links for good. <strong style="color:#b91c1c;">This cannot be undone.</strong>';
+    root.querySelector('#cf-name').textContent=name;
+    const ic=root.querySelector('#cf-ic'), ok=root.querySelector('#cf-ok');
+    ic.style.background=soft?'#f1f1f6':'#fef2f2';
+    ic.style.color=soft?'#6b7280':'#dc2626';
+    ic.querySelector('use').setAttribute('href',soft?'#i-archive':'#i-trash');
+    ok.style.background=soft?'#1a1a2e':'#dc2626';
+    ok.textContent=soft?'Soft-delete':'Delete permanently';
+    const okClone=ok.cloneNode(true); ok.parentNode.replaceChild(okClone,ok);
+    okClone.addEventListener('click',()=>{ self.closeConfirm(); self.closeDrawer(); self.toast(soft?'Memory soft-deleted.':'Memory permanently deleted.'); });
+    const sc=root.querySelector('#cf-scrim'); sc.style.pointerEvents='auto'; sc.style.opacity='1';
+    root.querySelector('#cf-box').style.transform='translateY(0)';
+  }
+  closeConfirm(){
+    const root=document.getElementById('mem-root'), sc=root.querySelector('#cf-scrim');
+    sc.style.opacity='0'; sc.style.pointerEvents='none';
+    root.querySelector('#cf-box').style.transform='translateY(8px)';
+  }
+  renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

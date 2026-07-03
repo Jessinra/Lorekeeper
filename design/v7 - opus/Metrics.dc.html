@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body{margin:0;background:#f9f9fb;color:#1a1a2e;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  *{box-sizing:border-box;}
+  .lk-rail-item{width:58px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 8px;border:none;background:transparent;border-radius:8px;color:#6b7280;font-size:10.5px;font-weight:500;position:relative;cursor:pointer;}
+  .lk-rail-item svg{width:19px;height:19px;}
+  .lk-rail-item:hover{background:#f4f4f6;color:#1a1a2e;}
+  .lk-rail-item.active{background:#f1edff;color:#7c5cff;font-weight:600;}
+  .mh-row{display:flex;align-items:center;padding:2px 6px;border-radius:6px;width:max-content;}
+  .mh-row:hover{background:#f6f6fa;}
+  .mh-lbl{width:44px;flex-shrink:0;font-size:11px;color:#9ca3af;font-variant-numeric:tabular-nums;}
+  .mh-cells{display:flex;gap:3px;}
+  .mh-cell{width:15px;height:15px;flex-shrink:0;border-radius:3px;cursor:pointer;transition:transform .08s;}
+  .mh-cell:hover{outline:1.5px solid #1a1a2e;outline-offset:1px;}
+  .mh-tick{width:15px;flex-shrink:0;font-size:9px;color:#c2c2cf;text-align:left;}
+  .mini .mh-lbl{width:38px;}.mini .mh-cells{gap:2px;}.mini .mh-cell{width:10px;height:10px;border-radius:2px;cursor:default;}
+  .mini .mh-row:hover{background:transparent;}
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"></path></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></symbol>
+  <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2.5"></circle><circle cx="19" cy="6" r="2.5"></circle><circle cx="12" cy="19" r="2.5"></circle><path d="M7 7.3L10.2 16.5M17 7.3L13.8 16.5M7.5 6H16.5"></path></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h16v12l-3 4H7l-3-4V4z"></path><path d="M4 12h5l2 3h2l2-3h5"></path></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l4 2"></path></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M12 20V4M20 20v-7"></path></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0115.4-6.4M21 12a9 9 0 01-15.4 6.4"></path><path d="M3 3v6h6M21 21v-6h-6"></path></symbol>
+</defs></svg>
+
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#7c5cff"/><g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><path d="M30 70V50M50 70V32M70 70V44"/></g></svg></template>
+<div id="met-root" style="display:flex;min-height:100vh;">
+
+  <nav aria-label="Primary" style="width:76px;flex-shrink:0;background:#fff;border-right:1px solid #e6e6ee;display:flex;flex-direction:column;align-items:center;padding:16px 0 12px;position:fixed;top:0;bottom:0;left:0;z-index:40;">
+    <div style="width:36px;height:36px;border-radius:8px;background:#7c5cff;color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:24px;"><svg style="width:20px;height:20px"><use href="#i-shield"></use></svg></div>
+    <div style="display:flex;flex-direction:column;gap:2px;width:100%;align-items:center;">
+      <button class="lk-rail-item"><svg><use href="#i-home"></use></svg>Home</button>
+      <button class="lk-rail-item"><svg><use href="#i-grid"></use></svg>Memories</button>
+      <button class="lk-rail-item"><svg><use href="#i-network"></use></svg>Links</button>
+      <button class="lk-rail-item"><svg><use href="#i-inbox"></use></svg>Review<span style="position:absolute;top:2px;right:6px;background:#dc2626;color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:999px;text-align:center;line-height:15px;padding:0 3px;">8</span></button>
+      <button class="lk-rail-item"><svg><use href="#i-clock"></use></svg>Sessions</button><button class="lk-rail-item active"><svg><use href="#i-bar"></use></svg>Metrics</button>
+    </div>
+    <div style="flex:1"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:12px;border-top:1px solid #e6e6ee;width:100%;margin-top:12px;">
+      <button class="lk-rail-item"><svg><use href="#i-gear"></use></svg>Settings</button>
+      <span style="width:7px;height:7px;border-radius:50%;background:#16a34a;margin-top:1px;"></span>
+    </div>
+  </nav>
+
+  <div style="flex:1;min-width:0;margin-left:76px;display:flex;flex-direction:column;">
+
+    <div style="height:60px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid #e6e6ee;background:#fff;position:sticky;top:0;z-index:30;">
+      <div style="font-size:14px;color:#9ca3af;display:flex;gap:6px;align-items:center;">Lorekeeper <span>/</span> <span style="color:#1a1a2e;font-weight:600;">Metrics</span></div>
+      <button style="display:flex;align-items:center;gap:8px;border:1px solid #e6e6ee;background:#f9f9fb;border-radius:6px;padding:8px 10px;color:#9ca3af;font-size:13px;width:230px;cursor:pointer;">
+        <svg style="width:15px;height:15px;flex-shrink:0"><use href="#i-search"></use></svg><span style="flex:1;text-align:left;">Search or jump to…</span>
+        <span style="display:flex;gap:3px;"><kbd style="background:#fff;border:1px solid #e6e6ee;border-radius:4px;font-size:10.5px;padding:1px 5px;color:#6b7280;">⌘</kbd><kbd style="background:#fff;border:1px solid #e6e6ee;border-radius:4px;font-size:10.5px;padding:1px 5px;color:#6b7280;">K</kbd></span>
+      </button>
+    </div>
+
+    <div style="padding:26px 32px 44px;max-width:1200px;width:100%;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;">
+        <div><h1 style="font-size:24px;font-weight:700;margin:0;">API Metrics</h1><p style="font-size:13px;color:#6b7280;margin:6px 0 0;">Last 7 days of API call activity, by tool.</p></div>
+        <button id="met-refresh" style="border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:500;color:#3f3f52;display:inline-flex;align-items:center;gap:7px;cursor:pointer;"><svg style="width:15px;height:15px;color:#6b7280"><use href="#i-refresh"></use></svg>Refresh</button>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:stretch;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="width:210px;flex-shrink:0;background:#fff;border:1px solid #e6e6ee;border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;">Total volume</span>
+            <span style="width:26px;height:26px;border-radius:7px;background:#f1edff;color:#7c5cff;display:flex;align-items:center;justify-content:center;"><svg style="width:15px;height:15px"><use href="#i-bar"></use></svg></span>
+          </div>
+          <div id="met-total" style="font-size:34px;font-weight:700;line-height:1;">—</div>
+          <div style="font-size:13px;color:#6b7280;margin-top:8px;">total calls · 7d</div>
+          <div id="met-avg" style="font-size:12px;color:#9ca3af;font-weight:500;margin-top:auto;padding-top:14px;">—</div>
+        </div>
+        <div style="flex:1;min-width:340px;background:#fff;border:1px solid #e6e6ee;border-radius:14px;padding:20px 22px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;">
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;">API activity — all tools</span>
+            <span style="font-size:10px;color:#c2c2cf;">GMT+8</span>
+          </div>
+          <div style="position:relative;overflow-x:auto;">
+            <div id="met-heat"></div>
+            <div id="met-tip" style="display:none;position:absolute;z-index:10;transform:translateY(-100%);background:#1a1a2e;color:#fff;border-radius:7px;padding:9px 12px;font-size:12px;min-width:150px;box-shadow:0 10px 28px rgba(0,0,0,.25);pointer-events:none;"></div>
+          </div>
+          <div id="met-legend" style="display:flex;align-items:center;gap:5px;justify-content:flex-end;margin-top:14px;font-size:11px;color:#9ca3af;"></div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #e6e6ee;border-radius:14px;padding:20px 22px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:16px;">Per-tool breakdown</div>
+        <div id="met-tools" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:860}}">
+class Component extends DCLogic {
+  componentDidMount(){ this.render(); const r=document.getElementById('met-refresh'); r&&r.addEventListener('click',()=>this.render()); }
+  mulberry32(seed){ return function(){ seed|=0;seed=(seed+0x6D2B79F5)|0; let t=Math.imul(seed^(seed>>>15),1|seed); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+  hexToRgb(hex){const v=hex.replace('#','');return{r:parseInt(v.slice(0,2),16),g:parseInt(v.slice(2,4),16),b:parseInt(v.slice(4,6),16)};}
+  toneScale(hex){const{r,g,b}=this.hexToRgb(hex);const mix=t=>`rgb(${Math.round(r+(255-r)*(1-t))},${Math.round(g+(255-g)*(1-t))},${Math.round(b+(255-b)*(1-t))})`;return[mix(0.07),mix(0.32),mix(0.55),mix(0.78),mix(1)];}
+  render(){
+    const root=document.getElementById('met-root'); if(!root) return;
+    const TOOLS=[{key:'lore_insert',color:'#16a34a'},{key:'lore_processed_sessions',color:'#7c5cff'},{key:'lore_recommend_links',color:'#0d9488'},{key:'lore_reflect',color:'#dc2626'},{key:'lore_search',color:'#2563eb'}];
+    const BLUE=['#eef1fb','#c9d9f6','#93b3ec','#5178dd','#1e3a8a'];
+    const rand=this.mulberry32(555);
+    const today=new Date();
+    const days=[]; for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(today.getDate()-i);days.push(d);}
+    const matrix=days.map(()=>Array.from({length:24},()=>{const cell={__total:0}; if(rand()<0.3){TOOLS.forEach(t=>{if(rand()<0.45){const v=Math.floor(rand()*4)+1;cell[t.key]=v;cell.__total+=v;}}); if(cell.__total===0){const t=TOOLS[Math.floor(rand()*TOOLS.length)];cell[t.key]=1;cell.__total=1;}} return cell;}));
+    const grand=matrix.reduce((s,row)=>s+row.reduce((a,c)=>a+c.__total,0),0);
+    const maxCell=Math.max(1,...matrix.flat().map(c=>c.__total));
+    const lvl=v=>{if(!v)return 0;const r=v/maxCell;return r>0.75?4:r>0.5?3:r>0.25?2:1;};
+    const dl=d=>`${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+    root.querySelector('#met-total').textContent=grand.toLocaleString();
+    root.querySelector('#met-avg').textContent='~'+Math.round(grand/7)+'/day avg';
+    root.querySelector('#met-legend').innerHTML='<span>Fewer</span>'+BLUE.map(s=>`<span style="width:12px;height:12px;border-radius:3px;background:${s};display:inline-block;"></span>`).join('')+'<span>More</span>';
+
+    let ticks=''; for(let h=0;h<24;h++) ticks+=`<span class="mh-tick">${h%6===0?String(h).padStart(2,'0'):''}</span>`;
+    let heat=`<div class="mh-row"><span class="mh-lbl"></span><span class="mh-cells">${ticks}</span></div>`;
+    days.forEach((d,ri)=>{ let cs=''; for(let h=0;h<24;h++) cs+=`<span class="mh-cell" style="background:${BLUE[lvl(matrix[ri][h].__total)]}" data-r="${ri}" data-c="${h}"></span>`; heat+=`<div class="mh-row"><span class="mh-lbl">${dl(d)}</span><span class="mh-cells">${cs}</span></div>`; });
+    root.querySelector('#met-heat').innerHTML=heat;
+
+    const tip=root.querySelector('#met-tip'); const wrap=tip.parentElement;
+    root.querySelectorAll('#met-heat .mh-cell').forEach(el=>{
+      el.addEventListener('mouseenter',()=>{ const ri=+el.dataset.r,h=+el.dataset.c,cell=matrix[ri][h];
+        const rows=TOOLS.filter(t=>cell[t.key]).map(t=>`<div style="display:flex;justify-content:space-between;gap:14px;padding:1px 0;"><span style="color:#c9c9d6;">${t.key}</span><b>${cell[t.key]}</b></div>`).join('')||'<div style="color:#c9c9d6;">No activity</div>';
+        tip.innerHTML=`<div style="font-weight:600;margin-bottom:3px;">2026-${dl(days[ri])} ${String(h).padStart(2,'0')}:00</div><div style="color:#9ca3af;font-size:11px;margin-bottom:5px;">Total: ${cell.__total}</div>${rows}`;
+        tip.style.display='block';
+        const rc=el.getBoundingClientRect(),wc=wrap.getBoundingClientRect();
+        tip.style.left=Math.min(rc.left-wc.left+wrap.scrollLeft-60,wrap.scrollWidth-160)+'px';
+        tip.style.top=(rc.top-wc.top-8)+'px';
+      });
+      el.addEventListener('mouseleave',()=>{tip.style.display='none';});
+    });
+
+    const totals=TOOLS.map(t=>({t,total:matrix.reduce((s,row)=>s+row.reduce((a,c)=>a+(c[t.key]||0),0),0)}));
+    root.querySelector('#met-tools').innerHTML=totals.map(({t,total})=>{
+      const sh=this.toneScale(t.color); let rows='';
+      days.forEach((d,ri)=>{ let cs=''; for(let h=0;h<24;h++){const v=matrix[ri][h][t.key]||0;const l=v===0?0:v>=3?4:v===2?3:2; cs+=`<span class="mh-cell" style="background:${sh[l]}"></span>`;} rows+=`<div class="mh-row"><span class="mh-lbl">${dl(d)}</span><span class="mh-cells">${cs}</span></div>`; });
+      return `<div style="border:1px solid #ececf3;border-radius:11px;padding:14px 16px;border-left:3px solid ${t.color};min-width:0;overflow-x:auto;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:12px;"><span style="width:8px;height:8px;border-radius:50%;background:${t.color};flex-shrink:0;"></span>${t.key}<span style="margin-left:auto;font-size:11px;font-weight:600;color:#6b7280;background:#f1f1f6;padding:2px 9px;border-radius:999px;">${total} calls</span></div>
+        <div class="mini">${rows}</div></div>`;
+    }).join('');
+  }
+  renderVals(){ return {}; }
+}
+</script>
+
+
+</body></html>
