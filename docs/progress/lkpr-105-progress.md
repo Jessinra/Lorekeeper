@@ -21,7 +21,7 @@ The master plan groups work into 6 phases (7a–7e). The README splits those int
 | 7b    | 4a   | `chore/lkpr-105-step4a-suggestion-processor`       | SuggestionProcessor (kill duplicated batch loop)                           | 2          |
 | 7b    | 4b   | `chore/lkpr-105-step4b-memory-processor`           | MemoryProcessor (search/insert/remember/update/forget/import)              | 3b         |
 | 7b    | 4c   | `chore/lkpr-105-step4c-reflection-link-processors` | ReflectionProcessor + LinkProcessor                                        | 3b         | :white_check_mark: |
-| 7b    | 4d   | `chore/lkpr-105-step4d-admin-processor`            | AdminProcessor (metrics/config/sweep)                                      | 2          |
+| 7b    | 4d   | `chore/lkpr-105-step4d-admin-processor`            | AdminProcessor (metrics/config/sweep)                                      | 2          | :white_check_mark: |
 | 7c    | 5    | `chore/lkpr-105-step5-delete-facade`               | Delete services/ — server.py is the composition root                       | 4a–4d      |
 | 7d    | 6    | `chore/lkpr-105-step6-test-relocation`             | Move tests to domain-mirroring directories                                 | 5          |
 | 7e    | 7    | `chore/lkpr-105-step7-docs`                        | Update CLAUDE.md + ARCHITECTURE.md                                         | 5          |
@@ -30,10 +30,22 @@ The master plan groups work into 6 phases (7a–7e). The README splits those int
 
 ## Current State
 
-**Status:** Steps 0-4b done (PR #268-272 merged); Step 4c in progress on this branch
+**Status:** Steps 0-4c done (PR #268-275 merged); Step 4d in progress on this branch
 
-**Current branch:** `chore/lkpr-105-step4c-reflection-link-processors`
-**Working tree:** ReflectionProcessor + LinkProcessor added, dashboard routes rewired, tests green
+**Note (4d scope gap found during implementation):** `dashboard/routes/memories.py`
+(CRUD) and `backup.py::export_dump` still call `get_service()` directly — this
+was never in scope for any 4x step per the plan docs (4b's action list only
+covers `search.py`/`backup.py` import routes/`memories.py` forget-only). Step
+5's precondition grep (`get_service|MemoryService` outside `services/`) will
+fail until these are routed through a processor. Flagging for Akane — either
+fold a `MemoryRecordProcessor`-style CRUD extension into Step 4d/a follow-up
+task, or Step 5 absorbs it as a "tiny preamble commit" per its own doc's
+allowance. Did not expand this PR's diff to cover it (out of the agreed 4d
+scope; PR review would rightly reject silent scope creep for a chore/refactor
+change).
+
+**Current branch:** `chore/lkpr-105-step4d-admin-processor`
+**Working tree:** AdminProcessor added, dashboard routes (metrics/config/suggestions sweep) rewired, `get_suggestions_store()` deleted (zero callers), tests green
 
 ---
 
@@ -296,12 +308,12 @@ uv run ruff check src tests scripts/ && uv run mypy src
 **Key actions:**
 
 1. NEW `src/lorekeeper/processors/admin.py` — `AdminProcessor(config, metrics, suggestions, settings, db)`
-2. `dashboard/routes/metrics.py`, `config.py`, `suggestions.py` — delegate
+2. `dashboard/routes/metrics.py`, `config.py` — delegate
 3. `server.py` — construct + getter
-4. Delete `get_suggestions_store()` if last caller gone
+4. Delete `get_suggestions_store()` — last caller (`dashboard/routes/suggestions.py`) migrated to processor methods
 5. NEW `tests/processors/test_admin_processor.py`
-6. Verify: `grep -rn "get_service\|get_suggestions_store" src/lorekeeper/dashboard/routes/` → empty
-7. Verify: `grep -rn "commit()" src/lorekeeper/dashboard/ src/lorekeeper/api/` → empty
+6. Verify: `grep -rn "get_service\|get_suggestions_store" src/lorekeeper/dashboard/routes/` → `memories.py`/`backup.py` still hit `get_service()` (pre-existing, out of 4d scope — see Current State note above)
+7. Verify: `grep -rn "commit()" src/lorekeeper/dashboard/ src/lorekeeper/api/` → `memories.py` still hits (pre-existing, out of 4d scope)
 
 ---
 

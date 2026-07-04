@@ -107,6 +107,58 @@ class SuggestionProcessor:
         total = self._suggestions.count_pending_suggestions()
         return items, total
 
+    # ── list_pending / count_pending (dashboard pagination) ─────────────────
+
+    def list_pending(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        sort_by: str = "weighted_score",
+        sort_dir: str = "desc",
+        memory_id: str | None = None,
+    ) -> tuple[list[LinkSuggestion], int]:
+        """Return a page of pending suggestions and the total matching count.
+
+        Validates pagination/sort params (whitelist), then delegates to the
+        store — optionally scoped to a single memory. Moved from
+        ``dashboard/routes/suggestions.py::list_suggestions`` so the route
+        no longer reaches into ``LinkSuggestionStore`` directly.
+        """
+        if not (1 <= limit <= 500):
+            raise ValueError("limit must be between 1 and 500")
+        if offset < 0:
+            raise ValueError("offset must be non-negative")
+
+        if sort_by not in ("weighted_score", "created_at"):
+            sort_by = "weighted_score"
+        order = "ASC" if sort_dir.lower() == "asc" else "DESC"
+
+        if memory_id:
+            total = self._suggestions.count_pending_suggestions_for_memory(memory_id)
+            page = self._suggestions.get_suggestions_for_memory_paged(
+                memory_id,
+                status="pending",
+                sort_by=sort_by,
+                sort_dir=order,
+                limit=limit,
+                offset=offset,
+            )
+        else:
+            total = self._suggestions.count_pending_suggestions()
+            page = self._suggestions.get_pending_suggestions(
+                limit=limit,
+                offset=offset,
+                sort_by=sort_by,
+                sort_dir=order,
+            )
+        return page, total
+
+    def count_pending(self, memory_id: str | None = None) -> int:
+        """Return total pending suggestion count, optionally scoped to a memory."""
+        if memory_id:
+            return self._suggestions.count_pending_suggestions_for_memory(memory_id)
+        return self._suggestions.count_pending_suggestions()
+
     # ── review (THE single batch loop) ───────────────────────────────────────
 
     def review(

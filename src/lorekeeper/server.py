@@ -20,6 +20,7 @@ from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
 from lorekeeper.platform.config.repository import ConfigStore
 from lorekeeper.platform.metrics.repository import MetricsStore
+from lorekeeper.processors.admin import AdminProcessor
 from lorekeeper.processors.link import LinkProcessor
 from lorekeeper.processors.memory import MemoryProcessor
 from lorekeeper.processors.reflection import ReflectionProcessor
@@ -42,6 +43,7 @@ _suggestion_processor: SuggestionProcessor | None = None
 _memory_processor: MemoryProcessor | None = None
 _reflection_processor: ReflectionProcessor | None = None
 _link_processor: LinkProcessor | None = None
+_admin_processor: AdminProcessor | None = None
 
 
 def get_service() -> MemoryService:
@@ -49,13 +51,6 @@ def get_service() -> MemoryService:
     if _svc is None:
         raise RuntimeError("MemoryService not initialised — call init_service() first")
     return _svc
-
-
-def get_suggestions_store() -> LinkSuggestionStore:
-    global _suggestions_store
-    if _suggestions_store is None:
-        raise RuntimeError("LinkSuggestionStore not initialised — call init_service() first")
-    return _suggestions_store
 
 
 def get_suggestion_processor() -> SuggestionProcessor:
@@ -86,9 +81,16 @@ def get_link_processor() -> LinkProcessor:
     return _link_processor
 
 
+def get_admin_processor() -> AdminProcessor:
+    global _admin_processor
+    if _admin_processor is None:
+        raise RuntimeError("AdminProcessor not initialised — call init_service() first")
+    return _admin_processor
+
+
 def init_service(settings: Settings | None = None) -> MemoryService:
     global _svc, _suggestions_store, _suggestion_processor, _memory_processor
-    global _reflection_processor, _link_processor
+    global _reflection_processor, _link_processor, _admin_processor
     s = settings or Settings()
     s.data_dir.mkdir(parents=True, exist_ok=True)
 
@@ -222,6 +224,13 @@ def init_service(settings: Settings | None = None) -> MemoryService:
         memories=memories,
         links=links,
         metrics=svc.metrics,
+        db=db,
+    )
+    _admin_processor = AdminProcessor(
+        config=config,
+        metrics=svc.metrics,
+        suggestions=_suggestions_store,
+        settings=svc.settings,
         db=db,
     )
     return svc

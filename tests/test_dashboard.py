@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
+from lorekeeper.processors.admin import AdminProcessor
 from lorekeeper.processors.link import LinkProcessor
 from lorekeeper.processors.memory import MemoryProcessor
 from lorekeeper.processors.reflection import ReflectionProcessor
@@ -90,6 +91,13 @@ def fresh_client(tmp_path):
         metrics=store.metrics,
         db=store.db,
     )
+    srv._admin_processor = AdminProcessor(
+        config=store.config,
+        metrics=store.metrics,
+        suggestions=store.suggestions,
+        settings=svc_obj.settings,
+        db=store.db,
+    )
 
     from lorekeeper.dashboard import app as dash_app
 
@@ -131,6 +139,13 @@ def seeded_client(tmp_path):
         memories=store.memories,
         links=store.links,
         metrics=store.metrics,
+        db=store.db,
+    )
+    srv._admin_processor = AdminProcessor(
+        config=store.config,
+        metrics=store.metrics,
+        suggestions=store.suggestions,
+        settings=svc_obj.settings,
         db=store.db,
     )
 
@@ -590,6 +605,13 @@ def suggestion_client(tmp_path):
         suggestion_service=svc.suggestion_service,
         suggestions=store.suggestions,
         metrics=store.metrics,
+        db=store.db,
+    )
+    srv._admin_processor = AdminProcessor(
+        config=store.config,
+        metrics=store.metrics,
+        suggestions=store.suggestions,
+        settings=svc.settings,
         db=store.db,
     )
 
