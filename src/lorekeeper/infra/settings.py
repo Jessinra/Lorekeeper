@@ -5,7 +5,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="LORE_", case_sensitive=False)
+    model_config = SettingsConfigDict(
+    env_prefix="LORE_", case_sensitive=False, validate_assignment=True,
+)
 
     data_dir: Path = Field(default=Path.home() / ".lorekeeper")
     log_dir: Path = Field(default=Path.home() / ".lorekeeper" / "logs")

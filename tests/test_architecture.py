@@ -263,7 +263,7 @@ def _check_rule5_services_deleted(
     importer: str, imported: str, lines: list[str],
 ) -> str | None:
     """Rule 5: lorekeeper.services must not exist — any import of it is a violation."""
-    if not imported.startswith("lorekeeper.services."):
+    if not (imported.startswith("lorekeeper.services.") or imported == "lorekeeper.services"):
         return None
 
     return (
@@ -310,7 +310,10 @@ def test_services_package_does_not_exist() -> None:
 def test_no_services_imports_remain() -> None:
     """No file should import from lorekeeper.services."""
     edges = _collect_import_edges()
-    services_imports = [(i, m, ln) for i, m, ln in edges if m.startswith("lorekeeper.services.")]
+    services_imports = [
+        (i, m, ln) for i, m, ln in edges
+        if m.startswith("lorekeeper.services.") or m == "lorekeeper.services"
+    ]
     assert not services_imports, (
         "Stale imports from lorekeeper.services found — delete them:\n" +
         "\n".join(f"  {i} → {m} (line {','.join(ln)})" for i, m, ln in services_imports)

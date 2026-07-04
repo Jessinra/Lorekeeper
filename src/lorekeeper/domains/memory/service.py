@@ -635,6 +635,32 @@ class MemoryWriteService:
             "errors": errors,
         }
 
+    def update_memory_fields(self, memory_id: str, **fields: Any) -> dict[str, bool]:
+        """Update a memory's scalar fields (dashboard route).
+
+        Owns the 404 check and persistence commit so the route layer
+        stays free of transaction control.
+        """
+        row = self._memories.get_memory_row(memory_id, namespaces=self._ns_filter)
+        if row is None:
+            raise ValueError(f"Memory {memory_id} not found")
+        self._memories.update_memory_fields(memory_id, **fields)
+        self._db.commit()
+        return {"ok": True}
+
+    def delete_memory(self, memory_id: str) -> dict[str, bool]:
+        """Permanently delete a memory row (dashboard route).
+
+        Owns the 404 check and persistence commit so the route layer
+        stays free of transaction control.
+        """
+        row = self._memories.get_memory_row(memory_id, namespaces=self._ns_filter)
+        if row is None:
+            raise ValueError(f"Memory {memory_id} not found")
+        self._memories.delete_memory_row(memory_id)
+        self._db.commit()
+        return {"ok": True}
+
     def forget(self, memory_ids: list[str], reason: str = "unspecified") -> dict[str, Any]:
         """Immediately soft-delete one or more memories by ID.
 

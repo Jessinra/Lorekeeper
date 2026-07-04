@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from lorekeeper.domains.memory.models import Memory
-from lorekeeper.server import get_db, get_link_store, get_memory_store
+from lorekeeper.server import get_link_store, get_memory_processor, get_memory_store
 from lorekeeper.shared.serializers import serialize_memory, serialize_memory_link
 
 router = APIRouter()
@@ -51,24 +51,18 @@ class MemoryUpdate(BaseModel):
 
 @router.patch("/api/memories/{memory_id}")
 def update_memory(memory_id: str, body: MemoryUpdate) -> dict[str, bool]:
-    memories = get_memory_store()
-    db = get_db()
-    if memories.get_memory_row(memory_id) is None:
-        raise HTTPException(status_code=404, detail="Memory not found")
     fields = body.model_dump(exclude_none=True)
     if "soft_deleted" in fields:
         fields["soft_deleted"] = int(fields["soft_deleted"])
-    memories.update_memory_fields(memory_id, **fields)
-    db.conn.commit()
-    return {"ok": True}
+    try:
+        return get_memory_processor().update_memory_fields(memory_id, fields)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Memory not found") from None
 
 
 @router.delete("/api/memories/{memory_id}")
 def delete_memory(memory_id: str) -> dict[str, bool]:
-    memories = get_memory_store()
-    db = get_db()
-    if memories.get_memory_row(memory_id) is None:
-        raise HTTPException(status_code=404, detail="Memory not found")
-    memories.delete_memory_row(memory_id)
-    db.conn.commit()
-    return {"ok": True}
+    try:
+        return get_memory_processor().delete_memory(memory_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Memory not found") from None
