@@ -11,32 +11,72 @@ The repo serves two purposes:
 
 ---
 
-## Architecture
+## Architecture — Six-Layer (LKPR-105)
 
-Two stores working together:
+Lorekeeper follows a strict 6-layer architecture with **unidirectional imports** — a layer may import from layers below it, never above.
 
-- **LanceDB** — vector embeddings, semantic ANN search (384-dim `all-MiniLM-L6-v2`). LanceDB returns cosine distance (converted to similarity internally), supports concurrent multi-process access.
-- **SQLite sidecar** — memory metadata (score, confidence, soft_deleted, usage_count), all MemoryLink rows, BM25 index rebuild source
+```
+┌──────────────────────────────────────────────────────────────┐
+│  api/mcp/, dashboard/, server.py, cli/                       │ Layer 6 — Interface adapters
+├──────────────────────────────────────────────────────────────┤
+│  shared/ (serializers, encouragement)                        │ Layer 5 — Presentation helpers
+├──────────────────────────────────────────────────────────────┤
+│  processors/ (memory, link, reflection, suggestion, admin)   │ Layer 4 — Orchestration
+├──────────────────────────────────────────────────────────────┤
+│  domains/{memory,link,reflection,suggestion}/                │ Layer 3 — Business logic
+├──────────────────────────────────────────────────────────────┤
+│  platform/{config,metrics}/                                  │ Layer 2 — Supporting repos
+├──────────────────────────────────────────────────────────────┤
+│  infra/ (database, search_engine, keyword_index,             │ Layer 1 — Zero business
+│         scheduler, logging_setup, settings)                  │           vocabulary
+└──────────────────────────────────────────────────────────────┘
+```
 
-The canonical `lore_id` UUID lives in Mem0's metadata field. All app logic uses `lore_id`. Mem0 assigns its own internal id — never expose it.
+### Import rules
 
-### SQLite store decomposition (LKPR-51)
+- `infra` imports NOTHING from lorekeeper except other `infra` modules
+- `platform` imports only `infra`
+- `domains` import `platform`, `infra`, and other domains (per DAG below) — never `shared`, `api`, `dashboard`, `server`
+- `shared` imports `domains` and below (it serializes domain models for the API layer)
+- `processors` import `domains`, `platform`, `infra` — never each other (no `processors.X` imports `processors.Y`)
+- `api`/`dashboard`/`server`/`cli` import anything below
+- `server.py` is exempt from layer rules (composition root imports everything)
 
-The SQLite layer is split into a shared `Database` class (owning the connection lifecycle + versioned migrations) and six focused stores, each handling one domain:
+### Cross-domain DAG (acyclic)
 
-| Store                 | Owns                                                                              | File                           |
-| --------------------- | --------------------------------------------------------------------------------- | ------------------------------ |
-| `Database`            | SQLite connection (WAL mode, FKs), versioned migrations (`_schema_version` table) | `services/database.py`         |
-| `MemoryStore`         | `memories` table CRUD                                                             | `services/memory_store.py`     |
-| `LinkStore`           | `memory_links` table CRUD                                                         | `services/link_store.py`       |
-| `ReflectionStore`     | `reflections` + `sessions` (FK-coupled)                                           | `services/reflection_store.py` |
-| `MetricsStore`        | `api_metrics` table                                                               | `services/metrics_store.py`    |
-| `ConfigStore`         | `config_overrides` table                                                          | `services/config_store.py`     |
-| `LinkSuggestionStore` | `link_suggestions` — sweep-generated candidate pairs with scores                  | `services/suggestion_store.py` |
+```
+suggestion ──→ memory ──→ link
+reflection ──→ memory
+```
 
-All stores share a single `Database` instance — they receive it via constructor and use its `conn` property. The `MemoryService` orchestrator exposes them as public attributes (`svc.memories`, `svc.links`, `svc.reflections`, `svc.metrics`, `svc.config`, `svc.settings`).
+`link` depends on no other domain. No cycles.
 
-**Migrations**: `Database.migrate()` applies entries from the `MIGRATIONS` list in version order, recording applied versions in `_schema_version`. The current `MIGRATIONS[0]` (version 1, `bootstrap_schema_and_fixups`) captures all pre-LKPR-51 schema setup + idempotent fixups. Add new schema changes as `MIGRATIONS.append((N, name, fn))` with strictly-increasing version numbers.
+### Layer Responsibilities
+
+| Layer                                          | Owns                                                                                                  | Does NOT own                                           |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **Presentation** (api, dashboard, server, cli) | MCP tool routing, HTTP routing, serialization, encouragement wrappers                                 | Validation, metrics, commit, business rules            |
+| **shared/**                                    | Serialization format (SearchResult → dict), encouragement text injection                              | Business logic, stores                                 |
+| **processors/**                                | Input validation, metric increments, commit boundaries, batch loops                                   | Serialization, single-aggregate business rules         |
+| **domains/**                                   | Single-aggregate business rules (dedup, scoring, feedback, search ranking, link candidate generation) | Validation (beyond domain invariants), metrics, commit |
+| **platform/**                                  | Supporting subdomain repos (config overrides, metrics storage)                                        | Business logic                                         |
+| **infra/**                                     | Database connection + migrations, vector search engine, keyword index, scheduler, settings            | Business vocabulary                                    |
+
+### Key stores (all in `domains/*/repository.py` or `platform/`)
+
+| Store                 | Class                 | Location                           |
+| --------------------- | --------------------- | ---------------------------------- |
+| `Database`            | `Database`            | `infra/database.py`                |
+| `MemoryStore`         | `MemoryStore`         | `domains/memory/repository.py`     |
+| `LinkStore`           | `LinkStore`           | `domains/link/repository.py`       |
+| `ReflectionStore`     | `ReflectionStore`     | `domains/reflection/repository.py` |
+| `LinkSuggestionStore` | `LinkSuggestionStore` | `domains/suggestion/repository.py` |
+| `MetricsStore`        | `MetricsStore`        | `platform/metrics/repository.py`   |
+| `ConfigStore`         | `ConfigStore`         | `platform/config/repository.py`    |
+
+- No `MemoryService` facade — `server.py` is the sole composition root
+- All stores share a single `Database` instance via constructor injection
+- **Migrations**: `Database.migrate()` applies entries from the `MIGRATIONS` list in version order
 
 ---
 
@@ -74,21 +114,25 @@ Semantic candidates: Mem0 search with `limit=200`. Keyword candidates: BM25 with
 
 Work through each step with tests green before moving to the next:
 
-1. `pyproject.toml`, `.python-version`, `__main__.py`, `config.py`, `logging_setup.py`, `models.py`
-2. `services/link_store.py` + SQLite schema + `test_link_store.py`
-3. `services/keyword_index.py` + `test_keyword_index.py`
-4. `services/memory_engine.py` + semantic scale probe
-5. `services/feedback.py` + `test_feedback.py`
-6. `services/dedup.py` + `test_dedup.py`
-7. `services/search.py` + `test_search.py`
-8. `services/orchestrator.py` + `test_orchestrator.py`
-9. `schemas.py`, `handlers.py`, `server.py` + `test_handlers.py`
-10. `scripts/migrate_from_json.py` (dry-run first)
-11. `scripts/smoke_test.py` (spawn server, 3 MCP calls via stdio)
-12. Run migration → `~/.lorekeeper/`
-13. Update `~/.claude/settings.json` → restart Claude Code
+1. `pyproject.toml`, `.python-version`, `__main__.py`, `infra/settings.py`, `infra/logging_setup.py`, `domains/memory/models.py`
+2. `infra/database.py` + migrations + `test_database.py`
+3. `domains/link/repository.py` + `test_link_repository.py`
+4. `domains/memory/repository.py` + `test_memory_repository.py`
+5. `infra/search_engine.py` + semantic scale probe
+6. `domains/memory/service.py` (SearchService + WriteService) + `test_search_service.py` + `test_write_service.py`
+7. `domains/memory/dedup.py` + `test_dedup.py`
+8. `domains/memory/feedback.py` + `test_feedback.py`
+9. `infra/keyword_index.py` + `test_keyword_index.py`
+10. `domains/reflection/service.py` + `test_reflection_service.py`
+11. `domains/suggestion/service.py` + `test_suggestion_service.py`
+12. `processors/` — memory, link, reflection, suggestion, admin + processor tests
+13. `server.py` (composition root) + `test_handlers.py`
+14. `scripts/migrate_from_json.py` (dry-run first)
+15. `scripts/smoke_test.py` (spawn server, 3 MCP calls via stdio)
+16. Run migration → `~/.lorekeeper/`
+17. Update `~/.claude/settings.json` → restart Claude Code
 
-See `PLAN.md` for the full specification including all data models, SQLite schema, Mem0 config, MCP output schemas, and migration details.
+Layering is enforced by `tests/test_architecture.py`, not by human review — if you need a new cross-layer edge, add it to the test's allowed-edges table with a comment.
 
 ---
 
@@ -140,7 +184,7 @@ All env vars use `LORE_` prefix. See `config.py` / `PLAN.md` for the full list.
 
 A generic `PeriodicJob` daemon thread runs inside the MCP server process. Each job persists its schedule in `config_overrides["{name}_next_run_at"]`, surviving restarts.
 
-**Sweep job (LKPR-99):** Implemented as a standalone `SweepService` in `services/sweep_service.py` — not coupled to `MemoryService`. Checks the timer every `LORE_SUGGEST_POLL_SECONDS` (default 5 min). When elapsed, fires `run()`:
+**Sweep job (LKPR-99):** Implemented as a standalone `SweepService` in `domains/suggestion/sweep.py` — not coupled to the old `MemoryService` facade. Checks the timer every `LORE_SUGGEST_POLL_SECONDS` (default 5 min). When elapsed, fires `run()`:
 
 1. Iterates all active memories
 2. Runs the existing `LinkCandidateGenerator` on each memory
@@ -334,7 +378,7 @@ When editing any file in `src/lorekeeper/`, `pyproject.toml`, or `loop/`, check 
 - **Env var names** — derived from field names + `LORE_` prefix (pydantic-settings)
 - **Tool signatures** — `server.py` parameter names and defaults must match README tool examples
 - **Dashboard port** — `dashboard/__init__.py` default port must match README
-- **Dedup formula** — `services/dedup.py` weights must match README description
+- **Dedup formula** — `domains/memory/dedup.py` weights must match README description
 - **Project layout** — new or renamed modules must be reflected in the README layout tree
 
 ---
