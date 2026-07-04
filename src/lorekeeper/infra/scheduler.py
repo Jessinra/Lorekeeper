@@ -23,12 +23,17 @@ from __future__ import annotations
 import threading
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import Any, Protocol
 
 import structlog
 
-if TYPE_CHECKING:
-    from lorekeeper.platform.config.repository import ConfigStore
+
+class OverrideStore(Protocol):
+    """Structural protocol — any object with these three methods is valid."""
+    def get_overrides(self) -> dict[str, Any]: ...
+    def set_override(self, key: str, value: object) -> None: ...
+    def commit(self) -> None: ...
+
 
 log = structlog.get_logger()
 
@@ -48,7 +53,7 @@ class PeriodicJob:
 
     def __init__(
         self,
-        config: ConfigStore,
+        config: OverrideStore,
         job_fn: Callable[[], dict[str, Any]],
         name: str,
         interval_hours: int = 12,

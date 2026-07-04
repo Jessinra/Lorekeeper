@@ -1,6 +1,15 @@
+from collections.abc import Sequence
+from typing import Protocol
+
 from rank_bm25 import BM25Okapi
 
-from lorekeeper.domains.memory.models import Memory
+
+class IndexableDoc(Protocol):
+    """Structural protocol — any object with these four fields is valid."""
+    id: str
+    title: str
+    description: str
+    content: str
 
 
 def _tokenize(text: str) -> list[str]:
@@ -12,7 +21,7 @@ class KeywordIndex:
         self._ids: list[str] = []
         self._bm25: BM25Okapi | None = None
 
-    def rebuild(self, memories: list[Memory]) -> None:
+    def rebuild(self, memories: Sequence[IndexableDoc]) -> None:
         if not memories:
             self._ids = []
             self._bm25 = None

@@ -209,16 +209,37 @@ jobs:
           script: |
             const MAX_INSERTIONS = 1000;
             const MAX_FILES = 20;
-            const add = context.payload.pull_request.additions;
-            const files = context.payload.pull_request.changed_files;
-            if (add > MAX_INSERTIONS && files > MAX_FILES) {
+            // Exclude docs/ and backlogs/ from size gate
+            const EXCLUDE_PREFIXES = ['docs/', 'backlogs/'];
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                per_page: 100,
+              },
+            );
+
+            let filteredAdditions = 0;
+            let filteredChangedFiles = 0;
+            for (const f of files) {
+              const excluded = EXCLUDE_PREFIXES.some(p => f.filename.startsWith(p));
+              if (!excluded) {
+                filteredAdditions += f.additions;
+                filteredChangedFiles += 1;
+              }
+            }
+
+            if (filteredAdditions > MAX_INSERTIONS && filteredChangedFiles > MAX_FILES) {
               core.setFailed(
-                `${add} insertions across ${files} files exceeds ${MAX_INSERTIONS}/${MAX_FILES} threshold. ` +
+                `${filteredAdditions} insertions across ${filteredChangedFiles} files exceeds ${MAX_INSERTIONS}/${MAX_FILES} threshold. ` +
                 'Large PRs skip depth review. Split into smaller PRs per concern.'
               );
-            } else if (add > 500 || files > 10) {
+            } else if (filteredAdditions > 500 || filteredChangedFiles > 10) {
               core.warning(
-                `${add} insertions across ${files} files — large PR. Consider splitting into smaller changes.`
+                `${filteredAdditions} insertions across ${filteredChangedFiles} files — large PR. Consider splitting into smaller changes.`
               );
             }
 
