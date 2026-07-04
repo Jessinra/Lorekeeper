@@ -75,4 +75,5 @@ def build_service(
         stores.config,
         kw,
         settings,
+        db=stores.db,
     )

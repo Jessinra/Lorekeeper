@@ -1010,7 +1010,10 @@ def test_reflect_auto_insert_memory_ids_populated(svc):
 def test_reflect_auto_insert_partial_failure_continues(svc):
     """If one item raises during auto-insert, others still succeed (best-effort)."""
     service, _ = svc
-    original_extract = service._extract_title
+
+    import lorekeeper.domains.reflection.service as ref_service
+
+    original_extract = ref_service.extract_title
 
     call_count = 0
 
@@ -1021,7 +1024,7 @@ def test_reflect_auto_insert_partial_failure_continues(svc):
             raise RuntimeError("simulated extract failure")
         return original_extract(text)
 
-    service._extract_title = patched_extract
+    ref_service.extract_title = patched_extract
     try:
         result = _reflect(
             service,
@@ -1032,7 +1035,7 @@ def test_reflect_auto_insert_partial_failure_continues(svc):
         assert len(result["memories_created"]) == 1
         assert result["memories_created"][0]["relation"] == "discovered_in"
     finally:
-        service._extract_title = original_extract
+        ref_service.extract_title = original_extract
 
 
 # ── LKPR-80: sort_by crash-guard on ids-path ─────────────────────────────────

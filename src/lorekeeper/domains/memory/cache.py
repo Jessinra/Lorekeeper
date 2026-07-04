@@ -8,9 +8,8 @@ silently split invalidation.
 
 from __future__ import annotations
 
-from lorekeeper.domains.memory.models import Memory
+from lorekeeper.domains.memory.models import Memory, row_to_memory
 from lorekeeper.domains.memory.repository import MemoryStore
-from lorekeeper.domains.memory.service import row_to_memory
 from lorekeeper.infra.keyword_index import KeywordIndex
 
 

@@ -200,18 +200,26 @@ class FakeEngine:
 
 
 def test_memory_service_has_no_db_parameter():
-    """MemoryService.__init__ must not accept a `db` parameter.
+    """MemoryService.__init__ accepts `db: Database` for commit control.
 
-    Regression: PR #237 added `db: Database` solely for creating
-    LinkSuggestionStore, which was dead code.
+    This is a deliberate difference from the pre-Step-3a design where
+    MemoryService had no db parameter and relied on ``memories._conn`` for
+    commit control. The ``db`` parameter is passed to domain services so
+    they can commit independently without reaching into private connection
+    refs on the store objects.
+
+    Sweep isolation is NOT violated: the sweep constructs its OWN Database
+    and MemoryStore instances (verified by
+    ``test_sweep_service_created_separately_in_server``) — the main DB
+    connection is never shared with the sweep thread.
     """
     from lorekeeper.services.orchestrator import MemoryService
 
     sig = inspect.signature(MemoryService.__init__)
     params = list(sig.parameters.keys())
 
-    assert "db" not in params, (
-        f"MemoryService.__init__ must not accept 'db' parameter. "
+    assert "db" in params, (
+        f"MemoryService.__init__ must accept 'db' parameter. "
         f"Parameters: {params}"
     )
 

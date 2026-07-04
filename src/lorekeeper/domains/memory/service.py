@@ -12,22 +12,27 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import structlog
 
+from lorekeeper.domains.link.repository import LinkStore
+from lorekeeper.domains.link.service import LinkService
+from lorekeeper.domains.memory.cache import MemoryCache
 from lorekeeper.domains.memory.dedup import is_duplicate
 from lorekeeper.domains.memory.feedback import (
     apply_score_delta,
     compute_running_confidence,
     should_soft_delete,
 )
-from lorekeeper.domains.memory.models import Memory
+from lorekeeper.domains.memory.models import row_to_memory
 from lorekeeper.domains.memory.ranking import SearchResult, parse_iso_utc, rank_results
-
-if TYPE_CHECKING:
-    from lorekeeper.domains.link.models import MemoryLink
-    from lorekeeper.services.orchestrator import MemoryService
+from lorekeeper.domains.memory.repository import MemoryStore
+from lorekeeper.infra.database import Database
+from lorekeeper.infra.keyword_index import KeywordIndex
+from lorekeeper.infra.search_engine import LanceDBEngine
+from lorekeeper.infra.settings import Settings
+from lorekeeper.platform.metrics.repository import MetricsStore
 
 log = structlog.get_logger()
 
@@ -64,8 +69,27 @@ def extract_title(thought: str) -> str:
 class MemorySearchService:
     """Search and bulk-lookup use cases for the Memory aggregate."""
 
-    def __init__(self, svc: MemoryService) -> None:
-        self._svc = svc
+    def __init__(
+        self,
+        engine: LanceDBEngine,
+        kw: KeywordIndex,
+        memories: MemoryStore,
+        links: LinkStore,
+        cache: MemoryCache,
+        metrics: MetricsStore,
+        settings: Settings,
+        db: Database,
+        ns_filter: list[str] | None,
+    ) -> None:
+        self._engine = engine
+        self._kw = kw
+        self._memories = memories
+        self._links = links
+        self._cache = cache
+        self._metrics = metrics
+        self._settings = settings
+        self._db = db
+        self._ns_filter = ns_filter
 
     def search(
         self,
@@ -81,25 +105,24 @@ class MemorySearchService:
         sort_by: str = "relevance",
         source_type: str | None = None,
     ) -> list[SearchResult]:
-        svc = self._svc
-        svc._increment_metric("lore_search")
-        sem_hits = svc._engine.search(query, limit=200)
-        kw_hits = svc._kw.search_normalized(query)
-        memories = svc._all_memories(include_deleted=include_deleted)
+        self._metrics.increment_metric_safe("lore_search")
+        sem_hits = self._engine.search(query, limit=200)
+        kw_hits = self._kw.search_normalized(query)
+        memories = self._cache.all_memories(include_deleted=include_deleted)
 
         if limit is None:
-            limit = svc.settings.search_limit
+            limit = self._settings.search_limit
 
-        links_by_id: dict[str, list[MemoryLink]] = {}
+        links_by_id: dict[str, list[Any]] = {}
         if include_links and search_format != "title":
-            max_links = svc.settings.max_links_per_memory
+            max_links = self._settings.max_links_per_memory
             for mid in memories:
-                all_links = svc.links.links_for_memory(mid)
+                all_links = self._links.links_for_memory(mid)
                 links_by_id[mid] = all_links[:max_links]
 
         results = rank_results(
             sem_hits, kw_hits, memories, links_by_id,
-            svc.settings, limit, min_score, include_deleted,
+            self._settings, limit, min_score, include_deleted,
             refine_from=refine_from,
             created_after=created_after,
             updated_after=updated_after,
@@ -109,8 +132,8 @@ class MemorySearchService:
 
         # Increment usage on returned memories
         for r in results:
-            svc.memories.update_memory_fields(r.memory.id, usage_count=r.memory.usage_count + 1)
-        svc._conn.commit()
+            self._memories.update_memory_fields(r.memory.id, usage_count=r.memory.usage_count + 1)
+        self._db.commit()
 
         return results
 
@@ -129,14 +152,13 @@ class MemorySearchService:
         Returns SearchResult objects with zero relevance scores (SQL-only path).
         Timestamp filters and sort_by compose with the ids path.
         """
-        svc = self._svc
         if not ids:
             return []
 
         # De-duplicate while preserving order
         ids = list(dict.fromkeys(ids))
 
-        rows = svc.memories.get_memory_rows(ids, namespaces=svc._ns_filter)
+        rows = self._memories.get_memory_rows(ids, namespaces=self._ns_filter)
         results: list[SearchResult] = []
         for row in rows:
             mem = row_to_memory(row)
@@ -158,9 +180,9 @@ class MemorySearchService:
             # LKPR-18: source_type filter on the ids path.
             if source_type is not None and mem.source_type != source_type:
                 continue
-            links: list[MemoryLink] = []
+            links: list[Any] = []
             if include_links:
-                links = svc.links.links_for_memory(mem.id)[:svc.settings.max_links_per_memory]
+                links = self._links.links_for_memory(mem.id)[:self._settings.max_links_per_memory]
             results.append(SearchResult(
                 memory=mem,
                 combined_score=0.0,
@@ -188,8 +210,8 @@ class MemorySearchService:
             results = [result_by_id[i] for i in ids if i in result_by_id]
 
         # Increment usage_count on all returned memories in one transaction
-        svc.memories.bulk_increment_usage_count([r.memory.id for r in results])
-        svc._conn.commit()
+        self._memories.bulk_increment_usage_count([r.memory.id for r in results])
+        self._db.commit()
 
         return results
 
@@ -197,8 +219,31 @@ class MemorySearchService:
 class MemoryWriteService:
     """Insert, remember, update, forget, and auto-link use cases."""
 
-    def __init__(self, svc: MemoryService) -> None:
-        self._svc = svc
+    def __init__(
+        self,
+        engine: LanceDBEngine,
+        memories: MemoryStore,
+        links: LinkStore,
+        cache: MemoryCache,
+        metrics: MetricsStore,
+        settings: Settings,
+        db: Database,
+        namespace: str,
+        ns_filter: list[str] | None,
+        link_service: LinkService,
+        kw: KeywordIndex,
+    ) -> None:
+        self._engine = engine
+        self._memories = memories
+        self._links = links
+        self._cache = cache
+        self._metrics = metrics
+        self._settings = settings
+        self._db = db
+        self._namespace = namespace
+        self._ns_filter = ns_filter
+        self._link_service = link_service
+        self._kw = kw
 
     def insert(
         self,
@@ -206,8 +251,7 @@ class MemoryWriteService:
         links: list[dict[str, Any]],
         force: bool = False,
     ) -> dict[str, Any]:
-        svc = self._svc
-        svc._increment_metric("lore_insert")
+        self._metrics.increment_metric_safe("lore_insert")
         inserted_memories: list[dict[str, Any]] = []
         inserted_links: list[dict[str, Any]] = []
         duplicates: list[dict[str, Any]] = []
@@ -264,9 +308,9 @@ class MemoryWriteService:
                         for link_def in inline_links:
                             try:
                                 # Validate target exists and is within scoped namespaces
-                                target_row = svc.memories.get_memory_row(
+                                target_row = self._memories.get_memory_row(
                                     link_def["target_memory_id"],
-                                    namespaces=svc._ns_filter,
+                                    namespaces=self._ns_filter,
                                 )
                                 if target_row is None:
                                     raise ValueError(
@@ -279,7 +323,7 @@ class MemoryWriteService:
                                     "relation_type": link_def["relation_type"],
                                     "reason": link_def.get("reason") or "",
                                 }
-                                inserted = svc.link_service.insert_one_link(normalized)
+                                inserted = self._link_service.insert_one_link(normalized)
                                 inserted_links.append(inserted)
                             except Exception as e:
                                 errors.append({
@@ -291,17 +335,17 @@ class MemoryWriteService:
 
         # Rebuild KW index after all memory inserts
         if inserted_memories:
-            svc._rebuild_kw()
+            self._cache.rebuild_kw()
 
         for lnk in links:
             try:
-                inserted = svc.link_service.insert_one_link(lnk)
+                inserted = self._link_service.insert_one_link(lnk)
                 inserted_links.append(inserted)
             except Exception as e:
                 errors.append({"input": str(lnk), "error": str(e)})
 
         if inserted_memories or inserted_links:
-            svc._conn.commit()
+            self._db.commit()
 
         return {
             "inserted_memories": inserted_memories,
@@ -312,10 +356,9 @@ class MemoryWriteService:
 
     def remember(self, thought: str, source_type: str = "observed") -> dict[str, Any]:
         """Fast one-shot insert with auto-extracted fields and auto-linking."""
-        svc = self._svc
-        svc._increment_metric("lore_remember")
+        self._metrics.increment_metric_safe("lore_remember")
         result = self.remember_with_score(
-            thought, score=svc.settings.new_memory_default_score, source_type=source_type
+            thought, score=self._settings.new_memory_default_score, source_type=source_type
         )
         return {
             "id": result["id"],
@@ -331,8 +374,7 @@ class MemoryWriteService:
         Returns a stable payload with created flag so callers (e.g. lore_reflect)
         can distinguish new inserts from dedup hits.
         """
-        svc = self._svc
-        title = svc._extract_title(thought)
+        title = extract_title(thought)
         description = title
 
         result = self.insert_one_memory({
@@ -355,10 +397,10 @@ class MemoryWriteService:
         lore_id = result["inserted"]["id"]
 
         # Rebuild KW index after the insert
-        svc._rebuild_kw()
+        self._cache.rebuild_kw()
 
         linked_to = self.auto_link(thought, lore_id)
-        svc._conn.commit()
+        self._db.commit()
         return {"id": lore_id, "title": title, "linked_to": linked_to, "created": True}
 
     def auto_link(
@@ -385,28 +427,27 @@ class MemoryWriteService:
             lore_id: The new memory's ID to link from.
             source: Origin label for the reason string ("remember" or "insert").
         """
-        svc = self._svc
-        if not svc.settings.auto_link_enabled:
+        if not self._settings.auto_link_enabled:
             return None
 
         if not text or not text.strip():
             return None
 
         # Clamp k to [1, 200] — non-positive values crash some vector backends
-        k = max(1, min(svc.settings.auto_link_k, 200))
-        threshold = svc.settings.auto_link_threshold
+        k = max(1, min(self._settings.auto_link_k, 200))
+        threshold = self._settings.auto_link_threshold
 
         try:
-            sem_hits = svc._engine.search(text, limit=k)
+            sem_hits = self._engine.search(text, limit=k)
         except Exception:
             log.warning("auto_link: engine.search failed", exc_info=True)
             return None
 
-        svc._increment_metric("auto_link_candidates")
+        self._metrics.increment_metric_safe("auto_link_candidates")
 
         # Pre-compute the set of IDs already linked to lore_id (both directions)
         try:
-            existing_links = svc.links.links_for_memory(lore_id)
+            existing_links = self._links.links_for_memory(lore_id)
             linked_ids: set[str] = set()
             for link in existing_links:
                 linked_ids.add(link.target_memory_id)
@@ -425,8 +466,8 @@ class MemoryWriteService:
 
             # Verify target memory exists, is not soft-deleted, and is within scoped namespaces
             try:
-                target_row = svc.memories.get_memory_row(
-                    hit["lore_id"], namespaces=svc._ns_filter
+                target_row = self._memories.get_memory_row(
+                    hit["lore_id"], namespaces=self._ns_filter
                 )
                 if target_row is None or target_row["soft_deleted"]:
                     continue
@@ -441,7 +482,7 @@ class MemoryWriteService:
 
             raw_score = round(hit["score"], 4)
             try:
-                svc.links.insert_link(
+                self._links.insert_link(
                     source_memory_id=lore_id,
                     target_memory_id=hit["lore_id"],
                     relation_type="references",
@@ -451,18 +492,17 @@ class MemoryWriteService:
                 log.warning("auto_link: insert_link failed", exc_info=True)
                 continue
 
-            svc._increment_metric("auto_linked")
+            self._metrics.increment_metric_safe("auto_linked")
             return {"id": hit["lore_id"], "score": raw_score}
         return None
 
     def insert_one_memory(self, m: dict[str, Any], force: bool) -> dict[str, Any]:
-        svc = self._svc
         if "title" not in m:
             raise ValueError("memory dict missing required field: 'title'")
         title = m["title"]
         description = m.get("description", "")
         content = m.get("content", "")
-        score = float(m.get("score", svc.settings.new_memory_default_score))
+        score = float(m.get("score", self._settings.new_memory_default_score))
         source_type = m.get("source_type", "observed")
         text = f"{title} {description} {content}"
 
@@ -470,9 +510,9 @@ class MemoryWriteService:
             # Shared agent checks across all namespaces (no filter) to preserve
             # pre-existing global dedup behavior. Non-shared agents scope checks
             # to their own namespace + the shared pool.
-            ns_filter = svc._ns_filter
+            ns_filter = self._ns_filter
             # Exact title match is a definitive duplicate — skip semantic search
-            existing_by_title = svc.memories.get_memory_row_by_title(title, namespaces=ns_filter)
+            existing_by_title = self._memories.get_memory_row_by_title(title, namespaces=ns_filter)
             if existing_by_title:
                 return {"duplicate": {
                     "input_title": title,
@@ -480,14 +520,14 @@ class MemoryWriteService:
                     "similarity": 1.0,
                 }}
 
-            sem_hits = svc._engine.search(text, limit=5)
-            kw_hits = svc._kw.search_normalized(text)
+            sem_hits = self._engine.search(text, limit=5)
+            kw_hits = self._kw.search_normalized(text)
             for hit in sem_hits:
                 lid = hit["lore_id"]
                 sem = hit["score"]
                 kw = kw_hits.get(lid, 0.0)
-                if is_duplicate(sem, kw, svc.settings):
-                    existing_row = svc.memories.get_memory_row(lid, namespaces=ns_filter)
+                if is_duplicate(sem, kw, self._settings):
+                    existing_row = self._memories.get_memory_row(lid, namespaces=ns_filter)
                     if existing_row:
                         return {"duplicate": {
                             "input_title": title,
@@ -497,10 +537,10 @@ class MemoryWriteService:
 
         lore_id = str(uuid.uuid4())
         now = datetime.now(UTC).isoformat()
-        svc._engine.add(text, lore_id)
-        svc.memories.upsert_memory_row(
+        self._engine.add(text, lore_id)
+        self._memories.upsert_memory_row(
             id=lore_id, title=title, description=description, content=content,
-            created_at=now, updated_at=now, score=score, namespace=svc._namespace,
+            created_at=now, updated_at=now, score=score, namespace=self._namespace,
             source_type=source_type,
         )
         log.info("memory_inserted", lore_id=lore_id, title=title)
@@ -511,8 +551,7 @@ class MemoryWriteService:
         memory_feedback: list[dict[str, Any]],
         link_feedback: list[dict[str, Any]],
     ) -> dict[str, Any]:
-        svc = self._svc
-        svc._increment_metric("lore_update")
+        self._metrics.increment_metric_safe("lore_update")
         updated_memories = 0
         updated_links = 0
         soft_deleted = 0
@@ -523,30 +562,30 @@ class MemoryWriteService:
                 mid = fb["id"]
                 useful = bool(fb["useful"])
                 confidence = fb.get("confidence")
-                row = svc.memories.get_memory_row(mid, namespaces=svc._ns_filter)
+                row = self._memories.get_memory_row(mid, namespaces=self._ns_filter)
                 if row is None:
                     errors.append({"id": mid, "error": "not found"})
                     continue
 
                 new_score = apply_score_delta(
-                    row["score"], useful, confidence, svc.settings
+                    row["score"], useful, confidence, self._settings
                 )
                 fields: dict[str, Any] = {"score": new_score, "usage_count": row["usage_count"] + 1}
 
                 if confidence is not None:
                     new_conf = compute_running_confidence(
                         row["confidence"], row["confidence_count"],
-                        confidence, svc.settings.confidence_window_size,
+                        confidence, self._settings.confidence_window_size,
                     )
                     fields["confidence"] = new_conf
                     fields["confidence_count"] = row["confidence_count"] + 1
 
-                threshold = svc.settings.soft_delete_confidence_threshold
+                threshold = self._settings.soft_delete_confidence_threshold
                 if should_soft_delete(useful, confidence, threshold):
                     fields["soft_deleted"] = 1
                     soft_deleted += 1
 
-                svc.memories.update_memory_fields(mid, **fields)
+                self._memories.update_memory_fields(mid, **fields)
                 updated_memories += 1
             except Exception as e:
                 errors.append({"id": fb.get("id", "?"), "error": str(e)})
@@ -556,45 +595,45 @@ class MemoryWriteService:
                 lid = fb["id"]
                 useful = bool(fb["useful"])
                 confidence = fb.get("confidence")
-                link = svc.links.get_link(lid)
+                link = self._links.get_link(lid)
                 if link is None:
                     errors.append({"id": lid, "error": "not found"})
                     continue
 
                 # Enforce namespace scope: verify both endpoints are accessible
-                if svc._ns_filter is not None:
-                    source_row = svc.memories.get_memory_row(
-                        link.source_memory_id, namespaces=svc._ns_filter
+                if self._ns_filter is not None:
+                    source_row = self._memories.get_memory_row(
+                        link.source_memory_id, namespaces=self._ns_filter
                     )
-                    target_row = svc.memories.get_memory_row(
-                        link.target_memory_id, namespaces=svc._ns_filter
+                    target_row = self._memories.get_memory_row(
+                        link.target_memory_id, namespaces=self._ns_filter
                     )
                     if source_row is None or target_row is None:
                         errors.append({"id": lid, "error": "not found"})
                         continue
 
                 new_score = apply_score_delta(
-                    link.score, useful, confidence, svc.settings
+                    link.score, useful, confidence, self._settings
                 )
                 fields = {"score": new_score, "usage_count": link.usage_count + 1}
 
                 if confidence is not None:
                     new_conf = compute_running_confidence(
                         link.confidence, link.confidence_count,
-                        confidence, svc.settings.confidence_window_size,
+                        confidence, self._settings.confidence_window_size,
                     )
                     fields["confidence"] = new_conf
                     fields["confidence_count"] = link.confidence_count + 1
 
-                svc.links.update_link_fields(lid, **fields)
+                self._links.update_link_fields(lid, **fields)
                 updated_links += 1
             except Exception as e:
                 errors.append({"id": fb.get("id", "?"), "error": str(e)})
 
         if updated_memories or updated_links:
-            svc._conn.commit()
+            self._db.commit()
         if updated_memories:
-            svc._invalidate_cache()
+            self._cache.invalidate()
 
         return {
             "updated_memories": updated_memories,
@@ -609,54 +648,34 @@ class MemoryWriteService:
         Reuses the existing soft-delete field — no new schema. Reason is logged
         for auditability but not persisted to the DB (soft_deleted=1 is the signal).
         """
-        svc = self._svc
         if not memory_ids:
             raise ValueError("memory_ids must not be empty")
         _VALID_REASONS = {"duplicate", "hallucinated", "outdated", "expired", "unspecified"}
         if reason not in _VALID_REASONS:
             raise ValueError(f"Unknown reason {reason!r}. Must be one of: {sorted(_VALID_REASONS)}")
-        svc._increment_metric("lore_forget")
+        self._metrics.increment_metric_safe("lore_forget")
         forgotten: list[str] = []
         not_found: list[str] = []
         errors: list[dict[str, Any]] = []
 
         for mid in memory_ids:
             try:
-                row = svc.memories.get_memory_row(mid, namespaces=svc._ns_filter)
+                row = self._memories.get_memory_row(mid, namespaces=self._ns_filter)
                 if row is None:
                     not_found.append(mid)
                     continue
-                svc.memories.update_memory_fields(mid, soft_deleted=1)
+                self._memories.update_memory_fields(mid, soft_deleted=1)
                 forgotten.append(mid)
                 log.info("lore_forget", memory_id=mid, reason=reason)
             except Exception as e:
                 errors.append({"id": mid, "error": str(e)})
 
         if forgotten:
-            svc._conn.commit()
-            svc._rebuild_kw()
+            self._db.commit()
+            self._cache.rebuild_kw()
 
         return {
             "forgotten": forgotten,
             "not_found": not_found,
             "errors": errors,
         }
-
-
-def row_to_memory(row: Any) -> Memory:
-    return Memory(
-        id=row["id"],
-        title=row["title"],
-        description=row["description"],
-        content=row["content"],
-        created_at=row["created_at"],
-        updated_at=row["updated_at"],
-        usage_count=row["usage_count"],
-        score=row["score"],
-        soft_deleted=bool(row["soft_deleted"]),
-        confidence=row["confidence"],
-        confidence_count=row["confidence_count"],
-        last_used=row["last_used"] if "last_used" in row.keys() else None,
-        namespace=row["namespace"] if "namespace" in row.keys() else "shared",
-        source_type=row["source_type"] if "source_type" in row.keys() else "unknown",
-    )
