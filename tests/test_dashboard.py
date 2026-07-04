@@ -6,6 +6,7 @@ Uses tmp_path to avoid touching any real ~/.lorekeeper/ data.
 from __future__ import annotations
 
 import json
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -13,6 +14,7 @@ from fastapi.testclient import TestClient
 
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
+from lorekeeper.processors.memory import MemoryProcessor
 from lorekeeper.services.orchestrator import MemoryService
 from tests._helpers import build_service, build_stores
 
@@ -49,22 +51,30 @@ class FakeEngine:
 # ── Factory ───────────────────────────────────────────────────────────────────
 
 
-def _make_svc(tmp_path: str) -> tuple[MemoryService, FakeEngine]:
+def _make_svc(tmp_path: str) -> tuple[MemoryService, FakeEngine, Any]:
     store = build_stores(tmp_path / "test.db")
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
     svc = build_service(store, engine, kw, settings)
-    return svc, engine
+    return svc, engine, store
 
 
 @pytest.fixture
 def fresh_client(tmp_path):
     """Each test gets its own clean service + client with no seed data."""
-    svc_obj, _engine = _make_svc(tmp_path)
+    svc_obj, _engine, store = _make_svc(tmp_path)
     import lorekeeper.server as srv
 
     srv._svc = svc_obj
+    srv._memory_processor = MemoryProcessor(
+        search_service=svc_obj.memory_search_service,
+        write_service=svc_obj.memory_write_service,
+        import_service=svc_obj.import_service,
+        metrics=store.metrics,
+        db=store.db,
+        settings=Settings(),
+    )
 
     from lorekeeper.dashboard import app as dash_app
 
@@ -76,7 +86,7 @@ def fresh_client(tmp_path):
 @pytest.fixture
 def seeded_client(tmp_path):
     """Service with one pre-seeded memory for retrieval tests."""
-    svc_obj, engine = _make_svc(tmp_path)
+    svc_obj, engine, store = _make_svc(tmp_path)
     svc_obj.insert(
         memories=[{"title": "test memory", "description": "desc", "content": "content"}],
         links=[],
@@ -87,6 +97,14 @@ def seeded_client(tmp_path):
     import lorekeeper.server as srv
 
     srv._svc = svc_obj
+    srv._memory_processor = MemoryProcessor(
+        search_service=svc_obj.memory_search_service,
+        write_service=svc_obj.memory_write_service,
+        import_service=svc_obj.import_service,
+        metrics=store.metrics,
+        db=store.db,
+        settings=Settings(),
+    )
 
     from lorekeeper.dashboard import app as dash_app
 

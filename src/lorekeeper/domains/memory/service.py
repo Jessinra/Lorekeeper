@@ -105,7 +105,6 @@ class MemorySearchService:
         sort_by: str = "relevance",
         source_type: str | None = None,
     ) -> list[SearchResult]:
-        self._metrics.increment_metric_safe("lore_search")
         sem_hits = self._engine.search(query, limit=200)
         kw_hits = self._kw.search_normalized(query)
         memories = self._cache.all_memories(include_deleted=include_deleted)
@@ -251,7 +250,6 @@ class MemoryWriteService:
         links: list[dict[str, Any]],
         force: bool = False,
     ) -> dict[str, Any]:
-        self._metrics.increment_metric_safe("lore_insert")
         inserted_memories: list[dict[str, Any]] = []
         inserted_links: list[dict[str, Any]] = []
         duplicates: list[dict[str, Any]] = []
@@ -356,7 +354,6 @@ class MemoryWriteService:
 
     def remember(self, thought: str, source_type: str = "observed") -> dict[str, Any]:
         """Fast one-shot insert with auto-extracted fields and auto-linking."""
-        self._metrics.increment_metric_safe("lore_remember")
         result = self.remember_with_score(
             thought, score=self._settings.new_memory_default_score, source_type=source_type
         )
@@ -443,8 +440,6 @@ class MemoryWriteService:
             log.warning("auto_link: engine.search failed", exc_info=True)
             return None
 
-        self._metrics.increment_metric_safe("auto_link_candidates")
-
         # Pre-compute the set of IDs already linked to lore_id (both directions)
         try:
             existing_links = self._links.links_for_memory(lore_id)
@@ -492,7 +487,6 @@ class MemoryWriteService:
                 log.warning("auto_link: insert_link failed", exc_info=True)
                 continue
 
-            self._metrics.increment_metric_safe("auto_linked")
             return {"id": hit["lore_id"], "score": raw_score}
         return None
 
@@ -551,7 +545,6 @@ class MemoryWriteService:
         memory_feedback: list[dict[str, Any]],
         link_feedback: list[dict[str, Any]],
     ) -> dict[str, Any]:
-        self._metrics.increment_metric_safe("lore_update")
         updated_memories = 0
         updated_links = 0
         soft_deleted = 0
@@ -653,7 +646,6 @@ class MemoryWriteService:
         _VALID_REASONS = {"duplicate", "hallucinated", "outdated", "expired", "unspecified"}
         if reason not in _VALID_REASONS:
             raise ValueError(f"Unknown reason {reason!r}. Must be one of: {sorted(_VALID_REASONS)}")
-        self._metrics.increment_metric_safe("lore_forget")
         forgotten: list[str] = []
         not_found: list[str] = []
         errors: list[dict[str, Any]] = []
