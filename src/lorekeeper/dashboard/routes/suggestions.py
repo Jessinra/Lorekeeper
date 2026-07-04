@@ -8,8 +8,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from lorekeeper.domains.link.models import RELATION_TYPES
-from lorekeeper.server import get_service, get_suggestions_store
+from lorekeeper.server import get_service, get_suggestion_processor, get_suggestions_store
 
 router = APIRouter()
 
@@ -120,13 +119,6 @@ def count_suggestions(memory_id: str | None = None) -> dict[str, int]:
 @router.post("/api/suggestions/batch")
 def batch_suggestions(body: BatchAction) -> BatchResponse:
     """Accept or reject multiple suggestions at once."""
-    store = get_suggestions_store()
-    svc = get_service()
-    results: list[BatchResultItem] = []
-    accepted = 0
-    rejected = 0
-    errors: list[str] = []
-
     action = body.action.lower()
     if action not in ("accept", "reject"):
         raise HTTPException(
@@ -134,67 +126,26 @@ def batch_suggestions(body: BatchAction) -> BatchResponse:
             detail="action must be 'accept' or 'reject'",
         )
 
-    for sid in body.suggestion_ids:
-        try:
-            suggestion = store.get_suggestion(sid)
-            if suggestion is None:
-                results.append(
-                    BatchResultItem(
-                        id=sid,
-                        status="error",
-                        message="Suggestion not found",
-                    )
-                )
-                errors.append(f"{sid}: not found")
-                continue
+    processor = get_suggestion_processor()
+    result = processor.review(
+        suggestion_ids=body.suggestion_ids, action=action
+    )
 
-            if action == "accept":
-                # Validate suggested_type before inserting the link
-                relation_type = suggestion.suggested_type or "references"
-                if relation_type not in RELATION_TYPES:
-                    relation_type = "references"
-
-                # insert_link + update_suggestion_status are atomic per item
-                # via SuggestionService.accept_one's Database.transaction()
-                # SAVEPOINT — a failure rolls back just this item, already-
-                # committed items in the same batch are unaffected.
-                svc.suggestion_service.accept_one(
-                    store,
-                    suggestion,
-                    relation_type,
-                    "Accepted from link suggestion sweep",
-                )
-                results.append(
-                    BatchResultItem(
-                        id=sid,
-                        status="accepted",
-                        message="Link created and suggestion accepted",
-                    )
-                )
-                accepted += 1
-            else:
-                store.update_suggestion_status(sid, "rejected")
-                results.append(
-                    BatchResultItem(
-                        id=sid,
-                        status="rejected",
-                        message="Suggestion rejected",
-                    )
-                )
-                rejected += 1
-        except Exception as e:
-            msg = f"{sid}: {e!s}"
-            results.append(
-                BatchResultItem(id=sid, status="error", message=msg)
+    mapped_results: list[BatchResultItem] = []
+    for r in result.results:
+        mapped_results.append(
+            BatchResultItem(
+                id=r["id"],
+                status=r["status"],
+                message=r["message"],
             )
-            errors.append(msg)
+        )
 
-    svc.commit()
     return BatchResponse(
-        results=results,
-        accepted=accepted,
-        rejected=rejected,
-        errors=errors,
+        results=mapped_results,
+        accepted=result.accepted,
+        rejected=result.rejected,
+        errors=[e["error"] for e in result.errors],
     )
 
 

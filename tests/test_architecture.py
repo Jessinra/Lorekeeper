@@ -65,8 +65,6 @@ TEMPORARY_ALLOWED: set[tuple[str, str]] = {
     # Steps 4a-4d / 5 remove — presentation → facade / deep domain
     ("lorekeeper.api.mcp.handlers.memory_handlers", "lorekeeper.services.orchestrator"),
     ("lorekeeper.api.mcp.handlers.memory_handlers", "lorekeeper.domains.memory.ranking"),
-    ("lorekeeper.api.mcp.handlers.suggestion_handlers", "lorekeeper.services.orchestrator"),
-    ("lorekeeper.api.mcp.handlers.suggestion_handlers", "lorekeeper.domains.suggestion.repository"),
     # server.py (composition root) — exempt from rules, but listed here for clarity
     ("lorekeeper.server", "lorekeeper.services.orchestrator"),
     ("lorekeeper.server", "lorekeeper.domains.link.repository"),
