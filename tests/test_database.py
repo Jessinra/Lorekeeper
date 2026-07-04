@@ -554,3 +554,58 @@ def test_transaction_nests_safely_with_outer_tx(tmp_path):
     ).fetchone()
     assert row[0] == "changed-inside-savepoint"
     db.close()
+
+
+def test_migration_4_accepts_exactly_12_frozen_types(tmp_path):
+    """Migration 4's CHECK constraint must accept the 12 frozen type strings.
+
+    This is a regression guard for the LKPR-105 Step 1 inlining of
+    the RELATION_TYPES import. The frozen constant must exactly match
+    the old derived set.
+    """
+    import sqlite3
+
+    import pytest
+
+    from lorekeeper.infra.database import _ALL_12_LEGACY
+
+    db = Database(tmp_path / "mig4_frozen.db")
+    db.migrate()
+
+    # Roll back to v3 so migration 4 actually runs (bootstrap creates
+    # the old-format memory_links table, migration 4 rebuilds it).
+    db.conn.execute("PRAGMA user_version = 3")
+    db.migrate()
+    assert db.current_version() == 5
+
+    # Each of the 12 frozen types must pass the CHECK
+    ts = "2026-01-01T00:00:00+00:00"
+
+    # Seed memory rows so FK constraints are satisfied
+    for mem_id in ("s0", "t0", "s1", "t1", "s2", "t2", "s3", "t3", "s4", "t4",
+                   "s5", "t5", "s6", "t6", "s7", "t7", "s8", "t8", "s9", "t9",
+                   "s10", "t10", "s11", "t11", "z_src", "z_tgt"):
+        db.conn.execute(
+            "INSERT INTO memories (id,title,description,content,created_at,updated_at) "
+            "VALUES (?,?,?,?,?,?)",
+            (mem_id, f"title-{mem_id}", "d", "c", ts, ts),
+        )
+
+    for i, rtype in enumerate(_ALL_12_LEGACY):
+        db.conn.execute(
+            "INSERT INTO memory_links "
+            "(id,source_memory_id,target_memory_id,relation_type,reason,created_at,updated_at) "
+            "VALUES (?,?,?,?,?,?,?)",
+            (f"l{i}", f"s{i}", f"t{i}", rtype, "test reason", ts, ts),
+        )
+
+    # A 13th random string must fail the CHECK
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK"):
+        db.conn.execute(
+            "INSERT INTO memory_links "
+            "(id,source_memory_id,target_memory_id,relation_type,reason,created_at,updated_at) "
+            "VALUES (?,?,?,?,?,?,?)",
+            ("z", "z_src", "z_tgt", "invalid_type_13th", "test reason", ts, ts),
+        )
+
+    db.close()

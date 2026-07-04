@@ -28,7 +28,13 @@ from pathlib import Path
 
 import structlog
 
-from lorekeeper.domains.link.models import RELATION_TYPES
+# Frozen snapshot of RELATION_TYPES as of migration 4 (LKPR-67).
+# Do not sync with models.py — this is a historical migration constant.
+_ALL_12_LEGACY: list[str] = sorted([
+    "causes", "contradicts", "depends_on", "derived_from", "part_of",
+    "references", "related_to", "supersedes",
+    "used_as", "used_by", "used_for", "used_in",
+])
 
 log = structlog.get_logger()
 
@@ -416,13 +422,7 @@ def _migration_4_revise_link_relation_types(conn: sqlite3.Connection) -> None:
     Read-side mapping in link_store._row_to_link normalises old type strings to
     new canonical types for all callers — no column rewrite needed.
     """
-    _ALL_12: list[str] = sorted(
-        set(RELATION_TYPES)
-        | {
-            "related_to", "used_in", "used_for", "used_by", "used_as",
-        }
-    )
-    _rebuild_memory_links_table(conn, _ALL_12)
+    _rebuild_memory_links_table(conn, _ALL_12_LEGACY)
     log.info("link_relation_types_revised", accepted_count=12)
 
 
