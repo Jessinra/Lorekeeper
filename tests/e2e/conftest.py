@@ -45,11 +45,12 @@ def seed_db(e2e_data_dir: Path) -> None:
     os.environ["LORE_DATA_DIR"] = str(e2e_data_dir)
 
     try:
-        from lorekeeper.server import init_service
+        from lorekeeper.server import get_memory_processor, init_service
 
-        svc = init_service()
+        init_service()
+        proc = get_memory_processor()
 
-        svc.insert(
+        proc.insert(
             [
                 {"title": "Test Memory One", "content": "Python dev patterns", "score": 9.0},
                 {"title": "Test Memory Two", "content": "Docker deployment guide", "score": 7.5},
@@ -65,7 +66,14 @@ def seed_db(e2e_data_dir: Path) -> None:
         # Reset singleton so the dashboard's lifespan re-initialises from disk
         import lorekeeper.server as srv_mod
 
-        srv_mod._svc = None
+        srv_mod._memory_store = None
+        srv_mod._link_store = None
+        srv_mod._db = None
+        srv_mod._suggestion_processor = None
+        srv_mod._memory_processor = None
+        srv_mod._reflection_processor = None
+        srv_mod._link_processor = None
+        srv_mod._admin_processor = None
     finally:
         _restore_env("LORE_DATA_DIR", _old_lore)
 

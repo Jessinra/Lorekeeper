@@ -18,6 +18,7 @@ Dashboard API (high priority):
 """
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -25,8 +26,7 @@ from fastapi.testclient import TestClient
 
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
-from lorekeeper.services.orchestrator import MemoryService
-from tests._helpers import Stores, build_service, build_stores
+from tests._helpers import App, build_app, build_stores
 
 # ── Shared fake engine ────────────────────────────────────────────────────────
 
@@ -59,12 +59,12 @@ class FakeEngine:
 # ── Shared service factory ────────────────────────────────────────────────────
 
 
-def _make_svc(tmp_path) -> tuple[MemoryService, FakeEngine, Stores]:
+def _make_svc(tmp_path) -> tuple[Any, FakeEngine, Any]:
     store = build_stores(tmp_path / "test.db")
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    svc = build_service(store, engine, kw, settings)
+    svc = build_app(store, engine, kw, settings)
     return svc, engine, store
 
 
@@ -80,7 +80,7 @@ def svc(tmp_path):
 @pytest.fixture
 def seeded_client(tmp_path):
     svc_obj, engine, store = _make_svc(tmp_path)
-    svc_obj.insert(
+    svc_obj.write_service.insert(
         memories=[{"title": "test memory", "description": "desc", "content": "content"}],
         links=[],
     )
@@ -138,9 +138,9 @@ def seeded_client(tmp_path):
 class TestUpdateLinkFeedback:
     """link_feedback path in lore_update — zero coverage before this ticket."""
 
-    def _make_link(self, svc: MemoryService) -> tuple[str, str, str]:
+    def _make_link(self, svc: App) -> tuple[str, str, str]:
         """Insert two memories and one link; return (src_id, tgt_id, link_id)."""
-        result = svc.insert(
+        result = svc.write_service.insert(
             memories=[
                 {"title": "source mem", "content": "src"},
                 {"title": "target mem", "content": "tgt"},
@@ -150,7 +150,7 @@ class TestUpdateLinkFeedback:
         ids = [m["id"] for m in result["inserted_memories"]]
         src_id, tgt_id = ids[0], ids[1]
         link = svc.links.insert_link(src_id, tgt_id, "references", "test")
-        svc._conn.commit()
+        svc.db.conn.commit()
         return src_id, tgt_id, link.id
 
     def test_link_feedback_useful_true_bumps_score(self, svc):
@@ -158,7 +158,7 @@ class TestUpdateLinkFeedback:
         _, _, link_id = self._make_link(svc)
         before = svc.links.get_link(link_id)
 
-        result = svc.update(
+        result = svc.memory_processor.update(
             memory_feedback=[],
             link_feedback=[{"id": link_id, "useful": True, "confidence": 8}],
         )
@@ -174,7 +174,7 @@ class TestUpdateLinkFeedback:
         _, _, link_id = self._make_link(svc)
         before = svc.links.get_link(link_id)
 
-        result = svc.update(
+        result = svc.memory_processor.update(
             memory_feedback=[],
             link_feedback=[{"id": link_id, "useful": False, "confidence": 5}],
         )
@@ -186,7 +186,7 @@ class TestUpdateLinkFeedback:
 
     def test_link_feedback_unknown_id_goes_to_errors(self, svc):
         """Non-existent link ID in link_feedback lands in errors — no exception raised."""
-        result = svc.update(
+        result = svc.memory_processor.update(
             memory_feedback=[],
             link_feedback=[{"id": "nonexistent-link-id", "useful": True, "confidence": 7}],
         )
@@ -205,7 +205,7 @@ class TestUpdateLinkFeedback:
 class TestUpdateMemoryFeedbackErrors:
     def test_nonexistent_memory_id_goes_to_errors_not_exception(self, svc):
         """Non-existent memory ID produces an errors entry — must not raise."""
-        result = svc.update(
+        result = svc.memory_processor.update(
             memory_feedback=[{"id": "no-such-id", "useful": True, "confidence": 5}],
             link_feedback=[],
         )
@@ -224,12 +224,12 @@ class TestUpdateMemoryFeedbackErrors:
 class TestProcessedSessions:
     def test_empty_when_no_reflections(self, svc):
         """get_processed_session_ids returns empty list before any reflect call."""
-        result = svc.get_processed_session_ids()
+        result = svc.reflection_service.get_processed_session_ids()
         assert result == []
 
     def test_session_id_appears_after_reflect(self, svc):
         """Calling submit_reflection registers session_id as processed."""
-        svc.submit_reflection(
+        svc.reflection_service.submit_reflection(
             session_id="test-session-abc",
             session_date="2026-06-10",
             summary="test summary",
@@ -238,13 +238,13 @@ class TestProcessedSessions:
             factual_discoveries=[], memory_ids=[], auto_insert=False,
         )
 
-        processed = svc.get_processed_session_ids()
+        processed = svc.reflection_service.get_processed_session_ids()
         assert "test-session-abc" in processed
 
     def test_multiple_sessions_all_appear(self, svc):
         """Two reflect calls → both session IDs in processed list."""
         for sid in ("session-1", "session-2"):
-            svc.submit_reflection(
+            svc.reflection_service.submit_reflection(
                 session_id=sid, session_date="2026-06-10",
                 summary=f"summary for {sid}",
                 topic=None, task_type=None, what_was_done=None, decisions=None,
@@ -252,14 +252,14 @@ class TestProcessedSessions:
                 factual_discoveries=[], memory_ids=[], auto_insert=False,
             )
 
-        processed = svc.get_processed_session_ids()
+        processed = svc.reflection_service.get_processed_session_ids()
         assert "session-1" in processed
         assert "session-2" in processed
 
     def test_duplicate_reflect_does_not_duplicate_in_processed_list(self, svc):
         """Same session_id reflected twice — appears only once in processed list."""
         for _ in range(2):
-            svc.submit_reflection(
+            svc.reflection_service.submit_reflection(
                 session_id="idempotent-session",
                 session_date="2026-06-10",
                 summary="same session, called twice",
@@ -268,7 +268,7 @@ class TestProcessedSessions:
                 factual_discoveries=[], memory_ids=[], auto_insert=False,
             )
 
-        processed = svc.get_processed_session_ids()
+        processed = svc.reflection_service.get_processed_session_ids()
         assert processed.count("idempotent-session") == 1
 
 
@@ -282,14 +282,14 @@ class TestForgetMixed:
         """One existing ID and one unknown ID in the same forget call.
         forgotten and not_found are both populated — not one or the other.
         """
-        result = svc.insert(
+        result = svc.write_service.insert(
             memories=[{"title": "forgettable", "content": "forget me"}],
             links=[],
         )
         real_id = result["inserted_memories"][0]["id"]
         fake_id = "does-not-exist-id"
 
-        forget_result = svc.forget([real_id, fake_id], reason="outdated")
+        forget_result = svc.memory_processor.forget([real_id, fake_id], reason="outdated")
 
         assert real_id in forget_result["forgotten"]
         assert fake_id in forget_result["not_found"]
@@ -319,9 +319,9 @@ class TestInsertForce:
         stores = build_stores(tmp_path / "force_test.db")
         engine = FakeEngine()
         kw = KeywordIndex()
-        svc = build_service(stores, engine, kw, low_threshold_settings)
+        svc = build_app(stores, engine, kw, low_threshold_settings)
 
-        r1 = svc.insert(
+        r1 = svc.write_service.insert(
             memories=[{"title": "mem alpha", "content": "dogs are loyal animals"}],
             links=[],
         )
@@ -331,7 +331,7 @@ class TestInsertForce:
         engine._search_results = [{"lore_id": first_id, "score": 0.99}]
 
         # Without force: rejected as semantic duplicate (score 0.6*0.99 = 0.594 ≥ 0.5).
-        r_no_force = svc.insert(
+        r_no_force = svc.write_service.insert(
             memories=[{"title": "mem beta", "content": "dogs are faithful companions"}],
             links=[],
         )
@@ -339,7 +339,7 @@ class TestInsertForce:
         assert len(r_no_force["duplicates"]) == 1
 
         # With force: semantic dedup is skipped — new row must be inserted.
-        r_force = svc.insert(
+        r_force = svc.write_service.insert(
             memories=[{"title": "mem beta", "content": "dogs are faithful companions"}],
             links=[],
             force=True,
@@ -356,12 +356,12 @@ class TestInsertForce:
         current behaviour; a separate ticket should decide whether force=True
         should also bypass the DB constraint (e.g. via a UUID suffix strategy).
         """
-        svc.insert(
+        svc.write_service.insert(
             memories=[{"title": "constrained title", "content": "first"}],
             links=[],
         )
 
-        result = svc.insert(
+        result = svc.write_service.insert(
             memories=[{"title": "constrained title", "content": "second"}],
             links=[],
             force=True,
@@ -376,12 +376,12 @@ class TestInsertForce:
 
     def test_force_false_deduplicates_by_title(self, svc):
         """Baseline: force=False (default) deduplicates on exact title match."""
-        svc.insert(
+        svc.write_service.insert(
             memories=[{"title": "same title", "content": "first"}],
             links=[],
         )
 
-        result = svc.insert(
+        result = svc.write_service.insert(
             memories=[{"title": "same title", "content": "second"}],
             links=[],
         )
@@ -400,7 +400,7 @@ class TestReflectionDetailRoute:
     def test_get_reflection_found(self, seeded_client):
         """GET /api/reflections/{id} — success path was 404-only before this ticket."""
         client, svc_obj, _ = seeded_client
-        svc_obj.submit_reflection(
+        svc_obj.reflection_service.submit_reflection(
             session_id="detail-session-1",
             session_date="2026-06-10",
             summary="detail test summary",
@@ -435,7 +435,7 @@ class TestReflectionDetailRoute:
 class TestSessionDetailRoute:
     def _submit_reflection(self, svc_obj, session_id: str) -> str:
         """Helper: submit a reflection and return its reflection_id."""
-        svc_obj.submit_reflection(
+        svc_obj.reflection_service.submit_reflection(
             session_id=session_id,
             session_date="2026-06-10",
             summary="session detail test",
@@ -472,7 +472,7 @@ class TestSessionDetailRoute:
             reviewed_at="2026-06-10T00:00:00",
             reflection_id=None,
         )
-        svc_obj._conn.commit()
+        svc_obj.db.conn.commit()
 
         resp = client.get("/api/sessions/orphan-session")
         assert resp.status_code == 200
@@ -513,7 +513,7 @@ class TestLinksIncludeDeleted:
     def _make_link_to_soft_deleted(self, svc_obj) -> tuple[str, str]:
         """Create two memories, link them, soft-delete the target. Return (src_id, tgt_id)."""
         # Capture IDs explicitly — don't rely on all_memory_rows() row order (no ORDER BY)
-        result = svc_obj.insert(
+        result = svc_obj.write_service.insert(
             memories=[{"title": "target to delete", "content": "tgt"}],
             links=[],
         )
@@ -521,9 +521,9 @@ class TestLinksIncludeDeleted:
         src_rows = svc_obj.memories.all_memory_rows(include_deleted=False)
         src_id = next(r["id"] for r in src_rows if r["title"] == "test memory")
         svc_obj.links.insert_link(src_id, tgt_id, "references", "test")
-        svc_obj._conn.commit()
+        svc_obj.db.conn.commit()
         # Soft-delete the target
-        svc_obj.forget([tgt_id], reason="outdated")
+        svc_obj.write_service.forget([tgt_id], reason="outdated")
         return src_id, tgt_id
 
     def test_link_to_soft_deleted_hidden_by_default(self, seeded_client):

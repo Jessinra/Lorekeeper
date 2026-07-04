@@ -165,7 +165,7 @@ def test_increment_metric_logs_on_sqlite_failure_and_does_not_raise(tmp_path):
 
     from lorekeeper.infra.keyword_index import KeywordIndex
     from lorekeeper.infra.settings import Settings
-    from tests._helpers import build_service
+    from tests._helpers import build_app, build_stores
 
     class _NoopEngine:
         def probe_score_scale(self): pass
@@ -176,7 +176,7 @@ def test_increment_metric_logs_on_sqlite_failure_and_does_not_raise(tmp_path):
         def find_vector_id(self, x): return None
 
     s = build_stores(tmp_path / "metric_boom.db")
-    svc = build_service(s, _NoopEngine(), KeywordIndex(), Settings())
+    svc = build_app(s, _NoopEngine(), KeywordIndex(), Settings())
 
     # Replace metrics.increment_metric with a function that raises sqlite3.Error.
     boom = MagicMock(side_effect=sqlite3.OperationalError("simulated DB locked"))

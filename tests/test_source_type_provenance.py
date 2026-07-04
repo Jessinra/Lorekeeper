@@ -19,7 +19,7 @@ from lorekeeper.infra.database import _migration_3_add_source_type
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
 from lorekeeper.processors.memory import MemoryProcessor
-from tests._helpers import build_service, build_stores
+from tests._helpers import build_app, build_stores
 
 
 class FakeEngine:
@@ -53,7 +53,7 @@ def svc(tmp_path):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    return build_service(store, engine, kw, settings)
+    return build_app(store, engine, kw, settings)
 
 
 @pytest.fixture

@@ -9,8 +9,8 @@ RULES:
 3. Cross-domain DAG: suggestion → {memory, link}, reflection → {memory},
    memory → {link} only.
 4. No `processors.X` imports `processors.Y` (X ≠ Y).
-5. `lorekeeper.services` must not be imported by anything not in
-   `TEMPORARY_ALLOWED` — and once the list is empty, must not exist at all.
+5. `lorekeeper.services` must not exist (the `services/` package was deleted
+   in Step 5 of the LKPR-105 refactor).
 6. `server.py` is exempt from all rules (composition root imports everything).
 """
 
@@ -31,7 +31,7 @@ LAYER: dict[str, int] = {
     "__main__": 6,
     # Shared utilities
     "shared": 5,
-    # Processors (empty until Step 4x — rule still declared)
+    # Processors
     "processors": 4,
     # Domain logic
     "domains": 3,
@@ -39,10 +39,6 @@ LAYER: dict[str, int] = {
     "platform": 2,
     # Infrastructure
     "infra": 1,
-    # Temporary facade — will be deleted. Service module can import anything
-    # (it assembles everything). Other modules must NOT import it except via
-    # TEMPORARY_ALLOWED (Rule 5).
-    "services": 99,
 }
 
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "lorekeeper"
@@ -54,45 +50,6 @@ CROSS_DOMAIN_ALLOWED: set[tuple[str, str]] = {
     ("lorekeeper.domains.suggestion", "lorekeeper.domains.link"),
     ("lorekeeper.domains.reflection", "lorekeeper.domains.memory"),
     ("lorekeeper.domains.memory", "lorekeeper.domains.link"),
-}
-
-# ── Temporary exception list ──────────────────────────────────────────────
-# Each entry is (importer_module_full, imported_module_full).
-# Entries are deleted by the step that fixes the violation.
-# Step 5 deletes the entire set (must be empty).
-
-TEMPORARY_ALLOWED: set[tuple[str, str]] = {
-    # Steps 4c-4d / 5 remove — presentation → facade / deep domain
-    # server.py (composition root) — exempt from rules, but listed here for clarity
-    ("lorekeeper.server", "lorekeeper.services.orchestrator"),
-    ("lorekeeper.server", "lorekeeper.domains.link.repository"),
-    ("lorekeeper.server", "lorekeeper.domains.memory.repository"),
-    ("lorekeeper.server", "lorekeeper.domains.reflection.repository"),
-    ("lorekeeper.server", "lorekeeper.domains.suggestion.repository"),
-    ("lorekeeper.server", "lorekeeper.domains.suggestion.candidate"),
-    ("lorekeeper.server", "lorekeeper.domains.suggestion.sweep"),
-    ("lorekeeper.server", "lorekeeper.infra.database"),
-    ("lorekeeper.server", "lorekeeper.infra.keyword_index"),
-    ("lorekeeper.server", "lorekeeper.infra.search_engine"),
-    ("lorekeeper.server", "lorekeeper.infra.settings"),
-    ("lorekeeper.server", "lorekeeper.infra.scheduler"),
-    ("lorekeeper.server", "lorekeeper.platform.config.repository"),
-    ("lorekeeper.server", "lorekeeper.platform.metrics.repository"),
-    # __main__ → infra (will die when server is the sole entry point)
-    ("lorekeeper.__main__", "lorekeeper.infra.logging_setup"),
-    ("lorekeeper.__main__", "lorekeeper.infra.settings"),
-    ("lorekeeper.__main__", "lorekeeper.server"),
-    ("lorekeeper.__main__", "lorekeeper.cli.setup"),
-    # dashboard → server (composition root getter, fine)
-    ("lorekeeper.dashboard.app", "lorekeeper.server"),
-    ("lorekeeper.dashboard.routes.backup", "lorekeeper.server"),
-    ("lorekeeper.dashboard.routes.config", "lorekeeper.server"),
-    ("lorekeeper.dashboard.routes.links", "lorekeeper.server"),
-    ("lorekeeper.dashboard.routes.memories", "lorekeeper.server"),
-    ("lorekeeper.dashboard.routes.metrics", "lorekeeper.server"),
-    ("lorekeeper.dashboard.routes.reflections", "lorekeeper.server"),
-    ("lorekeeper.dashboard.routes.search", "lorekeeper.server"),
-    ("lorekeeper.dashboard.routes.suggestions", "lorekeeper.server"),
 }
 
 # ── Helpers ────────────────────────────────────────────────────────────────
@@ -122,8 +79,8 @@ def _is_domain_models(module: str) -> bool:
             and parts[3] == "models")
 
 
-def _is_services_package(module: str) -> bool:
-    """Check if module is inside the temporary services package."""
+def _is_services_module(module: str) -> bool:
+    """Check if module is inside the deleted services package."""
     return module.startswith("lorekeeper.services.") or module == "lorekeeper.services"
 
 
@@ -165,14 +122,10 @@ def _check_rule1_lower_layer(
 
     Exemptions:
     - server.py (composition root) — exempt from all rules (Rule 6)
-    - services package (temporary facade) — can import anything
+    - services package (deleted) — any remaining import is a violation
     """
     # Rule 6: server.py is exempt from all rules
     if _is_server_module(importer):
-        return None
-
-    # Services package is temporary — can import anything
-    if _is_services_package(importer):
         return None
 
     imp_layer = _layer_of(importer)
@@ -262,11 +215,9 @@ def _check_rule3_cross_domain(
 ) -> str | None:
     """Rule 3: Cross-domain edges follow allowed DAG.
 
-    server.py and services package are exempt.
+    server.py is exempt.
     """
     if _is_server_module(importer):
-        return None
-    if _is_services_package(importer):
         return None
 
     if not imported.startswith("lorekeeper.domains."):
@@ -308,22 +259,16 @@ def _check_rule4_processors(
     )
 
 
-def _check_rule5_services(
+def _check_rule5_services_deleted(
     importer: str, imported: str, lines: list[str],
 ) -> str | None:
-    """Rule 5: lorekeeper.services must not be imported unless in TEMPORARY_ALLOWED."""
+    """Rule 5: lorekeeper.services must not exist — any import of it is a violation."""
     if not imported.startswith("lorekeeper.services."):
-        return None
-    if (importer, imported) in TEMPORARY_ALLOWED:
-        return None
-
-    # Services module importing itself is fine
-    if _is_services_package(importer):
         return None
 
     return (
         f"RULE 5: {importer} imports {imported} at line(s) {','.join(lines)} — "
-        f"services module is temporary; only TEMPORARY_ALLOWED entries may import it"
+        f"services package has been deleted; this import is stale"
     )
 
 
@@ -331,14 +276,11 @@ def _check_rule5_services(
 
 
 def _get_violations() -> list[str]:
-    """Run all rules against the codebase and return violation messages.
-
-    Excludes TEMPORARY_ALLOWED entries.
-    """
+    """Run all rules against the codebase and return violation messages."""
     violations: list[str] = []
     edges = _collect_import_edges()
     all_checkers = [
-        _check_rule5_services,
+        _check_rule5_services_deleted,
         _check_rule4_processors,
         _check_rule2_presentation_domain,
         _check_rule3_cross_domain,
@@ -346,10 +288,6 @@ def _get_violations() -> list[str]:
     ]
 
     for importer, imported, lines in edges:
-        # Skip imports already in TEMPORARY_ALLOWED
-        if (importer, imported) in TEMPORARY_ALLOWED:
-            continue
-
         for checker in all_checkers:
             msg = checker(importer, imported, lines)
             if msg is not None:
@@ -361,16 +299,21 @@ def _get_violations() -> list[str]:
 # ── Tests ──────────────────────────────────────────────────────────────────
 
 
-def test_temporary_allowed_entries_are_still_real() -> None:
-    """Every TEMPORARY_ALLOWED entry must still be a real import edge.
+def test_services_package_does_not_exist() -> None:
+    """Rule 5: lorekeeper.services/ directory must not exist on disk."""
+    services_dir = SRC_ROOT / "services"
+    assert not services_dir.is_dir(), (
+        f"services/ still exists at {services_dir} — it should have been deleted in Step 5"
+    )
 
-    Stale entries (violation already fixed) must be deleted.
-    """
-    edges = {(i, m) for i, m, _ in _collect_import_edges()}
-    stale = [(i, m) for i, m in TEMPORARY_ALLOWED if (i, m) not in edges]
-    assert not stale, (
-        "Stale TEMPORARY_ALLOWED entries — delete them:\n"
-        + "\n".join(f"  ({i}, {m})" for i, m in stale)
+
+def test_no_services_imports_remain() -> None:
+    """No file should import from lorekeeper.services."""
+    edges = _collect_import_edges()
+    services_imports = [(i, m, ln) for i, m, ln in edges if m.startswith("lorekeeper.services.")]
+    assert not services_imports, (
+        "Stale imports from lorekeeper.services found — delete them:\n" +
+        "\n".join(f"  {i} → {m} (line {','.join(ln)})" for i, m, ln in services_imports)
     )
 
 
@@ -410,15 +353,6 @@ def test_rule4_processors_independence() -> None:
     )
 
 
-def test_rule5_services_temporary() -> None:
-    """Services module may only be imported via TEMPORARY_ALLOWED."""
-    violations = _get_violations()
-    rule5_msgs = [v for v in violations if v.startswith("RULE 5:")]
-    assert not rule5_msgs, (
-        "Services import violations found:\n" + "\n".join(rule5_msgs)
-    )
-
-
 def test_architecture_negative_new_violation() -> None:
     """Verify a deliberate violation is caught (demonstrates test works).
 
@@ -435,3 +369,9 @@ def test_architecture_negative_new_violation() -> None:
         "lorekeeper.domains.link.service", "lorekeeper.domains.suggestion.models", ["99"],
     )
     assert msg is not None, "Expected a violation for link → suggestion (reverse of allowed)"
+
+    # A services import should be caught
+    msg = _check_rule5_services_deleted(
+        "lorekeeper.dashboard.foo", "lorekeeper.services.orchestrator", ["99"],
+    )
+    assert msg is not None, "Expected a violation for deleted services import"

@@ -6,7 +6,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 
 from lorekeeper.domains.memory.models import Memory
-from lorekeeper.server import get_memory_processor, get_service
+from lorekeeper.server import get_link_store, get_memory_processor, get_memory_store
 from lorekeeper.shared.serializers import serialize_memory, serialize_memory_link
 
 router = APIRouter()
@@ -24,18 +24,19 @@ def _parse_dump(raw: bytes) -> tuple[list[Any], list[Any]]:
 
 @router.get("/api/export")
 def export_dump(include_deleted: bool = False) -> Response:
-    svc = get_service()
+    memories = get_memory_store()
+    links_store = get_link_store()
     now = datetime.now(UTC)
-    memories = [
+    memories_list = [
         serialize_memory(Memory(**dict(r)))
-        for r in svc.memories.all_memory_rows(include_deleted=include_deleted)
+        for r in memories.all_memory_rows(include_deleted=include_deleted)
     ]
-    links = [serialize_memory_link(lnk) for lnk in svc.links.all_links()]
+    links_list = [serialize_memory_link(lnk) for lnk in links_store.all_links()]
     payload = {
         "version": "2",
         "exported_at": now.isoformat(),
-        "memories": memories,
-        "links": links,
+        "memories": memories_list,
+        "links": links_list,
     }
     filename = f"lorekeeper-{now.strftime('%Y-%m-%d')}.json"
     return Response(
@@ -47,11 +48,11 @@ def export_dump(include_deleted: bool = False) -> Response:
 
 @router.post("/api/import/preview")
 async def import_preview(file: UploadFile = File(...)) -> dict[str, Any]:
-    memories, links = _parse_dump(await file.read())
-    return get_memory_processor().import_dump(memories, links, dry_run=True)
+    memories_data, links_data = _parse_dump(await file.read())
+    return get_memory_processor().import_dump(memories_data, links_data, dry_run=True)
 
 
 @router.post("/api/import/confirm")
 async def import_confirm(file: UploadFile = File(...)) -> dict[str, Any]:
-    memories, links = _parse_dump(await file.read())
-    return get_memory_processor().import_dump(memories, links, dry_run=False)
+    memories_data, links_data = _parse_dump(await file.read())
+    return get_memory_processor().import_dump(memories_data, links_data, dry_run=False)
