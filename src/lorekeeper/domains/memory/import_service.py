@@ -8,19 +8,34 @@ per-request hot path, so it doesn't belong on ``MemorySearchService`` or
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from lorekeeper.domains.link.models import TYPE_MIGRATION_MAP
-
-if TYPE_CHECKING:
-    from lorekeeper.services.orchestrator import MemoryService
+from lorekeeper.domains.link.repository import LinkStore
+from lorekeeper.domains.memory.cache import MemoryCache
+from lorekeeper.domains.memory.repository import MemoryStore
+from lorekeeper.infra.database import Database
+from lorekeeper.infra.search_engine import LanceDBEngine
 
 
 class ImportService:
     """Backup/dump restore for memories and links."""
 
-    def __init__(self, svc: MemoryService) -> None:
-        self._svc = svc
+    def __init__(
+        self,
+        engine: LanceDBEngine,
+        memories: MemoryStore,
+        links: LinkStore,
+        cache: MemoryCache,
+        db: Database,
+        namespace: str,
+    ) -> None:
+        self._engine = engine
+        self._memories = memories
+        self._links = links
+        self._cache = cache
+        self._db = db
+        self._namespace = namespace
 
     def import_dump(
         self,
@@ -28,7 +43,6 @@ class ImportService:
         links: list[dict[str, Any]],
         dry_run: bool = False,
     ) -> dict[str, Any]:
-        svc = self._svc
         memories_inserted = 0
         memories_skipped = 0
         links_inserted = 0
@@ -39,7 +53,10 @@ class ImportService:
         preview_links: list[dict[str, Any]] = []
 
         # Track IDs that exist or were just inserted (for FK validation)
-        valid_ids: set[str] = {r["id"] for r in svc.memories.all_memory_rows(include_deleted=True)}
+        valid_ids: set[str] = {
+            r["id"]
+            for r in self._memories.all_memory_rows(include_deleted=True)
+        }
 
         for m in memories:
             mid = m.get("id", "")
@@ -59,8 +76,8 @@ class ImportService:
             else:
                 try:
                     text = f"{m.get('title', '')} {m.get('description', '')} {m.get('content', '')}"
-                    svc._engine.add(text, mid)
-                    svc.memories.upsert_memory_row(
+                    self._engine.add(text, mid)
+                    self._memories.upsert_memory_row(
                         id=mid,
                         title=m.get("title", ""),
                         description=m.get("description", ""),
@@ -73,7 +90,7 @@ class ImportService:
                         confidence=m.get("confidence"),
                         confidence_count=int(m.get("confidence_count", 0)),
                         last_used=m.get("last_used"),
-                        namespace=m.get("namespace", svc._namespace),
+                        namespace=m.get("namespace", self._namespace),
                         source_type=m.get("source_type", "observed"),
                     )
                 except Exception as e:
@@ -83,10 +100,10 @@ class ImportService:
             memories_inserted += 1
 
         if not dry_run and memories_inserted:
-            svc._rebuild_kw()
-            svc._conn.commit()
+            self._cache.rebuild_kw()
+            self._db.commit()
 
-        existing_link_ids: set[str] = {lnk.id for lnk in svc.links.all_links()}
+        existing_link_ids: set[str] = {lnk.id for lnk in self._links.all_links()}
 
         for lnk in links:
             lid = lnk.get("id", "")
@@ -114,7 +131,7 @@ class ImportService:
                 })
             else:
                 try:
-                    svc.links.insert_link(
+                    self._links.insert_link(
                         id=lid,
                         source_memory_id=src,
                         target_memory_id=tgt,
@@ -134,7 +151,7 @@ class ImportService:
             links_inserted += 1
 
         if not dry_run and links_inserted:
-            svc._conn.commit()
+            self._db.commit()
 
         return {
             "memories_inserted": memories_inserted,

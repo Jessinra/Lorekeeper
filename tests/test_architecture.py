@@ -62,12 +62,6 @@ CROSS_DOMAIN_ALLOWED: set[tuple[str, str]] = {
 # Step 5 deletes the entire set (must be empty).
 
 TEMPORARY_ALLOWED: set[tuple[str, str]] = {
-    # Steps 3a/3b remove — domain → facade (TYPE_CHECKING)
-    ("lorekeeper.domains.memory.import_service", "lorekeeper.services.orchestrator"),
-    ("lorekeeper.domains.link.service", "lorekeeper.services.orchestrator"),
-    ("lorekeeper.domains.reflection.service", "lorekeeper.services.orchestrator"),
-    ("lorekeeper.domains.memory.service", "lorekeeper.services.orchestrator"),
-    ("lorekeeper.domains.suggestion.service", "lorekeeper.services.orchestrator"),
     # Steps 4a-4d / 5 remove — presentation → facade / deep domain
     ("lorekeeper.api.mcp.handlers.memory_handlers", "lorekeeper.services.orchestrator"),
     ("lorekeeper.api.mcp.handlers.memory_handlers", "lorekeeper.domains.memory.ranking"),

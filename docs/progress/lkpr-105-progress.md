@@ -12,12 +12,12 @@
 The master plan groups work into 6 phases (7a–7e). The README splits those into 12 small PRs (steps 0–7, with 3a/3b and 4a–4d). Each step is one session, one branch, one PR.
 
 | Phase | Step | Branch                                             | Description                                                                | Depends on |
-| ----- | ---- | -------------------------------------------------- | -------------------------------------------------------------------------- | ---------- |
+| ----- | ---- | -------------------------------------------------- | -------------------------------------------------------------------------- | ---------- | ------------------ |
 | 7a′   | 0    | `chore/lkpr-105-step0-arch-test`                   | Architecture test with `TEMPORARY_ALLOWED` exception list                  | —          |
 | 7a′   | 1    | `chore/lkpr-105-step1-infra-layering`              | Fix 3 infra→up violations (database, keyword_index, scheduler)             | 0          |
 | 7a    | 2    | `chore/lkpr-105-step2-shared-collaborators`        | MemoryCache, Database.commit(), increment_metric_safe()                    | 0          |
-| 7a    | 3a   | `chore/lkpr-105-step3a-di-narrow`                  | Explicit DI for LinkService, ImportService, ReflectionService              | 2          |
-| 7a    | 3b   | `chore/lkpr-105-step3b-di-wide`                    | Explicit DI for MemorySearchService, MemoryWriteService, SuggestionService | 3a         |
+| 7a    | 3a   | `chore/lkpr-105-step3a-di-narrow`                  | Explicit DI for LinkService, ImportService, ReflectionService              | 2          | :white_check_mark: |
+| 7a    | 3b   | `chore/lkpr-105-step3a-di-narrow`                  | Explicit DI for MemorySearchService, MemoryWriteService, SuggestionService | 3a         | :white_check_mark: |
 | 7b    | 4a   | `chore/lkpr-105-step4a-suggestion-processor`       | SuggestionProcessor (kill duplicated batch loop)                           | 2          |
 | 7b    | 4b   | `chore/lkpr-105-step4b-memory-processor`           | MemoryProcessor (search/insert/remember/update/forget/import)              | 3b         |
 | 7b    | 4c   | `chore/lkpr-105-step4c-reflection-link-processors` | ReflectionProcessor + LinkProcessor                                        | 3b         |
@@ -30,10 +30,10 @@ The master plan groups work into 6 phases (7a–7e). The README splits those int
 
 ## Current State
 
-**Status:** Steps 0-2 done (PR #268, #269)
+**Status:** Steps 0-3b done (on same branch, Phase 3 complete)
 
-**Current branch:** `chore/lkpr-105-step2-shared-collaborators`
-**Working tree:** clean
+**Current branch:** `chore/lkpr-105-step3a-di-narrow` (also contains Step 3b)
+**Working tree:** clean (branch ready for PR)
 
 ---
 
@@ -72,11 +72,11 @@ Entry format: `(importer_module, imported_module)` — `# Step N removes`
 | 1            | `(lorekeeper.infra.database, lorekeeper.domains.link.models)`                         | NOT YET |
 | 1            | `(lorekeeper.infra.keyword_index, lorekeeper.domains.memory.models)`                  | NOT YET |
 | 1            | `(lorekeeper.infra.scheduler, lorekeeper.platform.config.repository)`                 | NOT YET |
-| 3a           | `(lorekeeper.domains.link.service, lorekeeper.services.orchestrator)`                 | NOT YET |
-| 3a           | `(lorekeeper.domains.memory.import_service, lorekeeper.services.orchestrator)`        | NOT YET |
-| 3a           | `(lorekeeper.domains.reflection.service, lorekeeper.services.orchestrator)`           | NOT YET |
-| 3b           | `(lorekeeper.domains.memory.service, lorekeeper.services.orchestrator)`               | NOT YET |
-| 3b           | `(lorekeeper.domains.suggestion.service, lorekeeper.services.orchestrator)`           | NOT YET |
+| 3a           | `(lorekeeper.domains.link.service, lorekeeper.services.orchestrator)`                 | DONE    |
+| 3a           | `(lorekeeper.domains.memory.import_service, lorekeeper.services.orchestrator)`        | DONE    |
+| 3a           | `(lorekeeper.domains.reflection.service, lorekeeper.services.orchestrator)`           | DONE    |
+| 3b           | `(lorekeeper.domains.memory.service, lorekeeper.services.orchestrator)`               | DONE    |
+| 3b           | `(lorekeeper.domains.suggestion.service, lorekeeper.services.orchestrator)`           | DONE    |
 | 4a/4b/4c     | `(lorekeeper.api.mcp.handlers.memory_handlers, lorekeeper.services.orchestrator)`     | NOT YET |
 | 4b           | `(lorekeeper.api.mcp.handlers.memory_handlers, lorekeeper.domains.memory.ranking)`    | NOT YET |
 | 4a           | `(lorekeeper.api.mcp.handlers.suggestion_handlers, lorekeeper.services.orchestrator)` | NOT YET |
@@ -406,9 +406,11 @@ grep -rn "orchestrator\|MemoryService" CLAUDE.md docs/ARCHITECTURE.md  # → emp
 _Record decisions, gotchas, and unexpected findings here as the refactor progresses._
 
 | Date | Step       | Note |
-| ---- | ---------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|      | 2026-07-04 | 0-1  | Combined PR #268 — Steps 0 (architecture test) + 1 (infra layering fixes) in one PR. 36 TEMPORARY_ALLOWED entries remain. Plan files (docs/plans/lkpr-105/) included in PR. |
-|      | 2026-07-04 | 2    | PR #269 — MemoryCache, Database.commit(), increment_metric_safe() extracted from facade. 6 direct cache tests. No new architecture exceptions.                              |
+| ---- | ---------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|      | 2026-07-04 | 0-1  | Combined PR #268 — Steps 0 (architecture test) + 1 (infra layering fixes) in one PR. 36 TEMPORARY_ALLOWED entries remain. Plan files (docs/plans/lkpr-105/) included in PR.                                                                                                      |
+|      | 2026-07-04 | 2    | PR #269 — MemoryCache, Database.commit(), increment_metric_safe() extracted from facade. 6 direct cache tests. No new architecture exceptions.                                                                                                                                   |
+|      | 2026-07-04 | 3a   | Branch `chore/lkpr-105-step3a-di-narrow` — Step 3a complete. Explicit DI for LinkService, ImportService, ReflectionService. 3 domain→orchestrator exception entries deleted. `db: Database` threaded into MemoryService. Sweep isolation invariant updated.                      |
+|      | 2026-07-04 | 3b   | Same branch — Step 3b complete. Explicit DI for MemorySearchService, MemoryWriteService, SuggestionService. `row_to_memory` moved to `models.py` (circular import fix). All 5 domain→orchestrator entries deleted. Zero `MemoryService` imports in `domains/`. Phase 3 complete. |
 
 ---
 

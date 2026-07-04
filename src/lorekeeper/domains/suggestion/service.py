@@ -15,19 +15,45 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from lorekeeper.domains.link.repository import LinkStore
+from lorekeeper.domains.memory.repository import MemoryStore
+from lorekeeper.infra.database import Database
+from lorekeeper.infra.keyword_index import KeywordIndex
+from lorekeeper.infra.search_engine import LanceDBEngine
+from lorekeeper.infra.settings import Settings
+from lorekeeper.platform.metrics.repository import MetricsStore
+
 if TYPE_CHECKING:
     from lorekeeper.domains.link.models import MemoryLink
-    from lorekeeper.domains.suggestion.candidate import LinkCandidate
+    from lorekeeper.domains.suggestion.candidate import LinkCandidate, LinkCandidateGenerator
     from lorekeeper.domains.suggestion.models import LinkSuggestion
     from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
-    from lorekeeper.services.orchestrator import MemoryService
 
 
 class SuggestionService:
     """Link candidate recommendation and suggestion review for the Suggestion aggregate."""
 
-    def __init__(self, svc: MemoryService) -> None:
-        self._svc = svc
+    def __init__(
+        self,
+        candidate_generator: LinkCandidateGenerator,
+        engine: LanceDBEngine,
+        kw: KeywordIndex,
+        memories: MemoryStore,
+        links: LinkStore,
+        metrics: MetricsStore,
+        settings: Settings,
+        db: Database,
+        ns_filter: list[str] | None,
+    ) -> None:
+        self._candidate_generator = candidate_generator
+        self._engine = engine
+        self._kw = kw
+        self._memories = memories
+        self._links = links
+        self._metrics = metrics
+        self._settings = settings
+        self._db = db
+        self._ns_filter = ns_filter
 
     def recommend_links(
         self,
@@ -40,23 +66,22 @@ class SuggestionService:
             lore_id: Source memory to find candidates for.
             top_k: Override max candidates (default: settings.link_top_m).
         """
-        svc = self._svc
-        svc._increment_metric("lore_recommend_links")
+        self._metrics.increment_metric_safe("lore_recommend_links")
         from lorekeeper.domains.suggestion.candidate import LinkCandidateGenerator
 
-        effective = svc.settings
+        effective = self._settings
         if top_k is not None:
             effective = effective.model_copy(update={"link_top_m": top_k})
             generator = LinkCandidateGenerator(
-                engine=svc._engine,
-                memory_store=svc.memories,
-                link_store=svc.links,
-                keyword_index=svc._kw,
+                engine=self._engine,
+                memory_store=self._memories,
+                link_store=self._links,
+                keyword_index=self._kw,
                 settings=effective,
-                ns_filter=svc._ns_filter,
+                ns_filter=self._ns_filter,
             )
         else:
-            generator = svc._link_candidate_generator
+            generator = self._candidate_generator
         candidates = generator.generate(lore_id)
 
         return candidates
@@ -74,9 +99,8 @@ class SuggestionService:
         either step rolls back only this suggestion — safe to call in a loop
         over a batch without one bad item poisoning already-processed items.
         """
-        svc = self._svc
-        with svc.memories._db.transaction():
-            link = svc.links.insert_link(
+        with self._db.transaction():
+            link = self._links.insert_link(
                 source_memory_id=suggestion.source_memory_id,
                 target_memory_id=suggestion.target_memory_id,
                 relation_type=relation_type,
@@ -84,4 +108,3 @@ class SuggestionService:
             )
             suggestion_store.update_suggestion_status(suggestion.id, "accepted")
         return link
-

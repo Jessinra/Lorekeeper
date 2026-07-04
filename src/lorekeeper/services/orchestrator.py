@@ -15,6 +15,7 @@ from lorekeeper.domains.memory.service import (
 from lorekeeper.domains.reflection.repository import ReflectionStore
 from lorekeeper.domains.reflection.service import ReflectionService
 from lorekeeper.domains.suggestion.service import SuggestionService
+from lorekeeper.infra.database import Database
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
@@ -65,6 +66,7 @@ class MemoryService:
         config: ConfigStore,
         keyword_index: KeywordIndex,
         settings: Settings,
+        db: Database,
         link_candidate_generator: LinkCandidateGenerator | None = None,
     ) -> None:
         self._engine = engine
@@ -101,13 +103,60 @@ class MemoryService:
                 ns_filter=self._ns_filter,
             )
 
-        # Domain services — each borrows this facade for shared infra access.
-        self.memory_search_service = MemorySearchService(self)
-        self.memory_write_service = MemoryWriteService(self)
-        self.link_service = LinkService(self)
-        self.suggestion_service = SuggestionService(self)
-        self.reflection_service = ReflectionService(self)
-        self.import_service = ImportService(self)
+        # Domain services — all now use explicit DI.
+        # Order: LinkService → MemoryWriteService → MemorySearchService
+        # → ReflectionService → SuggestionService → ImportService.
+        self.link_service = LinkService(links=links)
+        self.memory_write_service = MemoryWriteService(
+            engine=engine,
+            memories=memories,
+            links=links,
+            cache=self._cache,
+            metrics=metrics,
+            settings=settings,
+            db=db,
+            namespace=self._namespace,
+            ns_filter=self._ns_filter,
+            link_service=self.link_service,
+            kw=keyword_index,
+        )
+        self.memory_search_service = MemorySearchService(
+            engine=engine,
+            kw=keyword_index,
+            memories=memories,
+            links=links,
+            cache=self._cache,
+            metrics=metrics,
+            settings=settings,
+            db=db,
+            ns_filter=self._ns_filter,
+        )
+        self.reflection_service = ReflectionService(
+            reflections=reflections,
+            metrics=metrics,
+            db=db,
+            cache=self._cache,
+            write_service=self.memory_write_service,
+        )
+        self.suggestion_service = SuggestionService(
+            candidate_generator=self._link_candidate_generator,
+            engine=engine,
+            kw=keyword_index,
+            memories=memories,
+            links=links,
+            metrics=metrics,
+            settings=settings,
+            db=db,
+            ns_filter=self._ns_filter,
+        )
+        self.import_service = ImportService(
+            engine=engine,
+            memories=memories,
+            links=links,
+            cache=self._cache,
+            db=db,
+            namespace=self._namespace,
+        )
 
     def _invalidate_cache(self) -> None:
         """Mark the memory cache dirty. Call at every write that adds/removes memories."""

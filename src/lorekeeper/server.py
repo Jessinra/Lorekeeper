@@ -103,6 +103,7 @@ def init_service(settings: Settings | None = None) -> MemoryService:
 
     svc = MemoryService(
         engine, memories, links, reflections, metrics, config, kw, s,
+        db=db,
         link_candidate_generator=link_candidate_generator,
     )
     # Bootstrap BM25 from existing memories

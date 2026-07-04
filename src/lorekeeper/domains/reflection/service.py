@@ -8,12 +8,15 @@ from __future__ import annotations
 import json
 import uuid
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import structlog
 
-if TYPE_CHECKING:
-    from lorekeeper.services.orchestrator import MemoryService
+from lorekeeper.domains.memory.cache import MemoryCache
+from lorekeeper.domains.memory.service import MemoryWriteService, extract_title
+from lorekeeper.domains.reflection.repository import ReflectionStore
+from lorekeeper.infra.database import Database
+from lorekeeper.platform.metrics.repository import MetricsStore
 
 log = structlog.get_logger()
 
@@ -21,8 +24,19 @@ log = structlog.get_logger()
 class ReflectionService:
     """Session reflection submission and processed-session lookup."""
 
-    def __init__(self, svc: MemoryService) -> None:
-        self._svc = svc
+    def __init__(
+        self,
+        reflections: ReflectionStore,
+        metrics: MetricsStore,
+        db: Database,
+        cache: MemoryCache,
+        write_service: MemoryWriteService,
+    ) -> None:
+        self._reflections = reflections
+        self._metrics = metrics
+        self._db = db
+        self._cache = cache
+        self._write_service = write_service
 
     def submit_reflection(
         self,
@@ -40,13 +54,12 @@ class ReflectionService:
         memory_ids: list[str],
         auto_insert: bool = True,
     ) -> dict[str, Any]:
-        svc = self._svc
-        svc._increment_metric("lore_reflect")
+        self._metrics.increment_metric_safe("lore_reflect")
 
         # Guard: if this session has already been processed, return idempotent no-op.
         # Root cause confirmed (LKPR-1): without this check, every duplicate call inserts a
         # fresh orphaned reflection row and overwrites the session's reflection_id pointer.
-        existing_session = svc.reflections.get_session(session_id)
+        existing_session = self._reflections.get_session(session_id)
         if existing_session is not None:
             log.info(
                 "reflection_already_processed",
@@ -67,7 +80,7 @@ class ReflectionService:
         def _bullets(items: list[str]) -> str | None:
             return "\n".join(f"- {item}" for item in items) if items else None
 
-        svc.reflections.insert_reflection(
+        self._reflections.insert_reflection(
             id=reflection_id,
             created_at=now,
             session_count=1,
@@ -79,7 +92,7 @@ class ReflectionService:
             memory_ids=json.dumps(memory_ids) if memory_ids else None,
         )
 
-        svc.reflections.upsert_session(
+        self._reflections.upsert_session(
             session_id=session_id,
             reviewed_at=now,
             session_date=session_date,
@@ -95,7 +108,7 @@ class ReflectionService:
         )
 
         log.info("reflection_submitted", reflection_id=reflection_id, session_id=session_id)
-        svc._conn.commit()  # commit reflection + session rows before auto-insert
+        self._db.commit()  # commit reflection + session rows before auto-insert
 
         # Auto-insert factual_discoveries and lessons_learnt as memories (best-effort)
         memories_created: list[dict[str, Any]] = []
@@ -109,8 +122,8 @@ class ReflectionService:
             for items_list, relation, score in _auto_items:
                 for text in items_list:
                     try:
-                        title = svc._extract_title(text)
-                        result = svc.memory_write_service.insert_one_memory(
+                        title = extract_title(text)
+                        result = self._write_service.insert_one_memory(
                             {"title": title, "description": title, "content": text, "score": score},
                             force=False,
                         )
@@ -145,8 +158,8 @@ class ReflectionService:
                     session_id=session_id,
                 )
             if new_inserts:
-                svc._rebuild_kw()
-                svc._conn.commit()
+                self._cache.rebuild_kw()
+                self._db.commit()
 
         return {
             "reflection_id": reflection_id,
@@ -156,6 +169,5 @@ class ReflectionService:
         }
 
     def get_processed_session_ids(self) -> list[str]:
-        svc = self._svc
-        svc._increment_metric("lore_processed_sessions")
-        return list(svc.reflections.all_processed_session_ids())
+        self._metrics.increment_metric_safe("lore_processed_sessions")
+        return list(self._reflections.all_processed_session_ids())

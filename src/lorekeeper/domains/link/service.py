@@ -5,25 +5,22 @@ Extracted from ``services/orchestrator.py`` (LKPR-104 Phase 5).
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from lorekeeper.domains.link.models import RELATION_TYPES
-
-if TYPE_CHECKING:
-    from lorekeeper.services.orchestrator import MemoryService
+from lorekeeper.domains.link.repository import LinkStore
 
 
 class LinkService:
     """Link creation and relation-type validation for the Link aggregate."""
 
-    def __init__(self, svc: MemoryService) -> None:
-        self._svc = svc
+    def __init__(self, links: LinkStore) -> None:
+        self._links = links
 
     def insert_one_link(self, lnk: dict[str, Any]) -> dict[str, Any]:
-        svc = self._svc
         self.validate_relation_type(lnk.get("relation_type", ""))
         raw_score = lnk.get("score", 1.0)
-        link = svc.links.insert_link(
+        link = self._links.insert_link(
             source_memory_id=lnk["source_memory_id"],
             target_memory_id=lnk["target_memory_id"],
             relation_type=lnk["relation_type"],
