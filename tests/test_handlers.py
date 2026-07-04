@@ -2,6 +2,8 @@
 Handler layer tests.
 Validates that input validation happens early — before reaching the orchestrator.
 """
+from unittest.mock import patch
+
 import pytest
 
 from lorekeeper.api.mcp.handlers.memory_handlers import (
@@ -368,7 +370,14 @@ def test_recommend_links_negative_top_k_raises(processor):
 
 def test_recommend_links_top_k_capped_at_50(processor):
     """top_k > 50 must be silently capped — no error, result count <= 50."""
-    result = _handle_recommend_links(processor, lore_id="nonexistent-id", top_k=999)
+    with patch.object(
+        processor._suggestion_service,
+        'recommend_links',
+        wraps=processor._suggestion_service.recommend_links,
+    ) as mock_domain:
+        result = _handle_recommend_links(processor, lore_id="nonexistent-id", top_k=999)
+        # Verify the domain service received the capped value (spy catches the actual arg)
+        mock_domain.assert_called_once_with(lore_id="nonexistent-id", top_k=50)
     # nonexistent lore_id returns empty candidates — just verify no exception and cap applied
     assert result["count"] == 0
     assert result["source_lore_id"] == "nonexistent-id"

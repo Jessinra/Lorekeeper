@@ -61,7 +61,7 @@ def get_suggestion_processor() -> SuggestionProcessor:
 
 
 def init_service(settings: Settings | None = None) -> MemoryService:
-    global _svc, _suggestions_store
+    global _svc, _suggestions_store, _suggestion_processor
     s = settings or Settings()
     s.data_dir.mkdir(parents=True, exist_ok=True)
 
