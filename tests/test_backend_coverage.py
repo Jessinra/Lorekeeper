@@ -88,6 +88,7 @@ def seeded_client(tmp_path):
     engine._store[mem_id] = "test memory desc content"
 
     import lorekeeper.server as srv
+    from lorekeeper.processors.admin import AdminProcessor
     from lorekeeper.processors.link import LinkProcessor
     from lorekeeper.processors.memory import MemoryProcessor
     from lorekeeper.processors.reflection import ReflectionProcessor
@@ -112,6 +113,13 @@ def seeded_client(tmp_path):
         memories=store.memories,
         links=store.links,
         metrics=store.metrics,
+        db=store.db,
+    )
+    srv._admin_processor = AdminProcessor(
+        config=store.config,
+        metrics=store.metrics,
+        suggestions=store.suggestions,
+        settings=svc_obj.settings,
         db=store.db,
     )
 
