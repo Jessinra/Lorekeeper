@@ -21,6 +21,7 @@ from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
 from lorekeeper.platform.config.repository import ConfigStore
 from lorekeeper.platform.metrics.repository import MetricsStore
+from lorekeeper.processors.suggestion import SuggestionProcessor
 from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.shared.encouragement import (
     for_forget,
@@ -35,6 +36,7 @@ log = structlog.get_logger()
 mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
 _svc: MemoryService | None = None
 _suggestions_store: LinkSuggestionStore | None = None
+_suggestion_processor: SuggestionProcessor | None = None
 
 
 def get_service() -> MemoryService:
@@ -49,6 +51,13 @@ def get_suggestions_store() -> LinkSuggestionStore:
     if _suggestions_store is None:
         raise RuntimeError("LinkSuggestionStore not initialised — call init_service() first")
     return _suggestions_store
+
+
+def get_suggestion_processor() -> SuggestionProcessor:
+    global _suggestion_processor
+    if _suggestion_processor is None:
+        raise RuntimeError("SuggestionProcessor not initialised — call init_service() first")
+    return _suggestion_processor
 
 
 def init_service(settings: Settings | None = None) -> MemoryService:
@@ -161,6 +170,12 @@ def init_service(settings: Settings | None = None) -> MemoryService:
 
     _svc = svc
     _suggestions_store = LinkSuggestionStore(db)
+    _suggestion_processor = SuggestionProcessor(
+        suggestion_service=svc.suggestion_service,
+        suggestions=_suggestions_store,
+        metrics=svc.metrics,
+        db=db,
+    )
     return svc
 
 
@@ -280,9 +295,9 @@ async def lore_recommend_links(
     top_k: Max candidates to return (default: LORE_LINK_TOP_M from settings).
     """
     try:
-        svc = get_service()
+        proc = get_suggestion_processor()
         return handle_recommend_links(
-            svc, lore_id=lore_id, top_k=top_k
+            proc, lore_id=lore_id, top_k=top_k
         )
     except Exception:
         log.exception("lore_recommend_links_failed", lore_id=lore_id)
@@ -479,30 +494,15 @@ async def lore_get_suggestions(
 
     Returns:
         {
-          "suggestions": [
-            {
-              "id": "uuid",
-              "source_memory_id": "...",
-              "source_title": "...",
-              "target_memory_id": "...",
-              "target_title": "...",
-              "weighted_score": 0.72,
-              "cosine_score": 0.81,
-              "bm25_score": 0.65,
-              "entity_score": 0.30,
-              "temporal_score": 0.55,
-              "suggested_type": "references",
-              "confidence": "standard",
-              "created_at": "2026-06-20T12:00:00"
-            }
-          ],
+          "suggestions": [...],
           "count": 20,
           "total_pending": 142
         }
     """
     try:
+        proc = get_suggestion_processor()
         return handle_get_suggestions(
-            get_service(), get_suggestions_store(), limit=limit, min_score=min_score
+            proc, limit=limit, min_score=min_score
         )
     except Exception:
         log.exception("lore_get_suggestions_failed")
@@ -551,8 +551,9 @@ async def lore_review_suggestion(
         the exception message.
     """
     try:
+        proc = get_suggestion_processor()
         return handle_review_suggestion(
-            get_service(), get_suggestions_store(),
+            proc,
             suggestion_ids=suggestion_ids, action=action,
         )
     except Exception:

@@ -21,6 +21,7 @@ from lorekeeper.api.mcp.handlers.suggestion_handlers import (
 )
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
+from lorekeeper.processors.suggestion import SuggestionProcessor
 from tests._helpers import build_service, build_stores
 
 
@@ -60,6 +61,16 @@ def svc(stores):
     kw = KeywordIndex()
     settings = Settings()
     return build_service(stores, engine, kw, settings)
+
+
+@pytest.fixture
+def processor(svc, stores):
+    return SuggestionProcessor(
+        suggestion_service=svc.suggestion_service,
+        suggestions=stores.suggestions,
+        metrics=stores.metrics,
+        db=stores.db,
+    )
 
 
 def test_handle_insert_missing_title_raises_at_handler_layer(svc):
@@ -335,40 +346,40 @@ def test_search_by_ids_dedup_with_usage_count(svc):
 # ── _handle_recommend_links input validation ──────────────────────────────────
 
 
-def test_recommend_links_empty_lore_id_raises(svc):
+def test_recommend_links_empty_lore_id_raises(processor):
     with pytest.raises(ValueError, match="lore_id is required"):
-        _handle_recommend_links(svc, lore_id="")
+        _handle_recommend_links(processor, lore_id="")
 
 
-def test_recommend_links_whitespace_lore_id_raises(svc):
+def test_recommend_links_whitespace_lore_id_raises(processor):
     with pytest.raises(ValueError, match="lore_id is required"):
-        _handle_recommend_links(svc, lore_id="   ")
+        _handle_recommend_links(processor, lore_id="   ")
 
 
-def test_recommend_links_zero_top_k_raises(svc):
+def test_recommend_links_zero_top_k_raises(processor):
     with pytest.raises(ValueError, match="positive integer"):
-        _handle_recommend_links(svc, lore_id="abc", top_k=0)
+        _handle_recommend_links(processor, lore_id="abc", top_k=0)
 
 
-def test_recommend_links_negative_top_k_raises(svc):
+def test_recommend_links_negative_top_k_raises(processor):
     with pytest.raises(ValueError, match="positive integer"):
-        _handle_recommend_links(svc, lore_id="abc", top_k=-5)
+        _handle_recommend_links(processor, lore_id="abc", top_k=-5)
 
 
-def test_recommend_links_top_k_capped_at_50(svc):
+def test_recommend_links_top_k_capped_at_50(processor):
     """top_k > 50 must be silently capped — no error, result count <= 50."""
-    result = _handle_recommend_links(svc, lore_id="nonexistent-id", top_k=999)
+    result = _handle_recommend_links(processor, lore_id="nonexistent-id", top_k=999)
     # nonexistent lore_id returns empty candidates — just verify no exception and cap applied
     assert result["count"] == 0
     assert result["source_lore_id"] == "nonexistent-id"
 
 
-def test_recommend_links_valid_call_returns_shape(svc):
+def test_recommend_links_valid_call_returns_shape(processor):
     """Valid call must return dict with candidates, count, source_lore_id.
 
     Invariant: count must equal len(candidates).
     """
-    result = _handle_recommend_links(svc, lore_id="some-id")
+    result = _handle_recommend_links(processor, lore_id="some-id")
     assert "candidates" in result
     assert "count" in result
     assert "source_lore_id" in result
@@ -541,6 +552,15 @@ class TestSuggestionHandlers:
         settings = Settings()
         return build_service(suggestion_stores, engine, kw, settings)
 
+    @pytest.fixture
+    def suggestion_processor(self, suggestion_svc, suggestion_stores):
+        return SuggestionProcessor(
+            suggestion_service=suggestion_svc.suggestion_service,
+            suggestions=suggestion_stores.suggestions,
+            metrics=suggestion_stores.metrics,
+            db=suggestion_stores.db,
+        )
+
     def _insert_memory(self, stores, mem_id: str, title: str = "Memory") -> None:
         """Insert a minimal memory row so FK constraints on link_suggestions pass."""
         from datetime import UTC, datetime
@@ -570,30 +590,34 @@ class TestSuggestionHandlers:
 
     # ── _handle_get_suggestions input validation ──────────────────────────────
 
-    def test_get_suggestions_zero_limit_raises(self, suggestion_svc, suggestion_stores):
+    def test_get_suggestions_zero_limit_raises(self, suggestion_processor):
         with pytest.raises(ValueError, match="limit must be a positive integer"):
-            _handle_get_suggestions(suggestion_svc, suggestion_stores.suggestions, limit=0)
+            _handle_get_suggestions(suggestion_processor, limit=0)
 
-    def test_get_suggestions_negative_limit_raises(self, suggestion_svc, suggestion_stores):
+    def test_get_suggestions_negative_limit_raises(self, suggestion_processor):
         with pytest.raises(ValueError, match="limit must be a positive integer"):
-            _handle_get_suggestions(suggestion_svc, suggestion_stores.suggestions, limit=-1)
+            _handle_get_suggestions(suggestion_processor, limit=-1)
 
-    def test_get_suggestions_bool_limit_raises(self, suggestion_svc, suggestion_stores):
+    def test_get_suggestions_bool_limit_raises(self, suggestion_processor):
         """bool is a subclass of int — True/False must be rejected."""
         with pytest.raises(ValueError, match="limit must be a positive integer"):
-            _handle_get_suggestions(suggestion_svc, suggestion_stores.suggestions, limit=True)
+            _handle_get_suggestions(suggestion_processor, limit=True)
 
-    def test_get_suggestions_min_score_out_of_range_raises(self, suggestion_svc, suggestion_stores):
+    def test_get_suggestions_min_score_out_of_range_raises(
+        self, suggestion_processor, suggestion_stores
+    ):
         with pytest.raises(ValueError, match="min_score must be between"):
-            _handle_get_suggestions(suggestion_svc, suggestion_stores.suggestions, min_score=1.5)
+            _handle_get_suggestions(suggestion_processor, min_score=1.5)
 
-    def test_get_suggestions_negative_min_score_raises(self, suggestion_svc, suggestion_stores):
+    def test_get_suggestions_negative_min_score_raises(
+        self, suggestion_processor, suggestion_stores
+    ):
         with pytest.raises(ValueError, match="min_score must be between"):
-            _handle_get_suggestions(suggestion_svc, suggestion_stores.suggestions, min_score=-0.1)
+            _handle_get_suggestions(suggestion_processor, min_score=-0.1)
 
     # ── _handle_get_suggestions happy path ───────────────────────────────────
 
-    def test_get_suggestions_returns_pending_only(self, suggestion_svc, suggestion_stores):
+    def test_get_suggestions_returns_pending_only(self, suggestion_processor, suggestion_stores):
         """Only status='pending' suggestions are returned."""
         self._make_suggestion(suggestion_stores, src_id="a", tgt_id="b", score=0.9)
         self._make_suggestion(
@@ -603,40 +627,42 @@ class TestSuggestionHandlers:
             suggestion_stores, src_id="e", tgt_id="f", score=0.5, status="rejected"
         )
 
-        result = _handle_get_suggestions(suggestion_svc, suggestion_stores.suggestions)
+        result = _handle_get_suggestions(suggestion_processor)
         assert result["count"] == 1
         assert result["total_pending"] == 1
         assert result["suggestions"][0]["source_memory_id"] == "a"
 
-    def test_get_suggestions_empty_store_returns_empty(self, suggestion_svc, suggestion_stores):
-        result = _handle_get_suggestions(suggestion_svc, suggestion_stores.suggestions)
+    def test_get_suggestions_empty_store_returns_empty(
+        self, suggestion_processor, suggestion_stores
+    ):
+        result = _handle_get_suggestions(suggestion_processor)
         assert result["suggestions"] == []
         assert result["count"] == 0
         assert result["total_pending"] == 0
 
-    def test_get_suggestions_limit_caps_results(self, suggestion_svc, suggestion_stores):
+    def test_get_suggestions_limit_caps_results(self, suggestion_processor, suggestion_stores):
         for i in range(5):
             self._make_suggestion(
                 suggestion_stores, src_id=f"s{i}", tgt_id=f"t{i}", score=0.5 + i * 0.1
             )
         result = _handle_get_suggestions(
-            suggestion_svc, suggestion_stores.suggestions, limit=3
+            suggestion_processor, limit=3
         )
         assert result["count"] == 3
         assert result["total_pending"] == 5  # total not affected by limit
 
-    def test_get_suggestions_min_score_filters(self, suggestion_svc, suggestion_stores):
+    def test_get_suggestions_min_score_filters(self, suggestion_processor, suggestion_stores):
         self._make_suggestion(suggestion_stores, src_id="hi", tgt_id="hi2", score=0.9)
         self._make_suggestion(suggestion_stores, src_id="lo", tgt_id="lo2", score=0.3)
         result = _handle_get_suggestions(
-            suggestion_svc, suggestion_stores.suggestions, min_score=0.5
+            suggestion_processor, min_score=0.5
         )
         assert result["count"] == 1
         assert result["suggestions"][0]["source_memory_id"] == "hi"
 
-    def test_get_suggestions_response_shape(self, suggestion_svc, suggestion_stores):
+    def test_get_suggestions_response_shape(self, suggestion_processor, suggestion_stores):
         sug = self._make_suggestion(suggestion_stores)
-        result = _handle_get_suggestions(suggestion_svc, suggestion_stores.suggestions)
+        result = _handle_get_suggestions(suggestion_processor)
         assert "suggestions" in result
         assert "count" in result
         assert "total_pending" in result
@@ -649,28 +675,30 @@ class TestSuggestionHandlers:
 
     # ── _handle_review_suggestion input validation ────────────────────────────
 
-    def test_review_empty_ids_raises(self, suggestion_svc, suggestion_stores):
+    def test_review_empty_ids_raises(self, suggestion_processor, suggestion_stores):
         with pytest.raises(ValueError, match="suggestion_ids must not be empty"):
-            _handle_review_suggestion(suggestion_svc, suggestion_stores.suggestions,
+            _handle_review_suggestion(suggestion_processor,
                                        suggestion_ids=[], action="accept")
 
-    def test_review_invalid_action_raises(self, suggestion_svc, suggestion_stores):
+    def test_review_invalid_action_raises(self, suggestion_processor, suggestion_stores):
         with pytest.raises(ValueError, match="action must be 'accept' or 'reject'"):
-            _handle_review_suggestion(suggestion_svc, suggestion_stores.suggestions,
+            _handle_review_suggestion(suggestion_processor,
                                        suggestion_ids=["some-id"], action="approve")
 
-    def test_review_whitespace_only_ids_raises(self, suggestion_svc, suggestion_stores):
+    def test_review_whitespace_only_ids_raises(self, suggestion_processor, suggestion_stores):
         with pytest.raises(ValueError, match="suggestion_ids contained only empty strings"):
-            _handle_review_suggestion(suggestion_svc, suggestion_stores.suggestions,
+            _handle_review_suggestion(suggestion_processor,
                                        suggestion_ids=["   ", ""], action="accept")
 
     # ── _handle_review_suggestion accept path ────────────────────────────────
 
-    def test_review_accept_creates_link(self, suggestion_svc, suggestion_stores):
+    def test_review_accept_creates_link(
+        self, suggestion_svc, suggestion_processor, suggestion_stores
+    ):
         """Accepting a suggestion creates a real memory_links row."""
         sug = self._make_suggestion(suggestion_stores)
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[sug.id], action="accept",
         )
         assert result["accepted"] == 1
@@ -685,41 +713,43 @@ class TestSuggestionHandlers:
         assert link.source_memory_id == sug.source_memory_id
         assert link.target_memory_id == sug.target_memory_id
 
-    def test_review_accept_updates_suggestion_status(self, suggestion_svc, suggestion_stores):
+    def test_review_accept_updates_suggestion_status(self, suggestion_processor, suggestion_stores):
         sug = self._make_suggestion(suggestion_stores)
         _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[sug.id], action="accept",
         )
         updated = suggestion_stores.suggestions.get_suggestion(sug.id)
         assert updated.status == "accepted"
 
-    def test_review_accept_idempotent_on_already_accepted(self, suggestion_svc, suggestion_stores):
+    def test_review_accept_idempotent_on_already_accepted(
+        self, suggestion_processor, suggestion_stores
+    ):
         """Double-accept returns skipped, not an error."""
         sug = self._make_suggestion(suggestion_stores, status="accepted")
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[sug.id], action="accept",
         )
         assert result["skipped"] == 1
         assert result["accepted"] == 0
         assert result["results"][0]["message"] == "Already accepted"
 
-    def test_review_accept_unknown_id_skipped(self, suggestion_svc, suggestion_stores):
+    def test_review_accept_unknown_id_skipped(self, suggestion_processor, suggestion_stores):
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=["nonexistent-uuid"], action="accept",
         )
         assert result["skipped"] == 1
         assert result["results"][0]["message"] == "Suggestion not found"
 
     def test_review_accept_fallback_relation_type_for_invalid(
-        self, suggestion_svc, suggestion_stores
+        self, suggestion_svc, suggestion_processor, suggestion_stores
     ):
         """Suggestions with unrecognised suggested_type fall back to 'references'."""
         sug = self._make_suggestion(suggestion_stores, suggested_type="UNKNOWN_TYPE")
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[sug.id], action="accept",
         )
         assert result["accepted"] == 1
@@ -728,10 +758,10 @@ class TestSuggestionHandlers:
 
     # ── _handle_review_suggestion reject path ────────────────────────────────
 
-    def test_review_reject_updates_suggestion_status(self, suggestion_svc, suggestion_stores):
+    def test_review_reject_updates_suggestion_status(self, suggestion_processor, suggestion_stores):
         sug = self._make_suggestion(suggestion_stores)
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[sug.id], action="reject",
         )
         assert result["rejected"] == 1
@@ -740,29 +770,35 @@ class TestSuggestionHandlers:
         updated = suggestion_stores.suggestions.get_suggestion(sug.id)
         assert updated.status == "rejected"
 
-    def test_review_reject_does_not_create_link(self, suggestion_svc, suggestion_stores):
+    def test_review_reject_does_not_create_link(
+        self, suggestion_svc, suggestion_processor, suggestion_stores
+    ):
         sug = self._make_suggestion(suggestion_stores)
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[sug.id], action="reject",
         )
         assert result["results"][0]["link_id"] is None
         assert suggestion_svc.links.all_links() == []
 
-    def test_review_reject_idempotent_on_already_rejected(self, suggestion_svc, suggestion_stores):
+    def test_review_reject_idempotent_on_already_rejected(
+        self, suggestion_processor, suggestion_stores
+    ):
         sug = self._make_suggestion(suggestion_stores, status="rejected")
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[sug.id], action="reject",
         )
         assert result["skipped"] == 1
         assert result["results"][0]["message"] == "Already rejected"
 
-    def test_review_reject_on_accepted_is_skipped(self, suggestion_svc, suggestion_stores):
+    def test_review_reject_on_accepted_is_skipped(
+        self, suggestion_svc, suggestion_processor, suggestion_stores
+    ):
         """Rejecting an already-accepted suggestion must be skipped, not overwrite status."""
         sug = self._make_suggestion(suggestion_stores, status="accepted")
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[sug.id], action="reject",
         )
         assert result["skipped"] == 1
@@ -772,22 +808,22 @@ class TestSuggestionHandlers:
         updated = suggestion_stores.suggestions.get_suggestion(sug.id)
         assert updated.status == "accepted"
 
-    def test_review_reject_unknown_id_skipped(self, suggestion_svc, suggestion_stores):
+    def test_review_reject_unknown_id_skipped(self, suggestion_processor, suggestion_stores):
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=["does-not-exist"], action="reject",
         )
         assert result["skipped"] == 1
 
     # ── batch behaviour ───────────────────────────────────────────────────────
 
-    def test_review_batch_accept_multiple(self, suggestion_svc, suggestion_stores):
+    def test_review_batch_accept_multiple(self, suggestion_processor, suggestion_stores):
         """Batch accept processes all items in one call."""
         s1 = self._make_suggestion(suggestion_stores, src_id="a1", tgt_id="a2")
         s2 = self._make_suggestion(suggestion_stores, src_id="b1", tgt_id="b2")
         s3 = self._make_suggestion(suggestion_stores, src_id="c1", tgt_id="c2")
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[s1.id, s2.id, s3.id], action="accept",
         )
         assert result["accepted"] == 3
@@ -795,23 +831,27 @@ class TestSuggestionHandlers:
         assert result["errors"] == []
         assert len(result["results"]) == 3
 
-    def test_review_batch_mixed_accept_reject_independent(self, suggestion_svc, suggestion_stores):
+    def test_review_batch_mixed_accept_reject_independent(
+        self, suggestion_processor, suggestion_stores
+    ):
         """Batch with mixed valid/invalid IDs — each processed independently."""
         s1 = self._make_suggestion(suggestion_stores, src_id="x1", tgt_id="x2")
         s2 = self._make_suggestion(suggestion_stores, src_id="y1", tgt_id="y2", status="accepted")
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[s1.id, s2.id, "nonexistent-id"], action="accept",
         )
         assert result["accepted"] == 1
         assert result["skipped"] == 2  # s2 already accepted + nonexistent
         assert result["errors"] == []
 
-    def test_review_accept_on_rejected_creates_link(self, suggestion_svc, suggestion_stores):
+    def test_review_accept_on_rejected_creates_link(
+        self, suggestion_svc, suggestion_processor, suggestion_stores
+    ):
         """Edge case from plan: accept a previously-rejected suggestion creates a link."""
         sug = self._make_suggestion(suggestion_stores, status="rejected")
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[sug.id], action="accept",
         )
         assert result["accepted"] == 1
@@ -820,7 +860,7 @@ class TestSuggestionHandlers:
     # ── LKPR-104 Phase 6b: accept_one atomicity ──────────────────────────────
 
     def test_review_accept_rolls_back_link_if_status_update_fails(
-        self, suggestion_svc, suggestion_stores
+        self, suggestion_svc, suggestion_processor, suggestion_stores
     ):
         """If update_suggestion_status fails after insert_link succeeds, the
         link insert must be rolled back too — accept_one's Database.transaction()
@@ -834,7 +874,7 @@ class TestSuggestionHandlers:
         suggestion_stores.suggestions.update_suggestion_status = _boom
 
         result = _handle_review_suggestion(
-            suggestion_svc, suggestion_stores.suggestions,
+            suggestion_processor,
             suggestion_ids=[sug.id], action="accept",
         )
 

@@ -538,6 +538,14 @@ def suggestion_client(tmp_path):
 
     srv._svc = svc
     srv._suggestions_store = store.suggestions
+    from lorekeeper.processors.suggestion import SuggestionProcessor
+
+    srv._suggestion_processor = SuggestionProcessor(
+        suggestion_service=svc.suggestion_service,
+        suggestions=store.suggestions,
+        metrics=store.metrics,
+        db=store.db,
+    )
 
     from lorekeeper.dashboard import app as dash_app
 
@@ -635,8 +643,9 @@ def test_suggestions_batch_not_found(suggestion_client):
     assert resp.status_code == 200
     body = resp.json()
     assert body["accepted"] == 0
-    assert len(body["errors"]) >= 1
-    assert "not found" in body["errors"][0]
+    assert body["errors"] == []
+    assert len(body["results"]) == 1
+    assert body["results"][0]["status"] == "skipped"
 
 
 def test_suggestions_batch_accept_rolls_back_link_if_status_update_fails(suggestion_client):
