@@ -46,22 +46,22 @@ def svc(tmp_path):
 
 
 def test_cache_initially_none(svc):
-    assert svc._memory_cache is None
+    assert svc._cache._memory_cache is None
 
 
 def test_cache_populated_after_all_memories_call(svc):
     svc.insert(memories=[{"title": "alpha", "content": "content a"}], links=[])
     _ = svc._all_memories()
-    assert svc._memory_cache is not None
+    assert svc._cache._memory_cache is not None
 
 
 def test_cache_invalidated_by_rebuild_kw(svc):
     svc.insert(memories=[{"title": "beta", "content": "content b"}], links=[])
     _ = svc._all_memories()
-    assert svc._memory_cache is not None
+    assert svc._cache._memory_cache is not None
     svc._rebuild_kw()
     # _rebuild_kw invalidates then re-populates the cache; cache is non-None after
-    assert svc._memory_cache is not None
+    assert svc._cache._memory_cache is not None
 
 
 def test_cache_returns_consistent_data(svc):
@@ -142,7 +142,7 @@ def test_forget_invalidates_cache(svc):
 
     # Warm the cache
     _ = svc._all_memories()
-    assert svc._memory_cache is not None
+    assert svc._cache._memory_cache is not None
 
     svc.forget([mid], reason="outdated")
 

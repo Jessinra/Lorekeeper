@@ -182,8 +182,8 @@ def test_increment_metric_logs_on_sqlite_failure_and_does_not_raise(tmp_path):
     boom = MagicMock(side_effect=sqlite3.OperationalError("simulated DB locked"))
     svc.metrics.increment_metric = boom  # type: ignore[method-assign]
 
-    # Spy on the module-level structlog logger used by orchestrator.
-    with patch("lorekeeper.services.orchestrator.log") as mock_log:
+    # Spy on the module-level structlog logger used by MetricsStore.
+    with patch("lorekeeper.platform.metrics.repository.log") as mock_log:
         # Must NOT raise
         svc._increment_metric("test_tool")
 

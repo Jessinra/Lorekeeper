@@ -1,20 +1,16 @@
 from __future__ import annotations
 
-import sqlite3
 from typing import TYPE_CHECKING, Any
-
-import structlog
 
 from lorekeeper.domains.link.repository import LinkStore
 from lorekeeper.domains.link.service import LinkService
+from lorekeeper.domains.memory.cache import MemoryCache
 from lorekeeper.domains.memory.import_service import ImportService
-from lorekeeper.domains.memory.models import Memory
 from lorekeeper.domains.memory.repository import MemoryStore
 from lorekeeper.domains.memory.service import (
     MemorySearchService,
     MemoryWriteService,
     extract_title,
-    row_to_memory,
 )
 from lorekeeper.domains.reflection.repository import ReflectionStore
 from lorekeeper.domains.reflection.service import ReflectionService
@@ -26,9 +22,8 @@ from lorekeeper.platform.config.repository import ConfigStore
 from lorekeeper.platform.metrics.repository import MetricsStore
 
 if TYPE_CHECKING:
+    from lorekeeper.domains.memory.models import Memory
     from lorekeeper.domains.suggestion.candidate import LinkCandidate, LinkCandidateGenerator
-
-log = structlog.get_logger()
 
 
 class MemoryService:
@@ -88,9 +83,9 @@ class MemoryService:
             None if self._namespace == "shared" else [self._namespace, "shared"]
         )
         # LKPR-60: in-process cache for all_memories(include_deleted=True).
-        # None means dirty — must reload from SQLite. Cache always holds the full
+        # None means dirty -- must reload from SQLite. Cache always holds the full
         # (include_deleted=True) dataset; include_deleted=False is filtered in Python.
-        self._memory_cache: dict[str, Memory] | None = None
+        self._cache = MemoryCache(self.memories, self._kw, self._ns_filter)
         # LKPR-58: instantiate LinkCandidateGenerator once so spaCy model is only loaded once.
         if link_candidate_generator is not None:
             self._link_candidate_generator = link_candidate_generator
@@ -116,7 +111,7 @@ class MemoryService:
 
     def _invalidate_cache(self) -> None:
         """Mark the memory cache dirty. Call at every write that adds/removes memories."""
-        self._memory_cache = None
+        self._cache.invalidate()
 
     def commit(self) -> None:
         """Flush all pending writes to disk.
@@ -126,32 +121,15 @@ class MemoryService:
         self._conn.commit()
 
     def _all_memories(self, include_deleted: bool = False) -> dict[str, Memory]:
-        # None → no filter → reads all rows (backward-compat for the default "shared" agent).
-        # Non-shared agents scope reads to their own namespace + the shared pool.
-        namespaces = self._ns_filter
-        if self._memory_cache is None:
-            rows = self.memories.all_memory_rows(include_deleted=True, namespaces=namespaces)
-            self._memory_cache = {r["id"]: row_to_memory(r) for r in rows}
-        if include_deleted:
-            return dict(self._memory_cache)
-        return {mid: m for mid, m in self._memory_cache.items() if not m.soft_deleted}
+        return self._cache.all_memories(include_deleted)
 
     def _rebuild_kw(self) -> None:
-        self._invalidate_cache()
-        mems = list(self._all_memories(include_deleted=True).values())
-        self._kw.rebuild(mems)
+        self._cache.rebuild_kw()
 
     # ── Internal helpers ─────────────────────────────────────────────────────
 
     def _increment_metric(self, tool_name: str) -> None:
-        try:
-            self.metrics.increment_metric(tool_name)
-            self._conn.commit()
-        except sqlite3.Error:
-            # Metrics must never break a real call, but the failure should be
-            # observable. Log at WARNING (not ERROR) — metric write is degraded,
-            # not a request failure.
-            log.warning("metric_increment_failed", tool_name=tool_name, exc_info=True)
+        self.metrics.increment_metric_safe(tool_name)
 
     # ── Search — delegates to MemorySearchService ────────────────────────────
 

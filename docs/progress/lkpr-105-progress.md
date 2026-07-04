@@ -30,9 +30,9 @@ The master plan groups work into 6 phases (7a–7e). The README splits those int
 
 ## Current State
 
-**Status:** Steps 0-1 done (combined PR #268)
+**Status:** Steps 0-2 done (PR #268, #269)
 
-**Current branch:** `chore/lkpr-105-step1-infra-layering`
+**Current branch:** `chore/lkpr-105-step2-shared-collaborators`
 **Working tree:** clean
 
 ---
@@ -405,9 +405,10 @@ grep -rn "orchestrator\|MemoryService" CLAUDE.md docs/ARCHITECTURE.md  # → emp
 
 _Record decisions, gotchas, and unexpected findings here as the refactor progresses._
 
-| Date       | Step | Note                                                                                                                                                                        |
-| ---------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-07-04 | 0-1  | Combined PR #268 — Steps 0 (architecture test) + 1 (infra layering fixes) in one PR. 36 TEMPORARY_ALLOWED entries remain. Plan files (docs/plans/lkpr-105/) included in PR. |
+| Date | Step       | Note |
+| ---- | ---------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|      | 2026-07-04 | 0-1  | Combined PR #268 — Steps 0 (architecture test) + 1 (infra layering fixes) in one PR. 36 TEMPORARY_ALLOWED entries remain. Plan files (docs/plans/lkpr-105/) included in PR. |
+|      | 2026-07-04 | 2    | PR #269 — MemoryCache, Database.commit(), increment_metric_safe() extracted from facade. 6 direct cache tests. No new architecture exceptions.                              |
 
 ---
 

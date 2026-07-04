@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import sqlite3
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import structlog
+
 from lorekeeper.infra.database import Database
+
+log = structlog.get_logger()
 
 
 class MetricsStore:
@@ -26,6 +31,19 @@ class MetricsStore:
             """,
             (bucket, tool_name),
         )
+
+    def increment_metric_safe(self, tool_name: str) -> None:
+        """Fire-and-forget metric increment. Swallows sqlite3.Error at WARNING.
+
+        Metric writes must never break a real MCP call. This wraps
+        increment_metric + commit in a try/except that logs the failure
+        at WARNING level and suppresses the exception.
+        """
+        try:
+            self.increment_metric(tool_name)
+            self._conn.commit()
+        except sqlite3.Error:
+            log.warning("metric_increment_failed", tool_name=tool_name, exc_info=True)
 
     @staticmethod
     def _normalize_bucket(bucket: str) -> str:
