@@ -54,8 +54,6 @@ class ReflectionService:
         memory_ids: list[str],
         auto_insert: bool = True,
     ) -> dict[str, Any]:
-        self._metrics.increment_metric_safe("lore_reflect")
-
         # Guard: if this session has already been processed, return idempotent no-op.
         # Root cause confirmed (LKPR-1): without this check, every duplicate call inserts a
         # fresh orphaned reflection row and overwrites the session's reflection_id pointer.
