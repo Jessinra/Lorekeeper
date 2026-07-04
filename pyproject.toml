@@ -79,7 +79,7 @@ markers = [
     "e2e: E2E dashboard tests requiring a live server and Playwright browser",
 ]
 filterwarnings = [
-    "ignore::starlette.exceptions.StarletteDeprecationWarning",
+    "ignore::DeprecationWarning:starlette",
     "ignore::DeprecationWarning:fastapi",
 ]
 
