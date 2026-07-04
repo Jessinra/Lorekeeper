@@ -20,7 +20,7 @@ The master plan groups work into 6 phases (7a–7e). The README splits those int
 | 7a    | 3b   | `chore/lkpr-105-step3a-di-narrow`                  | Explicit DI for MemorySearchService, MemoryWriteService, SuggestionService | 3a         | :white_check_mark: |
 | 7b    | 4a   | `chore/lkpr-105-step4a-suggestion-processor`       | SuggestionProcessor (kill duplicated batch loop)                           | 2          |
 | 7b    | 4b   | `chore/lkpr-105-step4b-memory-processor`           | MemoryProcessor (search/insert/remember/update/forget/import)              | 3b         |
-| 7b    | 4c   | `chore/lkpr-105-step4c-reflection-link-processors` | ReflectionProcessor + LinkProcessor                                        | 3b         |
+| 7b    | 4c   | `chore/lkpr-105-step4c-reflection-link-processors` | ReflectionProcessor + LinkProcessor                                        | 3b         | :white_check_mark: |
 | 7b    | 4d   | `chore/lkpr-105-step4d-admin-processor`            | AdminProcessor (metrics/config/sweep)                                      | 2          |
 | 7c    | 5    | `chore/lkpr-105-step5-delete-facade`               | Delete services/ — server.py is the composition root                       | 4a–4d      |
 | 7d    | 6    | `chore/lkpr-105-step6-test-relocation`             | Move tests to domain-mirroring directories                                 | 5          |
@@ -30,10 +30,10 @@ The master plan groups work into 6 phases (7a–7e). The README splits those int
 
 ## Current State
 
-**Status:** Steps 0-3b done (on same branch, Phase 3 complete)
+**Status:** Steps 0-4b done (PR #268-272 merged); Step 4c in progress on this branch
 
-**Current branch:** `chore/lkpr-105-step3a-di-narrow` (also contains Step 3b)
-**Working tree:** clean (branch ready for PR)
+**Current branch:** `chore/lkpr-105-step4c-reflection-link-processors`
+**Working tree:** ReflectionProcessor + LinkProcessor added, dashboard routes rewired, tests green
 
 ---
 

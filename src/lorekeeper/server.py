@@ -20,7 +20,9 @@ from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
 from lorekeeper.platform.config.repository import ConfigStore
 from lorekeeper.platform.metrics.repository import MetricsStore
+from lorekeeper.processors.link import LinkProcessor
 from lorekeeper.processors.memory import MemoryProcessor
+from lorekeeper.processors.reflection import ReflectionProcessor
 from lorekeeper.processors.suggestion import SuggestionProcessor
 from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.shared.encouragement import (
@@ -38,6 +40,8 @@ _svc: MemoryService | None = None
 _suggestions_store: LinkSuggestionStore | None = None
 _suggestion_processor: SuggestionProcessor | None = None
 _memory_processor: MemoryProcessor | None = None
+_reflection_processor: ReflectionProcessor | None = None
+_link_processor: LinkProcessor | None = None
 
 
 def get_service() -> MemoryService:
@@ -68,8 +72,23 @@ def get_memory_processor() -> MemoryProcessor:
     return _memory_processor
 
 
+def get_reflection_processor() -> ReflectionProcessor:
+    global _reflection_processor
+    if _reflection_processor is None:
+        raise RuntimeError("ReflectionProcessor not initialised — call init_service() first")
+    return _reflection_processor
+
+
+def get_link_processor() -> LinkProcessor:
+    global _link_processor
+    if _link_processor is None:
+        raise RuntimeError("LinkProcessor not initialised — call init_service() first")
+    return _link_processor
+
+
 def init_service(settings: Settings | None = None) -> MemoryService:
     global _svc, _suggestions_store, _suggestion_processor, _memory_processor
+    global _reflection_processor, _link_processor
     s = settings or Settings()
     s.data_dir.mkdir(parents=True, exist_ok=True)
 
@@ -191,6 +210,19 @@ def init_service(settings: Settings | None = None) -> MemoryService:
         metrics=svc.metrics,
         db=db,
         settings=svc.settings,
+    )
+    _reflection_processor = ReflectionProcessor(
+        reflection_service=svc.reflection_service,
+        reflections=reflections,
+        metrics=svc.metrics,
+        db=db,
+    )
+    _link_processor = LinkProcessor(
+        link_service=svc.link_service,
+        memories=memories,
+        links=links,
+        metrics=svc.metrics,
+        db=db,
     )
     return svc
 
@@ -371,7 +403,7 @@ async def lore_update(
 async def lore_processed_sessions() -> dict[str, Any]:
     """Return all session IDs that have been marked as processed via lore_reflect."""
     try:
-        return {"session_ids": get_service().get_processed_session_ids()}
+        return {"session_ids": get_reflection_processor().processed_session_ids()}
     except Exception:
         log.exception("lore_processed_sessions_failed")
         raise
@@ -425,7 +457,7 @@ async def lore_reflect(
     first-time call.
     """
     try:
-        result = get_service().submit_reflection(
+        result = get_reflection_processor().submit_reflection(
             session_id=session_id,
             session_date=session_date,
             topic=topic,

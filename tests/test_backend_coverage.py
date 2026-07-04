@@ -26,7 +26,7 @@ from fastapi.testclient import TestClient
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
 from lorekeeper.services.orchestrator import MemoryService
-from tests._helpers import build_service, build_stores
+from tests._helpers import Stores, build_service, build_stores
 
 # ── Shared fake engine ────────────────────────────────────────────────────────
 
@@ -59,18 +59,18 @@ class FakeEngine:
 # ── Shared service factory ────────────────────────────────────────────────────
 
 
-def _make_svc(tmp_path) -> tuple[MemoryService, FakeEngine]:
+def _make_svc(tmp_path) -> tuple[MemoryService, FakeEngine, Stores]:
     store = build_stores(tmp_path / "test.db")
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
     svc = build_service(store, engine, kw, settings)
-    return svc, engine
+    return svc, engine, store
 
 
 @pytest.fixture
 def svc(tmp_path):
-    service, _ = _make_svc(tmp_path)
+    service, _, _ = _make_svc(tmp_path)
     return service
 
 
@@ -79,7 +79,7 @@ def svc(tmp_path):
 
 @pytest.fixture
 def seeded_client(tmp_path):
-    svc_obj, engine = _make_svc(tmp_path)
+    svc_obj, engine, store = _make_svc(tmp_path)
     svc_obj.insert(
         memories=[{"title": "test memory", "description": "desc", "content": "content"}],
         links=[],
@@ -88,8 +88,32 @@ def seeded_client(tmp_path):
     engine._store[mem_id] = "test memory desc content"
 
     import lorekeeper.server as srv
+    from lorekeeper.processors.link import LinkProcessor
+    from lorekeeper.processors.memory import MemoryProcessor
+    from lorekeeper.processors.reflection import ReflectionProcessor
 
     srv._svc = svc_obj
+    srv._memory_processor = MemoryProcessor(
+        search_service=svc_obj.memory_search_service,
+        write_service=svc_obj.memory_write_service,
+        import_service=svc_obj.import_service,
+        metrics=store.metrics,
+        db=store.db,
+        settings=Settings(),
+    )
+    srv._reflection_processor = ReflectionProcessor(
+        reflection_service=svc_obj.reflection_service,
+        reflections=store.reflections,
+        metrics=store.metrics,
+        db=store.db,
+    )
+    srv._link_processor = LinkProcessor(
+        link_service=svc_obj.link_service,
+        memories=store.memories,
+        links=store.links,
+        metrics=store.metrics,
+        db=store.db,
+    )
 
     from lorekeeper.dashboard import app as dash_app
 
