@@ -17,7 +17,7 @@ from lorekeeper.domains.suggestion.candidate import (
 )
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
-from tests._helpers import build_service, build_stores
+from tests._helpers import build_app, build_stores
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -73,7 +73,7 @@ def _rebuild_kw(service) -> None:
             confidence=r["confidence"], confidence_count=r["confidence_count"],
             namespace=r["namespace"],
         ))
-    service._kw.rebuild(mems)
+    service.kw.rebuild(mems)
 
 
 def _seed_vectors_from_content(engine: FakeVectorEngine, service) -> None:
@@ -286,7 +286,7 @@ def test_generator_empty_when_no_vector_hits(tmp_path):
     kw = KeywordIndex()
     settings = Settings()
     eng = FakeVectorEngine()
-    svc = build_service(stores, eng, kw, settings)
+    svc = build_app(stores, eng, kw, settings)
     _insert_memory(svc, "lonely", "unique isolated content")
     gen = LinkCandidateGenerator(eng, stores.memories, stores.links, kw, settings)  # type: ignore[arg-type]
     candidates = gen.generate(stores.memories.all_memory_rows()[0]["id"])
@@ -298,7 +298,7 @@ def test_generator_filters_existing_links(tmp_path):
     kw = KeywordIndex()
     settings = Settings()
     eng = FakeVectorEngine()
-    svc = build_service(stores, eng, kw, settings)
+    svc = build_app(stores, eng, kw, settings)
     src = _insert_memory(svc, "src", "content A")
     tgt = _insert_memory(svc, "tgt", "content A related")
     # Pre-link
@@ -317,7 +317,7 @@ def test_generator_respects_score_threshold(tmp_path):
     settings = Settings()
     settings.link_score_threshold = 9.0  # impossibly high
     eng = FakeVectorEngine()
-    svc = build_service(stores, eng, kw, settings)
+    svc = build_app(stores, eng, kw, settings)
     _insert_memory(svc, "src", "content")
     _insert_memory(svc, "tgt", "content related")
     _rebuild_kw(svc)
@@ -334,7 +334,7 @@ def test_generator_respects_top_m(tmp_path):
     settings = Settings()
     settings.link_top_m = 2
     eng = FakeVectorEngine()
-    svc = build_service(stores, eng, kw, settings)
+    svc = build_app(stores, eng, kw, settings)
     src = _insert_memory(svc, "src", "common topic")
     for i in range(5):
         _insert_memory(svc, f"cand_{i}", f"common topic variant {i}")
@@ -352,7 +352,7 @@ def test_generator_links_for_memory_filter_bidirectional(tmp_path):
     kw = KeywordIndex()
     settings = Settings()
     eng = FakeVectorEngine()
-    svc = build_service(stores, eng, kw, settings)
+    svc = build_app(stores, eng, kw, settings)
     a = _insert_memory(svc, "a", "shared topic")
     b = _insert_memory(svc, "b", "shared topic too")
     c = _insert_memory(svc, "c", "shared topic also")
@@ -388,7 +388,7 @@ def test_recommend_links_returns_link_candidates(tmp_path):
     kw = KeywordIndex()
     settings = Settings()
     eng = FakeVectorEngine()
-    svc = build_service(stores, eng, kw, settings)
+    svc = build_app(stores, eng, kw, settings)
     src = _insert_memory(svc, "src", "important project concept")
     _insert_memory(svc, "tgt", "related project concept")
     _rebuild_kw(svc)
@@ -407,7 +407,7 @@ def test_recommend_links_empty_when_no_matches(tmp_path):
     kw = KeywordIndex()
     settings = Settings()
     eng = FakeVectorEngine()
-    svc = build_service(stores, eng, kw, settings)
+    svc = build_app(stores, eng, kw, settings)
     _insert_memory(svc, "only mem", "isolated unique content")
     candidates = svc.recommend_links(stores.memories.all_memory_rows()[0]["id"])
     assert candidates == []
@@ -418,7 +418,7 @@ def test_recommend_links_read_only_no_writes(tmp_path):
     kw = KeywordIndex()
     settings = Settings()
     eng = FakeVectorEngine()
-    svc = build_service(stores, eng, kw, settings)
+    svc = build_app(stores, eng, kw, settings)
     src = _insert_memory(svc, "src", "content")
     _insert_memory(svc, "tgt", "content related")
     _rebuild_kw(svc)
@@ -436,7 +436,7 @@ def test_recommend_links_returns_top_k_override(tmp_path):
     settings = Settings()
     settings.link_top_m = 10  # default high
     eng = FakeVectorEngine()
-    svc = build_service(stores, eng, kw, settings)
+    svc = build_app(stores, eng, kw, settings)
     src = _insert_memory(svc, "src", "versatile topic")
     for i in range(5):
         _insert_memory(svc, f"rel_{i}", f"versatile topic extension {i}")

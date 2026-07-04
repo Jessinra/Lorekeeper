@@ -25,7 +25,7 @@ from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
 from lorekeeper.processors.memory import MemoryProcessor
 from lorekeeper.processors.suggestion import SuggestionProcessor
-from tests._helpers import build_service, build_stores
+from tests._helpers import build_app, build_stores
 
 
 class FakeEngine:
@@ -63,7 +63,7 @@ def svc(stores):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    return build_service(stores, engine, kw, settings)
+    return build_app(stores, engine, kw, settings)
 
 
 @pytest.fixture
@@ -140,7 +140,7 @@ def test_search_refine_from_exceeds_cap(svc, memory_processor):
 
 def test_search_refine_from_empty_is_noop(svc, memory_processor):
     """refine_from with an empty list should succeed (no filtering)."""
-    svc.insert(
+    svc.write_service.insert(
         memories=[{"title": "m1", "content": "one"}],
         links=[],
     )
@@ -153,7 +153,7 @@ def test_search_refine_from_empty_is_noop(svc, memory_processor):
 
 def test_search_title_format_returns_compact_results(svc, memory_processor):
     """format='title' returns only id, title, score — no content or full memory."""
-    svc.insert(
+    svc.write_service.insert(
         memories=[{"title": "alpha", "content": "alpha content long enough to distinguish"},
                    {"title": "beta", "content": "beta content different topic"}],
         links=[],
@@ -176,7 +176,7 @@ def test_search_title_format_returns_compact_results(svc, memory_processor):
 
 def test_search_title_format_backward_compatible(svc, memory_processor):
     """Omitting format (default='full') returns full memory bodies as before."""
-    svc.insert(
+    svc.write_service.insert(
         memories=[{"title": "gamma", "content": "gamma content"}],
         links=[],
     )
@@ -200,7 +200,7 @@ def test_search_title_format_with_empty_results(svc, memory_processor):
 
 def test_search_by_ids_returns_matching_memories(svc, memory_processor):
     """ids param returns full memories for the given IDs directly from SQL."""
-    r = svc.insert(
+    r = svc.write_service.insert(
         memories=[{"title": "mem one", "content": "content one"},
                    {"title": "mem two", "content": "content two"},
                    {"title": "mem three", "content": "content three"}],
@@ -230,7 +230,7 @@ def test_search_by_ids_nonexistent_silently_ignored(svc, memory_processor):
 
 def test_search_by_ids_with_title_format(svc, memory_processor):
     """ids + format='title' returns compact results for specific IDs."""
-    r = svc.insert(
+    r = svc.write_service.insert(
         memories=[{"title": "pick me", "content": "content to pick"},
                    {"title": "not me", "content": "other content"}],
         links=[],
@@ -286,7 +286,7 @@ def test_search_empty_query_with_ids_succeeds(svc, memory_processor):
 
 def test_search_by_ids_include_links_fetches_actual_links(svc, memory_processor):
     """ids path with include_links=True fetches and returns actual links."""
-    r = svc.insert(
+    r = svc.write_service.insert(
         memories=[{"title": "src", "content": "source"},
                    {"title": "tgt", "content": "target"}],
         links=[],
@@ -307,7 +307,7 @@ def test_search_by_ids_include_links_fetches_actual_links(svc, memory_processor)
 
 def test_search_by_ids_increments_usage_count(svc, memory_processor):
     """Bulk ID lookup increments usage_count on each returned memory."""
-    r = svc.insert(
+    r = svc.write_service.insert(
         memories=[{"title": "tracked", "content": "track me"}],
         links=[],
     )
@@ -327,7 +327,7 @@ def test_search_by_ids_increments_usage_count(svc, memory_processor):
 
 def test_search_by_ids_dedup_with_usage_count(svc, memory_processor):
     """Duplicate IDs in ids list should not cause extra usage_count bumps or duplicate results."""
-    r = svc.insert(
+    r = svc.write_service.insert(
         memories=[{"title": "dedup-me", "content": "test"}],
         links=[],
     )
@@ -433,7 +433,7 @@ def test_created_after_plus_zero_utc_accepted(svc, memory_processor):
 
 def test_created_after_filters_in_full_pipeline(svc, memory_processor):
     """Integration: created_after actually filters results end-to-end via handler."""
-    r = svc.insert(
+    r = svc.write_service.insert(
         memories=[
             {"title": "old mem", "content": "old content"},
             {"title": "new mem", "content": "new content"},
@@ -481,7 +481,7 @@ def test_sort_by_valid_values_do_not_raise(svc, memory_processor):
 
 def test_sort_by_recent_returns_results(svc, memory_processor):
     """sort_by='recent' round-trip via handler — at least returns valid shape."""
-    svc.insert(
+    svc.write_service.insert(
         memories=[{"title": "r1", "content": "content r1"},
                   {"title": "r2", "content": "content r2"}],
         links=[],
@@ -494,7 +494,7 @@ def test_sort_by_recent_returns_results(svc, memory_processor):
 
 def test_sort_by_frequent_returns_results(svc, memory_processor):
     """sort_by='frequent' round-trip via handler — at least returns valid shape."""
-    svc.insert(
+    svc.write_service.insert(
         memories=[{"title": "f1", "content": "content f1"}],
         links=[],
     )
@@ -506,7 +506,7 @@ def test_sort_by_frequent_returns_results(svc, memory_processor):
 
 def test_sort_by_and_created_after_compose_in_handler(svc, memory_processor):
     """sort_by and created_after work together end-to-end."""
-    r = svc.insert(
+    r = svc.write_service.insert(
         memories=[
             {"title": "old entry", "content": "entry old"},
             {"title": "recent entry", "content": "entry recent"},
@@ -561,7 +561,7 @@ class TestSuggestionHandlers:
         engine = FakeEngine()
         kw = KeywordIndex()
         settings = Settings()
-        return build_service(suggestion_stores, engine, kw, settings)
+        return build_app(suggestion_stores, engine, kw, settings)
 
     @pytest.fixture
     def suggestion_processor(self, suggestion_svc, suggestion_stores):

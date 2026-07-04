@@ -204,6 +204,28 @@ class MemoryProcessor:
         self._metrics.increment_metric_safe("lore_forget")
         return self._write_service.forget(memory_ids, reason)
 
+    # ── dashboard field update ────────────────────────────────────────────────
+
+    def update_memory_fields(self, memory_id: str, fields: dict[str, Any]) -> dict[str, bool]:
+        """Update a memory's scalar fields (dashboard route).
+
+        Validates existence, delegates to write_service which owns the
+        commit boundary, and increments the metric.
+        """
+        self._metrics.increment_metric_safe("dashboard_update_memory")
+        return self._write_service.update_memory_fields(memory_id, **fields)
+
+    # ── dashboard delete ─────────────────────────────────────────────────────
+
+    def delete_memory(self, memory_id: str) -> dict[str, bool]:
+        """Permanently delete a memory row (dashboard route).
+
+        Validates existence, delegates to write_service which owns the
+        commit boundary, and increments the metric.
+        """
+        self._metrics.increment_metric_safe("dashboard_delete_memory")
+        return self._write_service.delete_memory(memory_id)
+
     # ── import_dump (backup restore) ──────────────────────────────────────────
 
     def import_dump(

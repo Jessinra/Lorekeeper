@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from lorekeeper.domains.memory.models import Memory
-from lorekeeper.server import get_service
+from lorekeeper.server import get_link_store, get_memory_processor, get_memory_store
 from lorekeeper.shared.serializers import serialize_memory, serialize_memory_link
 
 router = APIRouter()
@@ -12,10 +12,11 @@ router = APIRouter()
 
 @router.get("/api/memories")
 def list_memories(include_deleted: bool = False) -> list[dict[str, Any]]:
-    svc = get_service()
-    rows = svc.memories.all_memory_rows(include_deleted=include_deleted)
+    memories = get_memory_store()
+    links = get_link_store()
+    rows = memories.all_memory_rows(include_deleted=include_deleted)
     link_counts: dict[str, int] = {}
-    for lnk in svc.links.all_links():
+    for lnk in links.all_links():
         link_counts[lnk.source_memory_id] = link_counts.get(lnk.source_memory_id, 0) + 1
         link_counts[lnk.target_memory_id] = link_counts.get(lnk.target_memory_id, 0) + 1
     result = []
@@ -28,14 +29,15 @@ def list_memories(include_deleted: bool = False) -> list[dict[str, Any]]:
 
 @router.get("/api/memories/{memory_id}")
 def get_memory(memory_id: str) -> dict[str, Any]:
-    svc = get_service()
-    row = svc.memories.get_memory_row(memory_id)
+    memories = get_memory_store()
+    links = get_link_store()
+    row = memories.get_memory_row(memory_id)
     if row is None:
         raise HTTPException(status_code=404, detail="Memory not found")
-    links = svc.links.links_for_memory(memory_id)
+    mem_links = links.links_for_memory(memory_id)
     return {
         "memory": serialize_memory(Memory(**dict(row))),
-        "links": [serialize_memory_link(lnk) for lnk in links],
+        "links": [serialize_memory_link(lnk) for lnk in mem_links],
     }
 
 
@@ -49,22 +51,18 @@ class MemoryUpdate(BaseModel):
 
 @router.patch("/api/memories/{memory_id}")
 def update_memory(memory_id: str, body: MemoryUpdate) -> dict[str, bool]:
-    svc = get_service()
-    if svc.memories.get_memory_row(memory_id) is None:
-        raise HTTPException(status_code=404, detail="Memory not found")
     fields = body.model_dump(exclude_none=True)
     if "soft_deleted" in fields:
         fields["soft_deleted"] = int(fields["soft_deleted"])
-    svc.memories.update_memory_fields(memory_id, **fields)
-    svc.commit()
-    return {"ok": True}
+    try:
+        return get_memory_processor().update_memory_fields(memory_id, fields)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Memory not found") from None
 
 
 @router.delete("/api/memories/{memory_id}")
 def delete_memory(memory_id: str) -> dict[str, bool]:
-    svc = get_service()
-    if svc.memories.get_memory_row(memory_id) is None:
-        raise HTTPException(status_code=404, detail="Memory not found")
-    svc.memories.delete_memory_row(memory_id)
-    svc.commit()
-    return {"ok": True}
+    try:
+        return get_memory_processor().delete_memory(memory_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Memory not found") from None

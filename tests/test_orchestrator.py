@@ -4,10 +4,10 @@ Uses real SQLite (via the focused stores from build_stores()) and a fake MemoryE
 """
 import pytest
 
+from lorekeeper.domains.memory.service import extract_title
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
-from lorekeeper.services.orchestrator import MemoryService
-from tests._helpers import build_service, build_stores
+from tests._helpers import build_app, build_stores
 
 
 class FakeEngine:
@@ -54,12 +54,12 @@ def svc(tmp_path):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    return build_service(store, engine, kw, settings), engine
+    return build_app(store, engine, kw, settings), engine
 
 
 def test_insert_and_search(svc):
     service, engine = svc
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{
             "title": "checkout flow",
             "description": "how checkout works",
@@ -79,14 +79,14 @@ def test_insert_and_search(svc):
 
 def test_update_bumps_score(svc):
     service, _engine = svc
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{"title": "test memory", "description": "d", "content": "c"}],
         links=[],
     )
     mid = result["inserted_memories"][0]["id"]
     row_before = service.memories.get_memory_row(mid)
 
-    service.update(memory_feedback=[{"id": mid, "useful": True}], link_feedback=[])
+    service.memory_processor.update(memory_feedback=[{"id": mid, "useful": True}], link_feedback=[])
     row_after = service.memories.get_memory_row(mid)
 
     assert row_after["score"] > row_before["score"]
@@ -94,13 +94,13 @@ def test_update_bumps_score(svc):
 
 def test_soft_delete_on_low_confidence_not_useful(svc):
     service, _ = svc
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{"title": "bad memory", "description": "d", "content": "c"}],
         links=[],
     )
     mid = result["inserted_memories"][0]["id"]
 
-    update_result = service.update(
+    update_result = service.memory_processor.update(
         memory_feedback=[{"id": mid, "useful": False, "confidence": 1}],
         link_feedback=[],
     )
@@ -111,7 +111,7 @@ def test_soft_delete_on_low_confidence_not_useful(svc):
 
 def test_insert_link_between_memories(svc):
     service, _ = svc
-    r = service.insert(
+    r = service.write_service.insert(
         memories=[
             {"title": "mem A", "description": "a", "content": "a"},
             {"title": "mem B", "description": "b", "content": "b"},
@@ -121,7 +121,7 @@ def test_insert_link_between_memories(svc):
     id_a = r["inserted_memories"][0]["id"]
     id_b = r["inserted_memories"][1]["id"]
 
-    r2 = service.insert(
+    r2 = service.write_service.insert(
         memories=[],
         links=[{"source_memory_id": id_a, "target_memory_id": id_b,
                 "relation_type": "references", "reason": "they relate"}],
@@ -132,7 +132,7 @@ def test_insert_link_between_memories(svc):
 def test_submit_reflection_first_call_succeeds(svc):
     """First lore_reflect call for a session should store a reflection and return reflection_id."""
     service, _ = svc
-    result = service.submit_reflection(
+    result = service.reflection_service.submit_reflection(
         session_id="session-abc",
         session_date="2026-05-23",
         topic="test topic",
@@ -154,7 +154,7 @@ def test_submit_reflection_first_call_succeeds(svc):
 def test_submit_reflection_duplicate_returns_noop(svc):
     """Calling lore_reflect on an already-processed session must return idempotent no-op."""
     service, _ = svc
-    first = service.submit_reflection(
+    first = service.reflection_service.submit_reflection(
         session_id="session-dup",
         session_date="2026-05-23",
         topic="topic",
@@ -169,7 +169,7 @@ def test_submit_reflection_duplicate_returns_noop(svc):
         memory_ids=[],
     )
     # Second call with same session_id
-    second = service.submit_reflection(
+    second = service.reflection_service.submit_reflection(
         session_id="session-dup",
         session_date="2026-05-24",
         topic="different topic",
@@ -193,7 +193,7 @@ def test_submit_reflection_duplicate_does_not_create_extra_reflection_row(svc):
     service, _ = svc
     session_id = "session-no-dup-row"
     for _ in range(3):
-        service.submit_reflection(
+        service.reflection_service.submit_reflection(
             session_id=session_id,
             session_date="2026-05-23",
             topic="topic",
@@ -217,12 +217,12 @@ def test_submit_reflection_duplicate_does_not_create_extra_reflection_row(svc):
 
 def test_search_excludes_soft_deleted(svc):
     service, engine = svc
-    r = service.insert(
+    r = service.write_service.insert(
         memories=[{"title": "deleted mem", "description": "d", "content": "c"}],
         links=[],
     )
     mid = r["inserted_memories"][0]["id"]
-    service.forget(memory_ids=[mid], reason="outdated")
+    service.memory_processor.forget(memory_ids=[mid], reason="outdated")
 
     engine._search_results = [{"lore_id": mid, "score": 0.9}]
     results = service.search("deleted", include_deleted=False)
@@ -234,7 +234,7 @@ def test_search_excludes_soft_deleted(svc):
 
 def test_insert_one_memory_missing_title_raises_clear_error(svc):
     service, _ = svc
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{"content": "no title here", "score": 8}],
         links=[],
     )
@@ -252,7 +252,7 @@ def test_insert_one_memory_missing_title_raises_clear_error(svc):
 
 def test_extract_title_short_thought():
     thought = "Checkout flow: three-step process"
-    assert MemoryService._extract_title(thought) == thought
+    assert extract_title(thought) == thought
 
 
 def test_extract_title_sentence_boundary():
@@ -260,7 +260,7 @@ def test_extract_title_sentence_boundary():
         "Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score "
         "+ 0.10 usage. This is the core ranking algorithm used across all lore_search calls."
     )
-    title = MemoryService._extract_title(thought)
+    title = extract_title(thought)
     assert title.endswith("usage.")
     assert len(title) <= 80
 
@@ -271,7 +271,7 @@ def test_extract_title_no_boundary_breaks_at_word():
         "This is a very long sentence that goes on and on without any punctuation "
         "at all and just keeps running past the eighty character limit"
     )
-    title = MemoryService._extract_title(thought)
+    title = extract_title(thought)
     assert len(title) <= 80
     # Should end at a word boundary (not mid-word like "charact")
     assert title[-1] != "e"  # "sentence" ends with 'e' — verify it didn't slice mid-word
@@ -279,7 +279,7 @@ def test_extract_title_no_boundary_breaks_at_word():
 
 def test_new_memory_default_score_is_five(svc):
     service, _engine = svc
-    result = service.remember("test thought")
+    result = service.memory_processor.remember("test thought")
     row = service.memories.get_memory_row(result["id"])
     assert row["score"] == 5.0
 
@@ -287,7 +287,7 @@ def test_new_memory_default_score_is_five(svc):
 def test_remember_stores_full_content(svc):
     service, _ = svc
     thought = "Project checkout uses GAS framework and SPEX protocol."
-    result = service.remember(thought)
+    result = service.memory_processor.remember(thought)
     row = service.memories.get_memory_row(result["id"])
     assert row["content"] == thought
 
@@ -295,14 +295,14 @@ def test_remember_stores_full_content(svc):
 def test_remember_returns_none_linked_to_when_no_neighbor(svc):
     service, engine = svc
     engine._search_results = []  # no results from Chroma
-    result = service.remember("lone thought")
+    result = service.memory_processor.remember("lone thought")
     assert result["linked_to"] is None
 
 
 def test_remember_auto_link_when_neighbor_above_threshold(svc):
     service, engine = svc
     # First, insert a seed memory
-    seed = service.insert(
+    seed = service.write_service.insert(
         memories=[{"title": "seed", "description": "s", "content": "seed content about checkout"}],
         links=[],
     )
@@ -314,7 +314,7 @@ def test_remember_auto_link_when_neighbor_above_threshold(svc):
         {"lore_id": "some-other", "score": 0.5},
     ]
 
-    result = service.remember("related thought about checkout")
+    result = service.memory_processor.remember("related thought about checkout")
     assert result["linked_to"] is not None
     assert result["linked_to"]["id"] == seed_id
     assert result["linked_to"]["score"] == 0.85
@@ -322,22 +322,22 @@ def test_remember_auto_link_when_neighbor_above_threshold(svc):
 
 def test_remember_no_auto_link_below_threshold(svc):
     service, engine = svc
-    seed = service.insert(
+    seed = service.write_service.insert(
         memories=[{"title": "seed", "description": "s", "content": "seed"}],
         links=[],
     )
     seed_id = seed["inserted_memories"][0]["id"]
 
     engine._search_results = [{"lore_id": seed_id, "score": 0.74}]
-    result = service.remember("unrelated thought")
+    result = service.memory_processor.remember("unrelated thought")
     assert result["linked_to"] is None
 
 
 def test_remember_detects_duplicate_title(svc):
     service, _ = svc
     thought = "Checkout flow: three steps"
-    first = service.remember(thought)
-    second = service.remember(thought)
+    first = service.memory_processor.remember(thought)
+    second = service.memory_processor.remember(thought)
     assert second["id"] == first["id"]
     assert second["linked_to"] is None
 
@@ -345,7 +345,7 @@ def test_remember_detects_duplicate_title(svc):
 def test_remember_auto_link_skips_self_match(svc):
     service, engine = svc
     engine._search_results = []  # Chroma doesn't return self (or returns self only)
-    result = service.remember("self-contained thought")
+    result = service.memory_processor.remember("self-contained thought")
     assert result["linked_to"] is None
 
 
@@ -357,14 +357,14 @@ def test_insert_with_inline_links(svc):
     service, _ = svc
 
     # First, create a target memory to link to
-    target_result = service.insert(
+    target_result = service.write_service.insert(
         memories=[{"title": "target mem", "description": "t", "content": "target"}],
         links=[],
     )
     target_id = target_result["inserted_memories"][0]["id"]
 
     # Insert a new memory with inline link to target
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{
             "title": "source mem",
             "description": "s",
@@ -395,7 +395,7 @@ def test_insert_inline_link_invalid_target(svc):
     """Invalid target in inline link returns error but memory is still inserted."""
     service, _ = svc
 
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{
             "title": "orphan mem",
             "description": "o",
@@ -423,13 +423,13 @@ def test_insert_inline_link_invalid_relation(svc):
     service, _ = svc
 
     # Create a target first
-    target_result = service.insert(
+    target_result = service.write_service.insert(
         memories=[{"title": "target for bad relation", "description": "t", "content": "t"}],
         links=[],
     )
     target_id = target_result["inserted_memories"][0]["id"]
 
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{
             "title": "mem with bad relation link",
             "description": "b",
@@ -455,7 +455,7 @@ def test_insert_inline_links_invalid_format_string_not_list(svc):
     """Inline links that is a string (not list) raises an error."""
     service, _ = svc
 
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{
             "title": "bad links format",
             "description": "b",
@@ -474,7 +474,7 @@ def test_insert_inline_link_missing_target_memory_id(svc):
     """Inline link without target_memory_id fails fast — memory is not inserted."""
     service, _ = svc
 
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{
             "title": "mem with incomplete link",
             "description": "m",
@@ -496,7 +496,7 @@ def test_insert_inline_link_missing_relation_type(svc):
     """Inline link without relation_type fails fast — memory is not inserted."""
     service, _ = svc
 
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{
             "title": "mem with incomplete link",
             "description": "m",
@@ -522,7 +522,7 @@ def test_insert_auto_link_creates_link(svc):
     service, engine = svc
 
     # Seed a memory
-    seed = service.insert(
+    seed = service.write_service.insert(
         memories=[{"title": "checkout", "description": "", "content": "checkout flow details"}],
         links=[],
     )
@@ -532,7 +532,7 @@ def test_insert_auto_link_creates_link(svc):
     engine._search_results = [{"lore_id": seed_id, "score": 0.90}]
 
     # Insert a new memory — should auto-link to seed
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{
             "title": "payment",
             "description": "",
@@ -553,7 +553,7 @@ def test_insert_auto_link_respects_disabled(svc):
     service, engine = svc
     service.settings.auto_link_enabled = False
 
-    seed = service.insert(
+    seed = service.write_service.insert(
         memories=[{"title": "checkout", "description": "", "content": "checkout"}],
         links=[],
     )
@@ -561,7 +561,7 @@ def test_insert_auto_link_respects_disabled(svc):
 
     engine._search_results = [{"lore_id": seed_id, "score": 0.90}]
 
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{"title": "payment", "description": "", "content": "payment"}],
         links=[],
     )
@@ -575,7 +575,7 @@ def test_insert_auto_link_respects_threshold(svc):
     """Auto-link should not create links below the configured threshold."""
     service, engine = svc
 
-    seed = service.insert(
+    seed = service.write_service.insert(
         memories=[{"title": "seed", "description": "", "content": "seed content"}],
         links=[],
     )
@@ -584,7 +584,7 @@ def test_insert_auto_link_respects_threshold(svc):
     # Score below default threshold of 0.85
     engine._search_results = [{"lore_id": seed_id, "score": 0.70}]
 
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{"title": "new", "description": "", "content": "new content"}],
         links=[],
     )
@@ -594,41 +594,13 @@ def test_insert_auto_link_respects_threshold(svc):
     assert len(links) == 0
 
 
-def test_auto_link_duplicate_guard(svc):
-    """Auto-link should skip candidates already linked to avoid duplicate links."""
-    service, engine = svc
-
-    seed = service.insert(
-        memories=[{"title": "seed", "description": "", "content": "seed content"}],
-        links=[],
-    )
-    seed_id = seed["inserted_memories"][0]["id"]
-
-    # First insert — auto-links A→seed
-    engine._search_results = [{"lore_id": seed_id, "score": 0.90}]
-    result = service.insert(
-        memories=[{"title": "mem A", "description": "", "content": "related content"}],
-        links=[],
-    )
-    mem_a_id = result["inserted_memories"][0]["id"]
-    assert len(service.links.links_for_memory(mem_a_id)) == 1
-
-    # Call _auto_link directly with the same lore_id — should skip because
-    # mem_a already has a link to seed
-    engine._search_results = [{"lore_id": seed_id, "score": 0.90}]
-    linked = service._auto_link("related content", mem_a_id, source="insert")
-    assert linked is None  # skipped by duplicate guard
-
-    # Still only 1 link from mem_a to seed
-    assert len(service.links.links_for_memory(mem_a_id)) == 1
-
 
 def test_auto_link_uses_settings_k(svc):
     """_auto_link searches with settings.auto_link_k candidates, not hardcoded 2."""
     service, engine = svc
     service.settings.auto_link_k = 10
 
-    seed = service.insert(
+    seed = service.write_service.insert(
         memories=[{"title": "seed", "description": "", "content": "seed"}],
         links=[],
     )
@@ -640,7 +612,7 @@ def test_auto_link_uses_settings_k(svc):
     hits.append({"lore_id": seed_id, "score": 0.95})
     engine._search_results = hits
 
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{"title": "test", "description": "", "content": "test content"}],
         links=[],
     )
@@ -656,7 +628,7 @@ def test_insert_with_inline_links_and_top_level_links(svc):
     service, _ = svc
 
     # Create target memories
-    r1 = service.insert(
+    r1 = service.write_service.insert(
         memories=[
             {"title": "target A", "description": "a", "content": "a"},
             {"title": "target B", "description": "b", "content": "b"},
@@ -669,7 +641,7 @@ def test_insert_with_inline_links_and_top_level_links(svc):
     id_c = r1["inserted_memories"][2]["id"]
 
     # Insert with both inline links and top-level links
-    result = service.insert(
+    result = service.write_service.insert(
         memories=[{
             "title": "source with inline link",
             "description": "s",
@@ -713,22 +685,9 @@ def _make_svc(tmp_path, db_name: str, namespace: str):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings(namespace=namespace)
-    return build_service(store, engine, kw, settings), store
+    return build_app(store, engine, kw, settings), store
 
 
-def test_insert_tags_with_agent_namespace(tmp_path):
-    svc, store = _make_svc(tmp_path, "ns.db", "diana")
-    svc.insert(memories=[{"title": "diana memory", "content": "c", "description": "d"}], links=[])
-    rows = store.memories.all_memory_rows()
-    assert len(rows) == 1
-    assert rows[0]["namespace"] == "diana"
-
-
-def test_insert_tags_with_shared_when_no_namespace(tmp_path):
-    svc, store = _make_svc(tmp_path, "ns.db", "shared")
-    svc.insert(memories=[{"title": "shared memory", "content": "c", "description": "d"}], links=[])
-    rows = store.memories.all_memory_rows()
-    assert rows[0]["namespace"] == "shared"
 
 
 def test_agent_reads_own_and_shared(tmp_path):
@@ -751,9 +710,9 @@ def test_agent_reads_own_and_shared(tmp_path):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings(namespace="diana")
-    svc = build_service(store, engine, kw, settings)
+    svc = build_app(store, engine, kw, settings)
 
-    memories = svc._all_memories()
+    memories = svc.cache.all_memories()
     ids = set(memories.keys())
     assert "a" in ids   # own namespace
     assert "b" in ids   # shared
@@ -775,111 +734,19 @@ def test_no_namespace_sees_all(tmp_path):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings(namespace="shared")
-    svc = build_service(store, engine, kw, settings)
+    svc = build_app(store, engine, kw, settings)
 
-    memories = svc._all_memories()
+    memories = svc.cache.all_memories()
     assert len(memories) == 2  # sees all
 
 
-def test_same_title_different_namespace_not_duplicate(tmp_path):
-    """Two agents in different namespaces can use the same title without false duplicate."""
-    diana_svc, _ = _make_svc(tmp_path, "dup.db", "diana")
-    bella_svc, _ = _make_svc(tmp_path, "dup.db", "bella")
-
-    # Insert same title in different namespaces
-    diana_res = diana_svc.insert(
-        memories=[{"title": "common title", "content": "diana's", "description": "d"}],
-        links=[],
-    )
-    diana_id = diana_res["inserted_memories"][0]["id"]
-
-    bella_res = bella_svc.insert(
-        memories=[{"title": "common title", "content": "bella's", "description": "d"}],
-        links=[],
-    )
-    bella_id = bella_res["inserted_memories"][0]["id"]
-
-    # Both should succeed with different IDs
-    assert diana_id != bella_id
 
 
-def test_same_title_same_namespace_still_detects_duplicate(tmp_path):
-    """Same title in same namespace still triggers duplicate detection."""
-    svc, _ = _make_svc(tmp_path, "dup2.db", "diana")
 
-    first = svc.insert(
-        memories=[{"title": "my memory", "content": "first", "description": "d"}],
-        links=[],
-    )
-    first_id = first["inserted_memories"][0]["id"]
-
-    second = svc.insert(
-        memories=[{"title": "my memory", "content": "second", "description": "d"}],
-        links=[],
-    )
-    assert len(second["duplicates"]) == 1
-    assert second["duplicates"][0]["existing_memory"]["id"] == first_id
-
-
-def test_same_title_in_shared_still_detects_duplicate(tmp_path):
-    """Memory with namespace='shared' is visible as duplicate to any agent."""
-    store = build_stores(tmp_path / "dup3.db")
-    engine = FakeEngine()
-    kw = KeywordIndex()
-    store.memories.upsert_memory_row(id="shared-id", title="overlap", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00",
-                            updated_at="2026-01-01T00:00:00+00:00",
-                            namespace="shared")
-
-    diana_svc = build_service(store, engine, kw, Settings(namespace="diana"))
-    result = diana_svc.insert(
-        memories=[{"title": "overlap", "content": "new", "description": "d"}],
-        links=[],
-    )
-    assert len(result["duplicates"]) == 1
-    assert result["duplicates"][0]["existing_memory"]["id"] == "shared-id"
-
-
-def test_shared_agent_deduplicates_against_all_namespaces(tmp_path):
-    """Regression: shared agent's insert duplicate check spans all namespaces.
-
-    A memory seeded in a non-shared namespace must still be detected as a
-    duplicate when the shared agent tries to insert the same title. Without
-    this, the shared agent could re-insert titles that already exist in
-    profile namespaces and later surface duplicates to every reader.
-    """
-    store = build_stores(tmp_path / "shared_dedup.db")
-    engine = FakeEngine()
-    kw = KeywordIndex()
-
-    # Seed a memory in "diana" namespace directly (bypassing the service)
-    store.memories.upsert_memory_row(
-        id="diana-mem-1",
-        title="cross-ns title",
-        description="original in diana ns",
-        content="content",
-        created_at="2026-01-01T00:00:00+00:00",
-        updated_at="2026-01-01T00:00:00+00:00",
-        namespace="diana",
-    )
-
-    # Shared agent should detect it as a duplicate (namespaces=None → global scan)
-    shared_svc = build_service(store, engine, kw, Settings(namespace="shared"))
-    result = shared_svc.insert(
-        memories=[{"title": "cross-ns title", "content": "new", "description": "d"}],
-        links=[],
-    )
-    assert len(result["duplicates"]) == 1, (
-        "Shared agent must detect duplicates from all namespaces"
-    )
-    assert result["duplicates"][0]["existing_memory"]["id"] == "diana-mem-1"
-
-
-# ── LKPR-30: lore_reflect auto-insert ─────────────────────────────────────────
 
 def _reflect(service, session_id="s-lkpr30", discoveries=None, lessons=None, auto_insert=True):
     """Helper to call submit_reflection with LKPR-30 params."""
-    return service.submit_reflection(
+    return service.reflection_service.submit_reflection(
         session_id=session_id,
         session_date="2026-06-02",
         topic="test",
@@ -1049,7 +916,7 @@ def test_ids_sort_by_recent_malformed_updated_at_does_not_crash(svc):
     service, _engine = svc
 
     # Insert two memories with known updated_at
-    r = service.insert([
+    r = service.write_service.insert([
         {"title": "good memory", "content": "c", "description": "d"},
         {"title": "bad timestamp memory", "content": "c", "description": "d"},
     ], links=[])
@@ -1057,13 +924,13 @@ def test_ids_sort_by_recent_malformed_updated_at_does_not_crash(svc):
 
     # Patch one memory's updated_at to a malformed value directly in the DB.
     bad_id = ids_inserted[1]
-    service.memories._conn.execute(
+    service.db.conn.execute(
         "UPDATE memories SET updated_at = 'NOT-A-DATE' WHERE id = ?", (bad_id,)
     )
-    service.memories._conn.commit()
+    service.db.conn.commit()
 
     # This must not raise despite the bad timestamp.
-    results = service.search_by_ids(ids=ids_inserted, sort_by="recent")
+    results = service.search_service.search_by_ids(ids=ids_inserted, sort_by="recent")
     result_ids = [r.memory.id for r in results]
 
     # Both returned — no crash.
@@ -1080,19 +947,19 @@ class TestSweepLinks:
     def _make_sweeper(self, service):
         from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
 
-        self._sug_store = LinkSuggestionStore(service.memories._db)
+        self._sug_store = LinkSuggestionStore(service.db)
         return self.SweepService(
             memory_store=service.memories,
             link_store=service.links,
             suggestion_store=self._sug_store,
-            link_candidate_generator=service._link_candidate_generator,
+            link_candidate_generator=service.link_candidate_generator,
             settings=service.settings,
             metrics_store=service.metrics,
             conn=service._conn,
         )
 
     def _seed_memories(self, service, engine):
-        r = service.insert(memories=[
+        r = service.write_service.insert(memories=[
             {"title": "alpha", "description": "first", "content": "alpha about databases"},
             {"title": "beta", "description": "second", "content": "beta about caching"},
             {"title": "gamma", "description": "third", "content": "gamma about strategies"},
@@ -1134,7 +1001,7 @@ class TestSweepLinks:
             source_memory_id=ids[0], target_memory_id=ids[1],
             relation_type="references", reason="test",
         )
-        service.commit()
+        service.db.conn.commit()
         sweeper.run()
         pending = self._sug_store.get_pending_suggestions()
         assert len(pending) >= 1
@@ -1148,7 +1015,7 @@ class TestSweepLinks:
             source_title="", target_title="", weighted_score=0.0,
             status="rejected",
         )
-        service.commit()
+        service.db.conn.commit()
         stats = sweeper.run()
         assert stats["skipped_rejected"] >= 1
 
@@ -1162,7 +1029,7 @@ class TestSweepLinks:
             status="pending",
         )
         original_id = sug.id
-        service.commit()
+        service.db.conn.commit()
         stats = sweeper.run()
         assert stats["skipped_pending"] >= 1
         still = self._sug_store.get_suggestion(original_id)

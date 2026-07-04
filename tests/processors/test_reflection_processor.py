@@ -17,7 +17,7 @@ import pytest
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
 from lorekeeper.processors.reflection import ReflectionProcessor
-from tests._helpers import build_service, build_stores
+from tests._helpers import build_app, build_stores
 from tests.test_handlers import FakeEngine
 
 
@@ -27,17 +27,17 @@ def stores(tmp_path):
 
 
 @pytest.fixture
-def svc(stores):
+def app(stores):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    return build_service(stores, engine, kw, settings)
+    return build_app(stores, engine, kw, settings)
 
 
 @pytest.fixture
-def processor(svc, stores):
+def processor(app, stores):
     return ReflectionProcessor(
-        reflection_service=svc.reflection_service,
+        reflection_service=app.reflection_service,
         reflections=stores.reflections,
         metrics=stores.metrics,
         db=stores.db,

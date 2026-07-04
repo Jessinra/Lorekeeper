@@ -11,9 +11,16 @@ from lorekeeper.api.mcp.handlers.suggestion_handlers import (
     handle_review_suggestion,
 )
 from lorekeeper.domains.link.repository import LinkStore
+from lorekeeper.domains.link.service import LinkService
+from lorekeeper.domains.memory.cache import MemoryCache
+from lorekeeper.domains.memory.import_service import ImportService
 from lorekeeper.domains.memory.repository import MemoryStore
+from lorekeeper.domains.memory.service import MemorySearchService, MemoryWriteService
 from lorekeeper.domains.reflection.repository import ReflectionStore
+from lorekeeper.domains.reflection.service import ReflectionService
+from lorekeeper.domains.suggestion.candidate import LinkCandidateGenerator
 from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
+from lorekeeper.domains.suggestion.service import SuggestionService
 from lorekeeper.infra.database import Database
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.search_engine import LanceDBEngine
@@ -25,7 +32,6 @@ from lorekeeper.processors.link import LinkProcessor
 from lorekeeper.processors.memory import MemoryProcessor
 from lorekeeper.processors.reflection import ReflectionProcessor
 from lorekeeper.processors.suggestion import SuggestionProcessor
-from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.shared.encouragement import (
     for_forget,
     for_insert,
@@ -37,8 +43,12 @@ from lorekeeper.shared.encouragement import (
 
 log = structlog.get_logger()
 mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
-_svc: MemoryService | None = None
-_suggestions_store: LinkSuggestionStore | None = None
+
+# ── Module-level singletons ────────────────────────────────────────────────
+_settings: Settings | None = None
+_memory_store: MemoryStore | None = None
+_link_store: LinkStore | None = None
+_db: Database | None = None
 _suggestion_processor: SuggestionProcessor | None = None
 _memory_processor: MemoryProcessor | None = None
 _reflection_processor: ReflectionProcessor | None = None
@@ -46,11 +56,31 @@ _link_processor: LinkProcessor | None = None
 _admin_processor: AdminProcessor | None = None
 
 
-def get_service() -> MemoryService:
-    global _svc
-    if _svc is None:
-        raise RuntimeError("MemoryService not initialised — call init_service() first")
-    return _svc
+# ── Store getters (dashboard routes only) ──────────────────────────────────
+
+
+def get_memory_store() -> MemoryStore:
+    global _memory_store
+    if _memory_store is None:
+        raise RuntimeError("MemoryStore not initialised — call init_service() first")
+    return _memory_store
+
+
+def get_link_store() -> LinkStore:
+    global _link_store
+    if _link_store is None:
+        raise RuntimeError("LinkStore not initialised — call init_service() first")
+    return _link_store
+
+
+def get_db() -> Database:
+    global _db
+    if _db is None:
+        raise RuntimeError("Database not initialised — call init_service() first")
+    return _db
+
+
+# ── Processor getters ─────────────────────────────────────────────────────
 
 
 def get_suggestion_processor() -> SuggestionProcessor:
@@ -88,33 +118,51 @@ def get_admin_processor() -> AdminProcessor:
     return _admin_processor
 
 
-def init_service(settings: Settings | None = None) -> MemoryService:
-    global _svc, _suggestions_store, _suggestion_processor, _memory_processor
-    global _reflection_processor, _link_processor, _admin_processor
+# ── Composition root ──────────────────────────────────────────────────────
+
+
+def init_service(settings: Settings | None = None) -> None:
+    """Wire everything bottom-up: stores → domain services → processors.
+
+    WIRING ORDER (must mirror tests/_helpers.py build_app() 1:1):
+        settings -> engine (+probe) -> Database -> stores -> config overrides ->
+        KeywordIndex -> ns_filter -> MemoryCache -> LinkCandidateGenerator ->
+        domain services (link -> write -> search -> reflection -> suggestion -> import)
+        -> processors (memory, link, reflection, suggestion, admin) -> BM25 bootstrap
+
+    Cross-reference: tests/_helpers.py build_app() wires the same objects.
+    """
+    global _settings, _memory_store, _link_store, _db
+    global _suggestion_processor, _memory_processor, _reflection_processor
+    global _link_processor, _admin_processor
+
     s = settings or Settings()
+    _settings = s
     s.data_dir.mkdir(parents=True, exist_ok=True)
 
     log.info("init_lorekeeper", data_dir=str(s.data_dir), vector_store="lancedb")
     engine = LanceDBEngine(s.lancedb_path, s.embedding_model)
     engine.probe_score_scale()
 
-    # Shared SQLite connection + versioned migrations
     db = Database(s.sqlite_path, busy_timeout_ms=s.busy_timeout_ms)
     db.migrate()
+    _db = db
 
-    # Focused stores all share the same Database connection
     memories = MemoryStore(db)
     links = LinkStore(db)
     reflections = ReflectionStore(db)
     metrics = MetricsStore(db)
     config = ConfigStore(db)
+    suggestions = LinkSuggestionStore(db)
+    _memory_store = memories
+    _link_store = links
 
-    # Apply persisted config overrides (dashboard changes that survived restart)
+    # Apply persisted config overrides
     overrides = config.get_overrides()
     for key, value in overrides.items():
         try:
             setattr(s, key, value)
-            getattr(s, key)  # confirm it reads back (catches silent failures)
+            getattr(s, key)
         except (ValueError, TypeError, AttributeError, ValidationError) as e:
             log.warning("config_override_skipped", key=key, value=value, error=str(e))
     if overrides:
@@ -122,13 +170,11 @@ def init_service(settings: Settings | None = None) -> MemoryService:
 
     kw = KeywordIndex()
 
-    # Build namespace filter (shared agents see everything; scoped agents see own + shared)
     ns_filter: list[str] | None = (
         None if s.namespace == "shared" else [s.namespace, "shared"]
     )
 
-    # LKPR-58: instantiate LinkCandidateGenerator once so spaCy model is only loaded once.
-    from lorekeeper.domains.suggestion.candidate import LinkCandidateGenerator
+    cache = MemoryCache(memories, kw, ns_filter)
 
     link_candidate_generator = LinkCandidateGenerator(
         engine=engine,
@@ -139,13 +185,56 @@ def init_service(settings: Settings | None = None) -> MemoryService:
         ns_filter=ns_filter,
     )
 
-    svc = MemoryService(
-        engine, memories, links, reflections, metrics, config, kw, s,
-        db=db,
-        link_candidate_generator=link_candidate_generator,
+    # ── Domain services ────────────────────────────────────────────────────
+    link_service = LinkService(links=links)
+    write_service = MemoryWriteService(
+        engine=engine, memories=memories, links=links, cache=cache,
+        metrics=metrics, settings=s, db=db,
+        namespace=s.namespace, ns_filter=ns_filter,
+        link_service=link_service, kw=kw,
     )
+    search_service = MemorySearchService(
+        engine=engine, kw=kw, memories=memories, links=links, cache=cache,
+        metrics=metrics, settings=s, db=db, ns_filter=ns_filter,
+    )
+    reflection_service = ReflectionService(
+        reflections=reflections, metrics=metrics, db=db,
+        cache=cache, write_service=write_service,
+    )
+    suggestion_service = SuggestionService(
+        candidate_generator=link_candidate_generator, engine=engine, kw=kw,
+        memories=memories, links=links, metrics=metrics,
+        settings=s, db=db, ns_filter=ns_filter,
+    )
+    import_service = ImportService(
+        engine=engine, memories=memories, links=links, cache=cache,
+        db=db, namespace=s.namespace,
+    )
+
+    # ── Processors ─────────────────────────────────────────────────────────
+    _memory_processor = MemoryProcessor(
+        search_service=search_service, write_service=write_service,
+        import_service=import_service, metrics=metrics, db=db, settings=s,
+    )
+    _reflection_processor = ReflectionProcessor(
+        reflection_service=reflection_service, reflections=reflections,
+        metrics=metrics, db=db,
+    )
+    _link_processor = LinkProcessor(
+        link_service=link_service, memories=memories, links=links,
+        metrics=metrics, db=db,
+    )
+    _suggestion_processor = SuggestionProcessor(
+        suggestion_service=suggestion_service, suggestions=suggestions,
+        metrics=metrics, db=db,
+    )
+    _admin_processor = AdminProcessor(
+        config=config, metrics=metrics, suggestions=suggestions,
+        settings=s, db=db,
+    )
+
     # Bootstrap BM25 from existing memories
-    all_mems = list(svc._all_memories(include_deleted=True).values())
+    all_mems = list(cache.all_memories(include_deleted=True).values())
     kw.rebuild(all_mems)
     log.info("bm25_rebuilt", count=len(all_mems))
 
@@ -154,14 +243,8 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     log.info("enc_rate_set", rate=s.enc_rate)
 
     # Start internal sweep scheduler (LKPR-99) — standalone SweepService,
-    # not coupled to MemoryService internals.
-    #
-    # IMPORTANT: sweep gets its OWN Database + store instances so it never
-    # shares the sqlite3.Connection with the main MCP thread.  Both threads
-    # issuing commit() on the same connection at the same time would corrupt
-    # transactions (Python's sqlite3 provides zero thread synchronisation even
-    # with check_same_thread=False).  WAL mode handles concurrent access at
-    # the database-file level — each thread gets its own connection.
+    # gets its OWN Database instance to avoid sharing sqlite3.Connection
+    # across threads.
     from lorekeeper.domains.suggestion.sweep import SweepService
     from lorekeeper.infra.scheduler import PeriodicJob
 
@@ -170,8 +253,6 @@ def init_service(settings: Settings | None = None) -> MemoryService:
     sweep_links = LinkStore(sweep_db)
     sweep_suggestions = LinkSuggestionStore(sweep_db)
     sweep_metrics = MetricsStore(sweep_db)
-
-    from lorekeeper.domains.suggestion.candidate import LinkCandidateGenerator
 
     sweep_generator = LinkCandidateGenerator(
         engine=engine,
@@ -196,44 +277,6 @@ def init_service(settings: Settings | None = None) -> MemoryService:
         poll_seconds=s.suggest_poll_seconds,
     ).start()
     log.info("sweep_scheduler_started")
-
-    _svc = svc
-    _suggestions_store = LinkSuggestionStore(db)
-    _suggestion_processor = SuggestionProcessor(
-        suggestion_service=svc.suggestion_service,
-        suggestions=_suggestions_store,
-        metrics=svc.metrics,
-        db=db,
-    )
-    _memory_processor = MemoryProcessor(
-        search_service=svc.memory_search_service,
-        write_service=svc.memory_write_service,
-        import_service=svc.import_service,
-        metrics=svc.metrics,
-        db=db,
-        settings=svc.settings,
-    )
-    _reflection_processor = ReflectionProcessor(
-        reflection_service=svc.reflection_service,
-        reflections=reflections,
-        metrics=svc.metrics,
-        db=db,
-    )
-    _link_processor = LinkProcessor(
-        link_service=svc.link_service,
-        memories=memories,
-        links=links,
-        metrics=svc.metrics,
-        db=db,
-    )
-    _admin_processor = AdminProcessor(
-        config=config,
-        metrics=svc.metrics,
-        suggestions=_suggestions_store,
-        settings=svc.settings,
-        db=db,
-    )
-    return svc
 
 
 # ── MCP tool registration ────────────────────────────────────────────────────
@@ -503,30 +546,21 @@ async def lore_forget(
     Args:
         memory_ids: List of lore_ids to forget. Must not be empty.
         reason: Why this memory is being forgotten. One of:
-            ``"duplicate"``, ``"hallucinated"``, ``"outdated"``,
-            ``"expired"``, ``"unspecified"``.
-
-    Returns:
-        {
-          "forgotten": [str],   # lore_ids successfully soft-deleted
-          "not_found": [str],   # lore_ids that were not found
-          "errors": [dict]      # any unexpected failures
-        }
+            ``\"duplicate\"``, ``\"hallucinated\"``, ``\"outdated\"``,
+            ``\"expired\"``, ``\"unspecified\"``.
     """
     try:
-        result = get_memory_processor().forget(memory_ids, reason)
-        forgotten_count = len(result.get("forgotten", []))
-        result.update(for_forget(count=forgotten_count))
+        if not memory_ids:
+            raise ValueError("memory_ids must not be empty")
+        result = get_memory_processor().forget(memory_ids, reason=reason)
+        result.update(for_forget(count=len(memory_ids)))
         return result
     except Exception:
-        log.exception("lore_forget_failed", memory_ids=memory_ids, reason=reason)
+        log.exception("lore_forget_failed")
         raise
 
 
-# ── MCP tools — suggestion review ─────────────────────────────────────────────
-
-
-@mcp.tool(name="lore_get_suggestions")
+@mcp.tool()
 async def lore_get_suggestions(
     limit: int = 20,
     min_score: float = 0.0,
@@ -539,25 +573,15 @@ async def lore_get_suggestions(
     Args:
         limit: Max suggestions to return (default 20, capped at 100).
         min_score: Minimum weighted_score filter, 0.0-1.0 (default 0.0 = all).
-
-    Returns:
-        {
-          "suggestions": [...],
-          "count": 20,
-          "total_pending": 142
-        }
     """
     try:
-        proc = get_suggestion_processor()
-        return handle_get_suggestions(
-            proc, limit=limit, min_score=min_score
-        )
+        return handle_get_suggestions(get_suggestion_processor(), limit=limit, min_score=min_score)
     except Exception:
         log.exception("lore_get_suggestions_failed")
         raise
 
 
-@mcp.tool(name="lore_review_suggestion")
+@mcp.tool()
 async def lore_review_suggestion(
     suggestion_ids: list[str],
     action: str,
@@ -579,31 +603,19 @@ async def lore_review_suggestion(
     Args:
         suggestion_ids: List of suggestion UUIDs to process (one or many).
         action: Either ``'accept'`` or ``'reject'``.
-
-    Returns:
-        {
-          "results": [
-            {"id": "uuid", "status": "accepted"|"rejected"|"skipped"|"error",
-             "link_id": "uuid"|null, "message": "..."}
-          ],
-          "accepted": int,
-          "rejected": int,
-          "skipped": int,
-          "errors": [{"id": "uuid", "error": "..."}]
-        }
-
-        Note: ``status="error"`` is set on a result item when the per-item
-        operation raises an unexpected exception. That item is *also* appended
-        to ``errors[]``. Callers that iterate ``results[*].status`` should
-        treat ``"error"`` as a failure sentinel and consult ``errors[]`` for
-        the exception message.
     """
     try:
-        proc = get_suggestion_processor()
-        return handle_review_suggestion(
-            proc,
-            suggestion_ids=suggestion_ids, action=action,
-        )
+        return handle_review_suggestion(get_suggestion_processor(), suggestion_ids, action)
     except Exception:
-        log.exception("lore_review_suggestion_failed", suggestion_ids=suggestion_ids)
+        log.exception("lore_review_suggestion_failed")
         raise
+
+
+# ── Settings getter (used by dashboard) ───────────────────────────────────
+
+
+def get_settings() -> Settings:
+    global _settings
+    if _settings is None:
+        raise RuntimeError("Settings not initialised — call init_service() first")
+    return _settings

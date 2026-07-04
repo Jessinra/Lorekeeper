@@ -16,7 +16,7 @@ import pytest
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
 from lorekeeper.processors.link import LinkProcessor
-from tests._helpers import build_service, build_stores
+from tests._helpers import build_app, build_stores
 from tests.test_handlers import FakeEngine
 
 
@@ -26,17 +26,17 @@ def stores(tmp_path):
 
 
 @pytest.fixture
-def svc(stores):
+def app(stores):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    return build_service(stores, engine, kw, settings)
+    return build_app(stores, engine, kw, settings)
 
 
 @pytest.fixture
-def processor(svc, stores):
+def processor(app, stores):
     return LinkProcessor(
-        link_service=svc.link_service,
+        link_service=app.link_service,
         memories=stores.memories,
         links=stores.links,
         metrics=stores.metrics,
@@ -44,8 +44,8 @@ def processor(svc, stores):
     )
 
 
-def _insert_two_memories(svc) -> tuple[str, str]:
-    r = svc.insert(
+def _insert_two_memories(app) -> tuple[str, str]:
+    r = app.write_service.insert(
         memories=[
             {"title": "mem A", "content": "a"},
             {"title": "mem B", "content": "b"},
@@ -63,8 +63,8 @@ def test_list_links_empty_returns_empty_list(processor):
     assert processor.list_links() == []
 
 
-def test_list_links_returns_created_link_with_titles(processor, svc):
-    src_id, tgt_id = _insert_two_memories(svc)
+def test_list_links_returns_created_link_with_titles(processor, app):
+    src_id, tgt_id = _insert_two_memories(app)
     processor.create_link(src_id, tgt_id, "references", "test link")
     links = processor.list_links()
     assert len(links) == 1
@@ -72,16 +72,16 @@ def test_list_links_returns_created_link_with_titles(processor, svc):
     assert links[0]["target_title"] == "mem B"
 
 
-def test_list_links_excludes_deleted_by_default(processor, svc, stores):
-    src_id, tgt_id = _insert_two_memories(svc)
+def test_list_links_excludes_deleted_by_default(processor, app, stores):
+    src_id, tgt_id = _insert_two_memories(app)
     processor.create_link(src_id, tgt_id, "references", "test link")
     stores.memories.update_memory_fields(src_id, soft_deleted=1)
     stores.db.commit()
     assert processor.list_links(include_deleted=False) == []
 
 
-def test_list_links_includes_deleted_when_requested(processor, svc, stores):
-    src_id, tgt_id = _insert_two_memories(svc)
+def test_list_links_includes_deleted_when_requested(processor, app, stores):
+    src_id, tgt_id = _insert_two_memories(app)
     processor.create_link(src_id, tgt_id, "references", "test link")
     stores.memories.update_memory_fields(src_id, soft_deleted=1)
     stores.db.commit()
@@ -91,20 +91,20 @@ def test_list_links_includes_deleted_when_requested(processor, svc, stores):
 # ── create_link: validation ─────────────────────────────────────────────────
 
 
-def test_create_link_source_not_found_raises_lookup_error(processor, svc):
-    _src_id, tgt_id = _insert_two_memories(svc)
+def test_create_link_source_not_found_raises_lookup_error(processor, app):
+    _src_id, tgt_id = _insert_two_memories(app)
     with pytest.raises(LookupError, match="Source memory not found"):
         processor.create_link("nonexistent", tgt_id, "references", "reason")
 
 
-def test_create_link_target_not_found_raises_lookup_error(processor, svc):
-    src_id, _tgt_id = _insert_two_memories(svc)
+def test_create_link_target_not_found_raises_lookup_error(processor, app):
+    src_id, _tgt_id = _insert_two_memories(app)
     with pytest.raises(LookupError, match="Target memory not found"):
         processor.create_link(src_id, "nonexistent", "references", "reason")
 
 
-def test_create_link_invalid_relation_type_raises_value_error(processor, svc):
-    src_id, tgt_id = _insert_two_memories(svc)
+def test_create_link_invalid_relation_type_raises_value_error(processor, app):
+    src_id, tgt_id = _insert_two_memories(app)
     with pytest.raises(ValueError, match="invalid relation_type"):
         processor.create_link(src_id, tgt_id, "bogus_relation", "reason")
 
@@ -112,16 +112,16 @@ def test_create_link_invalid_relation_type_raises_value_error(processor, svc):
 # ── create_link: happy path + commit boundary ───────────────────────────────
 
 
-def test_create_link_valid_call_returns_link(processor, svc):
-    src_id, tgt_id = _insert_two_memories(svc)
+def test_create_link_valid_call_returns_link(processor, app):
+    src_id, tgt_id = _insert_two_memories(app)
     link = processor.create_link(src_id, tgt_id, "references", "reason")
     assert link.source_memory_id == src_id
     assert link.target_memory_id == tgt_id
 
 
-def test_create_link_persists_after_commit(processor, svc, stores):
+def test_create_link_persists_after_commit(processor, app, stores):
     """create_link must commit — a fresh read must see the row."""
-    src_id, tgt_id = _insert_two_memories(svc)
+    src_id, tgt_id = _insert_two_memories(app)
     link = processor.create_link(src_id, tgt_id, "references", "reason")
     reread = stores.links.get_link(link.id)
     assert reread is not None
@@ -135,8 +135,8 @@ def test_delete_link_not_found_raises_lookup_error(processor):
         processor.delete_link("nonexistent")
 
 
-def test_delete_link_removes_link(processor, svc, stores):
-    src_id, tgt_id = _insert_two_memories(svc)
+def test_delete_link_removes_link(processor, app, stores):
+    src_id, tgt_id = _insert_two_memories(app)
     link = processor.create_link(src_id, tgt_id, "references", "reason")
     processor.delete_link(link.id)
     assert stores.links.get_link(link.id) is None
