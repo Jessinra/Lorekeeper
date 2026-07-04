@@ -30,22 +30,10 @@ The master plan groups work into 6 phases (7a–7e). The README splits those int
 
 ## Current State
 
-**Status:** Steps 0-4c done (PR #268-275 merged); Step 4d in progress on this branch
+**Status:** Steps 0-5 done (PR #268-279 merged); Step 6 done (PR #280)
 
-**Note (4d scope gap found during implementation):** `dashboard/routes/memories.py`
-(CRUD) and `backup.py::export_dump` still call `get_service()` directly — this
-was never in scope for any 4x step per the plan docs (4b's action list only
-covers `search.py`/`backup.py` import routes/`memories.py` forget-only). Step
-5's precondition grep (`get_service|MemoryService` outside `services/`) will
-fail until these are routed through a processor. Flagging for Akane — either
-fold a `MemoryRecordProcessor`-style CRUD extension into Step 4d/a follow-up
-task, or Step 5 absorbs it as a "tiny preamble commit" per its own doc's
-allowance. Did not expand this PR's diff to cover it (out of the agreed 4d
-scope; PR review would rightly reject silent scope creep for a chore/refactor
-change).
-
-**Current branch:** `chore/lkpr-105-step4d-admin-processor`
-**Working tree:** AdminProcessor added, dashboard routes (metrics/config/suggestions sweep) rewired, `get_suggestions_store()` deleted (zero callers), tests green
+**Current branch:** `chore/lkpr-105-step6-test-relocation`
+**Working tree:** test_orchestrator.py deleted (1059 lines) — tests distributed to 5 domain-specific files.
 
 ---
 

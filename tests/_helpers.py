@@ -251,3 +251,40 @@ def build_app(
         kw=kw,
         engine=engine,
     )
+
+
+class FakeEngine:
+    """Minimal stub: stores text by lore_id, returns configurable search results."""
+
+    def __init__(self) -> None:
+        self._store: dict[str, str] = {}
+        self._search_results: list[dict] = []
+
+    def probe_score_scale(self) -> None:
+        pass
+
+    def add(self, text: str, lore_id: str, extra_metadata: dict | None = None) -> str:
+        self._store[lore_id] = text
+        return lore_id
+
+    def search(self, query: str, limit: int = 200) -> list[dict]:
+        return self._search_results[:limit]
+
+    def get_embeddings_batch(self, ids: list[str]) -> dict[str, list[float]]:
+        import numpy as np
+
+        out = {}
+        for lid in ids:
+            if lid in self._store:
+                v = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+                out[lid] = v
+        return out
+
+    def get_all(self) -> list[dict]:
+        return [{"lore_id": k, "mem0_id": k} for k in self._store]
+
+    def normalize_score(self, raw: float) -> float:
+        return raw
+
+    def find_vector_id(self, lore_id: str) -> str | None:
+        return lore_id if lore_id in self._store else None
