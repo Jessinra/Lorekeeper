@@ -6,7 +6,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 
 from lorekeeper.domains.memory.models import Memory
-from lorekeeper.server import get_service
+from lorekeeper.server import get_memory_processor, get_service
 from lorekeeper.shared.serializers import serialize_memory, serialize_memory_link
 
 router = APIRouter()
@@ -48,10 +48,10 @@ def export_dump(include_deleted: bool = False) -> Response:
 @router.post("/api/import/preview")
 async def import_preview(file: UploadFile = File(...)) -> dict[str, Any]:
     memories, links = _parse_dump(await file.read())
-    return get_service().import_dump(memories, links, dry_run=True)
+    return get_memory_processor().import_dump(memories, links, dry_run=True)
 
 
 @router.post("/api/import/confirm")
 async def import_confirm(file: UploadFile = File(...)) -> dict[str, Any]:
     memories, links = _parse_dump(await file.read())
-    return get_service().import_dump(memories, links, dry_run=False)
+    return get_memory_processor().import_dump(memories, links, dry_run=False)

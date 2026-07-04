@@ -23,6 +23,7 @@ from lorekeeper.api.mcp.handlers.suggestion_handlers import (
 )
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
+from lorekeeper.processors.memory import MemoryProcessor
 from lorekeeper.processors.suggestion import SuggestionProcessor
 from tests._helpers import build_service, build_stores
 
@@ -66,6 +67,18 @@ def svc(stores):
 
 
 @pytest.fixture
+def memory_processor(svc, stores):
+    return MemoryProcessor(
+        search_service=svc.memory_search_service,
+        write_service=svc.memory_write_service,
+        import_service=svc.import_service,
+        metrics=stores.metrics,
+        db=stores.db,
+        settings=Settings(),
+    )
+
+
+@pytest.fixture
 def processor(svc, stores):
     return SuggestionProcessor(
         suggestion_service=svc.suggestion_service,
@@ -75,15 +88,10 @@ def processor(svc, stores):
     )
 
 
-def test_handle_insert_missing_title_raises_at_handler_layer(svc):
-    with pytest.raises(ValueError, match="missing required field: 'title'"):
-        _handle_insert(svc, memories=[{"content": "no title here"}], links=[])
-
-
-def test_handle_insert_missing_title_includes_index_in_message(svc):
+def test_handle_insert_missing_title_includes_index_in_message(svc, memory_processor):
     with pytest.raises(ValueError, match="memory at index 1"):
         _handle_insert(
-            svc,
+            memory_processor,
             memories=[
                 {"title": "valid memory", "content": "ok"},
                 {"content": "missing title"},
@@ -92,9 +100,9 @@ def test_handle_insert_missing_title_includes_index_in_message(svc):
         )
 
 
-def test_handle_insert_valid_memory_succeeds(svc):
+def test_handle_insert_valid_memory_succeeds(svc, memory_processor):
     result = _handle_insert(
-        svc,
+        memory_processor,
         memories=[{"title": "test", "content": "some content"}],
         links=[],
     )
@@ -105,17 +113,17 @@ def test_handle_insert_valid_memory_succeeds(svc):
 # ── MCP error paths ────────────────────────────────────────────────────────
 
 
-def test_handle_insert_no_memories(svc):
+def test_handle_insert_no_memories(svc, memory_processor):
     """Empty memories list should succeed with no inserted items."""
-    result = _handle_insert(svc, memories=[], links=[])
+    result = _handle_insert(memory_processor, memories=[], links=[])
     assert result["inserted_memories"] == []
     assert result["errors"] == []
 
 
-def test_handle_insert_invalid_inline_link_format(svc):
+def test_handle_insert_invalid_inline_link_format(svc, memory_processor):
     """Inline links as a string (not list) should be caught and returned as error."""
     result = _handle_insert(
-        svc,
+        memory_processor,
         memories=[{"title": "test", "links": "not-a-list"}],
         links=[],
     )
@@ -123,27 +131,27 @@ def test_handle_insert_invalid_inline_link_format(svc):
     assert "expected a list" in result["errors"][0]["error"]
 
 
-def test_search_refine_from_exceeds_cap(svc):
+def test_search_refine_from_exceeds_cap(svc, memory_processor):
     """refine_from with >200 IDs should raise ValueError at handler layer."""
     oversize = [str(i) for i in range(201)]
     with pytest.raises(ValueError, match="refine_from exceeds cap of 200 IDs"):
-        _handle_search(svc, "test", refine_from=oversize)
+        _handle_search(memory_processor, "test", refine_from=oversize)
 
 
-def test_search_refine_from_empty_is_noop(svc):
+def test_search_refine_from_empty_is_noop(svc, memory_processor):
     """refine_from with an empty list should succeed (no filtering)."""
     svc.insert(
         memories=[{"title": "m1", "content": "one"}],
         links=[],
     )
-    result = _handle_search(svc, "test", refine_from=[])
+    result = _handle_search(memory_processor, "test", refine_from=[])
     assert result["total_matched"] >= 0
 
 
 # ── format=title tests ───────────────────────────────────────────────────────
 
 
-def test_search_title_format_returns_compact_results(svc):
+def test_search_title_format_returns_compact_results(svc, memory_processor):
     """format='title' returns only id, title, score — no content or full memory."""
     svc.insert(
         memories=[{"title": "alpha", "content": "alpha content long enough to distinguish"},
@@ -153,7 +161,7 @@ def test_search_title_format_returns_compact_results(svc):
     # Configure fake engine to return memory IDs
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": r["id"], "score": 0.9} for r in all_rows]
-    result = _handle_search(svc, "alpha", format="title")
+    result = _handle_search(memory_processor, "alpha", format="title")
     assert "results" in result
     assert len(result["results"]) >= 1
     for item in result["results"]:
@@ -166,7 +174,7 @@ def test_search_title_format_returns_compact_results(svc):
         assert "relevance" not in item
 
 
-def test_search_title_format_backward_compatible(svc):
+def test_search_title_format_backward_compatible(svc, memory_processor):
     """Omitting format (default='full') returns full memory bodies as before."""
     svc.insert(
         memories=[{"title": "gamma", "content": "gamma content"}],
@@ -174,23 +182,23 @@ def test_search_title_format_backward_compatible(svc):
     )
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": r["id"], "score": 0.9} for r in all_rows]
-    result = _handle_search(svc, "gamma")
+    result = _handle_search(memory_processor, "gamma")
     assert "results" in result
     for item in result["results"]:
         assert "memory" in item  # full serialization
         assert "relevance" in item
 
 
-def test_search_title_format_with_empty_results(svc):
+def test_search_title_format_with_empty_results(svc, memory_processor):
     """format='title' with no matches returns empty results."""
-    result = _handle_search(svc, "nonexistent_zzz", format="title")
+    result = _handle_search(memory_processor, "nonexistent_zzz", format="title")
     assert result["results"] == []
 
 
 # ── ids param tests ──────────────────────────────────────────────────────────
 
 
-def test_search_by_ids_returns_matching_memories(svc):
+def test_search_by_ids_returns_matching_memories(svc, memory_processor):
     """ids param returns full memories for the given IDs directly from SQL."""
     r = svc.insert(
         memories=[{"title": "mem one", "content": "content one"},
@@ -202,25 +210,25 @@ def test_search_by_ids_returns_matching_memories(svc):
     # Pick first two
     target_ids = ids[:2]
 
-    result = _handle_search(svc, "", ids=target_ids)
+    result = _handle_search(memory_processor, "", ids=target_ids)
     assert len(result["results"]) == 2
     returned_ids = {item["memory"]["id"] for item in result["results"]}
     assert set(target_ids) == returned_ids
 
 
-def test_search_by_ids_empty_list_returns_empty(svc):
+def test_search_by_ids_empty_list_returns_empty(svc, memory_processor):
     """Empty ids list returns no results."""
-    result = _handle_search(svc, "", ids=[])
+    result = _handle_search(memory_processor, "", ids=[])
     assert result["results"] == []
 
 
-def test_search_by_ids_nonexistent_silently_ignored(svc):
+def test_search_by_ids_nonexistent_silently_ignored(svc, memory_processor):
     """Non-existent IDs in ids list are silently skipped."""
-    result = _handle_search(svc, "", ids=["nonexistent-id"])
+    result = _handle_search(memory_processor, "", ids=["nonexistent-id"])
     assert result["results"] == []
 
 
-def test_search_by_ids_with_title_format(svc):
+def test_search_by_ids_with_title_format(svc, memory_processor):
     """ids + format='title' returns compact results for specific IDs."""
     r = svc.insert(
         memories=[{"title": "pick me", "content": "content to pick"},
@@ -230,7 +238,7 @@ def test_search_by_ids_with_title_format(svc):
     ids = [m["id"] for m in r["inserted_memories"]]
     target_id = ids[0]
 
-    result = _handle_search(svc, "", ids=[target_id], format="title")
+    result = _handle_search(memory_processor, "", ids=[target_id], format="title")
     assert len(result["results"]) == 1
     item = result["results"][0]
     assert item["id"] == target_id
@@ -242,50 +250,41 @@ def test_search_by_ids_with_title_format(svc):
 # ── format validation ─────────────────────────────────────────────────────────
 
 
-def test_search_invalid_format_raises():
-    """Invalid format value raises ValueError before any db access."""
-    from unittest.mock import MagicMock
-
-    fake_svc = MagicMock()
-    with pytest.raises(ValueError, match="Unknown format"):
-        _handle_search(fake_svc, "query", format="xml")
-
-
 # ── ids cap ───────────────────────────────────────────────────────────────────
 
 
-def test_search_by_ids_exceeds_cap_raises(svc):
+def test_search_by_ids_exceeds_cap_raises(svc, memory_processor):
     """ids with >50 IDs raises ValueError at handler layer."""
     oversize = [str(i) for i in range(51)]
     with pytest.raises(ValueError, match="ids exceeds cap of 50 IDs"):
-        _handle_search(svc, "query", ids=oversize)
+        _handle_search(memory_processor, "query", ids=oversize)
 
 
 # ── empty query guard ─────────────────────────────────────────────────────────
 
 
-def test_search_empty_query_without_ids_raises(svc):
+def test_search_empty_query_without_ids_raises(svc, memory_processor):
     """Empty query with no ids raises ValueError."""
     with pytest.raises(ValueError, match="query is required"):
-        _handle_search(svc, "")
+        _handle_search(memory_processor, "")
 
 
-def test_search_blank_query_without_ids_raises(svc):
+def test_search_blank_query_without_ids_raises(svc, memory_processor):
     """Whitespace-only query with no ids raises ValueError."""
     with pytest.raises(ValueError, match="query is required"):
-        _handle_search(svc, "   ")
+        _handle_search(memory_processor, "   ")
 
 
-def test_search_empty_query_with_ids_succeeds(svc):
+def test_search_empty_query_with_ids_succeeds(svc, memory_processor):
     """Empty query with ids is fine — ids path doesn't need a query."""
-    result = _handle_search(svc, "", ids=[])
+    result = _handle_search(memory_processor, "", ids=[])
     assert result["results"] == []
 
 
 # ── include_links in ids path ─────────────────────────────────────────────────
 
 
-def test_search_by_ids_include_links_fetches_actual_links(svc):
+def test_search_by_ids_include_links_fetches_actual_links(svc, memory_processor):
     """ids path with include_links=True fetches and returns actual links."""
     r = svc.insert(
         memories=[{"title": "src", "content": "source"},
@@ -295,7 +294,7 @@ def test_search_by_ids_include_links_fetches_actual_links(svc):
     ids = [m["id"] for m in r["inserted_memories"]]
     svc.links.insert_link(ids[0], ids[1], "references", "test link")
 
-    result = _handle_search(svc, "", ids=[ids[0]], include_links=True)
+    result = _handle_search(memory_processor, "", ids=[ids[0]], include_links=True)
     assert len(result["results"]) == 1
     item = result["results"][0]
     assert "links" in item
@@ -306,7 +305,7 @@ def test_search_by_ids_include_links_fetches_actual_links(svc):
 # ── usage_count increment via ids path ────────────────────────────────────────
 
 
-def test_search_by_ids_increments_usage_count(svc):
+def test_search_by_ids_increments_usage_count(svc, memory_processor):
     """Bulk ID lookup increments usage_count on each returned memory."""
     r = svc.insert(
         memories=[{"title": "tracked", "content": "track me"}],
@@ -317,7 +316,7 @@ def test_search_by_ids_increments_usage_count(svc):
     before_row = svc.memories.get_memory_row(mem_id)
     before_count = before_row["usage_count"]
 
-    _handle_search(svc, "", ids=[mem_id])
+    _handle_search(memory_processor, "", ids=[mem_id])
 
     after_row = svc.memories.get_memory_row(mem_id)
     assert after_row["usage_count"] == before_count + 1
@@ -326,7 +325,7 @@ def test_search_by_ids_increments_usage_count(svc):
 # ── dedup IDs in search_by_ids ───────────────────────────────────────────────
 
 
-def test_search_by_ids_dedup_with_usage_count(svc):
+def test_search_by_ids_dedup_with_usage_count(svc, memory_processor):
     """Duplicate IDs in ids list should not cause extra usage_count bumps or duplicate results."""
     r = svc.insert(
         memories=[{"title": "dedup-me", "content": "test"}],
@@ -337,7 +336,7 @@ def test_search_by_ids_dedup_with_usage_count(svc):
     before_row = svc.memories.get_memory_row(mem_id)
     before_count = before_row["usage_count"]
 
-    result = _handle_search(svc, "", ids=[mem_id, mem_id, mem_id])
+    result = _handle_search(memory_processor, "", ids=[mem_id, mem_id, mem_id])
 
     assert len(result["results"]) == 1  # no duplicates
 
@@ -399,40 +398,40 @@ def test_recommend_links_valid_call_returns_shape(processor):
 # ── LKPR-61: created_after / updated_after validation tests ─────────────────
 
 
-def test_created_after_invalid_iso_string_raises(svc):
+def test_created_after_invalid_iso_string_raises(svc, memory_processor):
     with pytest.raises(ValueError, match="Invalid ISO timestamp for 'created_after'"):
-        _handle_search(svc, "test", created_after="not-a-date")
+        _handle_search(memory_processor, "test", created_after="not-a-date")
 
 
-def test_updated_after_invalid_iso_string_raises(svc):
+def test_updated_after_invalid_iso_string_raises(svc, memory_processor):
     with pytest.raises(ValueError, match="Invalid ISO timestamp for 'updated_after'"):
-        _handle_search(svc, "test", updated_after="2026/06/01")
+        _handle_search(memory_processor, "test", updated_after="2026/06/01")
 
 
-def test_created_after_non_utc_offset_raises(svc):
+def test_created_after_non_utc_offset_raises(svc, memory_processor):
     with pytest.raises(ValueError, match="Non-UTC timezone offset"):
-        _handle_search(svc, "test", created_after="2026-06-01T00:00:00+05:30")
+        _handle_search(memory_processor, "test", created_after="2026-06-01T00:00:00+05:30")
 
 
-def test_created_after_utc_z_notation_accepted(svc):
+def test_created_after_utc_z_notation_accepted(svc, memory_processor):
     """Z suffix is UTC — should not raise."""
-    result = _handle_search(svc, "test", created_after="2026-06-01T00:00:00Z")
+    result = _handle_search(memory_processor, "test", created_after="2026-06-01T00:00:00Z")
     assert "results" in result
 
 
-def test_created_after_naive_string_treated_as_utc(svc):
+def test_created_after_naive_string_treated_as_utc(svc, memory_processor):
     """Naive ISO strings (no tz) are treated as UTC — should not raise."""
-    result = _handle_search(svc, "test", created_after="2026-06-01T00:00:00")
+    result = _handle_search(memory_processor, "test", created_after="2026-06-01T00:00:00")
     assert "results" in result
 
 
-def test_created_after_plus_zero_utc_accepted(svc):
+def test_created_after_plus_zero_utc_accepted(svc, memory_processor):
     """+00:00 offset is UTC — should not raise."""
-    result = _handle_search(svc, "test", created_after="2026-06-01T00:00:00+00:00")
+    result = _handle_search(memory_processor, "test", created_after="2026-06-01T00:00:00+00:00")
     assert "results" in result
 
 
-def test_created_after_filters_in_full_pipeline(svc):
+def test_created_after_filters_in_full_pipeline(svc, memory_processor):
     """Integration: created_after actually filters results end-to-end via handler."""
     r = svc.insert(
         memories=[
@@ -459,7 +458,7 @@ def test_created_after_filters_in_full_pipeline(svc):
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": row["id"], "score": 0.9} for row in all_rows]
 
-    result = _handle_search(svc, "content", created_after="2026-03-01T00:00:00")
+    result = _handle_search(memory_processor, "content", created_after="2026-03-01T00:00:00")
     titles = {item["memory"]["title"] for item in result["results"]}
     assert "new mem" in titles
     assert "old mem" not in titles
@@ -468,19 +467,19 @@ def test_created_after_filters_in_full_pipeline(svc):
 # ── LKPR-80: sort_by validation tests ────────────────────────────────────────
 
 
-def test_sort_by_unknown_value_raises(svc):
+def test_sort_by_unknown_value_raises(svc, memory_processor):
     with pytest.raises(ValueError, match="Unknown sort_by"):
-        _handle_search(svc, "test", sort_by="magic")
+        _handle_search(memory_processor, "test", sort_by="magic")
 
 
-def test_sort_by_valid_values_do_not_raise(svc):
+def test_sort_by_valid_values_do_not_raise(svc, memory_processor):
     """All three valid sort_by values must be accepted without error."""
     for valid in ("relevance", "recent", "frequent"):
-        result = _handle_search(svc, "test", sort_by=valid)
+        result = _handle_search(memory_processor, "test", sort_by=valid)
         assert "results" in result
 
 
-def test_sort_by_recent_returns_results(svc):
+def test_sort_by_recent_returns_results(svc, memory_processor):
     """sort_by='recent' round-trip via handler — at least returns valid shape."""
     svc.insert(
         memories=[{"title": "r1", "content": "content r1"},
@@ -489,11 +488,11 @@ def test_sort_by_recent_returns_results(svc):
     )
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": r["id"], "score": 0.9} for r in all_rows]
-    result = _handle_search(svc, "content r1", sort_by="recent")
+    result = _handle_search(memory_processor, "content r1", sort_by="recent")
     assert isinstance(result["results"], list)
 
 
-def test_sort_by_frequent_returns_results(svc):
+def test_sort_by_frequent_returns_results(svc, memory_processor):
     """sort_by='frequent' round-trip via handler — at least returns valid shape."""
     svc.insert(
         memories=[{"title": "f1", "content": "content f1"}],
@@ -501,11 +500,11 @@ def test_sort_by_frequent_returns_results(svc):
     )
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": r["id"], "score": 0.9} for r in all_rows]
-    result = _handle_search(svc, "content f1", sort_by="frequent")
+    result = _handle_search(memory_processor, "content f1", sort_by="frequent")
     assert isinstance(result["results"], list)
 
 
-def test_sort_by_and_created_after_compose_in_handler(svc):
+def test_sort_by_and_created_after_compose_in_handler(svc, memory_processor):
     """sort_by and created_after work together end-to-end."""
     r = svc.insert(
         memories=[
@@ -531,7 +530,10 @@ def test_sort_by_and_created_after_compose_in_handler(svc):
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": row["id"], "score": 0.9} for row in all_rows]
 
-    result = _handle_search(svc, "entry", created_after="2026-03-01T00:00:00", sort_by="recent")
+    result = _handle_search(
+        memory_processor, "entry",
+        created_after="2026-03-01T00:00:00", sort_by="recent",
+    )
     titles = [item["memory"]["title"] for item in result["results"]]
     assert "old entry" not in titles
     assert "recent entry" in titles

@@ -18,6 +18,7 @@ from lorekeeper.domains.memory.models import SOURCE_TYPES, WRITE_SOURCE_TYPES
 from lorekeeper.infra.database import _migration_3_add_source_type
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
+from lorekeeper.processors.memory import MemoryProcessor
 from tests._helpers import build_service, build_stores
 
 
@@ -55,13 +56,26 @@ def svc(tmp_path):
     return build_service(store, engine, kw, settings)
 
 
+@pytest.fixture
+def processor(svc, tmp_path):
+    store = build_stores(tmp_path / "test.db")
+    return MemoryProcessor(
+        search_service=svc.memory_search_service,
+        write_service=svc.memory_write_service,
+        import_service=svc.import_service,
+        metrics=store.metrics,
+        db=store.db,
+        settings=Settings(),
+    )
+
+
 # ── Default source_type on insert ────────────────────────────────────────────
 
 
-def test_insert_default_source_type_is_observed(svc):
+def test_insert_default_source_type_is_observed(svc, processor):
     """lore_insert without source_type should store 'observed'."""
     r = _handle_insert(
-        svc,
+        processor,
         memories=[{"title": "default source", "content": "no source_type given"}],
         links=[],
     )
@@ -70,11 +84,11 @@ def test_insert_default_source_type_is_observed(svc):
     assert row["source_type"] == "observed"
 
 
-def test_insert_explicit_source_type_persisted(svc):
+def test_insert_explicit_source_type_persisted(svc, processor):
     """Write-time source_type set explicitly in memory dict must be stored as-is."""
     for st in WRITE_SOURCE_TYPES:
         r = _handle_insert(
-            svc,
+            processor,
             memories=[{"title": f"typed-{st}", "content": "content", "source_type": st}],
             links=[],
         )
@@ -86,23 +100,23 @@ def test_insert_explicit_source_type_persisted(svc):
 # ── source_type in serialised output ─────────────────────────────────────────
 
 
-def test_search_result_contains_source_type_field(svc):
+def test_search_result_contains_source_type_field(svc, processor):
     """Full-format search result must include source_type in the memory dict."""
     r = svc.insert(
         memories=[{"title": "emit-st", "content": "emit source type test"}],
         links=[],
     )
     mem_id = r["inserted_memories"][0]["id"]
-    result = _handle_search(svc, "", ids=[mem_id])
+    result = _handle_search(processor, "", ids=[mem_id])
     assert len(result["results"]) == 1
     mem = result["results"][0]["memory"]
     assert "source_type" in mem
 
 
-def test_search_result_source_type_matches_stored_value(svc):
+def test_search_result_source_type_matches_stored_value(svc, processor):
     """source_type in serialized result must match what was stored."""
     r = _handle_insert(
-        svc,
+        processor,
         memories=[{
             "title": "user-stated-mem",
             "content": "told by user",
@@ -111,7 +125,7 @@ def test_search_result_source_type_matches_stored_value(svc):
         links=[],
     )
     mem_id = r["inserted_memories"][0]["id"]
-    result = _handle_search(svc, "", ids=[mem_id])
+    result = _handle_search(processor, "", ids=[mem_id])
     mem = result["results"][0]["memory"]
     assert mem["source_type"] == "user_stated"
 
@@ -119,10 +133,10 @@ def test_search_result_source_type_matches_stored_value(svc):
 # ── source_type filter — query path ──────────────────────────────────────────
 
 
-def test_source_type_filter_returns_only_matching(svc):
+def test_source_type_filter_returns_only_matching(svc, processor):
     """source_type filter on query path must exclude non-matching memories."""
     _handle_insert(
-        svc,
+        processor,
         memories=[
             {"title": "obs-mem", "content": "observation content", "source_type": "observed"},
             {"title": "inf-mem", "content": "inferred content", "source_type": "inferred"},
@@ -132,33 +146,33 @@ def test_source_type_filter_returns_only_matching(svc):
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": row["id"], "score": 0.9} for row in all_rows]
 
-    result = _handle_search(svc, "content", source_type="inferred")
+    result = _handle_search(processor, "content", source_type="inferred")
     titles = {item["memory"]["title"] for item in result["results"]}
     assert "inf-mem" in titles
     assert "obs-mem" not in titles
 
 
-def test_source_type_filter_no_matches_returns_empty(svc):
+def test_source_type_filter_no_matches_returns_empty(svc, processor):
     """source_type filter with no matching memories returns empty results."""
     _handle_insert(
-        svc,
+        processor,
         memories=[{"title": "just-obs", "content": "only observed", "source_type": "observed"}],
         links=[],
     )
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": row["id"], "score": 0.9} for row in all_rows]
 
-    result = _handle_search(svc, "observed", source_type="consolidated")
+    result = _handle_search(processor, "observed", source_type="consolidated")
     assert result["results"] == []
 
 
 # ── source_type filter — ids path ─────────────────────────────────────────────
 
 
-def test_source_type_filter_in_ids_path(svc):
+def test_source_type_filter_in_ids_path(svc, processor):
     """ids path with source_type filter must exclude non-matching memories."""
     r = _handle_insert(
-        svc,
+        processor,
         memories=[
             {"title": "ids-obs", "content": "ids observed", "source_type": "observed"},
             {"title": "ids-inj", "content": "ids injected", "source_type": "injected"},
@@ -167,7 +181,7 @@ def test_source_type_filter_in_ids_path(svc):
     )
     ids = [m["id"] for m in r["inserted_memories"]]
 
-    result = _handle_search(svc, "", ids=ids, source_type="injected")
+    result = _handle_search(processor, "", ids=ids, source_type="injected")
     titles = {item["memory"]["title"] for item in result["results"]}
     assert "ids-inj" in titles
     assert "ids-obs" not in titles
@@ -176,41 +190,41 @@ def test_source_type_filter_in_ids_path(svc):
 # ── invalid source_type raises at handler layer ───────────────────────────────
 
 
-def test_search_invalid_source_type_raises_value_error(svc):
+def test_search_invalid_source_type_raises_value_error(svc, processor):
     """Invalid source_type must raise ValueError at the handler layer."""
     with pytest.raises(ValueError, match="Unknown source_type"):
-        _handle_search(svc, "test", source_type="made_up")
+        _handle_search(processor, "test", source_type="made_up")
 
 
-def test_search_valid_source_types_do_not_raise(svc):
+def test_search_valid_source_types_do_not_raise(svc, processor):
     """All valid SOURCE_TYPES must be accepted by _handle_search without error."""
     for st in SOURCE_TYPES:
         # No exception — empty results are fine
-        result = _handle_search(svc, "test", source_type=st)
+        result = _handle_search(processor, "test", source_type=st)
         assert "results" in result
 
 
-def test_insert_invalid_source_type_raises_value_error(svc):
+def test_insert_invalid_source_type_raises_value_error(svc, processor):
     """Invalid source_type in lore_insert memory dict must raise ValueError at the handler layer."""
     with pytest.raises(ValueError, match="invalid source_type"):
         _handle_insert(
-            svc,
+            processor,
             memories=[{"title": "bad-type", "content": "test", "source_type": "totally_made_up"}],
             links=[],
         )
 
 
-def test_insert_unknown_source_type_is_rejected(svc):
+def test_insert_unknown_source_type_is_rejected(svc, processor):
     """'unknown' source_type must be rejected on insert — it is reserved for migration backfill."""
     with pytest.raises(ValueError, match="invalid source_type"):
         _handle_insert(
-            svc,
+            processor,
             memories=[{"title": "unknown-type", "content": "test", "source_type": "unknown"}],
             links=[],
         )
 
 
-def test_insert_valid_source_types_do_not_raise(svc):
+def test_insert_valid_source_types_do_not_raise(svc, processor):
     """All write-time WRITE_SOURCE_TYPES must be accepted by _handle_insert without error.
 
     'unknown' is excluded — it is reserved for migration backfill and must NOT be
@@ -218,7 +232,7 @@ def test_insert_valid_source_types_do_not_raise(svc):
     """
     for st in WRITE_SOURCE_TYPES:
         result = _handle_insert(
-            svc,
+            processor,
             memories=[{"title": f"valid-{st}", "content": "test", "source_type": st}],
             links=[],
         )
@@ -296,10 +310,10 @@ def test_migration_3_is_idempotent(tmp_path):
     conn.close()
 
 
-def test_new_rows_get_observed_not_unknown(svc):
+def test_new_rows_get_observed_not_unknown(svc, processor):
     """Rows written via the service after migration must default to 'observed', not 'unknown'."""
     r = _handle_insert(
-        svc,
+        processor,
         memories=[{"title": "post-mig", "content": "inserted normally"}],
         links=[],
     )

@@ -11,7 +11,6 @@ from lorekeeper.api.mcp.handlers.suggestion_handlers import (
     handle_review_suggestion,
 )
 from lorekeeper.domains.link.repository import LinkStore
-from lorekeeper.domains.memory.models import WRITE_SOURCE_TYPES
 from lorekeeper.domains.memory.repository import MemoryStore
 from lorekeeper.domains.reflection.repository import ReflectionStore
 from lorekeeper.domains.suggestion.repository import LinkSuggestionStore
@@ -21,6 +20,7 @@ from lorekeeper.infra.search_engine import LanceDBEngine
 from lorekeeper.infra.settings import Settings
 from lorekeeper.platform.config.repository import ConfigStore
 from lorekeeper.platform.metrics.repository import MetricsStore
+from lorekeeper.processors.memory import MemoryProcessor
 from lorekeeper.processors.suggestion import SuggestionProcessor
 from lorekeeper.services.orchestrator import MemoryService
 from lorekeeper.shared.encouragement import (
@@ -37,6 +37,7 @@ mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
 _svc: MemoryService | None = None
 _suggestions_store: LinkSuggestionStore | None = None
 _suggestion_processor: SuggestionProcessor | None = None
+_memory_processor: MemoryProcessor | None = None
 
 
 def get_service() -> MemoryService:
@@ -60,8 +61,15 @@ def get_suggestion_processor() -> SuggestionProcessor:
     return _suggestion_processor
 
 
+def get_memory_processor() -> MemoryProcessor:
+    global _memory_processor
+    if _memory_processor is None:
+        raise RuntimeError("MemoryProcessor not initialised — call init_service() first")
+    return _memory_processor
+
+
 def init_service(settings: Settings | None = None) -> MemoryService:
-    global _svc, _suggestions_store, _suggestion_processor
+    global _svc, _suggestions_store, _suggestion_processor, _memory_processor
     s = settings or Settings()
     s.data_dir.mkdir(parents=True, exist_ok=True)
 
@@ -176,6 +184,14 @@ def init_service(settings: Settings | None = None) -> MemoryService:
         metrics=svc.metrics,
         db=db,
     )
+    _memory_processor = MemoryProcessor(
+        search_service=svc.memory_search_service,
+        write_service=svc.memory_write_service,
+        import_service=svc.import_service,
+        metrics=svc.metrics,
+        db=db,
+        settings=svc.settings,
+    )
     return svc
 
 
@@ -234,7 +250,7 @@ async def lore_search(
     """
     try:
         return handle_search(
-            get_service(), query, limit, min_score, include_links, include_deleted,
+            get_memory_processor(), query, limit, min_score, include_links, include_deleted,
             refine_from=refine_from, format=format, ids=ids,
             created_after=created_after, updated_after=updated_after,
             sort_by=sort_by, source_type=source_type,
@@ -268,7 +284,7 @@ async def lore_insert(
     relation_type, and reason.
     """
     try:
-        result = handle_insert(get_service(), memories or [], links or [], force)
+        result = handle_insert(get_memory_processor(), memories or [], links or [], force)
         mem_count = len(memories or [])
         link_count = len(links or [])
         result.update(for_insert(memory_count=mem_count, link_count=link_count))
@@ -319,12 +335,8 @@ async def lore_remember(thought: str, source_type: str = "observed") -> dict[str
             (extracted from conversation). Other values: ``'inferred'``,
             ``'user_stated'``, ``'consolidated'``, ``'injected'``.
     """
-    if source_type not in WRITE_SOURCE_TYPES:
-        raise ValueError(
-            f"Unknown source_type {source_type!r}. Must be one of: {sorted(WRITE_SOURCE_TYPES)}"
-        )
     try:
-        result = get_service().remember(thought, source_type=source_type)
+        result = get_memory_processor().remember(thought, source_type=source_type)
         result.update(for_remember())
         return result
     except Exception:
@@ -347,7 +359,7 @@ async def lore_update(
     Call after every ``lore_search`` to keep scores calibrated.
     """
     try:
-        result = get_service().update(memory_feedback or [], link_feedback or [])
+        result = get_memory_processor().update(memory_feedback or [], link_feedback or [])
         result.update(for_update())
         return result
     except Exception:
@@ -460,13 +472,8 @@ async def lore_forget(
           "errors": [dict]      # any unexpected failures
         }
     """
-    if not memory_ids:
-        raise ValueError("memory_ids must not be empty")
-    _VALID_REASONS = {"duplicate", "hallucinated", "outdated", "expired", "unspecified"}
-    if reason not in _VALID_REASONS:
-        raise ValueError(f"Unknown reason {reason!r}. Must be one of: {sorted(_VALID_REASONS)}")
     try:
-        result = get_service().forget(memory_ids, reason)
+        result = get_memory_processor().forget(memory_ids, reason)
         forgotten_count = len(result.get("forgotten", []))
         result.update(for_forget(count=forgotten_count))
         return result

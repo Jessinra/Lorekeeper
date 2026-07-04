@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from lorekeeper.server import get_service
+from lorekeeper.server import get_memory_processor
 from lorekeeper.shared.serializers import serialize_search_result
 
 router = APIRouter()
@@ -17,8 +17,9 @@ class SearchRequest(BaseModel):
 
 @router.post("/api/search")
 def search(body: SearchRequest) -> list[dict[str, Any]]:
-    results = get_service().search(
-        body.query, limit=body.limit, min_score=body.min_score, include_links=False
+    results = get_memory_processor().search(
+        body.query, limit=body.limit, min_score=body.min_score,
+        include_links=False,
     )
     return [
         serialize_search_result(
