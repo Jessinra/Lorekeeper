@@ -509,6 +509,10 @@ class Database:
         # clean up .db-shm / .db-wal.
         atexit.register(self.close)
 
+    def commit(self) -> None:
+        """Flush pending writes. Commit control belongs to the calling service."""
+        self._conn.commit()
+
     @property
     def conn(self) -> sqlite3.Connection:
         """Direct access to the underlying sqlite3 connection.
