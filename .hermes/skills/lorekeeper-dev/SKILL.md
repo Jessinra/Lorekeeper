@@ -455,18 +455,42 @@ The bar isn't perfection — it's transparency and traceability. If something wa
 
 ## Post-Change Rule
 
+### Commit timing — code first, test later
+
+Jason's rule: **commit after every main code change, before tests.**
+
+```
+Each main code change → commit → [then run tests, self-review, etc.]
+                      ^^^^^^^^^
+                      Do this first. Don't bundle tests in the same commit.
+```
+
+Rationale: small, focused commits are easier to review, bisect, and revert. Test commits belong in their own commit (or squashed into the feature commit at merge time). Never hold a finished code change hostage waiting for test results.
+
+### Full sequence
+
 After every set of changes:
 
-1. **Mandatory self-review loop** — load the `lorekeeper-dev-self-review` skill and run the Reflexion cycle (Actor → Evaluator → Reflector → repeat, max 3 iterations). Self-score each criterion 1-10. PASS requires overall ≥ 8. Do not skip this step.
-2. If PASS → commit with `[LKPR-N] type: title` format
-3. If FAIL after 3 iterations → surface blockers to Akane/Jason. Do not push.
-4. Push to `origin` (GitHub): `git push origin <branch>`
-5. Open a PR and request a reviewer — load the `github-pr-workflow` skill. In short:
+1. **Run prettier on changed markdown files** — `npx prettier --write <file>` for any `.md` files you touched. Pre-commit hooks will catch this, so fix it upfront instead of hitting `--no-verify` and failing CI.
+
+2. **Commit main code changes first** — `git add` the production code (exclude test files), then `git commit -m "[LKPR-N] type: what changed"`. Do not wait for tests or self-review. Do NOT use `--no-verify` unless the pre-commit hook is wrongly blocking legitimate changes.
+
+3. **Commit test changes** — `git add tests/` (if any), then `git commit -m "[LKPR-N] test: add tests for <feature>"`. Separate commit from the production code change.
+
+4. **Mandatory self-review loop** — load the `lorekeeper-dev-self-review` skill and run the Reflexion cycle (Actor → Evaluator → Reflector → repeat, max 3 iterations). Self-score each criterion 1-10. PASS requires overall ≥ 8. Do not skip this step.
+
+5. If FAIL after 3 iterations → surface blockers to Akane/Jason. Do not push.
+
+6. Push to `origin` (GitHub): `git push origin <branch>`
+
+7. Open a PR and request a reviewer — load the `github-pr-workflow` skill. In short:
+
    ```bash
    gh pr create --base main --title "[LKPR-N] type: title" --body "..."
    gh pr edit <PR_NUMBER> --add-reviewer @copilot   # separate step; may fail if login invalid
    ```
-6. Ping Jason on Telegram to review and merge
+
+8. Ping Jason on Telegram to review and merge
 
 ## Plans Location
 

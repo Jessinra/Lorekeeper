@@ -91,6 +91,40 @@ jobs:
               );
             }
 
+      - name: PR title & commit title convention check
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const TICKET_RE = /^\[LKPR-\d+\]/;
+
+            // ── PR title check ──────────────────────────────────────────────
+            const prTitle = context.payload.pull_request.title || '';
+            if (!TICKET_RE.test(prTitle)) {
+              core.setFailed(
+                `PR title must start with [LKPR-N]. Got: "${prTitle}"\n` +
+                '  Use [LKPR-0] for housekeeping (chore, docs, skill updates, etc.).'
+              );
+            }
+
+            // ── Commit title check ──────────────────────────────────────────
+            const { owner, repo } = context.repo;
+            const compare = await github.rest.repos.compareCommits({
+              owner, repo,
+              base: context.payload.pull_request.base.sha,
+              head: context.payload.pull_request.head.sha,
+            });
+            const badCommits = compare.data.commits
+              .filter(c => !TICKET_RE.test(c.commit.message.split('\n')[0]))
+              .map(c => `  ${c.sha.slice(0, 7)}  ${c.commit.message.split('\n')[0]}`);
+
+            if (badCommits.length > 0) {
+              core.setFailed(
+                `${badCommits.length} commit(s) missing [LKPR-N] prefix:\n${badCommits.join('\n')}\n\n` +
+                'Tip: use `git rebase -i` to reword commit messages, then force-push.'
+              );
+            }
+
       - name: Prettier markdown check
         run: |
           while IFS= read -r -d '' f; do
