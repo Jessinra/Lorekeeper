@@ -10,89 +10,16 @@ permissions:
   pull-requests: write
 
 jobs:
-  lint-and-test:
-    name: Lint & Test (Python 3.11)
+  # ── 1. PR metadata checks ────────────────────────────────────────────────────
+  pr-check:
+    name: PR Checks
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          enable-cache: true
-
-      - name: Cache HuggingFace models
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/huggingface
-          key: hf-models-all-MiniLM-L6-v2
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
-
-      - name: Pre-warm embedding model
-        env:
-          HF_HOME: ~/.cache/huggingface
-        run: |
-          uv run python - << 'EOF'
-          from sentence_transformers import SentenceTransformer
-          SentenceTransformer("all-MiniLM-L6-v2")
-          print("Model ready.")
-          EOF
-
-      - name: Ruff lint
-        run: uv run ruff check src tests scripts/
-
-      - name: Bandit security scan
-        run: uv run bandit -r src/ -ll -c pyproject.toml --exit-zero 2>&1 || true
-
-      - name: Biome JS lint (dashboard)
-        run: npx @biomejs/biome check src/lorekeeper/dashboard/static/js/ 2>&1 || echo "No JS changes detected — skipping"
-
-      - name: Dependency vulnerability scan
-        run: uv run pip-audit --strict 2>&1 || echo "pip-audit not installed — skipping"
-
-      - name: MCP tool documentation check
-        run: uv run python scripts/check_mcp_docs.py
-
-      - name: Proposal GitHub issue validation
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: uv run python scripts/check_issues.py
-
-      - name: PR body convention check
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const headRef = context.payload.pull_request.head.ref;
-            const body = context.payload.pull_request.body || '';
-            const isProposal = headRef.startsWith('proposal/');
-            const hasCloses = /\bcloses\s+#\d+/i.test(body);
-            const hasRefs = /\brefs?\s+#\d+/i.test(body);
-
-            if (isProposal && hasCloses) {
-              core.setFailed(
-                'Proposal PRs must use "Refs #N" not "Closes #N". ' +
-                'Proposal tickets should not auto-close — use "Refs #N" to reference them.'
-              );
-            }
-
-            if (!isProposal && !hasCloses && !hasRefs) {
-              core.warning(
-                'Feature/fix PRs should reference the issue. ' +
-                'Add "Closes #N" (auto-close) or "Refs #N" (reference only) to the PR body.'
-              );
-            }
-
       - name: PR title & commit title convention check
-        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
@@ -125,6 +52,79 @@ jobs:
               );
             }
 
+      - name: PR body convention check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const headRef = context.payload.pull_request.head.ref;
+            const body = context.payload.pull_request.body || '';
+            const isProposal = headRef.startsWith('proposal/');
+            const hasCloses = /\bcloses\s+#\d+/i.test(body);
+            const hasRefs = /\brefs?\s+#\d+/i.test(body);
+
+            if (isProposal && hasCloses) {
+              core.setFailed(
+                'Proposal PRs must use "Refs #N" not "Closes #N". ' +
+                'Proposal tickets should not auto-close — use "Refs #N" to reference them.'
+              );
+            }
+
+            if (!isProposal && !hasCloses && !hasRefs) {
+              core.warning(
+                'Feature/fix PRs should reference the issue. ' +
+                'Add "Closes #N" (auto-close) or "Refs #N" (reference only) to the PR body.'
+              );
+            }
+
+      - name: PR size check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_MAX_INSERTIONS: 1000
+          PR_MAX_FILES: 20
+          PR_WARN_INSERTIONS: 500
+          PR_WARN_FILES: 10
+          PR_EXCLUDE_PREFIXES: "docs/:backlogs/"
+          PR_BYPASS_LABEL: "big_refactor"
+        run: |
+          # Check bypass label via API before running the size gate.
+          labels=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '[.labels[].name] | join(",")' 2>/dev/null || echo "")
+          if echo "$labels" | grep -q "${PR_BYPASS_LABEL}"; then
+            echo "PR labeled '${PR_BYPASS_LABEL}' — skipping size gate."
+            exit 0
+          fi
+          bash scripts/check_pr_size.sh "origin/${{ github.base_ref }}"
+
+  # ── 2. Lint ──────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint (Python 3.11)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python, uv & dependencies
+        uses: ./.github/actions/setup-python-uv
+
+      - name: Ruff lint
+        run: uv run ruff check src tests scripts/
+
+      - name: Bandit security scan
+        run: uv run bandit -r src/ -ll -c pyproject.toml --exit-zero 2>&1 || true
+
+      - name: Biome JS lint (dashboard)
+        run: npx @biomejs/biome check src/lorekeeper/dashboard/static/js/ 2>&1 || echo "No JS changes detected — skipping"
+
+      - name: Dependency vulnerability scan
+        run: uv run pip-audit --strict 2>&1 || echo "pip-audit not installed — skipping"
+
+      - name: MCP tool documentation check
+        run: uv run python scripts/check_mcp_docs.py
+
+      - name: Proposal GitHub issue validation
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: uv run python scripts/check_issues.py
+
       - name: Prettier markdown check
         run: |
           while IFS= read -r -d '' f; do
@@ -133,6 +133,23 @@ jobs:
 
       - name: Skill format check
         run: uv run python scripts/check_skills.py
+
+      - name: Mypy type check
+        run: uv run mypy src
+
+  # ── 3. Test ──────────────────────────────────────────────────────────────────
+  test:
+    name: Test (Python 3.11)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python, uv & dependencies
+        uses: ./.github/actions/setup-python-uv
+
+      - name: Cache & pre-warm HuggingFace model
+        uses: ./.github/actions/setup-huggingface
 
       - name: Run tests with coverage
         env:
@@ -144,11 +161,37 @@ jobs:
             --cov=src/lorekeeper \
             --cov-report=term-missing \
             --cov-report=xml \
-            --cov-report=html \
             --tb=short -q | tee pytest-cov.log
 
-      - name: Summarize coverage in the job summary
+      - name: Upload coverage data
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data
+          path: .coverage
+          if-no-files-found: warn
+          retention-days: 1
+
+  # ── 4. Coverage ──────────────────────────────────────────────────────────────
+  coverage:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python, uv & dependencies
+        uses: ./.github/actions/setup-python-uv
+
+      - name: Download coverage data
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-data
+        continue-on-error: true
+
+      - name: Summarize coverage in the job summary
         run: |
           {
             echo "## Coverage"
@@ -182,6 +225,12 @@ jobs:
               } > coverage-comment.md
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Generate and upload coverage HTML report
+        if: always()
+        run: |
+          [ -f .coverage ] && uv run coverage html || true
+        continue-on-error: true
 
       - name: Upload coverage HTML report
         if: always()
@@ -233,68 +282,7 @@ jobs:
               core.info('Created coverage comment.');
             }
 
-      - name: Mypy type check
-        run: uv run mypy src
-
-      - name: PR size check
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const MAX_INSERTIONS = 1000;
-            const MAX_FILES = 20;
-            // Exclude docs/ and backlogs/ from size gate
-            const EXCLUDE_PREFIXES = ['docs/', 'backlogs/'];
-            // Allow deliberately large PRs to bypass the gate via label
-            const BYPASS_LABEL = 'big_refactor';
-
-            // Fetch labels fresh from the API rather than the webhook payload
-            // snapshot, so the bypass works on job re-runs after the label is
-            // added (the payload would otherwise reflect the original event).
-            const { data: pr } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-            });
-            const labels = (pr.labels || []).map(l => l.name);
-            if (labels.includes(BYPASS_LABEL)) {
-              core.info(`PR labeled "${BYPASS_LABEL}" — skipping size gate.`);
-              return;
-            }
-
-            const files = await github.paginate(
-              github.rest.pulls.listFiles,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.payload.pull_request.number,
-                per_page: 100,
-              },
-            );
-
-            let filteredAdditions = 0;
-            let filteredChangedFiles = 0;
-            for (const f of files) {
-              const excluded = EXCLUDE_PREFIXES.some(p => f.filename.startsWith(p));
-              if (!excluded) {
-                filteredAdditions += f.additions;
-                filteredChangedFiles += 1;
-              }
-            }
-
-            if (filteredAdditions > MAX_INSERTIONS && filteredChangedFiles > MAX_FILES) {
-              core.setFailed(
-                `${filteredAdditions} insertions across ${filteredChangedFiles} files exceeds ${MAX_INSERTIONS}/${MAX_FILES} threshold. ` +
-                'Large PRs skip depth review. Split into smaller PRs per concern.'
-              );
-            } else if (filteredAdditions > 500 || filteredChangedFiles > 10) {
-              core.warning(
-                `${filteredAdditions} insertions across ${filteredChangedFiles} files — large PR. Consider splitting into smaller changes.`
-              );
-            }
-
       - name: Coverage threshold gate
-        if: always()
         run: |
           if [ -f .coverage ]; then
             TOTAL=$(uv run coverage report --skip-covered | awk '/^TOTAL/{print $NF}' | tr -d '%')
@@ -308,42 +296,20 @@ jobs:
             echo "Coverage data not found — skipping gate"
           fi
 
+  # ── E2E ──────────────────────────────────────────────────────────────────────
   e2e:
     name: E2E Tests (Playwright / Chromium)
     runs-on: ubuntu-latest
-    needs: lint-and-test
+    needs: test
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Set up Python, uv & dependencies
+        uses: ./.github/actions/setup-python-uv
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          enable-cache: true
-
-      - name: Cache HuggingFace models
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/huggingface
-          key: hf-models-all-MiniLM-L6-v2
-
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
-
-      - name: Pre-warm embedding model
-        env:
-          HF_HOME: ~/.cache/huggingface
-        run: |
-          uv run python - << 'EOF'
-          from sentence_transformers import SentenceTransformer
-          SentenceTransformer("all-MiniLM-L6-v2")
-          print("Model ready.")
-          EOF
+      - name: Cache & pre-warm HuggingFace model
+        uses: ./.github/actions/setup-huggingface
 
       - name: Install Playwright browsers
         run: uv run playwright install chromium --with-deps
