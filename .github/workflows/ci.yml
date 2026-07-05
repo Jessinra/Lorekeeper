@@ -211,6 +211,22 @@ jobs:
             const MAX_FILES = 20;
             // Exclude docs/ and backlogs/ from size gate
             const EXCLUDE_PREFIXES = ['docs/', 'backlogs/'];
+            // Allow deliberately large PRs to bypass the gate via label
+            const BYPASS_LABEL = 'big_refactor';
+
+            // Fetch labels fresh from the API rather than the webhook payload
+            // snapshot, so the bypass works on job re-runs after the label is
+            // added (the payload would otherwise reflect the original event).
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            const labels = (pr.labels || []).map(l => l.name);
+            if (labels.includes(BYPASS_LABEL)) {
+              core.info(`PR labeled "${BYPASS_LABEL}" — skipping size gate.`);
+              return;
+            }
 
             const files = await github.paginate(
               github.rest.pulls.listFiles,
