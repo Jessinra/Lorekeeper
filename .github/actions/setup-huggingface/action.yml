@@ -5,7 +5,7 @@ runs:
   using: composite
   steps:
     - name: Cache HuggingFace models
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.cache/huggingface
         key: hf-models-all-MiniLM-L6-v2
