@@ -96,7 +96,6 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const MAX_COMMITS = 10;
             const TICKET_RE = /^\[LKPR-\d+\]/;
 
             // ── PR title check ──────────────────────────────────────────────
@@ -110,16 +109,11 @@ jobs:
 
             // ── Commit title check ──────────────────────────────────────────
             const { owner, repo } = context.repo;
-            // Fetch commits via the compare API (supports up to ~250 commits)
             const compare = await github.rest.repos.compareCommits({
               owner, repo,
               base: context.payload.pull_request.base.sha,
               head: context.payload.pull_request.head.sha,
-              per_page: MAX_COMMITS,
             });
-            if (compare.data.commits.length >= MAX_COMMITS) {
-              core.warning(`PR has ${compare.data.commits.length}+ commits — sampling first ${MAX_COMMITS}`);
-            }
             const badCommits = compare.data.commits
               .filter(c => !TICKET_RE.test(c.commit.message.split('\n')[0]))
               .map(c => `  ${c.sha.slice(0, 7)}  ${c.commit.message.split('\n')[0]}`);
