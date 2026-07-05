@@ -56,6 +56,10 @@ class Stores:
     metrics: MetricsStore
     config: ConfigStore
 
+    def close(self) -> None:
+        """Close the shared SQLite connection. Call in fixture teardown."""
+        self.db.close()
+
 
 def build_stores(db_path: Path) -> Stores:
     """Build a migrated Database and all five focused stores."""

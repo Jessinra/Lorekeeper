@@ -16,7 +16,8 @@ def svc(tmp_path):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    return build_app(store, engine, kw, settings), engine
+    yield build_app(store, engine, kw, settings), engine
+    store.close()
 
 
 def test_insert_link_between_memories(svc):

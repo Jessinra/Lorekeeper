@@ -16,7 +16,8 @@ def svc(tmp_path):
     engine = FakeEngine()
     kw = KeywordIndex()
     settings = Settings()
-    return build_app(store, engine, kw, settings), engine
+    yield build_app(store, engine, kw, settings), engine
+    store.close()
 
 
 def test_search_excludes_soft_deleted(svc):
@@ -49,50 +50,56 @@ def test_agent_reads_own_and_shared(tmp_path):
     """Diana agent should see diana + shared memories, not bella's."""
     # Seed the DB directly with memories from multiple namespaces
     store = build_stores(tmp_path / "multi.db")
-    store.memories.upsert_memory_row(id="a", title="diana mem", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00",
-                            updated_at="2026-01-01T00:00:00+00:00",
-                            namespace="diana")
-    store.memories.upsert_memory_row(id="b", title="shared mem", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00",
-                            updated_at="2026-01-01T00:00:00+00:00",
-                            namespace="shared")
-    store.memories.upsert_memory_row(id="c", title="bella mem", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00",
-                            updated_at="2026-01-01T00:00:00+00:00",
-                            namespace="bella")
+    try:
+        store.memories.upsert_memory_row(id="a", title="diana mem", description="d", content="c",
+                                created_at="2026-01-01T00:00:00+00:00",
+                                updated_at="2026-01-01T00:00:00+00:00",
+                                namespace="diana")
+        store.memories.upsert_memory_row(id="b", title="shared mem", description="d", content="c",
+                                created_at="2026-01-01T00:00:00+00:00",
+                                updated_at="2026-01-01T00:00:00+00:00",
+                                namespace="shared")
+        store.memories.upsert_memory_row(id="c", title="bella mem", description="d", content="c",
+                                created_at="2026-01-01T00:00:00+00:00",
+                                updated_at="2026-01-01T00:00:00+00:00",
+                                namespace="bella")
 
-    engine = FakeEngine()
-    kw = KeywordIndex()
-    settings = Settings(namespace="diana")
-    svc = build_app(store, engine, kw, settings)
+        engine = FakeEngine()
+        kw = KeywordIndex()
+        settings = Settings(namespace="diana")
+        svc = build_app(store, engine, kw, settings)
 
-    memories = svc.cache.all_memories()
-    ids = set(memories.keys())
-    assert "a" in ids   # own namespace
-    assert "b" in ids   # shared
-    assert "c" not in ids  # bella's — invisible
+        memories = svc.cache.all_memories()
+        ids = set(memories.keys())
+        assert "a" in ids   # own namespace
+        assert "b" in ids   # shared
+        assert "c" not in ids  # bella's — invisible
+    finally:
+        store.close()
 
 
 def test_no_namespace_sees_all(tmp_path):
     """With namespace='shared' (default), _all_memories returns all rows."""
     store = build_stores(tmp_path / "all.db")
-    store.memories.upsert_memory_row(id="a", title="t1", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00",
-                            updated_at="2026-01-01T00:00:00+00:00",
-                            namespace="diana")
-    store.memories.upsert_memory_row(id="b", title="t2", description="d", content="c",
-                            created_at="2026-01-01T00:00:00+00:00",
-                            updated_at="2026-01-01T00:00:00+00:00",
-                            namespace="shared")
+    try:
+        store.memories.upsert_memory_row(id="a", title="t1", description="d", content="c",
+                                created_at="2026-01-01T00:00:00+00:00",
+                                updated_at="2026-01-01T00:00:00+00:00",
+                                namespace="diana")
+        store.memories.upsert_memory_row(id="b", title="t2", description="d", content="c",
+                                created_at="2026-01-01T00:00:00+00:00",
+                                updated_at="2026-01-01T00:00:00+00:00",
+                                namespace="shared")
 
-    engine = FakeEngine()
-    kw = KeywordIndex()
-    settings = Settings(namespace="shared")
-    svc = build_app(store, engine, kw, settings)
+        engine = FakeEngine()
+        kw = KeywordIndex()
+        settings = Settings(namespace="shared")
+        svc = build_app(store, engine, kw, settings)
 
-    memories = svc.cache.all_memories()
-    assert len(memories) == 2  # sees all
+        memories = svc.cache.all_memories()
+        assert len(memories) == 2  # sees all
+    finally:
+        store.close()
 
 
 # ── LKPR-80: sort_by crash-guard on ids-path ─────────────────────────────────
