@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body{margin:0;background:#f9f9fb;color:#1a1a2e;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  *{box-sizing:border-box;}
+  .lk-rail-item{width:58px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 8px;border:none;background:transparent;border-radius:8px;color:#6b7280;font-size:10.5px;font-weight:500;position:relative;cursor:pointer;}
+  .lk-rail-item svg{width:19px;height:19px;}
+  .lk-rail-item:hover{background:#f4f4f6;color:#1a1a2e;}
+  .lk-rail-item.active{background:#f1edff;color:#7c5cff;font-weight:600;}
+  .chip{border:1px solid #e6e6ee;background:#fff;border-radius:999px;padding:7px 15px;font-size:13px;color:#3f3f52;font-weight:500;cursor:pointer;white-space:nowrap;}
+  .chip:hover{border-color:#d6d6e0;}
+  .chip.on{background:#f1edff;border-color:#c9b8ff;color:#6a46f5;font-weight:600;}
+  .tl{position:relative;padding-left:22px;border-left:2px solid #e6e6ee;margin-left:4px;}
+  .sess{position:relative;background:#fff;border:1px solid #e6e6ee;border-radius:12px;padding:14px 18px;margin-bottom:12px;cursor:pointer;transition:border-color .12s,background .12s;}
+  .sess:hover{border-color:#dcdce6;background:#fcfcfe;}
+  .sess::before{content:"";position:absolute;left:-29px;top:18px;width:9px;height:9px;border-radius:50%;border:2px solid #7c5cff;background:#fff;}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;flex-shrink:0;}
+  .badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;}
+  .b-build{background:#f1edff;color:#6a46f5;}.b-design{background:#fef6e7;color:#d97706;}.b-review{background:#ecfdf3;color:#16a34a;}.b-debug{background:#fef2f2;color:#dc2626;}.b-other{background:#f1f1f6;color:#6b7280;}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:440px;max-width:92vw;background:#fff;border-left:1px solid #e6e6ee;box-shadow:-12px 0 40px rgba(20,20,40,.1);transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);z-index:60;overflow-y:auto;}
+  .drawer.open{transform:translateX(0);}
+  .drawer2{position:fixed;top:0;right:0;height:100vh;width:456px;max-width:94vw;background:#fff;border-left:1px solid #e6e6ee;box-shadow:-16px 0 48px rgba(20,20,40,.17);transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);z-index:70;overflow-y:auto;}
+  .drawer2.open{transform:translateX(0);}
+  .d-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;margin:18px 0 6px;padding-left:0;transition:padding .12s;}
+  .d-fld{width:100%;font-family:inherit;font-size:13px;line-height:1.6;color:#1a1a2e;padding:0;border:1px solid transparent;border-radius:9px;background:transparent;box-sizing:border-box;resize:none;overflow:hidden;transition:border-color .12s,background .12s,padding .12s;-webkit-text-fill-color:#1a1a2e;}
+  .d-title-fld{font-size:17px;font-weight:700;line-height:1.35;color:#1a1a2e;-webkit-text-fill-color:#1a1a2e;padding:0;}
+  #mem-drawer:not(.editing) select.d-fld{background-image:none;}
+  #mem-drawer.editing .d-lbl{padding-left:12px;}
+  #mem-drawer.editing .d-fld{border-color:#e6e6ee;background:#fff;padding:10px 12px;cursor:text;}
+  #mem-drawer.editing .d-title-fld{padding:8px 12px;}
+  #mem-drawer.editing .d-fld:focus{outline:none;border-color:#7c5cff;box-shadow:0 0 0 3px rgba(124,92,255,.16);}
+  #mem-drawer.editing select.d-fld,#mem-drawer.editing .d-num{cursor:pointer;}
+  .scrim{position:fixed;inset:0;background:rgba(20,20,35,.28);opacity:0;pointer-events:none;transition:opacity .2s;z-index:55;}
+  .scrim.open{opacity:1;pointer-events:auto;}
+  .lk-search:focus{outline:none;border-color:#7c5cff;box-shadow:0 0 0 3px rgba(124,92,255,.16);}
+  .sd-mem-item:hover{border-color:#c9b8ff;background:#faf9fc;}
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="19" r="2.5"/><path d="M7 7.3L10.2 16.5M17 7.3L13.8 16.5M7.5 6H16.5"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h16v12l-3 4H7l-3-4V4z"/><path d="M4 12h5l2 3h2l2-3h5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M12 20V4M20 20v-7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></symbol>
+</defs></svg>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#7c5cff"/><g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><circle cx="50" cy="50" r="24"/><path d="M50 36v14l9 6"/></g></svg></template>
+<div id="sess-root" style="display:flex;min-height:100vh;">
+
+  <nav aria-label="Primary" style="width:76px;flex-shrink:0;background:#fff;border-right:1px solid #e6e6ee;display:flex;flex-direction:column;align-items:center;padding:16px 0 12px;position:fixed;top:0;bottom:0;left:0;z-index:40;">
+    <div style="width:36px;height:36px;border-radius:8px;background:#7c5cff;color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:24px;"><svg style="width:20px;height:20px"><use href="#i-shield"/></svg></div>
+    <div style="display:flex;flex-direction:column;gap:2px;width:100%;align-items:center;">
+      <button class="lk-rail-item"><svg><use href="#i-home"/></svg>Home</button>
+      <button class="lk-rail-item"><svg><use href="#i-grid"/></svg>Memories</button>
+      <button class="lk-rail-item"><svg><use href="#i-network"/></svg>Links</button>
+      <button class="lk-rail-item"><svg><use href="#i-inbox"/></svg>Review<span style="position:absolute;top:2px;right:6px;background:#dc2626;color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:999px;text-align:center;line-height:15px;padding:0 3px;">8</span></button>
+      <button class="lk-rail-item active"><svg><use href="#i-clock"/></svg>Sessions</button><button class="lk-rail-item"><svg><use href="#i-bar"></use></svg>Metrics</button>
+    </div>
+    <div style="flex:1"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:12px;border-top:1px solid #e6e6ee;width:100%;margin-top:12px;">
+      <button class="lk-rail-item"><svg><use href="#i-gear"/></svg>Settings</button>
+      <span style="width:7px;height:7px;border-radius:50%;background:#16a34a;margin-top:1px;"></span>
+    </div>
+  </nav>
+
+  <div style="flex:1;min-width:0;margin-left:76px;display:flex;flex-direction:column;">
+
+    <div style="height:60px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid #e6e6ee;background:#fff;position:sticky;top:0;z-index:30;">
+      <div style="font-size:14px;color:#9ca3af;display:flex;gap:6px;align-items:center;">Lorekeeper <span>/</span> <span style="color:#1a1a2e;font-weight:600;">Sessions</span></div>
+      <button style="display:flex;align-items:center;gap:8px;border:1px solid #e6e6ee;background:#f9f9fb;border-radius:6px;padding:8px 10px;color:#9ca3af;font-size:13px;width:230px;cursor:pointer;">
+        <svg style="width:15px;height:15px;flex-shrink:0"><use href="#i-search"/></svg><span style="flex:1;text-align:left;">Search or jump to…</span>
+        <span style="display:flex;gap:3px;"><kbd style="background:#fff;border:1px solid #e6e6ee;border-radius:4px;font-size:10.5px;padding:1px 5px;color:#6b7280;">⌘</kbd><kbd style="background:#fff;border:1px solid #e6e6ee;border-radius:4px;font-size:10.5px;padding:1px 5px;color:#6b7280;">K</kbd></span>
+      </button>
+    </div>
+
+    <div style="padding:24px 32px 44px;max-width:1000px;width:100%;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap;">
+        <div style="position:relative;flex:1;min-width:280px;max-width:360px;">
+          <svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#9ca3af"><use href="#i-search"/></svg>
+          <input id="sess-q" class="lk-search" type="text" placeholder="Search by session ID or topic…" style="width:100%;border:1px solid #e6e6ee;border-radius:9px;padding:10px 14px 10px 38px;font-size:13px;background:#fff;">
+        </div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;" id="sess-chips">
+          <button class="chip on" data-task="">All types</button>
+          <button class="chip" data-task="build">build</button>
+          <button class="chip" data-task="debug">debug</button>
+          <button class="chip" data-task="review">review</button>
+          <button class="chip" data-task="design">design</button>
+        </div>
+        <span style="flex:1"></span>
+        <span id="sess-count" style="font-size:12.5px;color:#9ca3af;">200 sessions</span>
+      </div>
+
+      <div id="sess-list">
+        <div class="grp" data-date="Jul 1">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin:0 0 12px;">Today — Jul 1</div>
+          <div class="tl">
+            <div class="sess" data-task="build" data-topic="review inbox triage pattern implementation" data-id="sess_2f88a1" data-dur="42m" data-mem="3" data-memories='[{"t":"Review inbox triage pattern notes","d":"Keyboard-first triage beats mouse-only for >20 items/day.","s":7.6},{"t":"Command palette fuzzy match scoring","d":"Scoring function for the ⌘K search.","s":8.7},{"t":"FastAPI middleware ordering rules","d":"Auth before rate-limit, rate-limit before logging.","s":6.9}]' data-date="Jul 1, 2:14 PM" data-sum="Added Y/N keyboard shortcuts to the review inbox; triage time dropped ~9s → ~3s per suggestion.">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:11px;min-width:0;"><span class="badge b-build">build</span><span style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Review inbox triage pattern implementation</span></div><span style="font-size:12px;color:#9ca3af;flex-shrink:0;">2:14 PM</span></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:12px;color:#6b7280;"><span>42m</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><span>3 memories</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><code style="color:#9ca3af;">sess_2f88a1</code></div>
+            </div>
+            <div class="sess" data-task="design" data-topic="graph visualization node sizing logic" data-id="sess_9ac103" data-dur="1h 10m" data-mem="2" data-memories='[{"t":"Graph layout node sizing logic","d":"Node radius scales with usage_count, capped.","s":6.4},{"t":"Vector embedding cache invalidation logic","d":"When to recompute embeddings vs reuse cached vectors.","s":5.8}]' data-date="Jul 1, 11:02 AM" data-sum="Capped node radius at usage_count=40 so mega-hub nodes stop dominating the graph layout.">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:11px;min-width:0;"><span class="badge b-design">design</span><span style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Graph visualization node sizing logic</span></div><span style="font-size:12px;color:#9ca3af;flex-shrink:0;">11:02 AM</span></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:12px;color:#6b7280;"><span>1h 10m</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><span>2 memories</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><code style="color:#9ca3af;">sess_9ac103</code></div>
+            </div>
+            <div class="sess" data-task="review" data-topic="suggestion sweep accuracy audit" data-id="sess_0dd44e" data-dur="28m" data-mem="2" data-memories='[{"t":"Suggestion sweep accuracy audit notes","d":"Sampled 50 accepted links; 6 judged wrong in hindsight.","s":5.9},{"t":"Lorekeeper sweep engine confidence floor","d":"Minimum weighted_score before a suggestion surfaces.","s":7.3}]' data-date="Jul 1, 9:40 AM" data-sum="Sampled 50 accepted links; found 6 mislabeled as references where contradicts fit better.">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:11px;min-width:0;"><span class="badge b-review">review</span><span style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Suggestion sweep accuracy audit</span></div><span style="font-size:12px;color:#9ca3af;flex-shrink:0;">9:40 AM</span></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:12px;color:#6b7280;"><span>28m</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><span>2 memories</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><code style="color:#9ca3af;">sess_0dd44e</code></div>
+            </div>
+          </div>
+        </div>
+        <div class="grp" data-date="Jun 30">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin:20px 0 12px;">Yesterday — Jun 30</div>
+          <div class="tl">
+            <div class="sess" data-task="debug" data-topic="fixed dp-lock orphan div rendering bug" data-id="sess_77b2c9" data-dur="55m" data-mem="3" data-memories='[{"t":"Concurrent agent session handling","d":"Isolating memory writes when agents share a namespace.","s":6.2},{"t":"MCP transport handshake timeout patterns","d":"Handshake retries and backoff for stdio/SSE transports.","s":7.9},{"t":"FastAPI middleware ordering rules","d":"Auth before rate-limit, rate-limit before logging.","s":6.9}]' data-date="Jun 30, 5:33 PM" data-sum="Root cause: detached mutation observer on unmount left an orphan div. Fixed teardown order.">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:11px;min-width:0;"><span class="badge b-debug">debug</span><span style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Fixed dp-lock orphan div rendering bug</span></div><span style="font-size:12px;color:#9ca3af;flex-shrink:0;">5:33 PM</span></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:12px;color:#6b7280;"><span>55m</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><span>3 memories</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><code style="color:#9ca3af;">sess_77b2c9</code></div>
+            </div>
+            <div class="sess" data-task="build" data-topic="command palette fuzzy search scoring" data-id="sess_a41f88" data-dur="1h 32m" data-mem="3" data-memories='[{"t":"Command palette fuzzy match scoring","d":"Scoring function for the ⌘K search.","s":8.7},{"t":"FastAPI middleware ordering rules","d":"Auth before rate-limit, rate-limit before logging.","s":6.9},{"t":"Project conventions file — v3","d":"House style for this repo.","s":7.5}]' data-date="Jun 30, 2:08 PM" data-sum="Tuned fuzzy-match weights to 0.6 prefix / 0.3 subsequence / 0.1 recency.">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:11px;min-width:0;"><span class="badge b-build">build</span><span style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Command palette fuzzy search scoring</span></div><span style="font-size:12px;color:#9ca3af;flex-shrink:0;">2:08 PM</span></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:12px;color:#6b7280;"><span>1h 32m</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><span>3 memories</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><code style="color:#9ca3af;">sess_a41f88</code></div>
+            </div>
+            <div class="sess" data-task="other" data-topic="backup rotation script maintenance" data-id="sess_c290ee" data-dur="19m" data-mem="1" data-memories='[{"t":"Backup rotation script maintenance","d":"Keeps last 14 daily backups, prunes older.","s":8.9}]' data-date="Jun 30, 10:15 AM" data-sum="Verified the 14-day backup retention cron and pruning of older snapshots.">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:11px;min-width:0;"><span class="badge b-other">other</span><span style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Backup rotation script maintenance</span></div><span style="font-size:12px;color:#9ca3af;flex-shrink:0;">10:15 AM</span></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:12px;color:#6b7280;"><span>19m</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><span>1 memory</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><code style="color:#9ca3af;">sess_c290ee</code></div>
+            </div>
+          </div>
+        </div>
+        <div class="grp" data-date="Jun 29">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin:20px 0 12px;">Jun 29</div>
+          <div class="tl">
+            <div class="sess" data-task="build" data-topic="sweep engine confidence floor tuning" data-id="sess_66eaa0" data-dur="47m" data-mem="3" data-memories='[{"t":"Lorekeeper sweep engine confidence floor","d":"Minimum weighted_score before a suggestion surfaces.","s":7.3},{"t":"Suggestion sweep accuracy audit notes","d":"Sampled 50 accepted links; 6 judged wrong.","s":5.9},{"t":"Vector embedding cache invalidation logic","d":"When to recompute embeddings vs reuse cached vectors.","s":5.8}]' data-date="Jun 29, 4:02 PM" data-sum="Raised the sweep confidence floor to 0.75 to cut noisy low-signal link suggestions.">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:11px;min-width:0;"><span class="badge b-build">build</span><span style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Sweep engine confidence floor tuning</span></div><span style="font-size:12px;color:#9ca3af;flex-shrink:0;">4:02 PM</span></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:12px;color:#6b7280;"><span>47m</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><span>3 memories</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><code style="color:#9ca3af;">sess_66eaa0</code></div>
+            </div>
+            <div class="sess" data-task="design" data-topic="health ring svg progress calculation" data-id="sess_b1d770" data-dur="1h 05m" data-mem="2" data-memories='[{"t":"Graph layout node sizing logic","d":"Node radius scales with usage_count, capped.","s":6.4},{"t":"Local Redis config for cache warmup","d":"Docker compose snippet plus warmup script.","s":8.1}]' data-date="Jun 29, 1:45 PM" data-sum="Worked out the stroke-dasharray math for the home health ring progress arc.">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:11px;min-width:0;"><span class="badge b-design">design</span><span style="font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Health ring SVG progress calculation</span></div><span style="font-size:12px;color:#9ca3af;flex-shrink:0;">1:45 PM</span></div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:12px;color:#6b7280;"><span>1h 05m</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><span>2 memories</span><span style="width:3px;height:3px;border-radius:50%;background:#c2c2cf;"></span><code style="color:#9ca3af;">sess_b1d770</code></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="sess-empty" style="display:none;padding:60px 0;text-align:center;color:#9ca3af;font-size:13px;">No sessions match this filter.</div>
+    </div>
+  </div>
+
+  <div id="sess-scrim" class="scrim"></div>
+  <div id="sess-drawer" class="drawer">
+    <div style="padding:24px 26px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:16px;border-bottom:1px solid #eeeef3;">
+        <div id="sd-title" style="font-size:17px;font-weight:700;line-height:1.35;"></div>
+        <button id="sd-close" style="border:none;background:transparent;color:#9ca3af;padding:6px;border-radius:7px;cursor:pointer;flex-shrink:0;"><svg style="width:16px;height:16px"><use href="#i-x"/></svg></button>
+      </div>
+      <div id="sd-meta" style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:16px 0 4px;"></div>
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;margin:20px 0 6px;">Session ID</div>
+      <div id="sd-id" style="font-size:13px;font-family:ui-monospace,monospace;color:#3f3f52;"></div>
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;margin:20px 0 6px;">Summary</div>
+      <div id="sd-sum" style="font-size:13px;line-height:1.6;color:#3f3f52;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;">Memories created</div>
+        <span id="sd-mem-count" style="font-size:11px;color:#c2c2cf;"></span>
+      </div>
+      <div id="sd-mem"></div>
+    </div>
+  </div>
+
+  <!-- memory detail drawer — same component as the Memories page -->
+  <div id="mem-scrim" class="scrim" style="z-index:65;"></div>
+  <div id="mem-drawer" class="drawer" style="z-index:70;">
+    <div style="padding:24px 26px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid #eeeef3;">
+        <input id="d-title-edit" class="d-fld d-title-fld" type="text" readonly style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span id="d-readonly-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;background:#f1f1f6;border-radius:999px;padding:4px 9px;"><svg style="width:11px;height:11px"><use href="#i-lock"/></svg>Read-only</span>
+          <span id="d-editing-badge" style="display:none;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#7c5cff;background:#f1edff;border-radius:999px;padding:4px 9px;">Editing</span>
+          <button id="d-close" style="border:none;background:transparent;color:#9ca3af;font-size:16px;padding:6px;border-radius:7px;cursor:pointer;line-height:1;"><svg style="width:16px;height:16px"><use href="#i-x"/></svg></button>
+        </div>
+      </div>
+
+      <div id="d-meta" style="display:flex;gap:7px;flex-wrap:wrap;margin:16px 0 4px;"></div>
+
+      <div style="display:flex;gap:14px;">
+        <div style="flex:1;"><div class="d-lbl">Namespace</div>
+          <select id="d-ns-edit" class="d-fld" disabled style="appearance:none;-webkit-appearance:none;">
+            <option value="default">default</option><option value="dev">dev</option><option value="infra">infra</option><option value="archive">archive</option>
+          </select>
+        </div>
+        <div style="width:120px;flex-shrink:0;"><div class="d-lbl">Score</div>
+          <input id="d-score-edit" class="d-fld d-num" type="number" min="0" max="10" step="0.1" readonly>
+        </div>
+      </div>
+
+      <div class="d-lbl">Description</div>
+      <textarea id="d-desc-edit" class="d-fld" readonly rows="2"></textarea>
+      <div class="d-lbl">Content</div>
+      <textarea id="d-content-edit" class="d-fld" readonly rows="4"></textarea>
+
+      <div id="d-danger" style="display:none;margin-top:24px;padding-top:20px;border-top:1px solid #eeeef3;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+          <div style="min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:#1a1a2e;">Delete this memory</div>
+            <div style="font-size:12px;color:#9ca3af;margin-top:2px;line-height:1.45;">Soft-delete is recoverable from the deleted view. Permanent delete can't be undone.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;">
+            <button id="d-soft" style="border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:500;color:#3f3f52;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg style="width:14px;height:14px;color:#9ca3af"><use href="#i-archive"/></svg>Soft-delete</button>
+            <button id="d-hard" data-confirm="hard" style="border:1px solid #f0c9c9;background:#fff;border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:600;color:#dc2626;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><svg style="width:14px;height:14px"><use href="#i-trash"/></svg>Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:24px;padding-top:16px;border-top:1px solid #eeeef3;">
+        <div id="d-foot-view" style="display:flex;gap:8px;width:100%;">
+          <button data-toast="Copied memory ID to clipboard." style="border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;color:#3f3f52;cursor:pointer;">Copy ID</button>
+          <span style="flex:1"></span>
+          <button id="d-edit-btn" style="border:none;background:#7c5cff;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:7px;"><svg style="width:14px;height:14px"><use href="#i-edit"/></svg>Edit memory</button>
+        </div>
+        <div id="d-foot-edit" style="display:none;gap:8px;width:100%;">
+          <button id="d-cancel" style="border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;color:#1a1a2e;cursor:pointer;">Cancel</button>
+          <span style="flex:1"></span>
+          <button id="d-save" style="border:none;background:#7c5cff;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:7px;"><svg style="width:14px;height:14px"><use href="#i-check"/></svg>Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="cf-scrim" style="position:fixed;inset:0;background:rgba(20,20,35,.4);opacity:0;pointer-events:none;transition:opacity .16s;z-index:80;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div id="cf-box" style="width:400px;max-width:100%;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(20,20,40,.28);padding:24px;transform:translateY(8px);transition:transform .16s;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <span id="cf-ic" style="width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"><svg style="width:19px;height:19px"><use href="#i-trash"/></svg></span>
+        <div id="cf-title" style="font-size:16px;font-weight:700;color:#1a1a2e;"></div>
+      </div>
+      <div id="cf-body" style="font-size:13px;line-height:1.55;color:#6b7280;"></div>
+      <div id="cf-name" style="font-size:13px;font-weight:600;color:#1a1a2e;background:#f6f6f9;border:1px solid #ececf3;border-radius:8px;padding:9px 12px;margin-top:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+      <div style="display:flex;gap:8px;margin-top:20px;">
+        <button id="cf-cancel" style="flex:1;border:1px solid #e6e6ee;background:#fff;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:500;color:#1a1a2e;cursor:pointer;">Cancel</button>
+        <button id="cf-ok" style="flex:1;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:780}}">
+class Component extends DCLogic {
+  MEM={
+    "Review inbox triage pattern notes":{ns:"dev",conf:78,uses:12,links:0,updated:"1d ago",content:"Y/N shortcuts cut average triage time per suggestion from ~9s to ~3s in informal testing. Keyboard-first triage beats mouse-only once you're past ~20 items a day."},
+    "Command palette fuzzy match scoring":{ns:"dev",conf:88,uses:25,links:1,updated:"7h ago",content:"Score = 0.6*prefix_match + 0.3*subsequence_match + 0.1*recency. Case-insensitive and diacritic-insensitive."},
+    "FastAPI middleware ordering rules":{ns:"dev",conf:68,uses:22,links:2,updated:"2d ago",content:"Middleware stack (outer to inner): CORS → Auth → RateLimit → RequestLogging → route handlers. Placing RateLimit before Auth leaks limiter state to unauthenticated callers."},
+    "Graph layout node sizing logic":{ns:"dev",conf:63,uses:8,links:0,updated:"1d ago",content:"radius = 8 + min(usage_count, 40) * 0.35. Capping at usage_count=40 keeps mega-hub nodes from dominating the layout."},
+    "Vector embedding cache invalidation logic":{ns:"infra",conf:61,uses:9,links:1,updated:"2d ago",content:"Recompute only if content or title changed. Description-only edits reuse the existing embedding to save cost, flagged with embedding_stale=false."},
+    "Suggestion sweep accuracy audit notes":{ns:"default",conf:59,uses:4,links:0,updated:"4d ago",content:"Sampled 50 accepted links; 6 were judged wrong in hindsight. Most false positives were references mislabeled where contradicts was the better fit."},
+    "Lorekeeper sweep engine confidence floor":{ns:"default",conf:74,uses:15,links:1,updated:"9h ago",content:"Floor is 0.75 weighted_score by default (auto_link_threshold). Lower floors flood the review queue with low-signal noise."},
+    "Concurrent agent session handling":{ns:"default",conf:65,uses:14,links:1,updated:"3d ago",content:"Each session gets a write-ahead buffer; commits are serialized per namespace to avoid duplicate auto-link races."},
+    "MCP transport handshake timeout patterns":{ns:"infra",conf:81,uses:28,links:1,updated:"1d ago",content:"First attempt: 2s timeout. Backoff ×1.8 up to 3 retries. Warn (not error) on retries 1–2; escalate to error on final failure."},
+    "Backup rotation script maintenance":{ns:"infra",conf:92,uses:31,links:0,updated:"11h ago",content:"Runs at 03:00 local time via cron. Keeps the last 14 daily backups and prunes older snapshots. Uses the /api/export endpoint internally."},
+    "Project conventions file — v3":{ns:"default",conf:76,uses:17,links:0,updated:"4d ago",content:"Prefer composition over inheritance. No default exports. Tests colocated with source."},
+    "Local Redis config for cache warmup":{ns:"infra",conf:84,uses:33,links:0,updated:"3d ago",content:"maxmemory 512mb, maxmemory-policy allkeys-lru. Warmup script preloads the top 200 memories by usage_count on boot."}
+  };
+  componentDidMount(){ this.wire(); }
+  toast(msg){
+    const t=document.createElement('div');t.textContent=msg;
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:11px 20px;border-radius:9px;font:600 13px/1 -apple-system,system-ui,sans-serif;box-shadow:0 10px 28px rgba(0,0,0,.22);z-index:200;opacity:0;transition:opacity .16s;';
+    document.body.appendChild(t);requestAnimationFrame(()=>t.style.opacity='1');
+    setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),220);},1800);
+  }
+  wire(){
+    const root=document.getElementById('sess-root'); if(!root||this._w) return; this._w=true;
+    const self=this;
+    const items=[...root.querySelectorAll('.sess')];
+    let task='', q='';
+    const apply=()=>{
+      let n=0;
+      items.forEach(it=>{
+        const ok=(!task||it.dataset.task===task)&&(!q||it.dataset.topic.includes(q)||it.dataset.id.includes(q));
+        it.style.display=ok?'':'none'; if(ok)n++;
+      });
+      root.querySelectorAll('.grp').forEach(g=>{ const any=[...g.querySelectorAll('.sess')].some(s=>s.style.display!=='none'); g.style.display=any?'':'none'; });
+      root.querySelector('#sess-count').textContent=(task||q)?`${n} of 200 sessions`:'200 sessions';
+      root.querySelector('#sess-empty').style.display=n?'none':'block';
+    };
+    root.querySelectorAll('#sess-chips .chip').forEach(c=>c.addEventListener('click',()=>{
+      root.querySelectorAll('#sess-chips .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); task=c.dataset.task; apply();
+    }));
+    root.querySelector('#sess-q').addEventListener('input',e=>{ q=e.target.value.trim().toLowerCase(); apply(); });
+    items.forEach(it=>it.addEventListener('click',()=>self.open(it)));
+    root.querySelector('#sd-close').addEventListener('click',()=>self.close());
+    root.querySelector('#sess-scrim').addEventListener('click',()=>self.close());
+    // memory detail drawer (same component as the Memories page)
+    root.querySelectorAll('[data-toast]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();self.toast(b.getAttribute('data-toast'));}));
+    root.querySelector('#d-close').addEventListener('click',()=>self.closeMemory());
+    root.querySelector('#mem-scrim').addEventListener('click',()=>self.closeMemory());
+    root.querySelector('#d-edit-btn').addEventListener('click',()=>self.setMode(true));
+    root.querySelector('#d-cancel').addEventListener('click',()=>{ if(self._mem) self.openMemory(self._mem); else self.setMode(false); });
+    root.querySelector('#d-save').addEventListener('click',()=>{ self.setMode(false); self.toast('Memory saved'); });
+    ['#d-desc-edit','#d-content-edit'].forEach(s=>{ const el=root.querySelector(s); if(el) el.addEventListener('input',()=>self.autosize(el)); });
+    root.querySelector('#d-soft').addEventListener('click',()=>{ self.closeMemory(); self.toast('Memory soft-deleted.'); });
+    root.querySelectorAll('#mem-drawer [data-confirm]').forEach(b=>b.addEventListener('click',()=>self.confirmDelete(b.getAttribute('data-confirm'))));
+    root.querySelector('#cf-cancel').addEventListener('click',()=>self.closeConfirm());
+    root.querySelector('#cf-scrim').addEventListener('click',e=>{ if(e.target===root.querySelector('#cf-scrim')) self.closeConfirm(); });
+  }
+  open(it){
+    const root=document.getElementById('sess-root');
+    root.querySelector('#sd-title').textContent=it.dataset.topic.replace(/\b\w/g,c=>c.toUpperCase());
+    const t=it.dataset.task, cls={build:'b-build',design:'b-design',review:'b-review',debug:'b-debug',other:'b-other'}[t]||'b-other';
+    root.querySelector('#sd-meta').innerHTML=`<span class="badge ${cls}">${t}</span><span style="background:#f1f1f6;border-radius:999px;padding:4px 10px;font-size:11px;color:#6b7280;">${it.dataset.dur}</span><span style="background:#f1f1f6;border-radius:999px;padding:4px 10px;font-size:11px;color:#6b7280;">${it.dataset.date}</span>`;
+    root.querySelector('#sd-id').textContent=it.dataset.id;
+    root.querySelector('#sd-sum').textContent=it.dataset.sum;
+    let mems=[]; try{ mems=JSON.parse(it.dataset.memories||'[]'); }catch(e){ mems=[]; }
+    root.querySelector('#sd-mem-count').textContent=mems.length+(mems.length===1?' memory':' memories');
+    const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const box=root.querySelector('#sd-mem');
+    box.innerHTML=mems.map(m=>{
+      const c=m.s>=7?['#ecfdf3','#16a34a']:m.s>=4?['#fef6e7','#d97706']:['#fef2f2','#dc2626'];
+      return `<button class="sd-mem-item" data-title="${esc(m.t)}" style="display:flex;width:100%;gap:12px;align-items:flex-start;text-align:left;border:1px solid #ececf3;background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .12s,background .12s;">`+
+        `<span style="flex:1;min-width:0;"><span style="display:block;font-size:13px;font-weight:600;color:#1a1a2e;">${esc(m.t)}</span>`+
+        `<span style="display:block;font-size:12px;color:#6b7280;line-height:1.5;margin-top:3px;">${esc(m.d)}</span></span>`+
+        `<span style="background:${c[0]};color:${c[1]};border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px;flex-shrink:0;">${m.s.toFixed(1)}</span></button>`;
+    }).join('');
+    this._mems=mems;
+    box.querySelectorAll('.sd-mem-item').forEach((b,i)=>b.addEventListener('click',()=>this.openMemory(this._mems[i])));
+    root.querySelector('#sess-drawer').classList.add('open');
+    root.querySelector('#sess-scrim').classList.add('open');
+  }
+  autosize(el){ if(!el) return; el.style.height='auto'; el.style.height=(el.scrollHeight)+'px'; }
+  setFieldsEditable(edit){
+    const root=document.getElementById('sess-root');
+    const flds=[...root.querySelectorAll('#mem-drawer .d-fld')];
+    flds.forEach(el=>{
+      if(edit){ el.removeAttribute('readonly'); } else { el.setAttribute('readonly','readonly'); }
+      const isTitle=el.classList.contains('d-title-fld');
+      if(isTitle){
+        el.style.border=edit?'1px solid #e6e6ee':'1px solid transparent';
+        el.style.background=edit?'#fff':'transparent';
+        el.style.padding=edit?'8px 12px':'0';
+        el.style.color='#1a1a2e'; el.style.webkitTextFillColor='#1a1a2e';
+        el.style.cursor=edit?'text':'default';
+      } else {
+        el.style.border=edit?'1px solid #e6e6ee':'1px solid #ececf3';
+        el.style.background=edit?'#fff':'#f6f6f9';
+        el.style.padding='10px 12px';
+        el.style.color=edit?'#1a1a2e':'#8a8a99';
+        el.style.webkitTextFillColor=edit?'#1a1a2e':'#8a8a99';
+        el.style.cursor=edit?(el.tagName==='SELECT'?'pointer':'text'):'default';
+      }
+    });
+    const ns=root.querySelector('#d-ns-edit'); if(ns){ ns.disabled=!edit; ns.style.backgroundImage=edit?'linear-gradient(45deg,transparent 50%,#9ca3af 50%),linear-gradient(135deg,#9ca3af 50%,transparent 50%)':'none'; ns.style.backgroundPosition='calc(100% - 16px) center,calc(100% - 11px) center'; ns.style.backgroundSize='5px 5px,5px 5px'; ns.style.backgroundRepeat='no-repeat'; }
+    root.querySelectorAll('#mem-drawer .d-lbl').forEach(l=>l.style.paddingLeft='0');
+  }
+  setMode(edit){
+    const root=document.getElementById('sess-root'), drawer=root.querySelector('#mem-drawer');
+    drawer.classList.toggle('editing',edit);
+    root.querySelector('#d-editing-badge').style.display=edit?'inline-flex':'none';
+    root.querySelector('#d-readonly-badge').style.display=edit?'none':'inline-flex';
+    root.querySelector('#d-danger').style.display=edit?'block':'none';
+    root.querySelector('#d-foot-view').style.display=edit?'none':'flex';
+    root.querySelector('#d-foot-edit').style.display=edit?'flex':'none';
+    this.setFieldsEditable(edit);
+    ['#d-desc-edit','#d-content-edit'].forEach(s=>this.autosize(root.querySelector(s)));
+    if(edit) root.querySelector('#d-title-edit').focus();
+  }
+  openMemory(mem){
+    if(!mem) return;
+    const root=document.getElementById('sess-root');
+    this._mem=mem;
+    const info=this.MEM[mem.t]||{};
+    root.querySelector('#d-title-edit').value=mem.t;
+    root.querySelector('#d-desc-edit').value=mem.d;
+    root.querySelector('#d-content-edit').value=info.content||mem.d;
+    root.querySelector('#d-score-edit').value=mem.s;
+    root.querySelector('#d-ns-edit').value=info.ns||'default';
+    const chip=(l,v)=>`<span style="background:#f1f1f6;border-radius:999px;padding:4px 10px;font-size:11px;color:#6b7280;">${l}: <strong style="color:#1a1a2e;font-weight:600;">${v}</strong></span>`;
+    root.querySelector('#d-meta').innerHTML=chip('conf',(info.conf??0)+'%')+chip('uses',info.uses??0)+chip('links',info.links??0)+chip('updated',info.updated||'—');
+    this.setMode(false);
+    root.querySelector('#mem-drawer').classList.add('open');
+    root.querySelector('#mem-scrim').classList.add('open');
+    requestAnimationFrame(()=>{ ['#d-desc-edit','#d-content-edit'].forEach(s=>this.autosize(root.querySelector(s))); });
+  }
+  closeMemory(){
+    const root=document.getElementById('sess-root');
+    root.querySelector('#mem-drawer').classList.remove('open');
+    root.querySelector('#mem-scrim').classList.remove('open');
+    this.setMode(false);
+  }
+  confirmDelete(kind){
+    const root=document.getElementById('sess-root'), self=this;
+    const name=root.querySelector('#d-title-edit').value||'this memory';
+    const soft=kind==='soft';
+    root.querySelector('#cf-title').textContent=soft?'Soft-delete memory?':'Delete permanently?';
+    root.querySelector('#cf-body').innerHTML=soft
+      ? 'It will be hidden from search but stays recoverable from the deleted view.'
+      : 'This removes the memory and all its links for good. <strong style="color:#b91c1c;">This cannot be undone.</strong>';
+    root.querySelector('#cf-name').textContent=name;
+    const ic=root.querySelector('#cf-ic'), ok=root.querySelector('#cf-ok');
+    ic.style.background=soft?'#f1f1f6':'#fef2f2';
+    ic.style.color=soft?'#6b7280':'#dc2626';
+    ic.querySelector('use').setAttribute('href',soft?'#i-archive':'#i-trash');
+    ok.style.background=soft?'#1a1a2e':'#dc2626';
+    ok.textContent=soft?'Soft-delete':'Delete permanently';
+    const okClone=ok.cloneNode(true); ok.parentNode.replaceChild(okClone,ok);
+    okClone.addEventListener('click',()=>{ self.closeConfirm(); self.closeMemory(); self.toast(soft?'Memory soft-deleted.':'Memory permanently deleted.'); });
+    const sc=root.querySelector('#cf-scrim'); sc.style.pointerEvents='auto'; sc.style.opacity='1';
+    root.querySelector('#cf-box').style.transform='translateY(0)';
+  }
+  closeConfirm(){
+    const root=document.getElementById('sess-root'), sc=root.querySelector('#cf-scrim');
+    sc.style.opacity='0'; sc.style.pointerEvents='none';
+    root.querySelector('#cf-box').style.transform='translateY(8px)';
+  }
+  close(){
+    const root=document.getElementById('sess-root');
+    this.closeMemory();
+    root.querySelector('#sess-drawer').classList.remove('open');
+    root.querySelector('#sess-scrim').classList.remove('open');
+  }
+  renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

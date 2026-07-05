@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body{margin:0;background:#f9f9fb;color:#1a1a2e;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  *{box-sizing:border-box;}
+  .q-rail{width:58px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 8px;border:none;background:transparent;border-radius:8px;color:#6b7280;font-size:10.5px;font-weight:500;position:relative;cursor:pointer;}
+  .q-rail svg{width:19px;height:19px;}
+  .q-rail:hover{background:#f4f4f6;color:#1a1a2e;}
+  .q-rail.active{background:#f1edff;color:#7c5cff;font-weight:600;}
+  .q-ta:focus{outline:none;border-color:#7c5cff;box-shadow:0 0 0 3px rgba(124,92,255,.16);}
+  .q-num:focus{outline:none;border-color:#7c5cff;box-shadow:0 0 0 3px rgba(124,92,255,.16);}
+  .q-run:hover{filter:brightness(.95);}
+  .q-sw-input{position:absolute;opacity:0;width:0;height:0;}
+  .q-sw-track{position:relative;display:inline-block;width:38px;height:21px;background:#c9c9d6;border-radius:999px;transition:background .15s;flex-shrink:0;}
+  .q-sw-track::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s;}
+  .q-sw-input:checked + .q-sw-track{background:#7c5cff;}
+  .q-sw-input:checked + .q-sw-track::after{transform:translateX(17px);}
+  .qb-row{cursor:pointer;transition:background .12s,border-color .12s;}
+  .qb-row:hover{background:#faf9fc;}
+  .link-chip:hover{border-color:#c9b8ff;background:#faf9ff;}
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-network" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="19" r="2.5"/><path d="M7 7.3L10.2 16.5M17 7.3L13.8 16.5M7.5 6H16.5"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h16v12l-3 4H7l-3-4V4z"/><path d="M4 12h5l2 3h2l2-3h5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M12 20V4M20 20v-7"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4.5 13.5H11l-1 8.5L19.5 10H13l0-8z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 005.66 0l2-2a4 4 0 00-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 00-5.66 0l-2 2a4 4 0 005.66 5.66l1-1"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-robot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="2.5"/><path d="M12 8V4M9 13h.01M15 13h.01M9 4h6"/></symbol>
+</defs></svg>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#7c5cff"/><g fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><circle cx="44" cy="44" r="18"/><path d="M58 58l14 14"/></g></svg></template>
+
+<div style="display:flex;min-height:100vh;">
+  <!-- rail -->
+  <nav style="width:76px;flex-shrink:0;background:#fff;border-right:1px solid #e6e6ee;display:flex;flex-direction:column;align-items:center;padding:16px 0 12px;position:fixed;top:0;bottom:0;left:0;z-index:40;">
+    <div style="width:36px;height:36px;border-radius:8px;background:#7c5cff;color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:24px;"><svg style="width:20px;height:20px"><use href="#i-shield"/></svg></div>
+    <div style="display:flex;flex-direction:column;gap:2px;width:100%;align-items:center;">
+      <button class="q-rail"><svg><use href="#i-home"/></svg>Home</button>
+      <button class="q-rail"><svg><use href="#i-grid"/></svg>Memories</button>
+      <button class="q-rail"><svg><use href="#i-network"/></svg>Links</button>
+      <button class="q-rail active"><svg><use href="#i-search"/></svg>Query</button>
+      <button class="q-rail"><svg><use href="#i-inbox"/></svg>Review</button>
+      <button class="q-rail"><svg><use href="#i-clock"/></svg>Sessions</button>
+      <button class="q-rail"><svg><use href="#i-bar"/></svg>Metrics</button>
+    </div>
+    <div style="flex:1"></div>
+    <button class="q-rail"><svg><use href="#i-gear"/></svg>Settings</button>
+  </nav>
+
+  <div style="flex:1;min-width:0;margin-left:76px;display:flex;flex-direction:column;height:100vh;">
+    <!-- top bar -->
+    <div style="height:60px;flex-shrink:0;display:flex;align-items:center;padding:0 28px;border-bottom:1px solid #e6e6ee;background:#fff;">
+      <div style="font-size:14px;color:#9ca3af;display:flex;gap:6px;align-items:center;">Lorekeeper <span>/</span> <span style="color:#1a1a2e;font-weight:600;">Query</span></div>
+    </div>
+
+    <!-- composer -->
+    <div style="flex-shrink:0;padding:16px 28px;border-bottom:1px solid #e6e6ee;background:#fff;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="position:relative;flex:1;min-width:0;">
+          <svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#9ca3af"><use href="#i-search"/></svg>
+          <input class="q-ta" type="text" value="How does the VIP+ one-time upgrade payment work in digital checkout?" style="width:100%;border:1px solid #e6e6ee;border-radius:9px;padding:11px 14px 11px 38px;font-size:13.5px;background:#fdfdff;">
+        </div>
+        <button class="q-run" style="display:inline-flex;align-items:center;gap:8px;background:#7c5cff;color:#fff;border:none;border-radius:9px;padding:11px 20px;font-size:13.5px;font-weight:600;cursor:pointer;flex-shrink:0;"><svg style="width:15px;height:15px"><use href="#i-zap"/></svg>Run query</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:12px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#6b7280;font-weight:500;">Limit<input class="q-num" type="number" value="10" style="width:56px;padding:6px 8px;border:1px solid #e6e6ee;border-radius:7px;font-size:12.5px;text-align:right;background:#fff;"></label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#6b7280;font-weight:500;">Min score<input class="q-num" type="number" value="0.10" step="0.05" style="width:62px;padding:6px 8px;border:1px solid #e6e6ee;border-radius:7px;font-size:12.5px;text-align:right;background:#fff;"></label>
+        <label style="display:flex;align-items:center;gap:9px;font-size:12px;color:#6b7280;font-weight:500;cursor:pointer;"><input type="checkbox" class="q-sw-input"><span class="q-sw-track"></span>Include deleted</label>
+        <span style="flex:1"></span>
+        <span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#6b7280;"><svg style="width:15px;height:15px;color:#7c5cff"><use href="#i-robot"/></svg>Returns <strong style="color:#3f3f52;">6 memories</strong> + <strong style="color:#3f3f52;">3 linked</strong> to the agent · 42 ms</span>
+      </div>
+    </div>
+
+    <!-- split body -->
+    <div style="flex:1;min-height:0;display:flex;">
+      <!-- list -->
+      <div style="width:42%;flex-shrink:0;border-right:1px solid #e6e6ee;overflow-y:auto;padding:16px 18px;">
+        <div id="qb-list" style="display:flex;flex-direction:column;gap:7px;"></div>
+      </div>
+      <!-- inspector -->
+      <div id="qb-inspector" style="flex:1;min-width:0;overflow-y:auto;padding:26px 30px;background:#fcfcfe;"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){ this.wire(); }
+  toast(msg){
+    const t=document.createElement('div');t.textContent=msg;
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:11px 20px;border-radius:9px;font:600 13px/1 -apple-system,system-ui,sans-serif;box-shadow:0 10px 28px rgba(0,0,0,.22);z-index:200;opacity:0;transition:opacity .16s;';
+    document.body.appendChild(t);requestAnimationFrame(()=>t.style.opacity='1');
+    setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),220);},1700);
+  }
+  data(){
+    return {rows:[
+      {t:'Digital Checkout (checkout/digital-checkout) Repository Reference',ns:'checkout',sem:.72,kw:.88,memN:1.0,useN:.85,uses:34,combined:.829,
+       snip:'Repository checkout/digital-checkout. Scope: everything for SVIP (Shopee VIP) and digital orders — subscription page, one-time upgrade, InitTransaction / QueryTransaction flows.',
+       links:[{r:'references',t:'OPC Docs (checkout/docs) Repository Reference'},{r:'relates',t:'VN digital checkout app name without region suffix'}]},
+      {t:'U4 VIP+ upgrade payment: one-time payment via InitTransaction',ns:'checkout',sem:.68,kw:.55,memN:.69,useN:.40,uses:13,combined:.621,
+       snip:'U4 VIP+ upgrade payment: one-time payment via InitTransaction + QueryTransaction (NOT direct_charge). Applies to the SVIP tier upgrade at checkout.',
+       links:[{r:'references',t:'SPB-51530 is the VIP+ feature ticket in digital-checkout'}]},
+      {t:'SPB-51530 is the VIP+ feature ticket in digital-checkout',ns:'checkout',sem:.61,kw:.70,memN:.70,useN:.28,uses:7,combined:.618,
+       snip:'SPB-51530 is the VIP+ feature ticket in digital-checkout. Tracks the one-time upgrade payment epic and its rollout to VN / SG regions.',links:[]},
+      {t:'OPC Docs (checkout/docs) Repository Reference',ns:'checkout',sem:.55,kw:.40,memN:1.0,useN:.30,uses:4,combined:.578,
+       snip:'Living documentation for checkout-related topics. Auto-built and published whenever a new MR merges. Mostly accurate but can lag by a day.',
+       links:[{r:'relates',t:'Digital Checkout Repository Reference'}]},
+      {t:'VN digital checkout app name without region suffix also works',ns:'checkout',sem:.58,kw:.35,memN:.70,useN:.18,uses:5,combined:.507,
+       snip:'VN digital checkout app name without region suffix also works for log searches (base name aggregates all regions).',links:[]},
+      {t:'Daily reflection cron set up at 20:00 SGT (changed to 07:00)',ns:'default',sem:.30,kw:.12,memN:.72,useN:.45,uses:20,combined:.354,
+       snip:'Daily reflection cron set up at 20:00 SGT (changed to 07:00 SGT in a later update). Borderline — only returned because min score is low.',links:[]},
+    ]};
+  }
+  chip(c){ if(c>=.60) return ['#ecfdf3','#16a34a']; if(c>=.40) return ['#fef6e7','#d97706']; return ['#fef2f2','#dc2626']; }
+  wire(){
+    if(this._w) return; this._w=true; const self=this;
+    document.querySelectorAll('.q-run').forEach(b=>b.addEventListener('click',()=>self.toast('Query re-run · 6 memories + 3 linked returned')));
+    this.buildB();
+  }
+  buildB(){
+    const list=document.getElementById('qb-list'); if(!list) return; const self=this;
+    const {rows}=this.data();
+    const seg=(v,c)=>`<span style="width:${(v*100).toFixed(1)}%;background:${c};"></span>`;
+    list.innerHTML=rows.map((r,i)=>{
+      const [bg,fg]=this.chip(r.combined);
+      return `<div class="qb-row" data-i="${i}" style="border:1px solid #ececef;border-radius:10px;padding:12px 13px;">
+        <div style="display:flex;align-items:center;gap:9px;">
+          <span style="font-size:11px;font-weight:700;color:#b0b0bd;width:14px;flex-shrink:0;">${i+1}</span>
+          <div style="font-size:12.8px;font-weight:600;line-height:1.35;flex:1;min-width:0;">${r.t}</div>
+          <span style="background:${bg};color:${fg};border-radius:6px;padding:2px 8px;font-weight:700;font-size:12px;flex-shrink:0;">${r.combined.toFixed(2)}</span>
+        </div>
+        <div style="display:flex;height:6px;border-radius:4px;background:#f1f1f6;overflow:hidden;margin:9px 0 0 23px;">${seg(r.sem*.45,'#7c5cff')}${seg(r.kw*.25,'#0ea5a4')}${seg(r.memN*.20,'#f59e0b')}${seg(r.useN*.10,'#f43f5e')}</div>
+        <div style="margin-left:23px;margin-top:7px;font-size:11px;color:#9ca3af;display:flex;gap:12px;">
+          <span>${r.uses} uses</span>${r.links.length?`<span style="color:#7c5cff;">+${r.links.length} linked</span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('.qb-row').forEach(row=>row.addEventListener('click',()=>self.select(+row.dataset.i)));
+    this.select(0);
+  }
+  select(i){
+    document.querySelectorAll('#qb-list .qb-row').forEach(x=>{
+      const on=+x.dataset.i===i;
+      x.style.background=on?'#f6f3ff':''; x.style.borderColor=on?'#c9b8ff':'#ececef';
+    });
+    this.renderInspector(i);
+  }
+  renderInspector(i){
+    const box=document.getElementById('qb-inspector'); if(!box) return;
+    const {rows}=this.data(); const r=rows[i];
+    const [bg,fg]=this.chip(r.combined);
+    const sig=[
+      {n:'Semantic',c:'#7c5cff',contrib:r.sem*.45},
+      {n:'Keyword',c:'#0ea5a4',contrib:r.kw*.25},
+      {n:'Mem score',c:'#f59e0b',contrib:r.memN*.20},
+      {n:'Usage',c:'#f43f5e',contrib:r.useN*.10},
+    ];
+    const bars=sig.map(s=>`
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:12.5px;margin-bottom:6px;">
+          <span style="display:inline-flex;align-items:center;gap:8px;color:#3f3f52;font-weight:500;"><span style="width:10px;height:10px;border-radius:3px;background:${s.c};"></span>${s.n}</span>
+          <span style="font-weight:700;color:#1a1a2e;">${s.contrib.toFixed(2)}</span>
+        </div>
+        <div style="height:9px;border-radius:5px;background:#f1f1f6;overflow:hidden;"><span style="display:block;height:100%;width:${(s.contrib/.40*100).toFixed(1)}%;max-width:100%;background:${s.c};border-radius:5px;"></span></div>
+      </div>`).join('');
+    box.innerHTML=`
+      <div style="display:flex;align-items:flex-start;gap:14px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;">Result #${i+1}</div>
+          <div style="font-size:18px;font-weight:700;line-height:1.3;margin-top:5px;">${r.t}</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:9px;font-size:12px;color:#9ca3af;">
+            <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#7c5cff;"></span>${r.ns}</span><span>${r.uses} uses</span>
+          </div>
+        </div>
+        <div style="text-align:center;flex-shrink:0;">
+          <div style="background:${bg};color:${fg};border-radius:11px;padding:9px 16px;font-size:24px;font-weight:800;line-height:1;">${r.combined.toFixed(2)}</div>
+          <div style="font-size:10.5px;color:#9ca3af;margin-top:5px;">combined score</div>
+        </div>
+      </div>
+
+      <p style="font-size:13px;line-height:1.6;color:#5b5b6b;margin:18px 0 24px;background:#f6f6f9;border-radius:9px;padding:13px 15px;">${r.snip}</p>
+
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:14px;">Why it ranked here</div>
+      ${bars}`;
+  }
+  renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>

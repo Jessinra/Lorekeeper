@@ -1,0 +1,22 @@
+name: Cache & pre-warm HuggingFace model
+description: Cache ~/.cache/huggingface and pre-warm the all-MiniLM-L6-v2 embedding model.
+
+runs:
+  using: composite
+  steps:
+    - name: Cache HuggingFace models
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/huggingface
+        key: hf-models-all-MiniLM-L6-v2
+
+    - name: Pre-warm embedding model
+      env:
+        HF_HOME: ~/.cache/huggingface
+      shell: bash
+      run: |
+        uv run python - << 'EOF'
+        from sentence_transformers import SentenceTransformer
+        SentenceTransformer("all-MiniLM-L6-v2")
+        print("Model ready.")
+        EOF
