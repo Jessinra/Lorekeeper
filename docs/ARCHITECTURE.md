@@ -6,7 +6,7 @@
 
 ## Six-Layer Architecture (strictly 1-directional DOWN only)
 
-```
+````text
 ┌──────────────────────────────────────────────────────────────┐
 │  api/mcp/, dashboard/, server.py, cli/                       │ Layer 6 — Interface adapters
 ├──────────────────────────────────────────────────────────────┤
@@ -21,7 +21,7 @@
 │  infra/ (database, search_engine, keyword_index,             │ Layer 1 — Zero business
 │         scheduler, logging_setup, settings)                  │           vocabulary
 └──────────────────────────────────────────────────────────────┘
-```
+```text
 
 ### Import rules
 
@@ -35,10 +35,10 @@
 
 ### Cross-domain DAG (acyclic)
 
-```
+```text
 suggestion ──→ memory ──→ link
 reflection ──→ memory
-```
+```text
 
 `link` depends on no other domain. No cycles.
 
@@ -105,7 +105,7 @@ Each service declares exactly the dependencies its methods use — nothing more,
 9. Encouragement rate
 10. Sweep scheduler: OWN `Database` instance (sweep isolation)
 
-**Module singletons:** 5 processors + settings. One getter per processor.
+**Module singletons:** 5 processors + 3 store/db accessors + settings.
 
 **No `get_service()`.** No `MemoryService` facade.
 
@@ -119,6 +119,9 @@ Each service declares exactly the dependencies its methods use — nothing more,
 | `get_suggestion_processor()` | `SuggestionProcessor` |
 | `get_admin_processor()`      | `AdminProcessor`      |
 | `get_settings()`             | `LorekeeperSettings`  |
+| `get_memory_store()`        | `MemoryStore`         |
+| `get_link_store()`          | `LinkStore`           |
+| `get_db()`                  | `Database`            |
 
 Each raises `RuntimeError("not initialised")` if called before `init_service()`.
 
@@ -143,7 +146,7 @@ Layering is enforced by `tests/test_architecture.py`, which uses pure stdlib `as
 - `services/orchestrator.py` — 212-line delegation facade. Replaced by processor layer + explicit DI.
 - `services/__init__.py` — empty package. `src/lorekeeper/services/` directory gone.
 - `MemoryService` class — the god object/facade. No replacement. Server is the sole composition root.
-- `get_service()` — deleted. Callers use `get_memory_processor()`, `get_write_service()`, etc.
+- `get_service()` — deleted. Callers use `get_memory_processor()`, `get_memory_store()`, etc.
 
 ## What Was Added (LKPR-105 Phase 7)
 
@@ -171,9 +174,9 @@ The canonical `lore_id` UUID lives in Mem0's metadata field. All app logic uses 
 
 ### Hybrid Scoring Formula
 
-```
+```text
 combined = 0.45·semantic + 0.30·keyword + 0.15·(score/10) + 0.10·log_usage_norm
-```
+```text
 
 Where `log_usage_norm = log2(1 + usage_count) / log2(1 + cap)`. All weights are env-configurable (`LORE_W_*`).
 
@@ -189,3 +192,4 @@ Where `log_usage_norm = log2(1 + usage_count) / log2(1 + cap)`. All weights are 
 - **MCP API surface is identical to v1** — same tool names, same input/output schemas. The three existing skills (`lorekeeper-memorize`, `lorekeeper-search`, `lorekeeper-reconcile`) work with zero changes.
 - **No LLM extraction on add** — text is stored verbatim, no inference or rewriting.
 - **stdout is reserved for MCP protocol** — all logging goes to stderr via `structlog`.
+````

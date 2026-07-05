@@ -15,7 +15,7 @@ The repo serves two purposes:
 
 Lorekeeper follows a strict 6-layer architecture with **unidirectional imports** — a layer may import from layers below it, never above.
 
-```
+````text
 ┌──────────────────────────────────────────────────────────────┐
 │  api/mcp/, dashboard/, server.py, cli/                       │ Layer 6 — Interface adapters
 ├──────────────────────────────────────────────────────────────┤
@@ -30,7 +30,7 @@ Lorekeeper follows a strict 6-layer architecture with **unidirectional imports**
 │  infra/ (database, search_engine, keyword_index,             │ Layer 1 — Zero business
 │         scheduler, logging_setup, settings)                  │           vocabulary
 └──────────────────────────────────────────────────────────────┘
-```
+```text
 
 ### Import rules
 
@@ -44,10 +44,10 @@ Lorekeeper follows a strict 6-layer architecture with **unidirectional imports**
 
 ### Cross-domain DAG (acyclic)
 
-```
+```text
 suggestion ──→ memory ──→ link
 reflection ──→ memory
-```
+```text
 
 `link` depends on no other domain. No cycles.
 
@@ -91,9 +91,9 @@ reflection ──→ memory
 
 ## Hybrid Scoring Formula
 
-```
+```text
 combined = 0.45·semantic + 0.30·keyword + 0.15·(score/10) + 0.10·log_usage_norm
-```
+```text
 
 Where `log_usage_norm = log2(1 + usage_count) / log2(1 + cap)`. All weights are env-configurable (`LORE_W_*`).
 
@@ -119,7 +119,7 @@ Work through each step with tests green before moving to the next:
 3. `domains/link/repository.py` + `test_link_repository.py`
 4. `domains/memory/repository.py` + `test_memory_repository.py`
 5. `infra/search_engine.py` + semantic scale probe
-6. `domains/memory/service.py` (SearchService + WriteService) + `test_search_service.py` + `test_write_service.py`
+6. `domains/memory/service.py` (MemorySearchService + MemoryWriteService) + `test_search_service.py` + `test_write_service.py`
 7. `domains/memory/dedup.py` + `test_dedup.py`
 8. `domains/memory/feedback.py` + `test_feedback.py`
 9. `infra/keyword_index.py` + `test_keyword_index.py`
@@ -205,7 +205,7 @@ For **end users** (pip install): run the bundled Python command:
 
 ```bash
 lorekeeper setup
-```
+````
 
 For **contributors** (git clone): run the bash script which also installs dev hooks and dev skills:
 
@@ -246,7 +246,7 @@ The agent pulls memory explicitly via MCP tools — no auto-injection. The disci
 
 **This repo is the first sample of a self-improving agent system.** Every session should leave the agent smarter than it started. The loop:
 
-```
+````text
 Session Start → lore_search (load context)
      ↓
 Work (build, debug, review)
@@ -254,7 +254,7 @@ Work (build, debug, review)
 Session End → capture learnings → lore_insert/update
      ↓
 Periodic Reconcile → consolidate → update CLAUDE.md / skills / code
-```
+```text
 
 ### Session Log Format
 
@@ -313,7 +313,7 @@ git config --local user.email "jessinra.kai@gmail.com"
 # Diana
 git config --local user.name "Diana"
 git config --local user.email "jessinra.kai@gmail.com"
-```
+````
 
 **Commit title format**: `[LKPR-N] type: short imperative title`
 
@@ -358,9 +358,9 @@ Do not skip this. It is the discipline that keeps the repo clean and auditable.
 
 **The workflow is always:**
 
-```
+````text
 feature branch → push → PR → review → merge via GitHub UI → delete branch
-```
+```text
 
 ---
 
@@ -390,3 +390,4 @@ When editing any file in `src/lorekeeper/`, `pyproject.toml`, or `loop/`, check 
 - Procedural memory / nightly CLAUDE.md update proposals
 - Episodic memory (session journal as a second vector collection)
 - Multi-user / multi-tenant support
+````
