@@ -56,9 +56,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const prTitle = context.payload.pull_request.title || '';
             const headRef = context.payload.pull_request.head.ref;
             const body = context.payload.pull_request.body || '';
             const isProposal = headRef.startsWith('proposal/');
+            const isHousekeeping = prTitle.startsWith('[LKPR-0]');
             const hasCloses = /\bcloses\s+#\d+/i.test(body);
             const hasRefs = /\brefs?\s+#\d+/i.test(body);
 
@@ -69,7 +71,7 @@ jobs:
               );
             }
 
-            if (!isProposal && !hasCloses && !hasRefs) {
+            if (!isProposal && !isHousekeeping && !hasCloses && !hasRefs) {
               core.warning(
                 'Feature/fix PRs should reference the issue. ' +
                 'Add "Closes #N" (auto-close) or "Refs #N" (reference only) to the PR body.'
@@ -83,7 +85,7 @@ jobs:
           PR_MAX_FILES: 20
           PR_WARN_INSERTIONS: 500
           PR_WARN_FILES: 10
-          PR_EXCLUDE_PREFIXES: "docs/:backlogs/"
+          PR_EXCLUDE_PREFIXES: "docs/:backlogs/:design/"
           PR_BYPASS_LABEL: "big_refactor"
         run: |
           # Check bypass label via API before running the size gate.
@@ -156,12 +158,11 @@ jobs:
           TOKENIZERS_PARALLELISM: "false"
           HF_HOME: ~/.cache/huggingface
         run: |
-          set -o pipefail
-          uv run --with pytest-cov pytest \
+          uv run pytest \
             --cov=src/lorekeeper \
             --cov-report=term-missing \
             --cov-report=xml \
-            --tb=short -q | tee pytest-cov.log
+            --tb=short -q
 
       - name: Upload coverage data
         if: always()
