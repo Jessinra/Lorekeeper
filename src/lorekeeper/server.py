@@ -1,15 +1,15 @@
+"""Composition root — wires all dependencies, creates handler structs, registers MCP tools.
+
+Layer 6 — exempt from layer import rules.  This is the single place where
+services, processors, stores, and handlers are instantiated and wired together.
+"""
+
 from typing import Any
 
 import structlog
 from fastmcp import FastMCP
 from pydantic import ValidationError
 
-from lorekeeper.api.mcp.handlers.memory_handlers import handle_insert, handle_search
-from lorekeeper.api.mcp.handlers.suggestion_handlers import (
-    handle_get_suggestions,
-    handle_recommend_links,
-    handle_review_suggestion,
-)
 from lorekeeper.domains.link.repository import LinkStore
 from lorekeeper.domains.link.service import LinkService
 from lorekeeper.domains.memory.cache import MemoryCache
@@ -32,19 +32,12 @@ from lorekeeper.processors.link import LinkProcessor
 from lorekeeper.processors.memory import MemoryProcessor
 from lorekeeper.processors.reflection import ReflectionProcessor
 from lorekeeper.processors.suggestion import SuggestionProcessor
-from lorekeeper.shared.encouragement import (
-    for_forget,
-    for_insert,
-    for_reflect,
-    for_remember,
-    for_update,
-    set_rate,
-)
 
 log = structlog.get_logger()
 mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
 
-# ── Module-level singletons ────────────────────────────────────────────────
+# ── Module-level singletons (DEPRECATED — will be removed when dashboard   ──
+#    routes migrate to app.state.dashboard_handler)                          ──
 _settings: Settings | None = None
 _memory_store: MemoryStore | None = None
 _link_store: LinkStore | None = None
@@ -56,7 +49,8 @@ _link_processor: LinkProcessor | None = None
 _admin_processor: AdminProcessor | None = None
 
 
-# ── Store getters (dashboard routes only) ──────────────────────────────────
+# ── Store getters (DEPRECATED — dashboard routes will migrate to            ──
+#    DashboardHandler)                                                       ──
 
 
 def get_memory_store() -> MemoryStore:
@@ -80,58 +74,64 @@ def get_db() -> Database:
     return _db
 
 
-# ── Processor getters ─────────────────────────────────────────────────────
-
-
 def get_suggestion_processor() -> SuggestionProcessor:
     global _suggestion_processor
     if _suggestion_processor is None:
-        raise RuntimeError("SuggestionProcessor not initialised — call init_service() first")
+        raise RuntimeError("SuggestionProcessor not initialised")
     return _suggestion_processor
 
 
 def get_memory_processor() -> MemoryProcessor:
     global _memory_processor
     if _memory_processor is None:
-        raise RuntimeError("MemoryProcessor not initialised — call init_service() first")
+        raise RuntimeError("MemoryProcessor not initialised")
     return _memory_processor
 
 
 def get_reflection_processor() -> ReflectionProcessor:
     global _reflection_processor
     if _reflection_processor is None:
-        raise RuntimeError("ReflectionProcessor not initialised — call init_service() first")
+        raise RuntimeError("ReflectionProcessor not initialised")
     return _reflection_processor
 
 
 def get_link_processor() -> LinkProcessor:
     global _link_processor
     if _link_processor is None:
-        raise RuntimeError("LinkProcessor not initialised — call init_service() first")
+        raise RuntimeError("LinkProcessor not initialised")
     return _link_processor
 
 
 def get_admin_processor() -> AdminProcessor:
     global _admin_processor
     if _admin_processor is None:
-        raise RuntimeError("AdminProcessor not initialised — call init_service() first")
+        raise RuntimeError("AdminProcessor not initialised")
     return _admin_processor
+
+
+def get_settings() -> Settings:
+    global _settings
+    if _settings is None:
+        raise RuntimeError("Settings not initialised — call init_service() first")
+    return _settings
 
 
 # ── Composition root ──────────────────────────────────────────────────────
 
 
-def init_service(settings: Settings | None = None) -> None:
-    """Wire everything bottom-up: stores → domain services → processors.
+def init_service(settings: Settings | None = None) -> dict[str, Any]:
+    """Wire everything bottom-up: stores → domain services → processors → handlers.
 
-    WIRING ORDER (must mirror tests/_helpers.py build_app() 1:1):
-        settings -> engine (+probe) -> Database -> stores -> config overrides ->
-        KeywordIndex -> ns_filter -> MemoryCache -> LinkCandidateGenerator ->
-        domain services (link -> write -> search -> reflection -> suggestion -> import)
-        -> processors (memory, link, reflection, suggestion, admin) -> BM25 bootstrap
-
-    Cross-reference: tests/_helpers.py build_app() wires the same objects.
+    Returns a dict with ``dashboard_handler`` for the dashboard lifespan
+    to store in ``app.state``.
     """
+    from lorekeeper.api.mcp.handlers import MCPHandler
+    from lorekeeper.api.mcp.tools import register_mcp_tools
+    from lorekeeper.dashboard.handler import DashboardHandler
+    from lorekeeper.shared.encouragement import set_rate
+
+    # ── Infra ────────────────────────────────────────────────────────────────
+
     global _settings, _memory_store, _link_store, _db
     global _suggestion_processor, _memory_processor, _reflection_processor
     global _link_processor, _admin_processor
@@ -185,7 +185,8 @@ def init_service(settings: Settings | None = None) -> None:
         ns_filter=ns_filter,
     )
 
-    # ── Domain services ────────────────────────────────────────────────────
+    # ── Domain services ──────────────────────────────────────────────────────
+
     link_service = LinkService(links=links)
     write_service = MemoryWriteService(
         engine=engine, memories=memories, links=links, cache=cache,
@@ -211,7 +212,8 @@ def init_service(settings: Settings | None = None) -> None:
         db=db, namespace=s.namespace,
     )
 
-    # ── Processors ─────────────────────────────────────────────────────────
+    # ── Processors ───────────────────────────────────────────────────────────
+
     _memory_processor = MemoryProcessor(
         search_service=search_service, write_service=write_service,
         import_service=import_service, metrics=metrics, db=db, settings=s,
@@ -242,9 +244,33 @@ def init_service(settings: Settings | None = None) -> None:
     set_rate(s.enc_rate)
     log.info("enc_rate_set", rate=s.enc_rate)
 
-    # Start internal sweep scheduler (LKPR-99) — standalone SweepService,
-    # gets its OWN Database instance to avoid sharing sqlite3.Connection
-    # across threads.
+    # ── Handlers (one per API level) ─────────────────────────────────────────
+
+    mcp_handler = MCPHandler(
+        memory_processor=_memory_processor,
+        suggestion_processor=_suggestion_processor,
+        reflection_processor=_reflection_processor,
+        link_processor=_link_processor,
+        admin_processor=_admin_processor,
+    )
+
+    dashboard_handler = DashboardHandler(
+        memory_processor=_memory_processor,
+        suggestion_processor=_suggestion_processor,
+        reflection_processor=_reflection_processor,
+        link_processor=_link_processor,
+        admin_processor=_admin_processor,
+        memory_store=memories,
+        link_store=links,
+        settings=s,
+    )
+
+    # Register MCP tools on the FastMCP server
+    register_mcp_tools(mcp, mcp_handler)
+    log.info("mcp_tools_registered", count=10)
+
+    # ── Internal sweep scheduler (LKPR-99) ───────────────────────────────────
+
     from lorekeeper.domains.suggestion.sweep import SweepService
     from lorekeeper.infra.scheduler import PeriodicJob
 
@@ -278,344 +304,4 @@ def init_service(settings: Settings | None = None) -> None:
     ).start()
     log.info("sweep_scheduler_started")
 
-
-# ── MCP tool registration ────────────────────────────────────────────────────
-
-@mcp.tool(name="lore_search")
-async def lore_search(
-    query: str = "",
-    limit: int | None = None,
-    min_score: float = 0.1,
-    include_links: bool = True,
-    include_deleted: bool = False,
-    refine_from: list[str] | None = None,
-    format: str = "full",
-    ids: list[str] | None = None,
-    created_after: str | None = None,
-    updated_after: str | None = None,
-    sort_by: str = "relevance",
-    source_type: str | None = None,
-) -> dict[str, Any]:
-    """Search memories by semantic + keyword query, or bulk-fetch by ID.
-
-    When ``ids`` is provided, skips the vector/BM25 pipeline entirely and does
-    a direct SQL lookup by lore_id. ``query`` is ignored in that path.
-
-    Args:
-        query: Search text. Required unless ``ids`` is set.
-        limit: Max results to return (default from settings).
-        min_score: Minimum combined_score threshold (default 0.1).
-        include_links: Attach memory links to results (default True; forced off
-            in ``format='title'`` mode since links add tokens with no gain).
-        include_deleted: Include soft-deleted memories (default False).
-        refine_from: Restrict search candidates to these lore_ids (configurable
-            cap, default 200 via ``LORE_MAX_REFINE_FROM_IDS``).
-        format: ``'full'`` (default) returns complete memory objects with
-            relevance scores. ``'title'`` returns compact ``{id, title, score}``
-            dicts — lower token cost for listing before a targeted fetch.
-        ids: When set, returns these specific lore_ids directly from SQL,
-            bypassing the search pipeline. Silently skips unknown IDs. Pair
-            with ``format='title'`` for a two-step list-then-fetch workflow.
-            Max 50 IDs (configurable via ``max_search_ids``).
-        created_after: ISO 8601 UTC timestamp. Only return memories created on
-            or after this time (e.g. ``'2026-06-04T00:00:00'``). UTC only;
-            non-UTC offsets raise a validation error.
-        updated_after: ISO 8601 UTC timestamp. Only return memories updated on
-            or after this time. Composes with ``created_after`` and all other
-            filters.
-        sort_by: ``'relevance'`` (default) ranks by hybrid score when the search
-            pipeline runs. In ``ids`` lookup mode there is no scoring, so
-            ``'relevance'`` preserves the caller-provided ``ids`` order instead.
-            ``'recent'`` sorts by ``updated_at DESC``. ``'frequent'`` sorts by
-            ``usage_count DESC``. Composes with timestamp filters.
-        source_type: Optional provenance filter. When set, only return memories
-            with this exact source_type. One of: ``observed``, ``inferred``,
-            ``user_stated``, ``consolidated``, ``injected``, ``unknown``.
-    """
-    try:
-        return handle_search(
-            get_memory_processor(), query, limit, min_score, include_links, include_deleted,
-            refine_from=refine_from, format=format, ids=ids,
-            created_after=created_after, updated_after=updated_after,
-            sort_by=sort_by, source_type=source_type,
-        )
-    except Exception:
-        log.exception("lore_search_failed", query=query)
-        raise
-
-
-@mcp.tool(name="lore_insert")
-async def lore_insert(
-    memories: list[dict[str, Any]] | None = None,
-    links: list[dict[str, Any]] | None = None,
-    force: bool = False,
-) -> dict[str, Any]:
-    """Insert memories and/or links into the store.
-
-    Each memory dict must include:
-      - title (str, required): short unique label for the memory
-      - content (str, optional): the full text to store
-      - description (str, optional): brief summary
-      - score (float, optional, default 5.0): initial quality score 0-10
-      - source_type (str, optional, default 'observed'): provenance tag.
-        One of: ``observed``, ``inferred``, ``user_stated``,
-        ``consolidated``, ``injected``.
-      - links (list[dict[str, Any]], optional): inline links to create after insert.
-        Each link dict: {target_memory_id (str, required), relation_type (str, required),
-        reason? (str)}
-
-    Each top-level link dict must include source_memory_id, target_memory_id,
-    relation_type, and reason.
-    """
-    try:
-        result = handle_insert(get_memory_processor(), memories or [], links or [], force)
-        mem_count = len(memories or [])
-        link_count = len(links or [])
-        result.update(for_insert(memory_count=mem_count, link_count=link_count))
-        return result
-    except Exception:
-        log.exception("lore_insert_failed", memory_count=len(memories or []))
-        raise
-
-
-@mcp.tool(
-    name="lore_recommend_links",
-    description=(
-        "Suggest link candidates between a memory and related memories. "
-        "Returns ranked candidates with per-signal scores. "
-        "Does NOT write any links — call lore_insert with links=[] to confirm."
-    ),
-)
-async def lore_recommend_links(
-    lore_id: str,
-    top_k: int | None = None,
-) -> dict[str, Any]:
-    """
-    lore_id: The source memory to find link candidates for.
-    top_k: Max candidates to return (default: LORE_LINK_TOP_M from settings).
-    """
-    try:
-        proc = get_suggestion_processor()
-        return handle_recommend_links(
-            proc, lore_id=lore_id, top_k=top_k
-        )
-    except Exception:
-        log.exception("lore_recommend_links_failed", lore_id=lore_id)
-        raise
-
-
-@mcp.tool(name="lore_remember")
-async def lore_remember(thought: str, source_type: str = "observed") -> dict[str, Any]:
-    """Capture a thought instantly — one fact, one call.
-
-    Use this when you discover something worth keeping:
-    a decision, a bug root cause, a user preference, a pattern.
-
-    Minimal effort, high reward. Your future self will find this useful.
-
-    Args:
-        thought: The fact or observation to store verbatim.
-        source_type: Provenance tag for this memory. Defaults to ``'observed'``
-            (extracted from conversation). Other values: ``'inferred'``,
-            ``'user_stated'``, ``'consolidated'``, ``'injected'``.
-    """
-    try:
-        result = get_memory_processor().remember(thought, source_type=source_type)
-        result.update(for_remember())
-        return result
-    except Exception:
-        log.exception("lore_remember_failed", thought=thought[:80])
-        raise
-
-
-@mcp.tool(name="lore_update")
-async def lore_update(
-    memory_feedback: list[dict[str, Any]] | None = None,
-    link_feedback: list[dict[str, Any]] | None = None,
-) -> dict[str, Any]:
-    """Rate memories and links after using them. Drives the quality signal loop.
-
-    Each memory_feedback dict: {id (str), useful (bool), confidence (int 1-10)}.
-    Each link_feedback dict: {id (str), useful (bool), confidence (int 1-10)}.
-
-    ``useful=True`` bumps score; ``useful=False`` deducts. Confidence scales the delta.
-    Repeated ``useful=False`` with low confidence triggers soft-delete.
-    Call after every ``lore_search`` to keep scores calibrated.
-    """
-    try:
-        result = get_memory_processor().update(memory_feedback or [], link_feedback or [])
-        result.update(for_update())
-        return result
-    except Exception:
-        log.exception("lore_update_failed")
-        raise
-
-
-@mcp.tool(name="lore_processed_sessions")
-async def lore_processed_sessions() -> dict[str, Any]:
-    """Return all session IDs that have been marked as processed via lore_reflect."""
-    try:
-        return {"session_ids": get_reflection_processor().processed_session_ids()}
-    except Exception:
-        log.exception("lore_processed_sessions_failed")
-        raise
-
-
-@mcp.tool(name="lore_reflect")
-async def lore_reflect(
-    session_id: str,
-    summary: str,
-    session_date: str | None = None,
-    topic: str | None = None,
-    task_type: str | None = None,
-    what_was_done: str | None = None,
-    decisions: str | None = None,
-    lessons_learnt: list[str] | None = None,
-    good_patterns: list[str] | None = None,
-    user_profile_updates: list[str] | None = None,
-    factual_discoveries: list[str] | None = None,
-    memory_ids: list[str] | None = None,
-    auto_insert: bool = True,
-) -> dict[str, Any]:
-    """Reflect on a completed session — save what you learned.
-
-    Minimal usage: pass session_id and summary. That's enough.
-    The rest are extras for when you discovered something substantial.
-
-    Args:
-        session_id: Unique session identifier (required).
-        summary: Short summary of what happened in the session (required).
-        session_date: ISO date string (e.g. ``"2026-06-02"``). Defaults to today.
-        topic: Domain or topic area (e.g. ``"lore_search refactor"``).
-        task_type: Optional category for the session (e.g. ``"build"``,
-            ``"debug"``, ``"review"``, ``"design"``).
-        what_was_done: Longer narrative of the work completed.
-        decisions: Key decisions made, with rationale.
-        lessons_learnt: List of lessons to propagate to future sessions.
-        good_patterns: Patterns that worked well and should be repeated.
-        user_profile_updates: Updates about the user's preferences or context.
-        factual_discoveries: New facts to record — stored as bullet text in the
-            reflection. Also auto-inserted as memories when ``auto_insert=True``.
-        memory_ids: IDs of existing memories this reflection relates to.
-        auto_insert: When True (default), automatically inserts each item in
-            ``factual_discoveries`` (score 7.0) and ``lessons_learnt`` (score 8.0)
-            as standalone memories. Duplicate-guarded. Returns created IDs in
-            ``memories_created``.
-
-    If this ``session_id`` was already processed, returns immediately with
-    ``already_processed=True`` and ``memories_created=[]``. The ``[]`` reflects
-    the current call only — the original call's auto-inserts are not
-    reconstructed. Check ``already_processed`` to distinguish a retry from a
-    first-time call.
-    """
-    try:
-        result = get_reflection_processor().submit_reflection(
-            session_id=session_id,
-            session_date=session_date,
-            topic=topic,
-            task_type=task_type,
-            what_was_done=what_was_done,
-            decisions=decisions,
-            lessons_learnt=lessons_learnt or [],
-            good_patterns=good_patterns or [],
-            user_profile_updates=user_profile_updates or [],
-            factual_discoveries=factual_discoveries or [],
-            summary=summary,
-            memory_ids=memory_ids or [],
-            auto_insert=auto_insert,
-        )
-        result.update(for_reflect(
-            already_processed=result.get("already_processed", False)
-        ))
-        return result
-    except Exception:
-        log.exception("lore_reflect_failed", session_id=session_id)
-        raise
-
-
-@mcp.tool()
-async def lore_forget(
-    memory_ids: list[str],
-    reason: str = "unspecified",
-) -> dict[str, Any]:
-    """Soft-delete one or more memories by ID.
-
-    Memories are marked soft_deleted=1 and excluded from future search results.
-    This is reversible at the DB level but no undelete tool is exposed in v1.
-
-    Args:
-        memory_ids: List of lore_ids to forget. Must not be empty.
-        reason: Why this memory is being forgotten. One of:
-            ``\"duplicate\"``, ``\"hallucinated\"``, ``\"outdated\"``,
-            ``\"expired\"``, ``\"unspecified\"``.
-    """
-    try:
-        if not memory_ids:
-            raise ValueError("memory_ids must not be empty")
-        result = get_memory_processor().forget(memory_ids, reason=reason)
-        result.update(for_forget(count=len(memory_ids)))
-        return result
-    except Exception:
-        log.exception("lore_forget_failed")
-        raise
-
-
-@mcp.tool()
-async def lore_get_suggestions(
-    limit: int = 20,
-    min_score: float = 0.0,
-) -> dict[str, Any]:
-    """Retrieve pending link suggestions for review, sorted by quality score.
-
-    Returns the top candidates from the sweep engine's pending queue.
-    Use ``lore_review_suggestion`` to accept or reject them.
-
-    Args:
-        limit: Max suggestions to return (default 20, capped at 100).
-        min_score: Minimum weighted_score filter, 0.0-1.0 (default 0.0 = all).
-    """
-    try:
-        return handle_get_suggestions(get_suggestion_processor(), limit=limit, min_score=min_score)
-    except Exception:
-        log.exception("lore_get_suggestions_failed")
-        raise
-
-
-@mcp.tool()
-async def lore_review_suggestion(
-    suggestion_ids: list[str],
-    action: str,
-) -> dict[str, Any]:
-    """Accept or reject one or more link suggestions in a single call.
-
-    Processes each suggestion independently — a failure on one does not block
-    the rest. Suggestion rows are never deleted; status is updated to
-    'accepted' or 'rejected' for audit trail.
-
-    On accept: creates a real ``memory_links`` row using the suggestion's
-    ``suggested_type`` (falls back to ``'references'`` if None or unrecognised).
-
-    On reject: marks the suggestion as rejected. Future sweeps skip this pair.
-
-    Idempotent per item: double-accept and double-reject both return
-    ``status='skipped'`` with an explanatory message.
-
-    Args:
-        suggestion_ids: List of suggestion UUIDs to process (one or many).
-        action: Either ``'accept'`` or ``'reject'``.
-    """
-    try:
-        return handle_review_suggestion(get_suggestion_processor(), suggestion_ids, action)
-    except Exception:
-        log.exception("lore_review_suggestion_failed")
-        raise
-
-
-# ── Settings getter (used by dashboard) ───────────────────────────────────
-
-
-def get_settings() -> Settings:
-    global _settings
-    if _settings is None:
-        raise RuntimeError("Settings not initialised — call init_service() first")
-    return _settings
+    return {"dashboard_handler": dashboard_handler}
