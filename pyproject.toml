@@ -101,6 +101,14 @@ ignore = [
   "RUF003", # Ambiguous unicode in comments (en-dash, multiplication sign) — intentional
 ]
 
+[tool.coverage.run]
+source = ["src/lorekeeper"]
+data_file = ".coverage"
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
+
 [tool.mypy]
 python_version = "3.11"
 strict = true
@@ -113,6 +121,7 @@ dev = [
     "mypy>=2.1.0",
     "pytest>=9.0.3",
     "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
     "pytest-playwright>=0.6.0",
     "pytest-timeout>=2.3",
     "ruff>=0.15.13",
