@@ -9,16 +9,20 @@ Covers:
   - migration 3 backfills pre-existing rows as 'unknown'
 """
 import sqlite3
+from unittest.mock import MagicMock
 
 import pytest
 
-from lorekeeper.api.mcp.handlers.memory_handlers import handle_insert as _handle_insert
-from lorekeeper.api.mcp.handlers.memory_handlers import handle_search as _handle_search
+from lorekeeper.api.mcp.handlers import MCPHandler
 from lorekeeper.domains.memory.models import SOURCE_TYPES, WRITE_SOURCE_TYPES
 from lorekeeper.infra.database import _migration_3_add_source_type
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
+from lorekeeper.processors.admin import AdminProcessor
+from lorekeeper.processors.link import LinkProcessor
 from lorekeeper.processors.memory import MemoryProcessor
+from lorekeeper.processors.reflection import ReflectionProcessor
+from lorekeeper.processors.suggestion import SuggestionProcessor
 from tests._helpers import build_app, build_stores
 
 
@@ -57,7 +61,7 @@ def svc(tmp_path):
 
 
 @pytest.fixture
-def processor(svc, tmp_path):
+def memory_processor(svc, tmp_path):
     store = build_stores(tmp_path / "test.db")
     return MemoryProcessor(
         search_service=svc.memory_search_service,
@@ -69,13 +73,28 @@ def processor(svc, tmp_path):
     )
 
 
+@pytest.fixture
+def mcp_handler(svc, memory_processor):
+    """MCPHandler with real MemoryProcessor + stubs for unused processors."""
+    stub_sugp = MagicMock(spec=SuggestionProcessor)
+    stub_refp = MagicMock(spec=ReflectionProcessor)
+    stub_lnkp = MagicMock(spec=LinkProcessor)
+    stub_admp = MagicMock(spec=AdminProcessor)
+    return MCPHandler(
+        memory_processor=memory_processor,
+        suggestion_processor=stub_sugp,
+        reflection_processor=stub_refp,
+        link_processor=stub_lnkp,
+        admin_processor=stub_admp,
+    )
+
+
 # ── Default source_type on insert ────────────────────────────────────────────
 
 
-def test_insert_default_source_type_is_observed(svc, processor):
+def test_insert_default_source_type_is_observed(svc, mcp_handler):
     """lore_insert without source_type should store 'observed'."""
-    r = _handle_insert(
-        processor,
+    r = mcp_handler.insert(
         memories=[{"title": "default source", "content": "no source_type given"}],
         links=[],
     )
@@ -84,11 +103,10 @@ def test_insert_default_source_type_is_observed(svc, processor):
     assert row["source_type"] == "observed"
 
 
-def test_insert_explicit_source_type_persisted(svc, processor):
+def test_insert_explicit_source_type_persisted(svc, mcp_handler):
     """Write-time source_type set explicitly in memory dict must be stored as-is."""
     for st in WRITE_SOURCE_TYPES:
-        r = _handle_insert(
-            processor,
+        r = mcp_handler.insert(
             memories=[{"title": f"typed-{st}", "content": "content", "source_type": st}],
             links=[],
         )
@@ -100,23 +118,22 @@ def test_insert_explicit_source_type_persisted(svc, processor):
 # ── source_type in serialised output ─────────────────────────────────────────
 
 
-def test_search_result_contains_source_type_field(svc, processor):
+def test_search_result_contains_source_type_field(svc, mcp_handler):
     """Full-format search result must include source_type in the memory dict."""
     r = svc.insert(
         memories=[{"title": "emit-st", "content": "emit source type test"}],
         links=[],
     )
     mem_id = r["inserted_memories"][0]["id"]
-    result = _handle_search(processor, "", ids=[mem_id])
+    result = mcp_handler.search(query="", ids=[mem_id])
     assert len(result["results"]) == 1
     mem = result["results"][0]["memory"]
     assert "source_type" in mem
 
 
-def test_search_result_source_type_matches_stored_value(svc, processor):
+def test_search_result_source_type_matches_stored_value(svc, mcp_handler):
     """source_type in serialized result must match what was stored."""
-    r = _handle_insert(
-        processor,
+    r = mcp_handler.insert(
         memories=[{
             "title": "user-stated-mem",
             "content": "told by user",
@@ -125,7 +142,7 @@ def test_search_result_source_type_matches_stored_value(svc, processor):
         links=[],
     )
     mem_id = r["inserted_memories"][0]["id"]
-    result = _handle_search(processor, "", ids=[mem_id])
+    result = mcp_handler.search(query="", ids=[mem_id])
     mem = result["results"][0]["memory"]
     assert mem["source_type"] == "user_stated"
 
@@ -133,10 +150,9 @@ def test_search_result_source_type_matches_stored_value(svc, processor):
 # ── source_type filter — query path ──────────────────────────────────────────
 
 
-def test_source_type_filter_returns_only_matching(svc, processor):
+def test_source_type_filter_returns_only_matching(svc, mcp_handler):
     """source_type filter on query path must exclude non-matching memories."""
-    _handle_insert(
-        processor,
+    mcp_handler.insert(
         memories=[
             {"title": "obs-mem", "content": "observation content", "source_type": "observed"},
             {"title": "inf-mem", "content": "inferred content", "source_type": "inferred"},
@@ -146,33 +162,31 @@ def test_source_type_filter_returns_only_matching(svc, processor):
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": row["id"], "score": 0.9} for row in all_rows]
 
-    result = _handle_search(processor, "content", source_type="inferred")
+    result = mcp_handler.search(query="content", source_type="inferred")
     titles = {item["memory"]["title"] for item in result["results"]}
     assert "inf-mem" in titles
     assert "obs-mem" not in titles
 
 
-def test_source_type_filter_no_matches_returns_empty(svc, processor):
+def test_source_type_filter_no_matches_returns_empty(svc, mcp_handler):
     """source_type filter with no matching memories returns empty results."""
-    _handle_insert(
-        processor,
+    mcp_handler.insert(
         memories=[{"title": "just-obs", "content": "only observed", "source_type": "observed"}],
         links=[],
     )
     all_rows = svc.memories.all_memory_rows()
     svc._engine._search_results = [{"lore_id": row["id"], "score": 0.9} for row in all_rows]
 
-    result = _handle_search(processor, "observed", source_type="consolidated")
+    result = mcp_handler.search(query="observed", source_type="consolidated")
     assert result["results"] == []
 
 
 # ── source_type filter — ids path ─────────────────────────────────────────────
 
 
-def test_source_type_filter_in_ids_path(svc, processor):
+def test_source_type_filter_in_ids_path(svc, mcp_handler):
     """ids path with source_type filter must exclude non-matching memories."""
-    r = _handle_insert(
-        processor,
+    r = mcp_handler.insert(
         memories=[
             {"title": "ids-obs", "content": "ids observed", "source_type": "observed"},
             {"title": "ids-inj", "content": "ids injected", "source_type": "injected"},
@@ -181,7 +195,7 @@ def test_source_type_filter_in_ids_path(svc, processor):
     )
     ids = [m["id"] for m in r["inserted_memories"]]
 
-    result = _handle_search(processor, "", ids=ids, source_type="injected")
+    result = mcp_handler.search(query="", ids=ids, source_type="injected")
     titles = {item["memory"]["title"] for item in result["results"]}
     assert "ids-inj" in titles
     assert "ids-obs" not in titles
@@ -190,49 +204,46 @@ def test_source_type_filter_in_ids_path(svc, processor):
 # ── invalid source_type raises at handler layer ───────────────────────────────
 
 
-def test_search_invalid_source_type_raises_value_error(svc, processor):
+def test_search_invalid_source_type_raises_value_error(svc, mcp_handler):
     """Invalid source_type must raise ValueError at the handler layer."""
     with pytest.raises(ValueError, match="Unknown source_type"):
-        _handle_search(processor, "test", source_type="made_up")
+        mcp_handler.search(query="test", source_type="made_up")
 
 
-def test_search_valid_source_types_do_not_raise(svc, processor):
-    """All valid SOURCE_TYPES must be accepted by _handle_search without error."""
+def test_search_valid_source_types_do_not_raise(svc, mcp_handler):
+    """All valid SOURCE_TYPES must be accepted by mcp_handler.search without error."""
     for st in SOURCE_TYPES:
         # No exception — empty results are fine
-        result = _handle_search(processor, "test", source_type=st)
+        result = mcp_handler.search(query="test", source_type=st)
         assert "results" in result
 
 
-def test_insert_invalid_source_type_raises_value_error(svc, processor):
+def test_insert_invalid_source_type_raises_value_error(svc, mcp_handler):
     """Invalid source_type in lore_insert memory dict must raise ValueError at the handler layer."""
     with pytest.raises(ValueError, match="invalid source_type"):
-        _handle_insert(
-            processor,
+        mcp_handler.insert(
             memories=[{"title": "bad-type", "content": "test", "source_type": "totally_made_up"}],
             links=[],
         )
 
 
-def test_insert_unknown_source_type_is_rejected(svc, processor):
+def test_insert_unknown_source_type_is_rejected(svc, mcp_handler):
     """'unknown' source_type must be rejected on insert — it is reserved for migration backfill."""
     with pytest.raises(ValueError, match="invalid source_type"):
-        _handle_insert(
-            processor,
+        mcp_handler.insert(
             memories=[{"title": "unknown-type", "content": "test", "source_type": "unknown"}],
             links=[],
         )
 
 
-def test_insert_valid_source_types_do_not_raise(svc, processor):
-    """All write-time WRITE_SOURCE_TYPES must be accepted by _handle_insert without error.
+def test_insert_valid_source_types_do_not_raise(svc, mcp_handler):
+    """All write-time WRITE_SOURCE_TYPES must be accepted by mcp_handler.insert without error.
 
     'unknown' is excluded — it is reserved for migration backfill and must NOT be
     accepted on new inserts.
     """
     for st in WRITE_SOURCE_TYPES:
-        result = _handle_insert(
-            processor,
+        result = mcp_handler.insert(
             memories=[{"title": f"valid-{st}", "content": "test", "source_type": st}],
             links=[],
         )
@@ -310,10 +321,9 @@ def test_migration_3_is_idempotent(tmp_path):
     conn.close()
 
 
-def test_new_rows_get_observed_not_unknown(svc, processor):
+def test_new_rows_get_observed_not_unknown(svc, mcp_handler):
     """Rows written via the service after migration must default to 'observed', not 'unknown'."""
-    r = _handle_insert(
-        processor,
+    r = mcp_handler.insert(
         memories=[{"title": "post-mig", "content": "inserted normally"}],
         links=[],
     )

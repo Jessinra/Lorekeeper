@@ -1,27 +1,15 @@
-import types
-from typing import Any, Union, get_args, get_origin
+from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from lorekeeper.server import get_admin_processor
+from lorekeeper.dashboard.handler import DashboardHandler
 
 router = APIRouter()
 
 
-def _unwrap_optional(tp: Any) -> Any:
-    """Unwrap Optional[T] / Union[T, None] | T | None to T."""
-    origin = get_origin(tp)
-    if origin is Union or origin is types.UnionType:
-        args = get_args(tp)
-        non_none = [a for a in args if a is not type(None)]
-        return non_none[0] if len(non_none) == 1 else tp
-    return tp
-
-
-@router.get("/api/config")
-def get_config() -> dict[str, Any]:
-    return get_admin_processor().get_config()
+def _handler(request: Request) -> DashboardHandler:
+    return request.app.state.dashboard_handler  # type: ignore[no-any-return]
 
 
 class ConfigUpdate(BaseModel):
@@ -46,16 +34,18 @@ class ConfigUpdate(BaseModel):
     auto_link_threshold: float | None = None
 
 
+@router.get("/api/config")
+def get_config(request: Request) -> dict[str, Any]:
+    return _handler(request).get_config()
+
+
 @router.patch("/api/config")
-def update_config(body: ConfigUpdate) -> dict[str, bool]:
-    """Update config overrides with type validation.
-    Read-only keys (data_dir, embedding_model) are silently skipped.
-    Returns 422 with detail on type mismatch.
-    """
-    admin = get_admin_processor()
+def update_config(request: Request, body: ConfigUpdate) -> dict[str, bool]:
+    """Update config overrides with type validation."""
+    handler = _handler(request)
     for key, value in body.model_dump(exclude_none=True).items():
         try:
-            admin.set_config(key, value)
+            handler.set_config(key, value)
         except ValueError as e:
             raise HTTPException(status_code=422, detail=str(e)) from e
     return {"ok": True}

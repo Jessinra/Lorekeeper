@@ -46,7 +46,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     log.info("dashboard_startup")
     _APP_VERSION = _resolve_version()
     log.info("version_resolved", version=_APP_VERSION)
-    init_service()
+    ctx = init_service()
+    app.state.dashboard_handler = ctx.dashboard_handler
     log.info("dashboard_ready")
     yield
 
@@ -59,6 +60,7 @@ app.mount("/js",  StaticFiles(directory=STATIC_DIR / "js"),  name="js")
 
 
 # ── Serve UI ──────────────────────────────────────────────────────────────────
+
 
 @app.get("/", include_in_schema=False)
 def index() -> Response:
