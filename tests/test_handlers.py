@@ -5,7 +5,6 @@ Validates that input validation happens early — before reaching the orchestrat
 from unittest.mock import patch
 
 import pytest
-
 from lorekeeper.api.mcp.handlers.memory_handlers import (
     handle_insert as _handle_insert,
 )
@@ -21,6 +20,7 @@ from lorekeeper.api.mcp.handlers.suggestion_handlers import (
 from lorekeeper.api.mcp.handlers.suggestion_handlers import (
     handle_review_suggestion as _handle_review_suggestion,
 )
+
 from lorekeeper.infra.keyword_index import KeywordIndex
 from lorekeeper.infra.settings import Settings
 from lorekeeper.processors.memory import MemoryProcessor

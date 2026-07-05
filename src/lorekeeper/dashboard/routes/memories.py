@@ -3,6 +3,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from lorekeeper.dashboard.handler import DashboardHandler
+
 router = APIRouter()
 
 
@@ -14,8 +16,8 @@ class MemoryUpdate(BaseModel):
     soft_deleted: bool | None = None
 
 
-def _handler(request: Request) -> Any:
-    return request.app.state.dashboard_handler
+def _handler(request: Request) -> DashboardHandler:
+    return request.app.state.dashboard_handler  # type: ignore[no-any-return]
 
 
 @router.get("/api/memories")

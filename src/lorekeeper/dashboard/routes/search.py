@@ -3,6 +3,8 @@ from typing import Any
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
+from lorekeeper.dashboard.handler import DashboardHandler
+
 router = APIRouter()
 
 
@@ -12,8 +14,8 @@ class SearchRequest(BaseModel):
     min_score: float = 0.1
 
 
-def _handler(request: Request) -> Any:
-    return request.app.state.dashboard_handler
+def _handler(request: Request) -> DashboardHandler:
+    return request.app.state.dashboard_handler  # type: ignore[no-any-return]
 
 
 @router.post("/api/search")

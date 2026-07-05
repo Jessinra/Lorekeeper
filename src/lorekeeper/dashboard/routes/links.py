@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from lorekeeper.dashboard.handler import DashboardHandler
 from lorekeeper.domains.link.models import RelationType
 
 router = APIRouter()
@@ -16,8 +17,8 @@ class LinkCreate(BaseModel):
     score: float = 1.0
 
 
-def _handler(request: Request) -> Any:
-    return request.app.state.dashboard_handler
+def _handler(request: Request) -> DashboardHandler:
+    return request.app.state.dashboard_handler  # type: ignore[no-any-return]
 
 
 @router.get("/api/links")

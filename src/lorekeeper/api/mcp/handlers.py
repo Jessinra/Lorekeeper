@@ -209,5 +209,5 @@ class MCPHandler:
             "accepted": result.accepted,
             "rejected": result.rejected,
             "skipped": result.skipped,
-            "errors": [e["error"] for e in result.errors],
+            "errors": result.errors,
         }
