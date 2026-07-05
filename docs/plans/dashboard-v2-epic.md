@@ -155,31 +155,31 @@ From spec §8 — all values must be exact:
 
 ## API Dependencies
 
-The v2 dashboard relies on the existing v1 API routes under `/api/`. Some endpoints need enhancement (pagination, filter params). The v2 FastAPI mount adds a `/v2/` prefix, proxying to the same underlying stores.
+The v2 dashboard relies on the existing v1 API routes under `/api/`. Some endpoints need enhancement (pagination, filter params).
 
-| Endpoint                                | Status                     | Needed for           |
-| --------------------------------------- | -------------------------- | -------------------- |
-| `GET /api/v2/memories`                  | Needs pagination + filters | Memories page        |
-| `GET /api/v2/memories/:id`              | Exists                     | Memory drawer        |
-| `PATCH /api/v2/memories/:id`            | Exists                     | Memory drawer edit   |
-| `DELETE /api/v2/memories/:id`           | Exists                     | Memory drawer delete |
-| `POST /api/v2/memories/:id/soft-delete` | Needs creation             | Memory drawer        |
-| `POST /api/v2/memories/:id/refresh`     | Needs creation             | Review stale         |
-| `GET /api/v2/links`                     | Needs pagination + filters | Links table          |
-| `DELETE /api/v2/links/:id`              | Exists                     | Links table          |
-| `GET /api/v2/suggestions`               | Exists (paginated)         | Review               |
-| `POST /api/v2/suggestions/batch`        | Exists                     | Review               |
-| `GET /api/v2/sessions`                  | Needs task-type filter     | Sessions             |
-| `GET /api/v2/sessions/:id`              | Exists                     | Sessions drawer      |
-| `POST /api/v2/query/debug`              | Needs creation             | Query page           |
-| `GET /api/v2/metrics/tool-calls`        | Needs 7d hourly agg        | Metrics              |
-| `GET /api/v2/health`                    | Needs creation             | Home page            |
-| `GET /api/v2/settings`                  | Exists                     | Settings             |
-| `PATCH /api/v2/settings`                | Exists                     | Settings             |
-| `POST /api/v2/export`                   | Exists                     | Settings             |
-| `POST /api/v2/import/preview`           | Exists                     | Settings             |
-| `POST /api/v2/import/confirm`           | Exists                     | Settings             |
-| `POST /api/v2/sweep/run`                | Exists                     | Settings             |
+| Endpoint                             | Status                     | Needed for           |
+| ------------------------------------ | -------------------------- | -------------------- |
+| `GET /api/memories`                  | Needs pagination + filters | Memories page        |
+| `GET /api/memories/:id`              | Exists                     | Memory drawer        |
+| `PATCH /api/memories/:id`            | Exists                     | Memory drawer edit   |
+| `DELETE /api/memories/:id`           | Exists                     | Memory drawer delete |
+| `POST /api/memories/:id/soft-delete` | Needs creation             | Memory drawer        |
+| `POST /api/memories/:id/refresh`     | Needs creation             | Review stale         |
+| `GET /api/links`                     | Needs pagination + filters | Links table          |
+| `DELETE /api/links/:id`              | Exists                     | Links table          |
+| `GET /api/suggestions`               | Exists (paginated)         | Review               |
+| `POST /api/suggestions/batch`        | Exists                     | Review               |
+| `GET /api/sessions`                  | Needs task-type filter     | Sessions             |
+| `GET /api/sessions/:id`              | Exists                     | Sessions drawer      |
+| `POST /api/query/debug`              | Needs creation             | Query page           |
+| `GET /api/metrics/tool-calls`        | Needs 7d hourly agg        | Metrics              |
+| `GET /api/health`                    | Needs creation             | Home page            |
+| `GET /api/settings`                  | Exists                     | Settings             |
+| `PATCH /api/settings`                | Exists                     | Settings             |
+| `POST /api/export`                   | Exists                     | Settings             |
+| `POST /api/import/preview`           | Exists                     | Settings             |
+| `POST /api/import/confirm`           | Exists                     | Settings             |
+| `POST /api/sweep/run`                | Exists                     | Settings             |
 
 ## Pending Design Decisions
 

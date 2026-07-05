@@ -38,7 +38,7 @@ Build the Metrics page with a total volume card, a main day×hour heatmap grid w
 
 ## API Dependencies
 
-- `GET /api/v2/metrics/tool-calls?hours=168` — returns hourly per-tool call counts for 7 days — **needs enhancement** (existing `/api/metrics` supports up to 24h; extend to 168h with hourly buckets)
+- `GET /api/metrics/tool-calls?hours=168` — returns hourly per-tool call counts for 7 days — **needs enhancement** (existing `/api/metrics` supports up to 24h; extend to 168h with hourly buckets)
 
 ## Testing
 
@@ -55,7 +55,7 @@ Build the Metrics page with a total volume card, a main day×hour heatmap grid w
 
 ## Required Updates
 
-- `GET /api/v2/metrics/tool-calls?hours=168` — extend existing `/api/metrics` to support 168h range with hourly buckets
+- `GET /api/metrics/tool-calls?hours=168` — extend existing `/api/metrics` to support 168h range with hourly buckets
 
 ## Design Gaps Resolved
 

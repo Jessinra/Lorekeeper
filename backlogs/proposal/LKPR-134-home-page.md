@@ -42,8 +42,8 @@ Build the Home page with a greeting header, Knowledge Health card (HealthRing SV
 
 ## API Dependencies
 
-- `GET /api/v2/health` — returns: `{ composite_score, freshness, confidence, dup_risk_score, memories_count, avg_score, total_uses, last_updated_at }` — **needs creation** (new endpoint)
-- Activity feed data — can use existing `/api/reflections` or a new `/api/v2/activity` endpoint; mock as fallback
+- `GET /api/health` — returns: `{ composite_score, freshness, confidence, dup_risk_score, memories_count, avg_score, total_uses, last_updated_at }` — **needs creation** (new endpoint)
+- Activity feed data — can use existing `/api/reflections` or a new `/api/activity` endpoint; mock as fallback
 
 ## Testing
 

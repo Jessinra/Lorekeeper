@@ -45,7 +45,7 @@ Build a **Review Inbox page** at `src/dashboard_v2/src/routes/review.svelte` wit
 
 - Two-tab pill group: **Suggestions** (with live pending count badge) and **Stale** (with live stale count badge)
 - White active tab indicator, switches the table content below
-- Counts fetched from `GET /api/v2/suggestions/count` and `GET /api/v2/memories/stale/count`
+- Counts fetched from `GET /api/suggestions/count` and `GET /api/memories/stale/count`
 
 ### Suggestions tab
 
@@ -79,7 +79,7 @@ Build a **Review Inbox page** at `src/dashboard_v2/src/routes/review.svelte` wit
 | Actions      | [↺] [✗]      | Refresh (time icon) / Delete (trash icon) inline buttons |
 
 - Row click → opens **MemoryDetailDrawer** (LKPR-127) with Refresh/Delete actions in the footer.
-- Inline Refresh marks the memory as used today via `POST /api/v2/memories/:id/refresh` → toast.
+- Inline Refresh marks the memory as used today via `POST /api/memories/:id/refresh` → toast.
 - Inline Delete fires immediately with a toast (per spec §4.1, stale-delete is lightweight, not confirm-gated — see open question §6.6).
 - **Bulk action bar**: when ≥1 row is checked, "N selected" + Refresh selected / Delete selected buttons.
 
@@ -90,12 +90,12 @@ Build a **Review Inbox page** at `src/dashboard_v2/src/routes/review.svelte` wit
 
 ### API dependencies
 
-- `GET /api/v2/suggestions` — exists at `/api/suggestions` with pagination, sort, `memory_id` filter. Already supports `limit`, `offset`, `sort_by`, `sort_dir`. The v2 mount needs to keep this contract.
-- `GET /api/v2/suggestions/count` — exists at `/api/suggestions/count`.
-- `POST /api/v2/suggestions/batch` — exists at `/api/suggestions/batch`. Accepts `{ suggestion_ids: string[], action: "accept" | "reject" }`.
-- `POST /api/v2/memories/:id/refresh` — **needs creation** (per dashboard-v2-epic.md API table). Marks a memory as "used today" by bumping `usage_count` and `updated_at`.
-- `GET /api/v2/memories/stale` — needs creation (or v2 mount of existing). Returns memories with low usage count and old `updated_at`. Accepts `sort`, `page`, `page_size`.
-- `GET /api/v2/memories/stale/count` — needs creation. Returns count of stale memories.
+- `GET /api/suggestions` — exists at `/api/suggestions` with pagination, sort, `memory_id` filter. Already supports `limit`, `offset`, `sort_by`, `sort_dir`. The v2 mount needs to keep this contract.
+- `GET /api/suggestions/count` — exists at `/api/suggestions/count`.
+- `POST /api/suggestions/batch` — exists at `/api/suggestions/batch`. Accepts `{ suggestion_ids: string[], action: "accept" | "reject" }`.
+- `POST /api/memories/:id/refresh` — **needs creation** (per dashboard-v2-epic.md API table). Marks a memory as "used today" by bumping `usage_count` and `updated_at`.
+- `GET /api/memories/stale` — needs creation (or v2 mount of existing). Returns memories with low usage count and old `updated_at`. Accepts `sort`, `page`, `page_size`.
+- `GET /api/memories/stale/count` — needs creation. Returns count of stale memories.
 
 ## Acceptance Criteria
 
@@ -152,7 +152,7 @@ Build a **Review Inbox page** at `src/dashboard_v2/src/routes/review.svelte` wit
 
 The v1 `suggestions.js` has a fully working paginated table with batch operations — this ticket is a full rewrite in Svelte 5, not an incremental patch. Use the v1 API surface as the data contract reference.
 
-The `POST /api/v2/memories/:id/refresh` endpoint is a new addition. It should bump `usage_count += 1` and update `updated_at` to now. Existing v1 Memories tab doesn't need this endpoint, only the Review Stale tab does.
+The `POST /api/memories/:id/refresh` endpoint is a new addition. It should bump `usage_count += 1` and update `updated_at` to now. Existing v1 Memories tab doesn't need this endpoint, only the Review Stale tab does.
 
 Spec §6.6 flags an inconsistency: stale-delete on the Stale tab fires immediately with no confirm dialog, while every other destructive action in the app confirms first. The ticket follows the spec's house rule (§4.1) that stale-delete is lightweight/reversible and doesn't confirm. If product decides otherwise, add a ConfirmDialog before the delete action.
 

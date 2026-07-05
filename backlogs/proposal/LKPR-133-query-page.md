@@ -103,7 +103,7 @@ On query completion, the first result is automatically selected and its data pop
 
 ### API dependencies
 
-- `POST /api/v2/query/debug` — **new endpoint** that returns ranked results with per-signal sub-scores. Request shape:
+- `POST /api/query/debug` — **new endpoint** that returns ranked results with per-signal sub-scores. Request shape:
 
   ```json
   {
@@ -143,7 +143,7 @@ On query completion, the first result is automatically selected and its data pop
   }
   ```
 
-- **Mock data fallback**: If the `/api/v2/query/debug` endpoint doesn't exist yet, the query page should fall back to calling the existing `/api/search` endpoint and derive dummy per-signal scores from the combined score. The mock should:
+- **Mock data fallback**: If the `/api/query/debug` endpoint doesn't exist yet, the query page should fall back to calling the existing `/api/search` endpoint and derive dummy per-signal scores from the combined score. The mock should:
 
   - Set `semantic_score = combined_score * 0.55`
   - Set `keyword_score = combined_score * 0.30`
@@ -168,7 +168,7 @@ On query completion, the first result is automatically selected and its data pop
 - [ ] Limit and Min score controls affect the API request
 - [ ] Empty state renders when no results
 - [ ] Pre-query state renders hint text in the inspector
-- [ ] Mock data fallback works when `/api/v2/query/debug` endpoint is unavailable
+- [ ] Mock data fallback works when `/api/query/debug` endpoint is unavailable
 - [ ] All progress bar colors match spec for each signal type
 
 ## Non-goals
@@ -183,7 +183,7 @@ On query completion, the first result is automatically selected and its data pop
 **New:**
 
 - `src/dashboard_v2/src/routes/query.svelte` — Query page: composer bar, 42/58 split panel, result list, inspector, empty states
-- Backend: `src/lorekeeper/dashboard/routes/query.py` — new `/api/v2/query/debug` endpoint returning per-signal sub-scores
+- Backend: `src/lorekeeper/dashboard/routes/query.py` — new `/api/query/debug` endpoint returning per-signal sub-scores
 
 **Modified:**
 
@@ -204,7 +204,7 @@ On query completion, the first result is automatically selected and its data pop
 
 ## Notes
 
-The v1 `query.js` uses the existing `/api/search` endpoint which returns a `relevance` object with `combined_score`, `semantic_score`, `keyword_score` — so the per-signal data is technically already available from the search endpoint, just not broken out as a separate debug endpoint. The new `/api/v2/query/debug` endpoint exists to provide a cleaner contract (separate from the product search used by the Memories tab) and to add the `usage_score` signal which the current search doesn't expose.
+The v1 `query.js` uses the existing `/api/search` endpoint which returns a `relevance` object with `combined_score`, `semantic_score`, `keyword_score` — so the per-signal data is technically already available from the search endpoint, just not broken out as a separate debug endpoint. The new `/api/query/debug` endpoint exists to provide a cleaner contract (separate from the product search used by the Memories tab) and to add the `usage_score` signal which the current search doesn't expose.
 
 The 42%/58% split ratio must be exact. Use CSS `grid-template-columns: 42fr 58fr` or equivalent. Do not fudge to 40/60 or 50/50.
 

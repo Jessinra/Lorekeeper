@@ -19,7 +19,7 @@ The spec (§3.2) describes a full-featured Memories page with toolbar, filter ch
 
 ## Solution
 
-Rebuild the Memories tab as a full-featured page with four sections: toolbar, filter chip row, DataTable, and pagination. API-backed via `GET /api/v2/memories` with pagination and filter params, falling back to the existing `/api/memories` route.
+Rebuild the Memories tab as a full-featured page with four sections: toolbar, filter chip row, DataTable, and pagination. API-backed via `GET /api/memories` with pagination and filter params, falling back to the existing `/api/memories` route.
 
 ### 1. Toolbar
 
@@ -45,7 +45,7 @@ A horizontal row of FilterChip components (from LKPR-126) below the toolbar:
 | High confidence | `confidence >= 8 AND score >= 7`                |
 | Stale >30d      | `updated_at < now() - 30d AND soft_deleted = 0` |
 
-Only one chip active at a time (mutually exclusive — selecting a chip replaces the previous selection). "All" is the default. Each chip also shows a count in a badge (from FilterChip's `count` prop). The count is obtained from a `GET /api/v2/memories/counts` endpoint that returns counts for each preset filter.
+Only one chip active at a time (mutually exclusive — selecting a chip replaces the previous selection). "All" is the default. Each chip also shows a count in a badge (from FilterChip's `count` prop). The count is obtained from a `GET /api/memories/counts` endpoint that returns counts for each preset filter.
 
 Filter chips are mutually exclusive with the search bar — if a chip is active and the user types a search, the chip deactivates and vice versa. (Or alternatively, filter chips narrow the search scope when search is active — to be decided in implementation.)
 
@@ -92,12 +92,12 @@ Current page button highlighted purple (`#8b5cf6`). Ellipsis for gaps (>3 pages 
 
 Clicking any row in the DataTable opens the MemoryDetailDrawer (LKPR-127) for that memory. The row click handler extracts the `lore_id` from `data-memory-id` and passes it to the drawer.
 
-### API: GET /api/v2/memories
+### API: GET /api/memories
 
 New paginated API endpoint:
 
 ```
-GET /api/v2/memories?page=1&per_page=50&q=search&namespace=code&include_deleted=false&filter=needs_review&sort=updated_at&sort_dir=desc
+GET /api/memories?page=1&per_page=50&q=search&namespace=code&include_deleted=false&filter=needs_review&sort=updated_at&sort_dir=desc
 ```
 
 Response:
@@ -126,12 +126,12 @@ Response:
 }
 ```
 
-If `/api/v2/memories` is not yet implemented, fall back to the existing `/api/memories` route and do client-side pagination/filtering from the full list (acceptable for Phase A with <10K memories).
+If `/api/memories` is not yet implemented, fall back to the existing `/api/memories` route and do client-side pagination/filtering from the full list (acceptable for Phase A with <10K memories).
 
-### Additional endpoint: GET /api/v2/memories/counts
+### Additional endpoint: GET /api/memories/counts
 
 ```
-GET /api/v2/memories/counts
+GET /api/memories/counts
 ```
 
 Returns counts for each filter preset to populate the FilterChip badges:
@@ -170,9 +170,9 @@ All page state (search query, namespace, deleted toggle, filter chip, page, sort
 - [ ] Skeleton loader shows during API fetch
 - [ ] URL query params reflect page state (search, namespace, page, etc.)
 - [ ] Sortable columns (click header to toggle ASC/DESC)
-- [ ] `GET /api/v2/memories` supports all filter/sort/pagination params
+- [ ] `GET /api/memories` supports all filter/sort/pagination params
 - [ ] Falls back to `/api/memories` if v2 endpoint is not available
-- [ ] Filter chip badges show correct counts from `/api/v2/memories/counts`
+- [ ] Filter chip badges show correct counts from `/api/memories/counts`
 
 ## Non-goals
 
@@ -192,7 +192,7 @@ All page state (search query, namespace, deleted toggle, filter chip, page, sort
 
 **Modified:**
 
-- `src/lorekeeper/dashboard/routes/memories.py` — add `GET /api/v2/memories` (paginated, filtered), `GET /api/v2/memories/counts`, `GET /api/namespaces`
+- `src/lorekeeper/dashboard/routes/memories.py` — add `GET /api/memories` (paginated, filtered), `GET /api/memories/counts`, `GET /api/namespaces`
 - `src/lorekeeper/services/memory_store.py` — add `paginated_search()` method with filter/sort/pagination support
 - `src/lorekeeper/dashboard/static/index.html` — restructure the Memories tab to use the new memories-page.js module
 

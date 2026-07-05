@@ -40,7 +40,7 @@ Build an SVG graph canvas with memory nodes (radius ∝ score), relation-colored
 
 ## API Dependencies
 
-- `GET /api/v2/links` — exists (returns all links with source/target titles)
+- `GET /api/links` — exists (returns all links with source/target titles)
 
 ## Required Updates
 

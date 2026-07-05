@@ -32,7 +32,7 @@ Build the Settings page with a sticky left side-nav (scroll-spy), single scrolli
 - [ ] **Limits**: Search result limit, max links per memory, decay lambda, confidence window size — per spec §3.8
 - [ ] **Backup & restore**: Export tile (include-soft-deleted checkbox, "Export JSON" button, last-export metadata), import tile (drag-and-drop .json, preview diff, "Import" button) — per spec §3.8
 - [ ] **Read-only**: Server version, DB path, embedding model (monospace, display-only) — per spec §3.8
-- [ ] Save → `PATCH /api/v2/settings`, triggers toast on success
+- [ ] Save → `PATCH /api/settings`, triggers toast on success
 - [ ] Reset → reverts form to server state, no API call
 - [ ] Validates types before sending (API does server-side validation, client catches type errors early)
 
@@ -44,12 +44,12 @@ Build the Settings page with a sticky left side-nav (scroll-spy), single scrolli
 
 ## API Dependencies
 
-- `GET /api/v2/settings` — exists (/api/config)
-- `PATCH /api/v2/settings` — exists (/api/config)
-- `POST /api/v2/export` — exists (/api/export)
-- `POST /api/v2/import/preview` — exists (/api/import/preview)
-- `POST /api/v2/import/confirm` — exists (/api/import/confirm)
-- `POST /api/v2/sweep/run` — exists (/api/sweep/trigger)
+- `GET /api/settings` — exists (/api/config)
+- `PATCH /api/settings` — exists (/api/config)
+- `POST /api/export` — exists (/api/export)
+- `POST /api/import/preview` — exists (/api/import/preview)
+- `POST /api/import/confirm` — exists (/api/import/confirm)
+- `POST /api/sweep/run` — exists (/api/sweep/trigger)
 
 ## Testing
 

@@ -44,7 +44,7 @@ Set up Playwright with Chromium at 1440×900 viewport. Write tests for every pag
 
 ## Configuration
 
-- `playwright.config.ts` — Chromium, 1440×900 viewport, base URL `http://127.0.0.1:7777/v2/`
+- `playwright.config.ts` — Chromium, 1440×900 viewport, base URL `http://127.0.0.1:7777/`
 - `tests/` directory under `dashboard_v2/`
 - Visual baseline stored in `tests/visual-baseline/`
 

@@ -75,8 +75,8 @@ When a memory is opened from within the SessionDrawer, the MemoryDetailDrawer la
 
 ### API dependencies
 
-- `GET /api/v2/sessions?q=&task=&page=` — paginated sessions with task-type filter support. Existing `/api/sessions` returns all sessions; the v2 mount needs `q` (search) and `task` (task-type filter) query params and pagination.
-- `GET /api/v2/sessions/:id` — single session with its memories list. Existing `/api/sessions/:id` works but needs to include the `memories` array (memory IDs, titles, descriptions, scores).
+- `GET /api/sessions?q=&task=&page=` — paginated sessions with task-type filter support. Existing `/api/sessions` returns all sessions; the v2 mount needs `q` (search) and `task` (task-type filter) query params and pagination.
+- `GET /api/sessions/:id` — single session with its memories list. Existing `/api/sessions/:id` works but needs to include the `memories` array (memory IDs, titles, descriptions, scores).
 - Uses existing `/api/reflections` for reflection detail linking.
 
 ## Acceptance Criteria
@@ -133,7 +133,7 @@ When a memory is opened from within the SessionDrawer, the MemoryDetailDrawer la
 
 This ticket depends on the stacked-drawer pattern (spec §2.2 stacking rule) which is unique to the Sessions page. Build and verify the stacking behavior with a clean test case before wiring real data — it's easy to get z-index wrong.
 
-The backend `GET /api/v2/sessions` endpoint should accept optional `query` (searches session_id + topic), `task` (task_type filter), `page` and `page_size` params. The existing `/api/sessions` returns all rows unfiltered; the v2 endpoint needs filtering and pagination for non-trivial session logs.
+The backend `GET /api/sessions` endpoint should accept optional `query` (searches session_id + topic), `task` (task_type filter), `page` and `page_size` params. The existing `/api/sessions` returns all rows unfiltered; the v2 endpoint needs filtering and pagination for non-trivial session logs.
 
 ## Next
 

@@ -84,7 +84,7 @@ Build the **Links table view** at `src/dashboard_v2/src/routes/links.svelte` wit
    - Title: "Delete this link?"
    - Body: "This will remove the relationship between Source and Target. The memories themselves will not be affected."
    - Buttons: Cancel (secondary) / Delete (destructive, red)
-   - On confirm: `DELETE /api/v2/links/:id` → toast "Link deleted" → row removed from table.
+   - On confirm: `DELETE /api/links/:id` → toast "Link deleted" → row removed from table.
 
 6. **Pagination footer** — "Showing X–Y of Z", 50 rows/page, prev/next chevrons.
 
@@ -92,8 +92,8 @@ Build the **Links table view** at `src/dashboard_v2/src/routes/links.svelte` wit
 
 ### API dependencies
 
-- `GET /api/v2/links?relation=&sort=&page=&page_size=` — existing `/api/links` returns all links. The v2 mount needs filter (by relation type), sort, and pagination support. Existing endpoint already supports `include_deleted` param.
-- `DELETE /api/v2/links/:id` — exists at `/api/links/:id`, returns `{"ok": true}`.
+- `GET /api/links?relation=&sort=&page=&page_size=` — existing `/api/links` returns all links. The v2 mount needs filter (by relation type), sort, and pagination support. Existing endpoint already supports `include_deleted` param.
+- `DELETE /api/links/:id` — exists at `/api/links/:id`, returns `{"ok": true}`.
 
 ## Acceptance Criteria
 
