@@ -22,7 +22,9 @@ from tests.test_handlers import FakeEngine
 
 @pytest.fixture
 def stores(tmp_path):
-    return build_stores(tmp_path / "test.db")
+    s = build_stores(tmp_path / "test.db")
+    yield s
+    s.close()
 
 
 @pytest.fixture

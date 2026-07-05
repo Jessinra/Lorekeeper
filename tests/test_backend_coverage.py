@@ -70,8 +70,9 @@ def _make_svc(tmp_path) -> tuple[Any, FakeEngine, Any]:
 
 @pytest.fixture
 def svc(tmp_path):
-    service, _, _ = _make_svc(tmp_path)
-    return service
+    service, _, store = _make_svc(tmp_path)
+    yield service
+    store.close()
 
 
 # ── Dashboard client fixture ──────────────────────────────────────────────────
@@ -128,6 +129,7 @@ def seeded_client(tmp_path):
     with patch("lorekeeper.dashboard.app.init_service", return_value=svc_obj):
         with TestClient(dash_app.app) as client:
             yield client, svc_obj, engine
+        store.close()
 
 
 # =============================================================================
