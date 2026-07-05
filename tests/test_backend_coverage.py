@@ -124,8 +124,22 @@ def seeded_client(tmp_path):
     )
 
     from lorekeeper.dashboard import app as dash_app
+    from lorekeeper.dashboard.handler import DashboardHandler
+    from lorekeeper.server import Server
 
-    with patch("lorekeeper.dashboard.app.init_service", return_value=svc_obj):
+    dashboard_handler = DashboardHandler(
+        memory_processor=svc_obj.memory_processor,
+        suggestion_processor=svc_obj.suggestion_processor,
+        reflection_processor=svc_obj.reflection_processor,
+        link_processor=svc_obj.link_processor,
+        admin_processor=svc_obj.admin_processor,
+        memory_store=svc_obj.memories,
+        link_store=svc_obj.links,
+        settings=svc_obj.settings,
+    )
+    server = Server(dashboard_handler=dashboard_handler)
+
+    with patch("lorekeeper.dashboard.app.init_service", return_value=server):
         with TestClient(dash_app.app) as client:
             yield client, svc_obj, engine
 
