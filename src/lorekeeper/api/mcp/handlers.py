@@ -64,13 +64,15 @@ class MCPHandler:
         sort_by: str = "relevance",
         source_type: str | None = None,
     ) -> dict[str, Any]:
-        return self._memp.search(
+        # TODO: serialize SearchResult → dict with serialize_search_result
+        results = self._memp.search(
             query=query, limit=limit, min_score=min_score,
             include_links=include_links, include_deleted=include_deleted,
             refine_from=refine_from, search_format=format, ids=ids,
             created_after=created_after, updated_after=updated_after,
             sort_by=sort_by, source_type=source_type,
         )
+        return {"results": results, "total_matched": len(results), "query": query}
 
     # ── lore_insert ──────────────────────────────────────────────────────────
 
@@ -93,7 +95,9 @@ class MCPHandler:
         lore_id: str,
         top_k: int | None = None,
     ) -> dict[str, Any]:
-        return self._sugp.recommend_links(lore_id=lore_id, top_k=top_k)
+        # TODO: serialize LinkCandidate → dict with serialize_link_candidate
+        candidates = self._sugp.recommend_links(lore_id=lore_id, top_k=top_k)
+        return {"candidates": candidates, "count": len(candidates), "source_lore_id": lore_id}
 
     # ── lore_remember ────────────────────────────────────────────────────────
 
@@ -170,7 +174,9 @@ class MCPHandler:
         limit: int = 20,
         min_score: float = 0.0,
     ) -> dict[str, Any]:
-        return self._sugp.get_pending(limit=limit, min_score=min_score)
+        # TODO: serialize tuple[list[LinkSuggestion], int] → dict
+        items, total = self._sugp.get_pending(limit=limit, min_score=min_score)
+        return {"suggestions": items, "count": len(items), "total_pending": total}
 
     # ── lore_review_suggestion ───────────────────────────────────────────────
 
@@ -179,4 +185,8 @@ class MCPHandler:
         suggestion_ids: list[str],
         action: str,
     ) -> dict[str, Any]:
-        return self._sugp.review(suggestion_ids=suggestion_ids, action=action)
+        # TODO: serialize ReviewResult → dict
+        result = self._sugp.review(suggestion_ids=suggestion_ids, action=action)
+        return {"results": result.results, "accepted": result.accepted,
+                "rejected": result.rejected, "skipped": result.skipped,
+                "errors": [e["error"] for e in result.errors]}
