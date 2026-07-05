@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
+TOOLS = ROOT / "src" / "lorekeeper" / "api" / "mcp" / "tools.py"
 SERVER = ROOT / "src" / "lorekeeper" / "server.py"
 README = ROOT / "README.md"
 API_REF = ROOT / "docs" / "api-reference.md"
@@ -72,10 +73,11 @@ def extract_documented_tools(readme_text: str) -> set[str]:
 
 def main() -> int:
     server_text = SERVER.read_text()
+    tools_text = TOOLS.read_text()
     readme_text = README.read_text()
     api_ref_text = API_REF.read_text() if API_REF.exists() else ""
 
-    registered = extract_tool_names(server_text)
+    registered = set(extract_tool_names(server_text)) | set(extract_tool_names(tools_text))
     documented = extract_documented_tools(readme_text) | extract_documented_tools(api_ref_text)
 
     missing = [t for t in registered if t not in documented]
@@ -83,8 +85,8 @@ def main() -> int:
     if missing:
         print("❌  MCP tool documentation check FAILED")
         print(
-            "   The following tools are registered in server.py but missing from README.md "
-            "or docs/api-reference.md:\n"
+            "   The following tools are registered in server.py or tools.py "
+            "but missing from README.md or docs/api-reference.md:\n"
         )
         for t in missing:
             print(f"   - {t}  →  add a '### `{t}`' section to README.md or docs/api-reference.md")

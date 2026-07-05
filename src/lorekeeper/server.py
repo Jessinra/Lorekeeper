@@ -4,11 +4,15 @@ Layer 6 — exempt from layer import rules.  This is the single place where
 services, processors, stores, and handlers are instantiated and wired together.
 """
 
-from typing import Any
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import structlog
 from fastmcp import FastMCP
 from pydantic import ValidationError
+
+if TYPE_CHECKING:
+    from lorekeeper.dashboard.handler import DashboardHandler
 
 from lorekeeper.domains.link.repository import LinkStore
 from lorekeeper.domains.link.service import LinkService
@@ -35,6 +39,18 @@ from lorekeeper.processors.suggestion import SuggestionProcessor
 
 log = structlog.get_logger()
 mcp: FastMCP = FastMCP(name="lorekeeper-mcp-server")
+
+
+@dataclass
+class Server:
+    """Public interface of the composed Lorekeeper server.
+
+    Returned by ``init_service()``.  Consumers access their slice through
+    this struct rather than reaching into module-level globals.
+    """
+
+    dashboard_handler: "DashboardHandler"
+
 
 # ── Module-level singletons (DEPRECATED — will be removed when dashboard   ──
 #    routes migrate to app.state.dashboard_handler)                          ──
@@ -119,11 +135,11 @@ def get_settings() -> Settings:
 # ── Composition root ──────────────────────────────────────────────────────
 
 
-def init_service(settings: Settings | None = None) -> dict[str, Any]:
+def init_service(settings: Settings | None = None) -> Server:
     """Wire everything bottom-up: stores → domain services → processors → handlers.
 
-    Returns a dict with ``dashboard_handler`` for the dashboard lifespan
-    to store in ``app.state``.
+    Returns a ``Server`` struct that consumers use to access their handler slice
+    (e.g. ``server.dashboard_handler``).
     """
     from lorekeeper.api.mcp.handlers import MCPHandler
     from lorekeeper.api.mcp.tools import register_mcp_tools
@@ -304,4 +320,4 @@ def init_service(settings: Settings | None = None) -> dict[str, Any]:
     ).start()
     log.info("sweep_scheduler_started")
 
-    return {"dashboard_handler": dashboard_handler}
+    return Server(dashboard_handler=dashboard_handler)

@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     _APP_VERSION = _resolve_version()
     log.info("version_resolved", version=_APP_VERSION)
     ctx = init_service()
-    app.state.dashboard_handler = ctx["dashboard_handler"]
+    app.state.dashboard_handler = ctx.dashboard_handler
     log.info("dashboard_ready")
     yield
 
