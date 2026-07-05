@@ -164,6 +164,7 @@ jobs:
             --cov=src/lorekeeper \
             --cov-report=term-missing \
             --cov-report=xml \
+            --cov-report=html \
             --tb=short -q
 
       - name: Upload coverage data
@@ -171,7 +172,11 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: coverage-data
-          path: .coverage
+          path: |
+            .coverage
+            coverage.xml
+            htmlcov/
+          include-hidden-files: true
           if-no-files-found: warn
           retention-days: 1
 
@@ -208,11 +213,23 @@ jobs:
               echo
               echo "HTML report: uploaded as an artifact named \`coverage-html\`."
               COVERAGE_TOTAL="$(printf '%s\n' "$REPORT" | awk '/^TOTAL[[:space:]]/ {print $NF; exit}')"
+            elif [ -f coverage.xml ]; then
+              echo "Binary .coverage not found — reading total from coverage.xml."
+              COVERAGE_TOTAL="$(python3 -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('coverage.xml')
+          root = tree.getroot()
+          pct = float(root.attrib.get('line-rate', 0)) * 100
+          print(f'{pct:.0f}%')
+          ")"
+              echo "Total coverage: ${COVERAGE_TOTAL}"
+            fi
+            if [ -n "${COVERAGE_TOTAL:-}" ]; then
               {
                 printf '%s\n' '<!-- coverage-summary -->'
                 printf '%s\n' '## Coverage report'
                 printf '%s\n' ''
-                printf '%s\n' "- **Total:** ${COVERAGE_TOTAL:-unknown}"
+                printf '%s\n' "- **Total:** ${COVERAGE_TOTAL}"
                 printf '%s\n' "- **Workflow run:** [${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
                 printf '%s\n' '- **HTML artifact:** `coverage-html`'
                 printf '%s\n' ''
@@ -228,12 +245,6 @@ jobs:
               } > coverage-comment.md
             fi
           } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Generate and upload coverage HTML report
-        if: always()
-        run: |
-          [ -f .coverage ] && uv run coverage html || true
-        continue-on-error: true
 
       - name: Upload coverage HTML report
         if: always()
@@ -293,17 +304,26 @@ jobs:
 
       - name: Coverage threshold gate
         run: |
+          MIN_COVERAGE=75
           if [ -f .coverage ]; then
             TOTAL=$(uv run coverage report --skip-covered | awk '/^TOTAL/{print $NF}' | tr -d '%')
-            MIN_COVERAGE=75
-            if [ "${TOTAL%.*}" -lt "$MIN_COVERAGE" ] 2>/dev/null; then
-              echo "::error::Coverage ${TOTAL}% is below minimum ${MIN_COVERAGE}%"
-              exit 1
-            fi
-            echo "Coverage: ${TOTAL}% (threshold: ${MIN_COVERAGE}%%) ✓"
+          elif [ -f coverage.xml ]; then
+            TOTAL=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('coverage.xml')
+          root = tree.getroot()
+          pct = float(root.attrib.get('line-rate', 0)) * 100
+          print(f'{pct:.0f}')
+          ")
           else
             echo "Coverage data not found — skipping gate"
+            exit 0
           fi
+          if [ "${TOTAL%.*}" -lt "$MIN_COVERAGE" ] 2>/dev/null; then
+            echo "::error::Coverage ${TOTAL}% is below minimum ${MIN_COVERAGE}%"
+            exit 1
+          fi
+          echo "Coverage: ${TOTAL}% (threshold: ${MIN_COVERAGE}%) ✓"
 
   # ── E2E ──────────────────────────────────────────────────────────────────────
   e2e:
