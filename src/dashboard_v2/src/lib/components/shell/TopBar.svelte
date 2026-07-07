@@ -47,7 +47,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 0 var(--space-topbar-x);
-		border-bottom: 1px solid var(--color-border);
+		border-bottom: var(--border-width) solid var(--color-border);
 		background: var(--color-surface);
 		position: sticky;
 		top: 0;
@@ -78,7 +78,7 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		border: 1px solid var(--color-border);
+		border: var(--border-width) solid var(--color-border);
 		background: var(--color-background);
 		border-radius: var(--radius-control);
 		padding: 8px 10px;
@@ -113,10 +113,10 @@
 
 	kbd {
 		background: var(--color-surface);
-		border: 1px solid var(--color-border);
+		border: var(--border-width) solid var(--color-border);
 		border-radius: var(--radius-kbd);
 		font-size: var(--font-size-label);
-		padding: 1px 5px;
+		padding: var(--space-kbd-pad);
 		color: var(--color-text-muted);
 		font-family: inherit;
 	}

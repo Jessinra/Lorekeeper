@@ -83,7 +83,7 @@
 		width: var(--nav-rail-width);
 		flex-shrink: 0;
 		background: var(--color-surface);
-		border-right: 1px solid var(--color-border);
+		border-right: var(--border-width) solid var(--color-border);
 		display: flex;
 		flex-direction: column;
 		align-items: center;

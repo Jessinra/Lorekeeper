@@ -24,6 +24,9 @@
 	--color-danger-bg: #fef2f2;
 	--color-danger-text: #dc2626;
 
+	/* Borders */
+	--border-width: 1px;
+
 	/* Radius */
 	--radius-card: 14px;
 	--radius-control: 9px;
@@ -39,6 +42,7 @@
 	--space-topbar-x: 28px;
 	--space-rail-y-top: 16px;
 	--space-rail-y-bottom: 12px;
+	--space-kbd-pad: 1px 5px;
 
 	/* Typography */
 	--font-size-body: 13px;

@@ -42,7 +42,7 @@
 	 */
 	:global(.placeholder) {
 		background: var(--color-surface);
-		border: 1px solid var(--color-border);
+		border: var(--border-width) solid var(--color-border);
 		border-radius: var(--radius-card);
 		padding: var(--space-placeholder-pad);
 		color: var(--color-text-muted);
