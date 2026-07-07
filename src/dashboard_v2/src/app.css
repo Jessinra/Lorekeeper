@@ -1,0 +1,62 @@
+@import "tailwindcss";
+@config "./tailwind.config.ts";
+
+/* ── Design tokens (spec §8) — primary source for Tailwind v4 ── */
+@theme {
+	/* Colors */
+	--color-background: #f9f9fb;
+	--color-text-primary: #1a1a2e;
+	--color-text-body: #3f3f52;
+	--color-text-muted: #6b7280;
+	--color-text-faint: #9ca3af;
+	--color-border: #e6e6ee;
+	--color-divider: #eeeef3;
+	--color-brand: #7c5cff;
+	--color-brand-hover: #6a46f5;
+	--color-brand-tint: #f1edff;
+	--color-success-bg: #ecfdf3;
+	--color-success-text: #16a34a;
+	--color-warning-bg: #fef6e7;
+	--color-warning-text: #d97706;
+	--color-danger-bg: #fef2f2;
+	--color-danger-text: #dc2626;
+
+	/* Radius */
+	--radius-card: 14px;
+	--radius-control: 9px;
+	--radius-pill: 999px;
+
+	/* Typography */
+	--font-size-body: 13px;
+	--font-size-micro: 11px;
+	--font-family-sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+}
+
+/* ── Global defaults ── */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	font-family: var(--font-family-sans);
+	font-size: var(--font-size-body);
+	background-color: var(--color-background);
+	color: var(--color-text-body);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+button {
+	font-family: inherit;
+}
+
+/* ── Layout constants ── */
+:root {
+	--nav-rail-width: 76px;
+	--top-bar-height: 60px;
+}
