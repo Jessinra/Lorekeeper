@@ -48,6 +48,7 @@ plugins:
 exclude_docs: |
   plans/
   research/
+  archieve/
   linter-decisions.md
   ARCHITECTURE.md
   incidents/
