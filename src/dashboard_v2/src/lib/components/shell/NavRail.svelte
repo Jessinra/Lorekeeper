@@ -87,7 +87,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 16px 0 12px;
+		padding: var(--space-rail-y-top) 0 var(--space-rail-y-bottom);
 		position: fixed;
 		top: 0;
 		bottom: 0;

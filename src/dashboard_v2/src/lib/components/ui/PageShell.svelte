@@ -34,4 +34,18 @@
 		color: var(--color-text-muted);
 		margin: 0;
 	}
+
+	/*
+	 * Shared placeholder block — used by every route stub while full
+	 * implementation is pending. Avoids duplicating these styles across
+	 * 8 route files.
+	 */
+	:global(.placeholder) {
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-card);
+		padding: var(--space-placeholder-pad);
+		color: var(--color-text-muted);
+		font-size: var(--font-size-body);
+	}
 </style>

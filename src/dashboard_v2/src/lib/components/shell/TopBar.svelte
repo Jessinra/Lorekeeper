@@ -46,7 +46,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0 28px;
+		padding: 0 var(--space-topbar-x);
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-surface);
 		position: sticky;

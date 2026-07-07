@@ -35,6 +35,10 @@
 	--space-page-x: 32px;
 	--space-page-y-top: 26px;
 	--space-page-y-bottom: 44px;
+	--space-placeholder-pad: 40px;
+	--space-topbar-x: 28px;
+	--space-rail-y-top: 16px;
+	--space-rail-y-bottom: 12px;
 
 	/* Typography */
 	--font-size-body: 13px;
