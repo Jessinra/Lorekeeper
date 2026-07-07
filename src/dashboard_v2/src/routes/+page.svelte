@@ -4,7 +4,7 @@
 </script>
 
 <PageShell title="Home" subtitle="Knowledge health at a glance.">
-	<div class="placeholder">
+	<div class="route-placeholder">
 		<p>Full implementation coming in LKPR-134.</p>
 	</div>
 </PageShell>

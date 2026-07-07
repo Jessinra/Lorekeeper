@@ -31,7 +31,7 @@ Every review comment **must** carry a severity label.
 
 1. **Holistic review** — Before checking the diff, read every changed file in full, read adjacent files (server.py wiring, caller modules), and read the ticket/plan. Does the implementation match the design? Does the new code belong where it was placed? This catches the most expensive class of bugs: architectural misalignment. Load `references/holistic-review.md` for the full framework.
 2. **Pre-check** — `git diff main...HEAD --name-only | grep -q "^src/lorekeeper/"` → RUNTIME or NON-CODE
-3. **Deleted-file check** — `git diff main --name-only | grep "^D"` — any deleted test file is BLOCKER unless replaced. Any deleted source file without a rename/move justification is BLOCKER.
+3. **Deleted-file check** — `git diff main --name-status --diff-filter=D | grep -q "^D"` — any deleted test file is BLOCKER unless replaced. Any deleted source file without a rename/move justification is BLOCKER.
 4. **API divergence check** — compare MCP tool signatures in `server.py` against the ticket ACs. A different param name, type, or arity is a BLOCKER that requires PM sign-off.
    4a. **Required-updates check** — scan the ticket's "Required Updates" section and every `- [ ]` AC checkbox for explicit skill/doc/script update obligations. A checkbox is a contract: if it's not in the diff, it's a missed AC regardless of whether the feature code works. LKPR-100 example: AC said "`lorekeeper-reconcile` — note suggestion review workflow" — if the diff doesn't touch that skill, it's a MAJOR miss.
 5. **RUNTIME PR** → load `references/blocker-patterns.md` for the 24 BLOCKER patterns
@@ -285,7 +285,7 @@ Flag immediately — indicate misunderstanding of the architecture:
 - **Comment only on the diff** — don't flag pre-existing issues
 - Use `praise:` when something is done well
 - Always explain rationale for BLOCKER/MAJOR items
-- Verify local file state before reviewing — restore `git status D` entries first
+- Verify local file state before reviewing — clean up any accidental local edits first, but leave PR deletions intact
 
 ## What NOT to Comment On (automation handles)
 

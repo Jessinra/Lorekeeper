@@ -40,7 +40,7 @@
 	 * implementation is pending. Avoids duplicating these styles across
 	 * 8 route files.
 	 */
-	:global(.placeholder) {
+	:global(.route-placeholder) {
 		background: var(--color-surface);
 		border: var(--border-width) solid var(--color-border);
 		border-radius: var(--radius-card);

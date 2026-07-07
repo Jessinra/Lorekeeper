@@ -69,7 +69,7 @@ export function labelFromPath(pathname: string): string {
 	const exact = all.find((r) => r.href === pathname);
 	if (exact) return exact.label;
 	const prefix = all
-		.filter((r) => r.href !== '/' && pathname.startsWith(r.href))
+		.filter((r) => r.href !== '/' && (pathname === r.href || pathname.startsWith(r.href + '/')))
 		.sort((a, b) => b.href.length - a.href.length)[0];
 	return prefix ? prefix.label : 'Home';
 }

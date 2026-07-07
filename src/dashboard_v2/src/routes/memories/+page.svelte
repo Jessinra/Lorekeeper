@@ -4,7 +4,7 @@
 </script>
 
 <PageShell title="Memories">
-	<div class="placeholder">
+	<div class="route-placeholder">
 		<p>Full implementation coming in LKPR-129.</p>
 	</div>
 </PageShell>

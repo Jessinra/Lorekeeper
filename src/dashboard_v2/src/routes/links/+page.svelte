@@ -4,7 +4,7 @@
 </script>
 
 <PageShell title="Links">
-	<div class="placeholder">
+	<div class="route-placeholder">
 		<p>Full implementation coming in LKPR-132.</p>
 	</div>
 </PageShell>

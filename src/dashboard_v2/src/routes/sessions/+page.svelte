@@ -4,7 +4,7 @@
 </script>
 
 <PageShell title="Sessions">
-	<div class="placeholder">
+	<div class="route-placeholder">
 		<p>Full implementation coming in LKPR-130.</p>
 	</div>
 </PageShell>

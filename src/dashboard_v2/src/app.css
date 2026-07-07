@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@config "./tailwind.config.ts";
+@config "../tailwind.config.ts";
 
 /* ── Design tokens (spec §8) — primary source for Tailwind v4 ── */
 @theme {

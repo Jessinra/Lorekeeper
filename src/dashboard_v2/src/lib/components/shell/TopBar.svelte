@@ -7,11 +7,11 @@
 
 <header>
 	<!-- Breadcrumb -->
-	<div class="breadcrumb" aria-label="Breadcrumb">
+	<nav class="breadcrumb" aria-label="Breadcrumb">
 		<span class="breadcrumb-root">Lorekeeper</span>
 		<span class="breadcrumb-sep" aria-hidden="true">/</span>
 		<span class="breadcrumb-current">{currentLabel}</span>
-	</div>
+	</nav>
 
 	<!-- ⌘K search trigger -->
 	<button

@@ -4,7 +4,7 @@
 </script>
 
 <PageShell title="Review">
-	<div class="placeholder">
+	<div class="route-placeholder">
 		<p>Full implementation coming in LKPR-131.</p>
 	</div>
 </PageShell>
