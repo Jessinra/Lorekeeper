@@ -11,6 +11,15 @@ github_issue: 295
 
 # [LKPR-130] Sessions page — day-grouped timeline, session cards, stacked drawer navigation
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The current v1 Sessions tab (at `sessions.js`) renders sessions as a flat table with inline expandable detail rows. There's no day-grouped timeline, no session cards showing task badge/title/time/duration/memory count in a glanceable format, and no drawer-based drill-down. Navigating from a session to a memory it produced requires switching to the Memories tab — there's no layered drawer pattern.

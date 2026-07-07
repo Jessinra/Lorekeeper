@@ -13,6 +13,15 @@ github_issue: 301
 
 **Status:** ⬜ Pending | **Depends on:** LKPR-123, LKPR-126 | **Next:** LKPR-137
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The Settings page allows users to tune the sweep engine, ranking weights, auto-linking thresholds, and limits, plus backup/restore data. The v1 dashboard has a config tab but no structured settings page with side-nav and unsaved-changes detection.

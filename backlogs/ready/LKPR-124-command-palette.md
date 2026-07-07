@@ -11,6 +11,15 @@ github_issue: 289
 
 # [LKPR-124] Command Palette
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The dashboard has no quick-navigation or global command interface. Users must click through the nav rail to switch pages, and there is no way to search for memories, jump to specific pages, or trigger actions without navigating to the right page first.

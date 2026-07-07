@@ -11,6 +11,15 @@ github_issue: 298
 
 # [LKPR-133] Query page — debug relevance search with 42/58 split layout, per-signal breakdown, result inspector
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The current v1 Query tab (at `query.js`) is a simple search input + result cards with per-signal score pills. It has no split-panel layout, no result inspector, no stacked bar visualization of signal contributions, no auto-select of the first result, and no "Include deleted" toggle. It uses the standard `/api/search` endpoint which returns combined scores only — not the per-signal sub-scores needed for a debug tool.

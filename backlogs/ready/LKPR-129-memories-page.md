@@ -11,6 +11,15 @@ github_issue: 294
 
 # [LKPR-129] Memories page
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The Memories tab (built in LKPR-76) is a basic table with no search, no filtering, no pagination, and no interaction. Users can't find a specific memory, filter by namespace or score, toggle deleted memories, or click a row for details. As the memory store grows past a few hundred entries, the flat list becomes unusable.

@@ -11,6 +11,15 @@ github_issue: 293
 
 # [LKPR-128] Relationship drawer
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 When reviewing link suggestions (via `lore_get_suggestions`) or browsing existing links between memories, there is no way to see both memories side-by-side. The user must open each memory individually (via detail drawer) or make separate MCP calls. This makes it hard to evaluate whether a suggested link is correct, or to understand why two memories are related.

@@ -11,6 +11,15 @@ github_issue: 288
 
 # [LKPR-123] Toast + Confirm Dialog
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The dashboard v2 has no way to give user feedback after actions (save, delete, copy, accept/reject) or to confirm destructive operations. Every page from LKPR-129 onward needs both. Without these two components, every page would inline its own toast or dialog logic, creating inconsistencies in appearance, timing, and behavior.

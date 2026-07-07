@@ -11,6 +11,15 @@ github_issue: 290
 
 # [LKPR-125] Data Table + pagination
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The dashboard v2 has no reusable data table component. Every page that displays tabular data — Memories, Links, Suggestions, Stale (Review), Sessions, Query results — would build its own table, duplicating sort/pagination/selection logic and creating visual inconsistencies.

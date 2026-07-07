@@ -11,6 +11,15 @@ github_issue: 291
 
 # [LKPR-126] UI primitives library — reusable dashboard components
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The dashboard's JS modules (health, memories, activity grid) each re-implement the same visual patterns — colored badges, toggleable chips, stat cards — with slightly different CSS and HTML. This leads to visual drift, duplicated code, and makes it harder to add new tabs or iterate on existing ones. There's no shared component library that ensures consistent rendering.

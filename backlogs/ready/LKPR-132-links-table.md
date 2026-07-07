@@ -11,6 +11,15 @@ github_issue: 297
 
 # [LKPR-132] Links table view — sortable table, RelationPill colors, RelationshipDrawer, delete with ConfirmDialog
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The current v1 Links tab (at `links.js`) renders a flat table with Source, Relation badge, Target, Reason, Score, Uses, and a delete button. It uses inline `confirm()` for deletes, has no RelationPill color coding per spec §2.5, no RelationType legend/filter chips, no Graph/Links SegmentedControl (Graph tab is a placeholder), and no RelationshipDrawer on row click. The delete action uses a browser `confirm()` dialog instead of the app's ConfirmDialog component.
