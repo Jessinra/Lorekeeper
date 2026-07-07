@@ -1,27 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
+	import { labelFromPath } from '$lib/constants/routes.js';
 
-	// Derive current page label from pathname
-	const pageLabels: Record<string, string> = {
-		'/': 'Home',
-		'/memories': 'Memories',
-		'/links': 'Links',
-		'/query': 'Query',
-		'/review': 'Review',
-		'/sessions': 'Sessions',
-		'/metrics': 'Metrics',
-		'/settings': 'Settings'
-	};
-
-	$: currentLabel = (() => {
-		const path = $page.url.pathname;
-		// Match exact first, then prefix
-		if (pageLabels[path]) return pageLabels[path];
-		const match = Object.entries(pageLabels).find(
-			([k]) => k !== '/' && path.startsWith(k)
-		);
-		return match ? match[1] : 'Home';
-	})();
+	const currentLabel = $derived(labelFromPath(page.url.pathname));
 </script>
 
 <header>
@@ -39,7 +20,15 @@
 		aria-label="Search or jump to… (⌘K)"
 		aria-keyshortcuts="Meta+k"
 	>
-		<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+		<svg
+			width="15"
+			height="15"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			aria-hidden="true"
+		>
 			<circle cx="11" cy="11" r="7" />
 			<path d="M21 21l-4.3-4.3" />
 		</svg>
@@ -59,7 +48,7 @@
 		justify-content: space-between;
 		padding: 0 28px;
 		border-bottom: 1px solid var(--color-border);
-		background: #fff;
+		background: var(--color-surface);
 		position: sticky;
 		top: 0;
 		z-index: 30;
@@ -69,7 +58,7 @@
 		display: flex;
 		gap: 6px;
 		align-items: center;
-		font-size: 14px;
+		font-size: var(--font-size-breadcrumb);
 	}
 
 	.breadcrumb-root {
@@ -91,17 +80,19 @@
 		gap: 8px;
 		border: 1px solid var(--color-border);
 		background: var(--color-background);
-		border-radius: 6px;
+		border-radius: var(--radius-control);
 		padding: 8px 10px;
 		color: var(--color-text-faint);
-		font-size: 13px;
+		font-size: var(--font-size-body);
 		width: 230px;
 		cursor: pointer;
-		transition: border-color 0.15s, box-shadow 0.15s;
+		transition:
+			border-color 0.15s,
+			box-shadow 0.15s;
 	}
 
 	.search-trigger:hover {
-		border-color: #c5c5d8;
+		border-color: var(--color-border-strong);
 	}
 
 	.search-trigger:focus-visible {
@@ -121,10 +112,10 @@
 	}
 
 	kbd {
-		background: #fff;
+		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 4px;
-		font-size: 10.5px;
+		border-radius: var(--radius-kbd);
+		font-size: var(--font-size-label);
 		padding: 1px 5px;
 		color: var(--color-text-muted);
 		font-family: inherit;

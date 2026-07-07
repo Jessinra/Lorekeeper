@@ -1,6 +1,12 @@
 <script lang="ts">
-	import NavRail from './NavRail.svelte';
-	import TopBar from './TopBar.svelte';
+	import NavRail from '$lib/components/shell/NavRail.svelte';
+	import TopBar from '$lib/components/shell/TopBar.svelte';
+
+	interface Props {
+		children: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 </script>
 
 <div class="app-frame">
@@ -8,7 +14,7 @@
 	<div class="main-column">
 		<TopBar />
 		<main class="page-body">
-			<slot />
+			{@render children()}
 		</main>
 	</div>
 </div>
@@ -30,6 +36,6 @@
 
 	.page-body {
 		flex: 1;
-		padding: 26px 32px 44px;
+		padding: var(--space-page-y-top) var(--space-page-x) var(--space-page-y-bottom);
 	}
 </style>

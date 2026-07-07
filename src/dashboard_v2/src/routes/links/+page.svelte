@@ -1,24 +1,21 @@
 <script lang="ts">
 	// Links page — stub for LKPR-132
+	import PageShell from '$lib/components/ui/PageShell.svelte';
 </script>
 
-<div class="page-header">
-	<h1>Links</h1>
-</div>
-
-<div class="placeholder">
-	<p>Full implementation coming in LKPR-132.</p>
-</div>
+<PageShell title="Links">
+	<div class="placeholder">
+		<p>Full implementation coming in LKPR-132.</p>
+	</div>
+</PageShell>
 
 <style>
-	.page-header { margin-bottom: 24px; }
-	h1 { font-size: 20px; font-weight: 700; color: var(--color-text-primary); margin: 0; }
 	.placeholder {
-		background: #fff;
+		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-card);
 		padding: 40px;
 		color: var(--color-text-muted);
-		font-size: 13px;
+		font-size: var(--font-size-body);
 	}
 </style>

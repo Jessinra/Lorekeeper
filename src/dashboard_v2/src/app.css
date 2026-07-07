@@ -5,12 +5,15 @@
 @theme {
 	/* Colors */
 	--color-background: #f9f9fb;
+	--color-surface: #ffffff;
 	--color-text-primary: #1a1a2e;
 	--color-text-body: #3f3f52;
 	--color-text-muted: #6b7280;
 	--color-text-faint: #9ca3af;
 	--color-border: #e6e6ee;
+	--color-border-strong: #c5c5d8;
 	--color-divider: #eeeef3;
+	--color-hover-bg: #f4f4f6;
 	--color-brand: #7c5cff;
 	--color-brand-hover: #6a46f5;
 	--color-brand-tint: #f1edff;
@@ -25,11 +28,28 @@
 	--radius-card: 14px;
 	--radius-control: 9px;
 	--radius-pill: 999px;
+	--radius-icon: 8px;
+	--radius-kbd: 4px;
+
+	/* Spacing */
+	--space-page-x: 32px;
+	--space-page-y-top: 26px;
+	--space-page-y-bottom: 44px;
 
 	/* Typography */
 	--font-size-body: 13px;
 	--font-size-micro: 11px;
+	--font-size-label: 10.5px;
+	--font-size-badge: 9px;
+	--font-size-heading: 20px;
+	--font-size-breadcrumb: 14px;
 	--font-family-sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+
+	/* Layout */
+	--nav-rail-width: 76px;
+	--top-bar-height: 60px;
+	--rail-item-width: 58px;
+	--brand-mark-size: 36px;
 }
 
 /* ── Global defaults ── */
@@ -53,10 +73,4 @@ body {
 
 button {
 	font-family: inherit;
-}
-
-/* ── Layout constants ── */
-:root {
-	--nav-rail-width: 76px;
-	--top-bar-height: 60px;
 }
