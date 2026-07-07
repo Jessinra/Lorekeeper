@@ -13,6 +13,15 @@ github_issue: 299
 
 **Status:** ⬜ Pending | **Depends on:** LKPR-125, LKPR-126 | **Next:** LKPR-135
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The Home page is the user's landing dashboard — it needs to show a daily digest of knowledge health, quick stats, and recent activity. Currently the v1 dashboard has no equivalent page.

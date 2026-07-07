@@ -11,6 +11,15 @@ github_issue: 292
 
 # [LKPR-127] Memory detail drawer
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The Memories tab currently only shows a table of memories. Clicking a row has no behavior beyond highlighting. Users have no way to inspect a memory's full content, edit its fields, delete it, or view its metadata — everything requires MCP tool calls. This makes the dashboard feel like a read-only viewer rather than a management tool.

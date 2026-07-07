@@ -13,6 +13,15 @@ github_issue: 303
 
 **Status:** 🔴 Blocked | **Depends on:** LKPR-132 | **Next:** _(blocked — no scheduled next)_
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The Links page needs a graph visualization of memory nodes connected by relation-colored edges. The v1 dashboard has no graph view at all. However, the graph layout algorithm and rendering strategy for production-scale data is undesigned (spec §6.4).

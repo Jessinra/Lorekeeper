@@ -11,6 +11,15 @@ github_issue: 296
 
 # [LKPR-131] Review Inbox page — Suggestions/Stale tabs, bulk-select, inline triage, RelationshipDrawer drill-down
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The current v1 Suggestions tab (at `suggestions.js`) is a single flat table with accept/reject inline buttons and pagination — but it has no Stale tab, no segmented control, no bulk-select action bar, and no RelationshipDrawer for exploring a suggestion's full context before acting. The v1 UI requires users to batch-operate on suggestions without seeing the memory details inline, and stale memories have no dedicated review surface at all.

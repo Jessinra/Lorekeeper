@@ -11,6 +11,15 @@ github_issue: 287
 
 # [LKPR-122] Scaffold, shell, design tokens
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 Phase 1 of the dashboard v2 revamp has no foundation to build on. There is no SvelteKit project at `src/dashboard_v2/`, no shared layout shell, no design tokens configured. Every subsequent ticket (LKPR-123 through LKPR-137) depends on this base being in place — the nav rail, top bar, page body skeleton, and a Tailwind config that matches the design spec exactly.

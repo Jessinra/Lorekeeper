@@ -13,6 +13,15 @@ github_issue: 302
 
 **Status:** ⬜ Pending | **Depends on:** LKPR-122 through LKPR-136 | **Next:** _(final ticket)_
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 Without automated E2E + visual regression tests, UI regressions go undetected. Every page must be verified to match the mockup exactly, and core user flows must work end-to-end.

@@ -13,6 +13,15 @@ github_issue: 300
 
 **Status:** ⬜ Pending | **Depends on:** LKPR-125, LKPR-126 | **Next:** LKPR-136
 
+## Key References
+
+Read only when you need detailed information
+
+- high level plan: docs/plans/dashboard-v2-epic.md
+- visuals: design/visuals/\*
+- mockups: design/mockups/\*
+- design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
 ## Problem
 
 The Metrics page provides operational visibility into MCP tool call volume. Currently there is no dedicated page for this — the v1 dashboard has a metrics tab but no heatmap visualization.
