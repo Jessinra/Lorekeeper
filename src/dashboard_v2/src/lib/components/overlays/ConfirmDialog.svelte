@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Icon from '$lib/components/ui/Icon.svelte';
+	import OverlayScrim from '$lib/components/ui/OverlayScrim.svelte';
 
 	interface Props {
 		open: boolean;
@@ -23,12 +25,18 @@
 		onCancel
 	}: Props = $props();
 
-	const SWATCH_COLOR = {
-		neutral: '#6b7280',
-		destructive: '#dc2626'
+	/** Resolves via design tokens — no raw hex in logic */
+	const SWATCH_BG_VAR = {
+		neutral: 'var(--color-hover-bg)',
+		destructive: 'var(--color-danger-bg)'
 	} as const;
 
-	const SWATCH_ICON = {
+	const SWATCH_ICON_VAR = {
+		neutral: 'var(--color-text-muted)',
+		destructive: 'var(--color-danger-text)'
+	} as const;
+
+	const SWATCH_PATH = {
 		neutral:
 			'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
 		destructive:
@@ -87,9 +95,7 @@
 </script>
 
 {#if open}
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="scrim" onclick={onCancel} aria-hidden="true"></div>
+	<OverlayScrim onclick={onCancel} />
 
 	<div
 		class="dialog-card"
@@ -100,20 +106,11 @@
 		bind:this={dialogEl}
 	>
 		<!-- Icon swatch -->
-		<div class="icon-swatch" style="background: {SWATCH_COLOR[severity]}1a; color: {SWATCH_COLOR[severity]}">
-			<svg
-				width="22"
-				height="22"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				aria-hidden="true"
-			>
-				<path d={SWATCH_ICON[severity]} />
-			</svg>
+		<div
+			class="icon-swatch"
+			style="background: {SWATCH_BG_VAR[severity]}; color: {SWATCH_ICON_VAR[severity]}"
+		>
+			<Icon path={SWATCH_PATH[severity]} size={22} strokeWidth={2} />
 		</div>
 
 		<!-- Text content -->
@@ -143,29 +140,21 @@
 {/if}
 
 <style>
-	.scrim {
-		position: fixed;
-		inset: 0;
-		z-index: 800;
-		background: rgba(0, 0, 0, 0.4);
-		animation: fade-in 200ms ease forwards;
-	}
-
 	.dialog-card {
 		position: fixed;
 		inset: 0;
 		z-index: 801;
 		margin: auto;
 
-		/* Center via margin auto trick — needs width + height constraints */
+		/* Center via transform */
 		width: min(420px, calc(100vw - 32px));
 		height: fit-content;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
 
-		background: var(--color-surface, #ffffff);
-		border-radius: var(--radius-card, 14px);
+		background: var(--color-surface);
+		border-radius: var(--radius-card);
 		padding: 28px 28px 24px;
 		box-shadow:
 			0 4px 6px -1px rgba(0, 0, 0, 0.08),
@@ -192,26 +181,26 @@
 	.dialog-title {
 		font-size: 16px;
 		font-weight: 700;
-		color: var(--color-text-primary, #1a1a2e);
+		color: var(--color-text-primary);
 		margin: 0 0 8px;
 		line-height: 1.3;
 	}
 
 	.dialog-body {
-		font-size: var(--font-size-body, 13px);
-		color: var(--color-text-body, #3f3f52);
+		font-size: var(--font-size-body);
+		color: var(--color-text-body);
 		margin: 0 0 16px;
 		line-height: 1.5;
 	}
 
 	.item-chip {
 		display: inline-block;
-		background: var(--color-hover-bg, #f4f4f6);
-		border: 1px solid var(--color-border, #e6e6ee);
-		border-radius: var(--radius-control, 9px);
+		background: var(--color-hover-bg);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-control);
 		padding: 4px 10px;
-		font-size: var(--font-size-body, 13px);
-		color: var(--color-text-body, #3f3f52);
+		font-size: var(--font-size-body);
+		color: var(--color-text-body);
 		margin-bottom: 20px;
 		max-width: 100%;
 		overflow: hidden;
@@ -229,8 +218,8 @@
 	/* Shared button base */
 	button {
 		padding: 8px 16px;
-		border-radius: var(--radius-control, 9px);
-		font-size: var(--font-size-body, 13px);
+		border-radius: var(--radius-control);
+		font-size: var(--font-size-body);
 		font-weight: 500;
 		cursor: pointer;
 		border: none;
@@ -239,38 +228,29 @@
 	}
 
 	.btn-cancel {
-		background: var(--color-hover-bg, #f4f4f6);
-		color: var(--color-text-body, #3f3f52);
+		background: var(--color-hover-bg);
+		color: var(--color-text-body);
 	}
 
 	.btn-cancel:hover {
-		background: var(--color-border, #e6e6ee);
+		background: var(--color-border);
 	}
 
 	.btn-confirm {
-		background: var(--color-brand, #7c5cff);
+		background: var(--color-brand);
 		color: #ffffff;
 	}
 
 	.btn-confirm:hover {
-		background: var(--color-brand-hover, #6a46f5);
+		background: var(--color-brand-hover);
 	}
 
 	.btn-confirm.danger {
-		background: #dc2626;
+		background: var(--color-danger-text);
 	}
 
 	.btn-confirm.danger:hover {
 		background: #b91c1c;
-	}
-
-	@keyframes fade-in {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
 	}
 
 	@keyframes card-in {
