@@ -1,13 +1,42 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { NAV_ROUTES, SETTINGS_ROUTE } from '$lib/constants/routes.js';
+	import { NAV_ROUTES, SETTINGS_ROUTE, matchRoute, type NavRoute } from '$lib/constants/routes.js';
 
 	function isActive(href: string): boolean {
-		const pathname = page.url.pathname;
-		if (href === '/') return pathname === '/';
-		return pathname === href || pathname.startsWith(href + '/');
+		return matchRoute(page.url.pathname, href);
 	}
 </script>
+
+{#snippet railLink(route: NavRoute)}
+	<a
+		href={route.href}
+		class="rail-item"
+		class:active={isActive(route.href)}
+		aria-label={route.label}
+		aria-current={isActive(route.href) ? 'page' : undefined}
+	>
+		<svg
+			width="19"
+			height="19"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			{#if route.iconExtra === 'circle'}
+				<circle cx="12" cy="12" r="3.2" />
+			{/if}
+			<path d={route.icon} />
+		</svg>
+		<span class="label">{route.label}</span>
+		{#if route.badge}
+			<span class="badge" aria-label="{route.badge} pending">{route.badge}</span>
+		{/if}
+	</a>
+{/snippet}
 
 <nav aria-label="Primary navigation">
 	<!-- Brand mark -->
@@ -20,31 +49,7 @@
 	<!-- Primary nav items -->
 	<div class="nav-items">
 		{#each NAV_ROUTES as item (item.href)}
-			<a
-				href={item.href}
-				class="rail-item"
-				class:active={isActive(item.href)}
-				aria-label={item.label}
-				aria-current={isActive(item.href) ? 'page' : undefined}
-			>
-				<svg
-					width="19"
-					height="19"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					aria-hidden="true"
-				>
-					<path d={item.icon} />
-				</svg>
-				<span class="label">{item.label}</span>
-				{#if item.badge}
-					<span class="badge" aria-label="{item.badge} pending">{item.badge}</span>
-				{/if}
-			</a>
+			{@render railLink(item)}
 		{/each}
 	</div>
 
@@ -53,27 +58,7 @@
 
 	<!-- Settings + health dot -->
 	<div class="bottom-section">
-		<a
-			href={SETTINGS_ROUTE.href}
-			class="rail-item"
-			class:active={isActive(SETTINGS_ROUTE.href)}
-			aria-label={SETTINGS_ROUTE.label}
-			aria-current={isActive(SETTINGS_ROUTE.href) ? 'page' : undefined}
-		>
-			<svg
-				width="19"
-				height="19"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				aria-hidden="true"
-			>
-				<circle cx="12" cy="12" r="3.2" />
-				<path d={SETTINGS_ROUTE.icon} />
-			</svg>
-			<span class="label">{SETTINGS_ROUTE.label}</span>
-		</a>
+		{@render railLink(SETTINGS_ROUTE)}
 		<div class="health-dot" title="System healthy" aria-label="System status: healthy"></div>
 	</div>
 </nav>

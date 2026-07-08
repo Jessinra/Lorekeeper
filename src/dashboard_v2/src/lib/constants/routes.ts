@@ -11,6 +11,8 @@ export interface NavRoute {
 	label: string;
 	/** SVG path `d` attribute data — viewBox="0 0 24 24", stroke-based */
 	icon: string;
+	/** Extra shape to render alongside `icon` (e.g. the settings gear's center dot). */
+	iconExtra?: 'circle';
 	badge?: number;
 }
 
@@ -57,19 +59,31 @@ export const NAV_ROUTES: NavRoute[] = [
 export const SETTINGS_ROUTE: NavRoute = {
 	href: '/settings',
 	label: 'Settings',
-	icon: 'M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1'
+	icon: 'M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1',
+	iconExtra: 'circle'
 };
+
+/** All routes, in priority order for prefix matching (used by matchRoute / labelFromPath). */
+const ALL_ROUTES: NavRoute[] = [...NAV_ROUTES, SETTINGS_ROUTE];
+
+/**
+ * True when `pathname` belongs to the route at `href`.
+ * `/` matches only the exact root; other routes match themselves or any sub-path.
+ */
+export function matchRoute(pathname: string, href: string): boolean {
+	if (href === '/') return pathname === '/';
+	return pathname === href || pathname.startsWith(href + '/');
+}
 
 /**
  * Derive the page label from a pathname.
  * Exact match first, then longest prefix, fallback to 'Home'.
  */
 export function labelFromPath(pathname: string): string {
-	const all = [...NAV_ROUTES, SETTINGS_ROUTE];
-	const exact = all.find((r) => r.href === pathname);
+	const exact = ALL_ROUTES.find((r) => r.href === pathname);
 	if (exact) return exact.label;
-	const prefix = all
-		.filter((r) => r.href !== '/' && (pathname === r.href || pathname.startsWith(r.href + '/')))
-		.sort((a, b) => b.href.length - a.href.length)[0];
+	const prefix = ALL_ROUTES.filter((r) => matchRoute(pathname, r.href) && r.href !== '/').sort(
+		(a, b) => b.href.length - a.href.length
+	)[0];
 	return prefix ? prefix.label : 'Home';
 }
