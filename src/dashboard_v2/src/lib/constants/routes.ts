@@ -54,14 +54,17 @@ export const NAV_ROUTES: NavRoute[] = [
 	}
 ];
 
-export const SETTINGS_ROUTE: NavRoute = {
-	href: '/settings',
-	label: 'Settings',
-	icon: 'M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1M12 12m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0'
-};
+/** Bottom-pinned nav routes, rendered below the spacer (e.g. settings). */
+export const UTILITY_ROUTES: NavRoute[] = [
+	{
+		href: '/settings',
+		label: 'Settings',
+		icon: 'M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1M12 12m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0'
+	}
+];
 
 /** All routes, in priority order for prefix matching (used by matchRoute / labelFromPath). */
-const ALL_ROUTES: NavRoute[] = [...NAV_ROUTES, SETTINGS_ROUTE];
+const ALL_ROUTES: NavRoute[] = [...NAV_ROUTES, ...UTILITY_ROUTES];
 
 /**
  * True when `pathname` belongs to the route at `href`.

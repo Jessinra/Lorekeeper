@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { NAV_ROUTES, SETTINGS_ROUTE, matchRoute, type NavRoute } from '$lib/constants/routes.js';
+	import { NAV_ROUTES, UTILITY_ROUTES, matchRoute, type NavRoute } from '$lib/constants/routes.js';
 
 	function isActive(href: string): boolean {
 		return matchRoute(page.url.pathname, href);
@@ -53,9 +53,11 @@
 	<!-- Spacer -->
 	<div class="spacer" aria-hidden="true"></div>
 
-	<!-- Settings + health dot -->
+	<!-- Utility items (settings) + health dot -->
 	<div class="bottom-section">
-		{@render railLink(SETTINGS_ROUTE)}
+		{#each UTILITY_ROUTES as item (item.href)}
+			{@render railLink(item)}
+		{/each}
 		<div class="health-dot" title="System healthy" aria-label="System status: healthy"></div>
 	</div>
 </nav>
