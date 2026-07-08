@@ -11,8 +11,6 @@ export interface NavRoute {
 	label: string;
 	/** SVG path `d` attribute data — viewBox="0 0 24 24", stroke-based */
 	icon: string;
-	/** Extra shape to render alongside `icon` (e.g. the settings gear's center dot). */
-	iconExtra?: 'circle';
 	badge?: number;
 }
 
@@ -59,8 +57,7 @@ export const NAV_ROUTES: NavRoute[] = [
 export const SETTINGS_ROUTE: NavRoute = {
 	href: '/settings',
 	label: 'Settings',
-	icon: 'M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1',
-	iconExtra: 'circle'
+	icon: 'M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1M12 12m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0'
 };
 
 /** All routes, in priority order for prefix matching (used by matchRoute / labelFromPath). */

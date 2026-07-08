@@ -26,9 +26,6 @@
 			stroke-linejoin="round"
 			aria-hidden="true"
 		>
-			{#if route.iconExtra === 'circle'}
-				<circle cx="12" cy="12" r="3.2" />
-			{/if}
 			<path d={route.icon} />
 		</svg>
 		<span class="label">{route.label}</span>
