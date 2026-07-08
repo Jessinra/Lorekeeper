@@ -23,9 +23,6 @@
 		role="status"
 		aria-live="polite"
 		aria-atomic="true"
-		onclick={() => dismissToast(toast.id)}
-		onkeydown={(e) => e.key === 'Enter' && dismissToast(toast.id)}
-		tabindex="0"
 	>
 		<span class="swatch" style="color: {SWATCH[toast.type]}">
 			<svg
@@ -43,6 +40,12 @@
 			</svg>
 		</span>
 		<span class="message">{toast.message}</span>
+		<button
+			class="dismiss-btn"
+			type="button"
+			aria-label="Dismiss notification"
+			onclick={() => dismissToast(toast.id)}
+		>×</button>
 	</div>
 {/if}
 
@@ -85,6 +88,23 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.dismiss-btn {
+		flex-shrink: 0;
+		background: transparent;
+		border: none;
+		color: rgba(255, 255, 255, 0.6);
+		cursor: pointer;
+		font-size: 16px;
+		line-height: 1;
+		padding: 0 0 0 4px;
+		display: flex;
+		align-items: center;
+	}
+
+	.dismiss-btn:hover {
+		color: #ffffff;
 	}
 
 	@keyframes toast-in {
