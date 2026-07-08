@@ -37,10 +37,8 @@
 
 <nav aria-label="Primary navigation">
 	<!-- Brand mark -->
-	<div class="brand" aria-hidden="true">
-		<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-			<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" />
-		</svg>
+	<div class="brand">
+		<img src="/logo.svg" alt="Lorekeeper" width="36" height="36" />
 	</div>
 
 	<!-- Primary nav items -->
@@ -82,14 +80,17 @@
 	.brand {
 		width: var(--brand-mark-size);
 		height: var(--brand-mark-size);
-		border-radius: var(--radius-icon);
-		background: var(--color-brand);
-		color: var(--color-surface);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		margin-bottom: 24px;
 		flex-shrink: 0;
+	}
+
+	.brand img {
+		width: 100%;
+		height: 100%;
+		border-radius: var(--radius-icon);
 	}
 
 	.nav-items {
