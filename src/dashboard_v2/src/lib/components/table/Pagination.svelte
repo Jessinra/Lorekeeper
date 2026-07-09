@@ -1,18 +1,18 @@
 <script lang="ts">
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import { PAGINATION_STRINGS } from '$lib/constants/strings.js';
+	import { ICON_ARROW_RIGHT } from '$lib/constants/icons.js';
 
 	interface Props {
 		totalRows: number;
 		page?: number;
 		pageSize?: number;
-		onPageChange?: (page: number) => void;
 	}
 
 	let {
 		totalRows,
 		page = $bindable(1),
-		pageSize = 50,
-		onPageChange = undefined
+		pageSize = 50
 	}: Props = $props();
 
 	let totalPages = $derived(Math.max(1, Math.ceil(totalRows / pageSize)));
@@ -22,48 +22,55 @@
 	let isLastPage = $derived(page >= totalPages);
 
 	function goPrev() {
-		if (page > 1) {
-			page--;
-			onPageChange?.(page);
-		}
+		if (page > 1) page--;
 	}
 
 	function goNext() {
-		if (page < totalPages) {
-			page++;
-			onPageChange?.(page);
-		}
+		if (page < totalPages) page++;
+	}
+
+	function rangeLabel(): string {
+		return PAGINATION_STRINGS.rangeLabel
+			.replace('{start}', String(startRow))
+			.replace('{end}', String(endRow))
+			.replace('{total}', String(totalRows));
+	}
+
+	function pageIndicator(): string {
+		return PAGINATION_STRINGS.pageIndicator
+			.replace('{page}', String(page))
+			.replace('{pages}', String(totalPages));
 	}
 </script>
 
-<div class="pagination" role="navigation" aria-label="Table pagination">
+<div class="pagination" role="navigation" aria-label={PAGINATION_STRINGS.navAriaLabel}>
 	<span class="range-label">
-		Showing {startRow}–{endRow} of {totalRows}
+		{rangeLabel()}
 	</span>
 
 	<div class="controls">
 		<button
 			class="nav-btn"
 			type="button"
-			aria-label="Previous page"
+			aria-label={PAGINATION_STRINGS.prevAriaLabel}
 			disabled={isFirstPage}
 			onclick={goPrev}
 		>
-			<Icon path="M15 18l-6-6 6-6" size={16} />
+			<Icon path={ICON_ARROW_RIGHT} size={16} />
 		</button>
 
 		<span class="page-indicator" aria-live="polite">
-			Page {page} of {totalPages}
+			{pageIndicator()}
 		</span>
 
 		<button
-			class="nav-btn"
+			class="nav-btn nav-btn-next"
 			type="button"
-			aria-label="Next page"
+			aria-label={PAGINATION_STRINGS.nextAriaLabel}
 			disabled={isLastPage}
 			onclick={goNext}
 		>
-			<Icon path="M9 18l6-6-6-6" size={16} />
+			<Icon path={ICON_ARROW_RIGHT} size={16} />
 		</button>
 	</div>
 </div>
@@ -113,6 +120,10 @@
 	.nav-btn:disabled {
 		opacity: 0.35;
 		cursor: not-allowed;
+	}
+
+	.nav-btn-next {
+		transform: scaleX(-1);
 	}
 
 	.page-indicator {

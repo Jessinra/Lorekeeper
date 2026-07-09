@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import Pagination from '$lib/components/table/Pagination.svelte';
 
@@ -89,40 +89,36 @@ describe('Pagination — prev/next buttons', () => {
 });
 
 describe('Pagination — navigation', () => {
-	it('calls onPageChange with page 2 when next is clicked', async () => {
-		const onPageChange = vi.fn();
-		const { getByLabelText } = render(Pagination, {
-			props: { totalRows: 100, page: 1, pageSize: 50, onPageChange }
+	it('clicking next advances to page 2', async () => {
+		const { container, getByLabelText } = render(Pagination, {
+			props: { totalRows: 100, page: 1, pageSize: 50 }
 		});
 		await fireEvent.click(getByLabelText('Next page'));
-		expect(onPageChange).toHaveBeenCalledWith(2);
+		expect(container.textContent).toContain('Page 2 of 2');
 	});
 
-	it('calls onPageChange with page 1 when prev is clicked', async () => {
-		const onPageChange = vi.fn();
-		const { getByLabelText } = render(Pagination, {
-			props: { totalRows: 100, page: 2, pageSize: 50, onPageChange }
+	it('clicking prev goes back to page 1', async () => {
+		const { container, getByLabelText } = render(Pagination, {
+			props: { totalRows: 100, page: 2, pageSize: 50 }
 		});
 		await fireEvent.click(getByLabelText('Previous page'));
-		expect(onPageChange).toHaveBeenCalledWith(1);
+		expect(container.textContent).toContain('Page 1 of 2');
 	});
 
-	it('does not call onPageChange when prev is clicked on first page', async () => {
-		const onPageChange = vi.fn();
-		const { getByLabelText } = render(Pagination, {
-			props: { totalRows: 100, page: 1, pageSize: 50, onPageChange }
+	it('prev does nothing on first page', async () => {
+		const { container, getByLabelText } = render(Pagination, {
+			props: { totalRows: 100, page: 1, pageSize: 50 }
 		});
 		await fireEvent.click(getByLabelText('Previous page'));
-		expect(onPageChange).not.toHaveBeenCalled();
+		expect(container.textContent).toContain('Page 1 of 2');
 	});
 
-	it('does not call onPageChange when next is clicked on last page', async () => {
-		const onPageChange = vi.fn();
-		const { getByLabelText } = render(Pagination, {
-			props: { totalRows: 100, page: 2, pageSize: 50, onPageChange }
+	it('next does nothing on last page', async () => {
+		const { container, getByLabelText } = render(Pagination, {
+			props: { totalRows: 100, page: 2, pageSize: 50 }
 		});
 		await fireEvent.click(getByLabelText('Next page'));
-		expect(onPageChange).not.toHaveBeenCalled();
+		expect(container.textContent).toContain('Page 2 of 2');
 	});
 
 	it('page indicator has aria-live="polite"', () => {

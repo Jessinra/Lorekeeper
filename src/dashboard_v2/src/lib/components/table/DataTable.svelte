@@ -3,6 +3,8 @@
 	import type { Column } from '$lib/components/table/types.js';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { isNumericColumn, toggleDirection } from '$lib/sort.js';
+	import { TABLE_STRINGS } from '$lib/constants/strings.js';
+	import { ICON_TABLE_EMPTY } from '$lib/constants/icons.js';
 
 	// ─── Props ────────────────────────────────────────────────────────────────
 
@@ -13,9 +15,9 @@
 		sortDirection = $bindable('desc'),
 		onRowClick = undefined,
 		selectable = false,
-		selectedRows = new Set<string>(),
-		emptyMessage = 'No rows to display',
-		emptyIcon = 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4',
+		selectedRows = new Set<unknown>(),
+		emptyMessage = TABLE_STRINGS.emptyMessage,
+		emptyIcon = ICON_TABLE_EMPTY,
 		loading = false,
 		children = undefined,
 		pagination = undefined
@@ -26,7 +28,7 @@
 		sortDirection?: 'asc' | 'desc';
 		onRowClick?: (row: T) => void;
 		selectable?: boolean;
-		selectedRows?: Set<string>;
+		selectedRows?: Set<unknown>;
 		emptyMessage?: string;
 		emptyIcon?: string;
 		loading?: boolean;

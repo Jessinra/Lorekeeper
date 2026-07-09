@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isNumericColumn, toggleDirection, sortRows } from '$lib/sort.js';
+import { isNumericColumn, DEFAULT_NUMERIC_KEYS, toggleDirection, sortRows } from '$lib/sort.js';
 
 // ─── isNumericColumn ─────────────────────────────────────────────────────────
 
@@ -18,6 +18,16 @@ describe('isNumericColumn', () => {
 		expect(isNumericColumn('namespace')).toBe(false);
 		expect(isNumericColumn('relation')).toBe(false);
 		expect(isNumericColumn('label')).toBe(false);
+	});
+
+	it('accepts custom numeric keys override', () => {
+		expect(isNumericColumn('title', ['title'])).toBe(true);
+		expect(isNumericColumn('score', ['title'])).toBe(false);
+	});
+
+	it('exposes DEFAULT_NUMERIC_KEYS for inspection', () => {
+		expect(DEFAULT_NUMERIC_KEYS).toContain('score');
+		expect(DEFAULT_NUMERIC_KEYS).toContain('confidence');
 	});
 });
 

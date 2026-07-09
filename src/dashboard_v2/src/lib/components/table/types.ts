@@ -23,7 +23,7 @@ export interface DataTableProps<T> {
 	sortDirection?: 'asc' | 'desc';
 	onRowClick?: (row: T) => void;
 	selectable?: boolean;
-	selectedRows?: Set<string>;
+	selectedRows?: Set<unknown>;
 	emptyMessage?: string;
 	emptyIcon?: string;
 	loading?: boolean;

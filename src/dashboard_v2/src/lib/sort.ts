@@ -3,13 +3,23 @@
 // for text columns. Numeric columns sort by numeric value.
 
 /**
+ * Default set of column keys considered numeric.
+ * Page-specific overrides can be passed via the second argument.
+ */
+export const DEFAULT_NUMERIC_KEYS = [
+	'score', 'uses', 'confidence', 'count', 'updated', 'created',
+] as const;
+
+/**
  * Heuristic: returns true if the column key likely holds numeric data.
  * Used to determine the default sort direction (descending for numeric,
  * ascending for text).
+ *
+ * @param key - The column key to check.
+ * @param numericKeys - Optional override list. Defaults to `DEFAULT_NUMERIC_KEYS`.
  */
-export function isNumericColumn(key: string): boolean {
-	const numericKeys = ['score', 'uses', 'confidence', 'count', 'updated', 'created'];
-	return numericKeys.includes(key);
+export function isNumericColumn(key: string, numericKeys?: readonly string[]): boolean {
+	return (numericKeys ?? DEFAULT_NUMERIC_KEYS).includes(key);
 }
 
 /**

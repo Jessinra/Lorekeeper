@@ -65,6 +65,28 @@ export const TOAST_STRINGS = {
 	dismissAriaLabel: 'Dismiss notification',
 } as const;
 
+// ── Data Table ────────────────────────────────────────────────────────────────
+
+export const TABLE_STRINGS = {
+	/** Default empty-state message when no rows match */
+	emptyMessage: 'No rows to display',
+} as const;
+
+// ── Pagination ─────────────────────────────────────────────────────────────────
+
+export const PAGINATION_STRINGS = {
+	/** aria-label for the pagination <nav> */
+	navAriaLabel: 'Table pagination',
+	/** aria-label for the previous page button */
+	prevAriaLabel: 'Previous page',
+	/** aria-label for the next page button */
+	nextAriaLabel: 'Next page',
+	/** Template for the range label: "Showing {start}–{end} of {total}" */
+	rangeLabel: 'Showing {start}–{end} of {total}',
+	/** Template for the page indicator: "Page {page} of {pages}" */
+	pageIndicator: 'Page {page} of {pages}',
+} as const;
+
 // ── Confirm Dialog ────────────────────────────────────────────────────────────
 
 export const CONFIRM_STRINGS = {
