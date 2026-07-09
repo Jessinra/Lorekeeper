@@ -70,6 +70,38 @@
 	--font-size-breadcrumb: 14px;
 	--font-family-sans: -apple-system, "Segoe UI", system-ui, sans-serif;
 
+	/* DataTable */
+	--table-th-padding: 10px 12px;
+	--table-th-letter-spacing: 0.05em;
+	--table-th-transition: 100ms;
+	--table-sort-indicator-gap: 4px;
+	--table-td-padding: 8px 12px;
+	--table-row-hover-transition: 80ms;
+	--table-row-hover-opacity: 0.88;
+	--table-checkbox-width: 36px;
+	--table-checkbox-padding: 8px 4px;
+	--table-skeleton-line-height: 12px;
+	--table-skeleton-line-width: 70%;
+	--table-skeleton-opacity-low: 0.4;
+	--table-skeleton-opacity-high: 0.8;
+	--table-skeleton-duration: 1.5s;
+
+	/* Pagination */
+	--pagination-bar-padding: 10px 12px;
+	--pagination-controls-gap: 8px;
+	--pagination-btn-size: 24px;
+	--pagination-transition-duration: 100ms;
+	--pagination-disabled-opacity: 0.35;
+	--pagination-page-min-width: 72px;
+
+	/* EmptyState */
+	--empty-state-padding: 48px 24px;
+	--empty-state-icon-margin-bottom: 12px;
+	--empty-state-message-margin: 0 0 4px;
+	--empty-state-message-font-weight: 600;
+	--empty-state-description-max-width: 320px;
+	--empty-state-description-line-height: 1.5;
+
 	/* Layout */
 	--nav-rail-width: 76px;
 	--top-bar-height: 60px;

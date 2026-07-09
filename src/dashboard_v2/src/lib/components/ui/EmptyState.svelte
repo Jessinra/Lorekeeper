@@ -26,28 +26,28 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 48px 24px;
+		padding: var(--empty-state-padding);
 		text-align: center;
 	}
 
 	.icon-wrapper {
 		color: var(--color-text-faint);
-		margin-bottom: 12px;
+		margin-bottom: var(--empty-state-icon-margin-bottom);
 		display: flex;
 	}
 
 	.message {
 		font-size: var(--font-size-body);
-		font-weight: 600;
+		font-weight: var(--empty-state-message-font-weight);
 		color: var(--color-text-muted);
-		margin: 0 0 4px;
+		margin: var(--empty-state-message-margin);
 	}
 
 	.description {
 		font-size: var(--font-size-body);
 		color: var(--color-text-faint);
 		margin: 0;
-		max-width: 320px;
-		line-height: 1.5;
+		max-width: var(--empty-state-description-max-width);
+		line-height: var(--empty-state-description-line-height);
 	}
 </style>

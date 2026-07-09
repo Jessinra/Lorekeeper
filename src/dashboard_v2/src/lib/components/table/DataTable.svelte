@@ -202,17 +202,17 @@
 		position: sticky;
 		top: 0;
 		background: var(--color-surface);
-		padding: 10px 12px;
+		padding: var(--table-th-padding);
 		font-size: var(--font-size-micro);
 		font-weight: 600;
 		color: var(--color-text-muted);
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		letter-spacing: var(--table-th-letter-spacing);
 		text-align: var(--col-align, left);
 		white-space: nowrap;
 		border-bottom: var(--border-width) solid var(--color-border);
 		user-select: none;
-		transition: color 100ms;
+		transition: color var(--table-th-transition);
 	}
 
 	th.sortable {
@@ -228,14 +228,14 @@
 	}
 
 	.sort-indicator {
-		margin-left: 4px;
+		margin-left: var(--table-sort-indicator-gap);
 		font-size: var(--font-size-micro);
 		display: inline-block;
 		vertical-align: middle;
 	}
 
 	td {
-		padding: 8px 12px;
+		padding: var(--table-td-padding);
 		font-size: var(--font-size-body);
 		color: var(--color-text-body);
 		text-align: var(--col-align, left);
@@ -251,34 +251,34 @@
 
 	tr.clickable {
 		cursor: pointer;
-		transition: background 80ms;
+		transition: background var(--table-row-hover-transition);
 	}
 
 	tr.clickable:hover {
 		background: var(--color-brand-tint);
-		opacity: 0.88;
+		opacity: var(--table-row-hover-opacity);
 	}
 
 	/* Checkbox column */
 	.col-checkbox {
-		width: 36px;
-		min-width: 36px;
-		padding: 8px 4px;
+		width: var(--table-checkbox-width);
+		min-width: var(--table-checkbox-width);
+		padding: var(--table-checkbox-padding);
 		text-align: center;
 	}
 
 	/* Loading skeleton */
 	.skeleton-line {
 		display: inline-block;
-		height: 12px;
+		height: var(--table-skeleton-line-height);
 		background: var(--color-border);
-		border-radius: 4px;
-		width: 70%;
-		animation: skeleton-pulse 1.5s ease-in-out infinite;
+		border-radius: var(--radius-kbd);
+		width: var(--table-skeleton-line-width);
+		animation: skeleton-pulse var(--table-skeleton-duration) ease-in-out infinite;
 	}
 
 	@keyframes skeleton-pulse {
-		0%, 100% { opacity: 0.4; }
-		50% { opacity: 0.8; }
+		0%, 100% { opacity: var(--table-skeleton-opacity-low); }
+		50% { opacity: var(--table-skeleton-opacity-high); }
 	}
 </style>
