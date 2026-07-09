@@ -128,4 +128,13 @@ describe('Pagination — navigation', () => {
 		const indicator = container.querySelector('.page-indicator');
 		expect(indicator).toHaveAttribute('aria-live', 'polite');
 	});
+
+	it('clamps page when totalRows shrinks below current page', async () => {
+		const { container } = render(Pagination, {
+			props: { totalRows: 25, page: 2, pageSize: 50 }
+		});
+		// page=2 but totalPages=1 → should clamp to page 1
+		expect(container.textContent).toContain('Showing 1–25 of 25');
+		expect(container.textContent).toContain('Page 1 of 1');
+	});
 });

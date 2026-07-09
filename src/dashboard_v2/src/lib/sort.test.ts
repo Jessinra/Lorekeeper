@@ -111,6 +111,7 @@ describe('sortRows — edge cases', () => {
 		const result = sortRows(sparse, 'title', 'asc', false);
 		// null and '' should not crash — null/undefined coerces to ''
 		expect(result).toHaveLength(3);
+		expect(result[0].id).toBe(1);
 	});
 
 	it('handles NaN numeric values (sorts to end)', () => {
