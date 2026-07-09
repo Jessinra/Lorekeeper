@@ -15,16 +15,12 @@
 		position: fixed;
 		inset: 0;
 		z-index: 800;
-		background: rgba(0, 0, 0, 0.4);
+		background: var(--color-scrim);
 		animation: fade-in 200ms ease forwards;
 	}
 
 	@keyframes fade-in {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
+		from { opacity: 0; }
+		to   { opacity: 1; }
 	}
 </style>

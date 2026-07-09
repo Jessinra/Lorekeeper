@@ -1,19 +1,21 @@
 <script lang="ts">
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import { toastStore, dismissToast, type Toast } from '$lib/toast.js';
+	import { ICON_CHECK, ICON_X_CLOSE, ICON_INFO_DOT } from '$lib/constants/icons.js';
+	import { TOAST_STRINGS } from '$lib/constants/strings.js';
 
-	/** Icon path per toast type (24×24 viewBox, check / x / i-dot) */
+	/** Icon path per toast type */
 	const ICONS: Record<Toast['type'], string> = {
-		success: 'M5 13l4 4L19 7',
-		error: 'M6 18L18 6M6 6l12 12',
-		info: 'M12 8v4m0 4h.01'
+		success: ICON_CHECK,
+		error:   ICON_X_CLOSE,
+		info:    ICON_INFO_DOT,
 	};
 
 	/** CSS variable name per toast type — resolves via design tokens */
 	const ICON_COLOR_VAR: Record<Toast['type'], string> = {
 		success: 'var(--color-success-text)',
-		error: 'var(--color-danger-text)',
-		info: 'var(--color-text-muted)'
+		error:   'var(--color-danger-text)',
+		info:    'var(--color-text-muted)',
 	};
 </script>
 
@@ -32,7 +34,7 @@
 		<button
 			class="dismiss-btn"
 			type="button"
-			aria-label="Dismiss notification"
+			aria-label={TOAST_STRINGS.dismissAriaLabel}
 			onclick={() => dismissToast(toast.id)}
 		>×</button>
 	</div>
@@ -50,8 +52,8 @@
 		align-items: center;
 		gap: 8px;
 
-		background: rgba(17, 17, 17, 0.9);
-		color: #ffffff;
+		background: var(--color-toast-bg);
+		color: var(--color-toast-text);
 		padding: 10px 18px;
 		border-radius: var(--radius-pill);
 		max-width: 420px;
@@ -62,7 +64,6 @@
 		cursor: default;
 		user-select: none;
 
-		/* Entrance */
 		animation: toast-in 200ms ease forwards;
 	}
 
@@ -83,7 +84,7 @@
 		flex-shrink: 0;
 		background: transparent;
 		border: none;
-		color: rgba(255, 255, 255, 0.6);
+		color: var(--color-toast-dismiss);
 		cursor: pointer;
 		font-size: 16px;
 		line-height: 1;
@@ -93,7 +94,7 @@
 	}
 
 	.dismiss-btn:hover {
-		color: #ffffff;
+		color: var(--color-toast-dismiss-hover);
 	}
 
 	@keyframes toast-in {

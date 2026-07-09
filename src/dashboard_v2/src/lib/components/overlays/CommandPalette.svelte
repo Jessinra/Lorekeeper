@@ -5,6 +5,7 @@
 	import OverlayScrim from '$lib/components/ui/OverlayScrim.svelte';
 	import { filterCommands, GROUP_LABELS, GROUP_ORDER } from '$lib/commands.js';
 	import type { Command } from '$lib/commands.js';
+	import { PALETTE_STRINGS } from '$lib/constants/strings.js';
 
 	// ─── Props ────────────────────────────────────────────────────────────────
 	// Commands are built and injected by the parent (AppShell) — this component
@@ -123,7 +124,7 @@
 		class="palette-card"
 		role="dialog"
 		aria-modal="true"
-		aria-label="Command palette"
+		aria-label={PALETTE_STRINGS.dialogAriaLabel}
 	>
 		<!-- Search input -->
 		<div class="palette-input-row">
@@ -148,7 +149,7 @@
 				bind:value={query}
 				class="palette-input"
 				type="text"
-				placeholder="Search or jump to…"
+				placeholder={PALETTE_STRINGS.inputPlaceholder}
 				autocomplete="off"
 				spellcheck="false"
 				aria-autocomplete="list"
@@ -158,7 +159,12 @@
 					: undefined}
 			/>
 
-			<button class="close-btn" type="button" aria-label="Close palette" onclick={onClose}>
+			<button
+				class="close-btn"
+				type="button"
+				aria-label={PALETTE_STRINGS.closeButtonAriaLabel}
+				onclick={onClose}
+			>
 				<kbd>Esc</kbd>
 			</button>
 		</div>
@@ -172,7 +178,7 @@
 			class="palette-results"
 			id="palette-results"
 			role="listbox"
-			aria-label="Commands"
+			aria-label={PALETTE_STRINGS.resultsListAriaLabel}
 		>
 			{#each renderItems as item (item.kind === 'header' ? `header-${item.group}` : item.command.id)}
 				{#if item.kind === 'header'}
@@ -201,20 +207,22 @@
 					</li>
 				{/if}
 			{:else}
-				<li class="empty-state">No results for "<strong>{query}</strong>"</li>
+				<li class="empty-state">
+					{PALETTE_STRINGS.emptyStatePreamble} "<strong>{query}</strong>"
+				</li>
 			{/each}
 		</ul>
 
 		<!-- Footer hint -->
 		<div class="palette-footer" aria-hidden="true">
 			<span class="hint-group">
-				<kbd>↑</kbd><kbd>↓</kbd> navigate
+				<kbd>↑</kbd><kbd>↓</kbd> {PALETTE_STRINGS.footerNavigate}
 			</span>
 			<span class="hint-group">
-				<kbd>↵</kbd> select
+				<kbd>↵</kbd> {PALETTE_STRINGS.footerSelect}
 			</span>
 			<span class="hint-group">
-				<kbd>Esc</kbd> close
+				<kbd>Esc</kbd> {PALETTE_STRINGS.footerClose}
 			</span>
 		</div>
 	</div>
@@ -238,8 +246,8 @@
 		border: var(--border-width) solid var(--color-border);
 		border-radius: var(--radius-card);
 		box-shadow:
-			0 4px 6px -1px rgba(0, 0, 0, 0.1),
-			0 24px 48px -8px rgba(0, 0, 0, 0.2);
+			0 4px 6px -1px var(--color-shadow-lg),
+			0 24px 48px -8px var(--color-shadow-xl);
 
 		animation: palette-in 160ms ease forwards;
 		overflow: hidden;

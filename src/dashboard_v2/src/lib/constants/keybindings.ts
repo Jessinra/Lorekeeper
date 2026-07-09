@@ -17,10 +17,18 @@ export interface HotkeyConfig {
 	macModifier: 'metaKey' | 'ctrlKey';
 	/** Modifier property on Windows / Linux */
 	otherModifier: 'metaKey' | 'ctrlKey';
-	/** Symbol displayed in Mac kbd hints */
+	/** Symbol displayed in Mac kbd hints (e.g. ⌘) */
 	macModifierDisplay: string;
-	/** Text displayed in Win/Linux kbd hints */
+	/** Text displayed in Win/Linux kbd hints (e.g. Ctrl) */
 	otherModifierDisplay: string;
+	/**
+	 * WAI-ARIA aria-keyshortcuts value for Mac.
+	 * Uses KeyboardEvent.key names (Meta, Control, etc.), lowercase key.
+	 * https://www.w3.org/TR/wai-aria-1.2/#aria-keyshortcuts
+	 */
+	macAriaKeyshortcuts: string;
+	/** WAI-ARIA aria-keyshortcuts value for Win/Linux. */
+	otherAriaKeyshortcuts: string;
 }
 
 /** ⌘K / Ctrl+K — opens the Command Palette. */
@@ -31,4 +39,6 @@ export const COMMAND_PALETTE_HOTKEY: HotkeyConfig = {
 	otherModifier: 'ctrlKey',
 	macModifierDisplay: '⌘',
 	otherModifierDisplay: 'Ctrl',
+	macAriaKeyshortcuts: 'Meta+k',
+	otherAriaKeyshortcuts: 'Control+k',
 } as const;
