@@ -77,4 +77,68 @@ describe('toast store', () => {
 		const [a, b] = get(toastStore);
 		expect(a.id).not.toBe(b.id);
 	});
+
+	// ── New tests covering sequential-timer and orphaned-timer fixes ──
+
+	it('queued toasts each get their full duration — not starting early', () => {
+		showToast('First', 'info', 1000);
+		showToast('Second', 'info', 1000);
+
+		// After 1 000 ms the first is dismissed and second becomes head
+		vi.advanceTimersByTime(1000);
+		expect(get(toastStore)).toHaveLength(1);
+		expect(get(toastStore)[0].message).toBe('Second');
+
+		// Second's 1 000 ms starts only AFTER first dismissed — so at 1 999 ms it is still visible
+		vi.advanceTimersByTime(999);
+		expect(get(toastStore)).toHaveLength(1);
+
+		// At 2 000 ms total (1 000 for first + 1 000 for second) it finally dismisses
+		vi.advanceTimersByTime(1);
+		expect(get(toastStore)).toHaveLength(0);
+	});
+
+	it('three rapid toasts each shown for their full duration', () => {
+		showToast('A', 'info', 500);
+		showToast('B', 'info', 500);
+		showToast('C', 'info', 500);
+
+		vi.advanceTimersByTime(500);
+		expect(get(toastStore)[0].message).toBe('B');
+
+		vi.advanceTimersByTime(500);
+		expect(get(toastStore)[0].message).toBe('C');
+
+		vi.advanceTimersByTime(500);
+		expect(get(toastStore)).toHaveLength(0);
+	});
+
+	it('manual dismiss cancels the running timer — no orphaned fire', () => {
+		showToast('Quick', 'info', 1000);
+		const [toast] = get(toastStore);
+
+		// Dismiss manually at t=300
+		vi.advanceTimersByTime(300);
+		dismissToast(toast.id);
+		expect(get(toastStore)).toHaveLength(0);
+
+		// Timer was cancelled — still empty at t=1000
+		vi.advanceTimersByTime(700);
+		expect(get(toastStore)).toHaveLength(0);
+	});
+
+	it('manual dismiss of head starts timer for next toast', () => {
+		showToast('First', 'info', 2000);
+		showToast('Second', 'info', 1000);
+
+		const [first] = get(toastStore);
+		dismissToast(first.id);
+
+		// Second now at head — should dismiss after 1 000 ms
+		vi.advanceTimersByTime(999);
+		expect(get(toastStore)).toHaveLength(1);
+
+		vi.advanceTimersByTime(1);
+		expect(get(toastStore)).toHaveLength(0);
+	});
 });
