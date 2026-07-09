@@ -59,6 +59,7 @@
 
 		font-size: var(--font-size-body);
 		line-height: 1.4;
+		cursor: default;
 		user-select: none;
 
 		/* Entrance */

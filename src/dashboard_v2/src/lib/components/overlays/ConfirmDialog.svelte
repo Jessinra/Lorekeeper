@@ -37,8 +37,9 @@
 	} as const;
 
 	const SWATCH_PATH = {
-		neutral:
-			'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
+		/** Info circle — for neutral / non-destructive confirmations */
+		neutral: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+		/** Trash can — for destructive / delete confirmations */
 		destructive:
 			'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
 	} as const;
@@ -250,7 +251,7 @@
 	}
 
 	.btn-confirm.danger:hover {
-		background: #b91c1c;
+		background: var(--color-danger-hover, #b91c1c);
 	}
 
 	@keyframes card-in {
