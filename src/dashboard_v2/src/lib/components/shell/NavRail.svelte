@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { NAV_ROUTES, UTILITY_ROUTES, matchRoute, type NavRoute } from '$lib/constants/routes.js';
+	import { NAV_RAIL_STRINGS } from '$lib/constants/strings.js';
 
 	function isActive(href: string): boolean {
 		return matchRoute(page.url.pathname, href);
@@ -30,15 +31,20 @@
 		</svg>
 		<span class="label">{route.label}</span>
 		{#if route.badge}
-			<span class="badge" aria-label="{route.badge} pending">{route.badge}</span>
+			<span class="badge" aria-label="{route.badge} {NAV_RAIL_STRINGS.badgePendingSuffix}">{route.badge}</span>
 		{/if}
 	</a>
 {/snippet}
 
-<nav aria-label="Primary navigation">
+<nav aria-label={NAV_RAIL_STRINGS.navAriaLabel}>
 	<!-- Brand mark -->
 	<div class="brand">
-		<img src="/logo.svg" alt="Lorekeeper" width="36" height="36" />
+		<img
+			src="/logo.svg"
+			alt={NAV_RAIL_STRINGS.logoAlt}
+			width="36"
+			height="36"
+		/>
 	</div>
 
 	<!-- Primary nav items -->
@@ -56,7 +62,11 @@
 		{#each UTILITY_ROUTES as item (item.href)}
 			{@render railLink(item)}
 		{/each}
-		<div class="health-dot" title="System healthy" aria-label="System status: healthy"></div>
+		<div
+			class="health-dot"
+			title={NAV_RAIL_STRINGS.healthDotTitle}
+			aria-label={NAV_RAIL_STRINGS.healthDotAriaLabel}
+		></div>
 	</div>
 </nav>
 

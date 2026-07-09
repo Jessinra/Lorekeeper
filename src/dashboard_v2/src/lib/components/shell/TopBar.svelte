@@ -1,14 +1,44 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { labelFromPath } from '$lib/constants/routes.js';
+	import { COMMAND_PALETTE_HOTKEY } from '$lib/constants/keybindings.js';
+	import { TOP_BAR_STRINGS } from '$lib/constants/strings.js';
+	import { ICON_SEARCH } from '$lib/constants/icons.js';
+	import Icon from '$lib/components/ui/Icon.svelte';
+
+	interface Props {
+		onOpenPalette: () => void;
+	}
+
+	let { onOpenPalette }: Props = $props();
 
 	const currentLabel = $derived(labelFromPath(page.url.pathname));
+
+	// Derive the correct modifier symbol from config — stays in sync with hotkeys.ts
+	// navigator.platform is deprecated; prefer userAgentData.platform (Chrome 90+)
+	// with a userAgent fallback for Firefox/Safari.
+	// Cast needed because userAgentData is not yet in the lib.dom typings.
+	const ua = typeof navigator !== 'undefined'
+		? (navigator as Navigator & { userAgentData?: { platform: string } })
+		: null;
+	const isMac = ua
+		? (ua.userAgentData
+			? ua.userAgentData.platform === 'macOS'
+			: /Mac|iPhone|iPad|iPod/.test(navigator.userAgent))
+		: false;
+	const modifierDisplay = isMac
+		? COMMAND_PALETTE_HOTKEY.macModifierDisplay
+		: COMMAND_PALETTE_HOTKEY.otherModifierDisplay;
+	const keyDisplay = COMMAND_PALETTE_HOTKEY.keyDisplay;
+	const ariaKeyshortcuts = isMac
+		? COMMAND_PALETTE_HOTKEY.macAriaKeyshortcuts
+		: COMMAND_PALETTE_HOTKEY.otherAriaKeyshortcuts;
 </script>
 
 <header>
 	<!-- Breadcrumb -->
-	<nav class="breadcrumb" aria-label="Breadcrumb">
-		<span class="breadcrumb-root">Lorekeeper</span>
+	<nav class="breadcrumb" aria-label={TOP_BAR_STRINGS.breadcrumbNavAriaLabel}>
+		<span class="breadcrumb-root">{TOP_BAR_STRINGS.breadcrumbRoot}</span>
 		<span class="breadcrumb-sep" aria-hidden="true">/</span>
 		<span class="breadcrumb-current">{currentLabel}</span>
 	</nav>
@@ -17,24 +47,16 @@
 	<button
 		class="search-trigger"
 		type="button"
-		aria-label="Search or jump to… (⌘K)"
-		aria-keyshortcuts="Meta+k"
+		aria-label="{TOP_BAR_STRINGS.searchTriggerPlaceholder} ({modifierDisplay}{keyDisplay})"
+		aria-keyshortcuts={ariaKeyshortcuts}
+		onclick={onOpenPalette}
 	>
-		<svg
-			width="15"
-			height="15"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			aria-hidden="true"
-		>
-			<circle cx="11" cy="11" r="7" />
-			<path d="M21 21l-4.3-4.3" />
-		</svg>
-		<span class="search-placeholder">Search or jump to…</span>
+		<span class="search-icon" aria-hidden="true">
+			<Icon path={ICON_SEARCH} size={15} strokeWidth={2} />
+		</span>
+		<span class="search-placeholder">{TOP_BAR_STRINGS.searchTriggerPlaceholder}</span>
 		<span class="kbd-hints" aria-hidden="true">
-			<kbd>⌘</kbd><kbd>K</kbd>
+			<kbd>{modifierDisplay}</kbd><kbd>{keyDisplay}</kbd>
 		</span>
 	</button>
 </header>
@@ -99,6 +121,12 @@
 		outline: none;
 		border-color: var(--color-brand);
 		box-shadow: 0 0 0 3px var(--color-brand-tint);
+	}
+
+	.search-icon {
+		display: flex;
+		align-items: center;
+		flex-shrink: 0;
 	}
 
 	.search-placeholder {

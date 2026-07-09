@@ -2,6 +2,11 @@
 	import { onMount } from 'svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import OverlayScrim from '$lib/components/ui/OverlayScrim.svelte';
+	import {
+		ICON_INFO_CIRCLE,
+		ICON_TRASH,
+	} from '$lib/constants/icons.js';
+	import { CONFIRM_STRINGS } from '$lib/constants/strings.js';
 
 	interface Props {
 		open: boolean;
@@ -27,21 +32,18 @@
 
 	/** Resolves via design tokens — no raw hex in logic */
 	const SWATCH_BG_VAR = {
-		neutral: 'var(--color-hover-bg)',
-		destructive: 'var(--color-danger-bg)'
+		neutral:     'var(--color-hover-bg)',
+		destructive: 'var(--color-danger-bg)',
 	} as const;
 
 	const SWATCH_ICON_VAR = {
-		neutral: 'var(--color-text-muted)',
-		destructive: 'var(--color-danger-text)'
+		neutral:     'var(--color-text-muted)',
+		destructive: 'var(--color-danger-text)',
 	} as const;
 
 	const SWATCH_PATH = {
-		/** Info circle — for neutral / non-destructive confirmations */
-		neutral: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-		/** Trash can — for destructive / delete confirmations */
-		destructive:
-			'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+		neutral:     ICON_INFO_CIRCLE,
+		destructive: ICON_TRASH,
 	} as const;
 
 	let dialogEl: HTMLDivElement | null = $state(null);
@@ -84,7 +86,6 @@
 
 	$effect(() => {
 		if (open && cancelBtn) {
-			// Defer so the DOM is painted
 			requestAnimationFrame(() => cancelBtn?.focus());
 		}
 	});
@@ -126,7 +127,7 @@
 		<!-- Actions -->
 		<div class="dialog-actions">
 			<button class="btn-cancel" type="button" bind:this={cancelBtn} onclick={onCancel}>
-				Cancel
+				{CONFIRM_STRINGS.cancelLabel}
 			</button>
 			<button
 				class="btn-confirm"
@@ -147,7 +148,6 @@
 		z-index: 801;
 		margin: auto;
 
-		/* Center via transform */
 		width: min(420px, calc(100vw - 32px));
 		height: fit-content;
 		top: 50%;
@@ -158,8 +158,8 @@
 		border-radius: var(--radius-card);
 		padding: 28px 28px 24px;
 		box-shadow:
-			0 4px 6px -1px rgba(0, 0, 0, 0.08),
-			0 20px 40px -8px rgba(0, 0, 0, 0.16);
+			0 4px 6px -1px var(--color-shadow-sm),
+			0 20px 40px -8px var(--color-shadow-md);
 
 		display: flex;
 		flex-direction: column;
@@ -239,7 +239,7 @@
 
 	.btn-confirm {
 		background: var(--color-brand);
-		color: #ffffff;
+		color: var(--color-text-on-filled);
 	}
 
 	.btn-confirm:hover {
@@ -251,7 +251,7 @@
 	}
 
 	.btn-confirm.danger:hover {
-		background: var(--color-danger-hover, #b91c1c);
+		background: var(--color-danger-hover);
 	}
 
 	@keyframes card-in {

@@ -23,6 +23,23 @@
 	--color-warning-text: #d97706;
 	--color-danger-bg: #fef2f2;
 	--color-danger-text: #dc2626;
+	--color-danger-hover: #b91c1c;
+
+	/* Overlay / scrim */
+	--color-scrim: rgba(0, 0, 0, 0.4);
+	--color-shadow-sm: rgba(0, 0, 0, 0.08);
+	--color-shadow-md: rgba(0, 0, 0, 0.16);
+	--color-shadow-lg: rgba(0, 0, 0, 0.1);
+	--color-shadow-xl: rgba(0, 0, 0, 0.2);
+
+	/* Solid surfaces used by toasts */
+	--color-toast-bg: rgba(17, 17, 17, 0.9);
+	--color-toast-text: #ffffff;
+	--color-toast-dismiss: rgba(255, 255, 255, 0.6);
+	--color-toast-dismiss-hover: #ffffff;
+
+	/* Pure white — for button text on filled backgrounds */
+	--color-text-on-filled: #ffffff;
 
 	/* Borders */
 	--border-width: 1px;
