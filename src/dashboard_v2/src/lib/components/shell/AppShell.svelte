@@ -1,6 +1,7 @@
 <script lang="ts">
 	import NavRail from '$lib/components/shell/NavRail.svelte';
 	import TopBar from '$lib/components/shell/TopBar.svelte';
+	import Toast from '$lib/components/overlays/Toast.svelte';
 
 	interface Props {
 		children: import('svelte').Snippet;
@@ -17,6 +18,7 @@
 			{@render children()}
 		</main>
 	</div>
+	<Toast />
 </div>
 
 <style>
