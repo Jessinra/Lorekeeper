@@ -2,6 +2,12 @@
 	import { page } from '$app/state';
 	import { labelFromPath } from '$lib/constants/routes.js';
 
+	interface Props {
+		onOpenPalette: () => void;
+	}
+
+	let { onOpenPalette }: Props = $props();
+
 	const currentLabel = $derived(labelFromPath(page.url.pathname));
 </script>
 
@@ -19,6 +25,7 @@
 		type="button"
 		aria-label="Search or jump to… (⌘K)"
 		aria-keyshortcuts="Meta+k"
+		onclick={onOpenPalette}
 	>
 		<svg
 			width="15"

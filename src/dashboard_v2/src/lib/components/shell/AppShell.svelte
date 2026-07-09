@@ -1,24 +1,43 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import NavRail from '$lib/components/shell/NavRail.svelte';
 	import TopBar from '$lib/components/shell/TopBar.svelte';
 	import Toast from '$lib/components/overlays/Toast.svelte';
+	import CommandPalette from '$lib/components/overlays/CommandPalette.svelte';
+	import { attachCommandPaletteHotkey } from '$lib/hotkeys.js';
 
 	interface Props {
 		children: import('svelte').Snippet;
 	}
 
 	let { children }: Props = $props();
+
+	let paletteOpen = $state(false);
+
+	function openPalette() {
+		paletteOpen = true;
+	}
+
+	function closePalette() {
+		paletteOpen = false;
+	}
+
+	onMount(() => {
+		const cleanup = attachCommandPaletteHotkey(openPalette);
+		return cleanup;
+	});
 </script>
 
 <div class="app-frame">
 	<NavRail />
 	<div class="main-column">
-		<TopBar />
+		<TopBar onOpenPalette={openPalette} />
 		<main class="page-body">
 			{@render children()}
 		</main>
 	</div>
 	<Toast />
+	<CommandPalette open={paletteOpen} onClose={closePalette} />
 </div>
 
 <style>
