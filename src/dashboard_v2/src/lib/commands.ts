@@ -8,6 +8,7 @@
  */
 
 import { NAV_ROUTES } from '$lib/constants/routes.js';
+import { ICON_ARROW_RIGHT, ICON_SEARCH, ICON_SETTINGS } from '$lib/constants/icons.js';
 
 export type CommandGroup = 'recent' | 'jump' | 'actions';
 
@@ -22,13 +23,6 @@ export interface Command {
 	/** Handler called when the command is selected */
 	action: () => void;
 }
-
-// ─── Icon paths ──────────────────────────────────────────────────────────────
-
-const ICON_ARROW_RIGHT = 'M5 12h14M12 5l7 7-7 7';
-const ICON_SETTINGS =
-	'M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1M12 12m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0';
-const ICON_SEARCH = 'M11 11m-7 0a7 7 0 1 0 14 0a7 7 0 1 0-14 0M21 21l-4.3-4.3';
 
 // ─── Jump commands (generated from NAV_ROUTES) ────────────────────────────────
 

@@ -1,25 +1,28 @@
 /**
  * Keyboard shortcut listener for the Command Palette.
  *
- * Registers a global `keydown` handler that opens the palette on:
- *  - macOS: ⌘K
- *  - Windows/Linux: Ctrl+K
+ * Key identity and modifier symbols are imported from `constants/keybindings.ts`.
+ * To change the shortcut, update the config there — nothing else needs touching.
  *
  * Returns a cleanup function — call it in `onDestroy` / `$effect` teardown.
  */
 
+import { COMMAND_PALETTE_HOTKEY } from '$lib/constants/keybindings.js';
+
 /**
- * Attach the ⌘K / Ctrl+K listener.
+ * Attach the global Command Palette hotkey listener (⌘K on Mac, Ctrl+K elsewhere).
  *
- * @param onOpen  Called when the shortcut fires. Receives the triggering event.
+ * @param onOpen  Called when the shortcut fires.
  * @returns       Teardown function that removes the listener.
  */
 export function attachCommandPaletteHotkey(onOpen: () => void): () => void {
 	function handleKeydown(e: KeyboardEvent): void {
 		const isMac = navigator.platform.toUpperCase().startsWith('MAC');
-		const modifierHeld = isMac ? e.metaKey : e.ctrlKey;
+		const modifier = isMac
+			? COMMAND_PALETTE_HOTKEY.macModifier
+			: COMMAND_PALETTE_HOTKEY.otherModifier;
 
-		if (modifierHeld && e.key === 'k') {
+		if (e[modifier] && e.key === COMMAND_PALETTE_HOTKEY.key) {
 			e.preventDefault();
 			onOpen();
 		}

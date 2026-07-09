@@ -1,17 +1,21 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { tick } from 'svelte';
+	import { onMount } from 'svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import OverlayScrim from '$lib/components/ui/OverlayScrim.svelte';
-	import { buildCommands, filterCommands, GROUP_LABELS, GROUP_ORDER } from '$lib/commands.js';
+	import { filterCommands, GROUP_LABELS, GROUP_ORDER } from '$lib/commands.js';
 	import type { Command } from '$lib/commands.js';
-	import { goto } from '$app/navigation';
 
+	// ─── Props ────────────────────────────────────────────────────────────────
+	// Commands are built and injected by the parent (AppShell) — this component
+	// is pure UI: filter, render, navigate with keyboard, emit selection.
 	interface Props {
 		open: boolean;
+		commands: Command[];
 		onClose: () => void;
 	}
 
-	let { open, onClose }: Props = $props();
+	let { open, commands, onClose }: Props = $props();
 
 	// ─── State ────────────────────────────────────────────────────────────────
 	let query = $state('');
@@ -19,26 +23,9 @@
 	let inputEl: HTMLInputElement | null = $state(null);
 	let listEl: HTMLUListElement | null = $state(null);
 
-	// ─── Command list ─────────────────────────────────────────────────────────
-	const allCommands = buildCommands({
-		navigate: (href) => {
-			goto(href);
-			onClose();
-		},
-		openQuery: () => {
-			goto('/query');
-			onClose();
-		},
-		openSettings: () => {
-			goto('/settings');
-			onClose();
-		}
-	});
+	// ─── Filtered + grouped view ──────────────────────────────────────────────
+	let filtered = $derived(filterCommands(commands, query));
 
-	let filtered = $derived(filterCommands(allCommands, query));
-
-	// ─── Grouped view ─────────────────────────────────────────────────────────
-	/** Flat list of items interspersed with group headers for rendering. */
 	type RenderItem =
 		| { kind: 'header'; group: string; label: string }
 		| { kind: 'command'; command: Command; flatIndex: number };
@@ -58,7 +45,6 @@
 		return items;
 	});
 
-	// Total selectable items count
 	let commandCount = $derived(filtered.length);
 
 	// ─── Focus & reset on open ────────────────────────────────────────────────
@@ -68,6 +54,13 @@
 			activeIndex = 0;
 			tick().then(() => inputEl?.focus());
 		}
+	});
+
+	// ─── Reset active index when query changes ────────────────────────────────
+	$effect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		query; // reactive dependency
+		activeIndex = 0;
 	});
 
 	// ─── Keyboard nav inside palette ─────────────────────────────────────────
@@ -110,13 +103,6 @@
 			active?.scrollIntoView({ block: 'nearest' });
 		});
 	}
-
-	// ─── Reset active index when query changes ────────────────────────────────
-	$effect(() => {
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		query; // reactive dependency
-		activeIndex = 0;
-	});
 
 	// ─── Select on click ──────────────────────────────────────────────────────
 	function select(cmd: Command) {

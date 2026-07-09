@@ -1,16 +1,37 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import NavRail from '$lib/components/shell/NavRail.svelte';
 	import TopBar from '$lib/components/shell/TopBar.svelte';
 	import Toast from '$lib/components/overlays/Toast.svelte';
 	import CommandPalette from '$lib/components/overlays/CommandPalette.svelte';
 	import { attachCommandPaletteHotkey } from '$lib/hotkeys.js';
+	import { buildCommands } from '$lib/commands.js';
 
 	interface Props {
 		children: import('svelte').Snippet;
 	}
 
 	let { children }: Props = $props();
+
+	// ─── Command Palette ──────────────────────────────────────────────────────
+	// Commands are built here — the composition root that knows about SvelteKit
+	// routing. CommandPalette.svelte is a pure UI component and receives them
+	// as a prop, keeping it framework-agnostic and independently testable.
+	const paletteCommands = buildCommands({
+		navigate: (href) => {
+			goto(href);
+			closePalette();
+		},
+		openQuery: () => {
+			goto('/query');
+			closePalette();
+		},
+		openSettings: () => {
+			goto('/settings');
+			closePalette();
+		}
+	});
 
 	let paletteOpen = $state(false);
 
@@ -37,7 +58,7 @@
 		</main>
 	</div>
 	<Toast />
-	<CommandPalette open={paletteOpen} onClose={closePalette} />
+	<CommandPalette open={paletteOpen} commands={paletteCommands} onClose={closePalette} />
 </div>
 
 <style>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { labelFromPath } from '$lib/constants/routes.js';
+	import { COMMAND_PALETTE_HOTKEY } from '$lib/constants/keybindings.js';
 
 	interface Props {
 		onOpenPalette: () => void;
@@ -9,6 +10,14 @@
 	let { onOpenPalette }: Props = $props();
 
 	const currentLabel = $derived(labelFromPath(page.url.pathname));
+
+	// Derive the correct modifier symbol from config — stays in sync with hotkeys.ts
+	const isMac =
+		typeof navigator !== 'undefined' && navigator.platform.toUpperCase().startsWith('MAC');
+	const modifierDisplay = isMac
+		? COMMAND_PALETTE_HOTKEY.macModifierDisplay
+		: COMMAND_PALETTE_HOTKEY.otherModifierDisplay;
+	const keyDisplay = COMMAND_PALETTE_HOTKEY.keyDisplay;
 </script>
 
 <header>
@@ -41,7 +50,7 @@
 		</svg>
 		<span class="search-placeholder">Search or jump to…</span>
 		<span class="kbd-hints" aria-hidden="true">
-			<kbd>⌘</kbd><kbd>K</kbd>
+			<kbd>{modifierDisplay}</kbd><kbd>{keyDisplay}</kbd>
 		</span>
 	</button>
 </header>
