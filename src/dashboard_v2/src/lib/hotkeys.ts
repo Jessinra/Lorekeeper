@@ -17,12 +17,18 @@ import { COMMAND_PALETTE_HOTKEY } from '$lib/constants/keybindings.js';
  */
 export function attachCommandPaletteHotkey(onOpen: () => void): () => void {
 	function handleKeydown(e: KeyboardEvent): void {
-		const isMac = navigator.platform.toUpperCase().startsWith('MAC');
+		// navigator.platform is deprecated; prefer userAgentData.platform (Chrome 90+)
+		// with a userAgent fallback for Firefox/Safari.
+		// Cast needed because userAgentData is not yet in the lib.dom typings.
+		const ua = navigator as Navigator & { userAgentData?: { platform: string } };
+		const isMac = ua.userAgentData
+			? ua.userAgentData.platform === 'macOS'
+			: /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
 		const modifier = isMac
 			? COMMAND_PALETTE_HOTKEY.macModifier
 			: COMMAND_PALETTE_HOTKEY.otherModifier;
 
-		if (e[modifier] && e.key === COMMAND_PALETTE_HOTKEY.key) {
+		if (e[modifier] && e.key.toLowerCase() === COMMAND_PALETTE_HOTKEY.key) {
 			e.preventDefault();
 			onOpen();
 		}

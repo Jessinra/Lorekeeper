@@ -21,15 +21,12 @@
 	const paletteCommands = buildCommands({
 		navigate: (href) => {
 			goto(href);
-			closePalette();
 		},
 		openQuery: () => {
 			goto('/query');
-			closePalette();
 		},
 		openSettings: () => {
 			goto('/settings');
-			closePalette();
 		}
 	});
 

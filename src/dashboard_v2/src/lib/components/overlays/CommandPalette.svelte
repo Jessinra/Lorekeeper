@@ -5,6 +5,7 @@
 	import OverlayScrim from '$lib/components/ui/OverlayScrim.svelte';
 	import { filterCommands, GROUP_LABELS, GROUP_ORDER } from '$lib/commands.js';
 	import type { Command } from '$lib/commands.js';
+	import { ICON_SEARCH } from '$lib/constants/icons.js';
 	import { PALETTE_STRINGS } from '$lib/constants/strings.js';
 
 	// ─── Props ────────────────────────────────────────────────────────────────
@@ -46,7 +47,17 @@
 		return items;
 	});
 
-	let commandCount = $derived(filtered.length);
+	// Command-only list following the same group order as renderItems.
+	// Arrow nav, Enter selection, and aria-activedescendant all index into this
+	// so keyboard focus and the rendered UI are always aligned — even once the
+	// 'recent' group is populated or GROUP_ORDER changes.
+	let flatCommands = $derived(
+		renderItems
+			.filter((item): item is { kind: 'command'; command: Command; flatIndex: number } => item.kind === 'command')
+			.map((item) => item.command)
+	);
+
+	let commandCount = $derived(flatCommands.length);
 
 	// ─── Focus & reset on open ────────────────────────────────────────────────
 	$effect(() => {
@@ -83,7 +94,7 @@
 
 			case 'Enter': {
 				e.preventDefault();
-				const active = filtered[activeIndex];
+				const active = flatCommands[activeIndex];
 				if (active) {
 					active.action();
 					onClose();
@@ -128,21 +139,9 @@
 	>
 		<!-- Search input -->
 		<div class="palette-input-row">
-			<svg
-				class="search-icon"
-				width="16"
-				height="16"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				aria-hidden="true"
-			>
-				<circle cx="11" cy="11" r="7" />
-				<path d="M21 21l-4.3-4.3" />
-			</svg>
+			<span class="search-icon" aria-hidden="true">
+				<Icon path={ICON_SEARCH} size={16} strokeWidth={2} />
+			</span>
 
 			<input
 				bind:this={inputEl}
@@ -154,8 +153,8 @@
 				spellcheck="false"
 				aria-autocomplete="list"
 				aria-controls="palette-results"
-				aria-activedescendant={filtered[activeIndex]
-					? `palette-cmd-${filtered[activeIndex].id}`
+				aria-activedescendant={flatCommands[activeIndex]
+					? `palette-cmd-${flatCommands[activeIndex].id}`
 					: undefined}
 			/>
 
@@ -276,6 +275,8 @@
 	.search-icon {
 		color: var(--color-text-faint);
 		flex-shrink: 0;
+		display: flex;
+		align-items: center;
 	}
 
 	.palette-input {
