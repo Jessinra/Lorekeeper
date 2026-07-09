@@ -1,11 +1,30 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { attachCommandPaletteHotkey } from '$lib/hotkeys.js';
+
+// Helper to mock platform detection.
+// hotkeys.ts reads navigator.userAgentData.platform (Chrome 90+) with a
+// navigator.userAgent fallback, so we mock via userAgent which jsdom exposes.
+function mockMac() {
+	vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+	);
+	// Ensure userAgentData is absent so userAgent fallback is used
+	Object.defineProperty(navigator, 'userAgentData', { value: undefined, configurable: true });
+}
+
+function mockWindows() {
+	vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+	);
+	Object.defineProperty(navigator, 'userAgentData', { value: undefined, configurable: true });
+}
 
 describe('attachCommandPaletteHotkey', () => {
 	let cleanup: () => void;
 
 	afterEach(() => {
 		cleanup?.();
+		vi.restoreAllMocks();
 	});
 
 	function fire(key: string, options: Partial<KeyboardEventInit> = {}) {
@@ -14,9 +33,8 @@ describe('attachCommandPaletteHotkey', () => {
 		return event;
 	}
 
-	it('calls onOpen on ⌘K (metaKey)', () => {
-		// Simulate macOS
-		vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel');
+	it('calls onOpen on ⌘K (metaKey) on Mac', () => {
+		mockMac();
 
 		const onOpen = vi.fn();
 		cleanup = attachCommandPaletteHotkey(onOpen);
@@ -27,7 +45,7 @@ describe('attachCommandPaletteHotkey', () => {
 	});
 
 	it('calls onOpen on Ctrl+K (non-Mac)', () => {
-		vi.spyOn(navigator, 'platform', 'get').mockReturnValue('Win32');
+		mockWindows();
 
 		const onOpen = vi.fn();
 		cleanup = attachCommandPaletteHotkey(onOpen);
@@ -47,7 +65,7 @@ describe('attachCommandPaletteHotkey', () => {
 	});
 
 	it('does NOT call onOpen on ⌘J', () => {
-		vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel');
+		mockMac();
 
 		const onOpen = vi.fn();
 		cleanup = attachCommandPaletteHotkey(onOpen);
@@ -58,7 +76,7 @@ describe('attachCommandPaletteHotkey', () => {
 	});
 
 	it('removes listener after cleanup is called', () => {
-		vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel');
+		mockMac();
 
 		const onOpen = vi.fn();
 		const teardown = attachCommandPaletteHotkey(onOpen);
@@ -70,7 +88,7 @@ describe('attachCommandPaletteHotkey', () => {
 	});
 
 	it('does NOT call onOpen on Mac when ctrlKey is used (not meta)', () => {
-		vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel');
+		mockMac();
 
 		const onOpen = vi.fn();
 		cleanup = attachCommandPaletteHotkey(onOpen);
@@ -78,5 +96,17 @@ describe('attachCommandPaletteHotkey', () => {
 		fire('k', { ctrlKey: true });
 
 		expect(onOpen).not.toHaveBeenCalled();
+	});
+
+	it('calls onOpen on ⌘K with Caps Lock on (key="K")', () => {
+		mockMac();
+
+		const onOpen = vi.fn();
+		cleanup = attachCommandPaletteHotkey(onOpen);
+
+		// Caps Lock causes e.key to be uppercase 'K'
+		fire('K', { metaKey: true });
+
+		expect(onOpen).toHaveBeenCalledOnce();
 	});
 });
