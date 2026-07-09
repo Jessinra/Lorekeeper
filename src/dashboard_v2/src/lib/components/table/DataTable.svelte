@@ -38,18 +38,23 @@
 
 	// ─── Sort handling ────────────────────────────────────────────────────────
 
+	function sortKey(col: Column<T>): string {
+		return col.sortKey ?? col.key;
+	}
+
 	function handleHeaderClick(col: Column<T>): void {
 		if (!col.sortable) return;
-		if (sortColumn === col.key) {
+		const key = sortKey(col);
+		if (sortColumn === key) {
 			sortDirection = toggleDirection(sortDirection);
 		} else {
-			sortColumn = col.key;
-			sortDirection = isNumericColumn(col.key) ? 'desc' : 'asc';
+			sortColumn = key;
+			sortDirection = isNumericColumn(key) ? 'desc' : 'asc';
 		}
 	}
 
 	function isActive(col: Column<T>): boolean {
-		return sortColumn === col.key;
+		return sortColumn === sortKey(col);
 	}
 
 	function getSortIndicator(col: Column<T>): string {

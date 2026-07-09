@@ -21,6 +21,13 @@
 	let isFirstPage = $derived(page <= 1);
 	let isLastPage = $derived(page >= totalPages);
 
+	// Clamp page when totalRows shrinks (e.g. after filtering)
+	$effect(() => {
+		if (page > totalPages) {
+			page = totalPages;
+		}
+	});
+
 	function goPrev() {
 		if (page > 1) page--;
 	}
@@ -50,7 +57,7 @@
 
 	<div class="controls">
 		<button
-			class="nav-btn"
+			class="nav-btn nav-btn-prev"
 			type="button"
 			aria-label={PAGINATION_STRINGS.prevAriaLabel}
 			disabled={isFirstPage}
@@ -64,7 +71,7 @@
 		</span>
 
 		<button
-			class="nav-btn nav-btn-next"
+			class="nav-btn"
 			type="button"
 			aria-label={PAGINATION_STRINGS.nextAriaLabel}
 			disabled={isLastPage}
@@ -122,7 +129,7 @@
 		cursor: not-allowed;
 	}
 
-	.nav-btn-next {
+	.nav-btn-prev {
 		transform: scaleX(-1);
 	}
 
