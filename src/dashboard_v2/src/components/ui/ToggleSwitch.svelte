@@ -22,7 +22,7 @@
 	aria-checked={checked}
 	aria-label={label}
 	onclick={toggle}
-	onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggle(); }}
+	onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }}}
 	tabindex="0"
 >
 	<div

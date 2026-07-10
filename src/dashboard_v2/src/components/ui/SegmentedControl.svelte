@@ -18,6 +18,7 @@
 <div class="inline-flex rounded-lg p-0.5" role="tablist" style="background-color: var(--color-seg-bg);">
 	{#each options as opt}
 		<button
+			type="button"
 			class="rounded-md px-3.5 py-1 text-sm font-medium transition-colors duration-150"
 			data-active={opt.value === value}
 			role="tab"

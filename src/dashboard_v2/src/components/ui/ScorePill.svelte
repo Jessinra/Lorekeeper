@@ -7,14 +7,8 @@
 </script>
 
 <span
-	class="inline-flex h-7 items-center rounded-full text-xs font-medium leading-none text-white pill"
+	class="inline-flex h-7 items-center rounded-full px-2.5 text-xs font-medium leading-none text-white"
 	style="background-color: {bgColor}"
 >
 	{score}
 </span>
-
-<style>
-	.pill {
-		padding-inline: 10px;
-	}
-</style>

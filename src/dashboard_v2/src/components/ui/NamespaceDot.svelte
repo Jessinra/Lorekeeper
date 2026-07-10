@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { namespaceColor } from '$lib/constants/primitives';
 	import { NAMESPACE_DOT_STRINGS } from '$lib/constants/strings';
+	import { NAMESPACE_COLORS } from '$lib/constants/primitives';
 
-	let { namespace }: { namespace: string } = $props();
+	let { namespace }: { namespace: keyof typeof NAMESPACE_COLORS } = $props();
 
 	const color = $derived(namespaceColor(namespace));
 </script>

@@ -23,7 +23,7 @@ export const NAMESPACE_COLORS = {
 
 export const NAMESPACE_DEFAULT_COLOR = 'var(--color-ns-default)';
 
-export function namespaceColor(namespace: string): string {
+export function namespaceColor(namespace: keyof typeof NAMESPACE_COLORS): string {
 	return NAMESPACE_COLORS[namespace] ?? NAMESPACE_DEFAULT_COLOR;
 }
 
@@ -45,6 +45,10 @@ export const RELATION_FALLBACK_STYLE: RelationStyle = {
 	bg: 'var(--color-rel-fallback-bg)',
 	text: 'var(--color-rel-fallback-text)',
 };
+
+export function relationStyle(type: keyof typeof RELATION_STYLES): RelationStyle {
+	return RELATION_STYLES[type] ?? RELATION_FALLBACK_STYLE;
+}
 
 export function readableLabel(type: string): string {
 	return type
@@ -69,6 +73,7 @@ export const HEALTH_RING_DEFAULTS = {
 	strokeWidth: 6,
 	color: 'var(--color-ring-fg)',
 	labelFontSize: 14,
+	labelFontWeight: 600,
 } as const;
 
 // ── HeatmapGrid ──
@@ -84,7 +89,7 @@ export const HEATMAP_DEFAULTS = {
 export function defaultColorScale(value: number, max: number): string {
 	if (value === 0) return 'var(--color-heatmap-zero)';
 	const intensity = value / max;
-	if (intensity > 0.66) return 'var(--color-brand)';
+	if (intensity > 0.66) return 'var(--color-heatmap-high)';
 	if (intensity > 0.33) return 'var(--color-heatmap-mid)';
 	return 'var(--color-heatmap-low)';
 }

@@ -17,6 +17,7 @@
 	--color-brand: #7c5cff;
 	--color-brand-hover: #6a46f5;
 	--color-brand-tint: #f1edff;
+	--color-brand-primary: #8b5cf6;
 	--color-success-bg: #ecfdf3;
 	--color-success-text: #16a34a;
 	--color-warning-bg: #fef6e7;
@@ -56,23 +57,23 @@
 	--color-chip-border: #d1d5db;
 	--color-chip-text: #6b7280;
 	--color-chip-bg: #ffffff;
-	--color-chip-active-border: #8b5cf6;
-	--color-chip-active-text: #8b5cf6;
+	--color-chip-active-border: var(--color-brand-primary);
+	--color-chip-active-text: var(--color-brand-primary);
 	--color-chip-active-bg: #f5f3ff;
 	--color-chip-hover-bg: #f9fafb;
-	--color-chip-count-bg: #d1d5db;
-	--color-chip-count-active-bg: #8b5cf6;
+	--color-chip-count-bg: #6b7280;
+	--color-chip-count-active-bg: var(--color-brand-primary);
 	--color-chip-count-text: #ffffff;
 
 	/* SegmentedControl */
 	--color-seg-bg: #f3f4f6;
 	--color-seg-active-bg: #ffffff;
-	--color-seg-active-text: #8b5cf6;
+	--color-seg-active-text: var(--color-brand-primary);
 	--color-seg-inactive-text: #6b7280;
 
 	/* ToggleSwitch */
 	--color-toggle-off-bg: #d1d5db;
-	--color-toggle-on-bg: #8b5cf6;
+	--color-toggle-on-bg: var(--color-brand-primary);
 	--color-toggle-thumb-bg: #ffffff;
 
 	/* StatTile */
@@ -85,19 +86,20 @@
 
 	/* HealthRing */
 	--color-ring-bg: #e5e7eb;
-	--color-ring-fg: #8b5cf6;
+	--color-ring-fg: var(--color-brand-primary);
 	--color-ring-label: #111827;
 
 	/* EmptyState */
 	--color-empty-icon: #d1d5db;
 	--color-empty-title: #374151;
 	--color-empty-message: #6b7280;
-	--color-empty-action-bg: #8b5cf6;
+	--color-empty-action-bg: var(--color-brand-primary);
 
 	/* HeatmapGrid */
 	--color-heatmap-zero: #f3f4f6;
 	--color-heatmap-low: #c4b5fd;
 	--color-heatmap-mid: #a78bfa;
+	--color-heatmap-high: var(--color-brand-primary);
 	--color-heatmap-label: #6b7280;
 
 	/* Overlay / scrim */

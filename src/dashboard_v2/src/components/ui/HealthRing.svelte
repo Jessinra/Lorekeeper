@@ -17,9 +17,11 @@
 
 	const radius = $derived((size - strokeWidth) / 2);
 	const circumference = $derived(2 * Math.PI * radius);
-	const dashOffset = $derived(circumference - (percent / 100) * circumference);
+	const clampedPercent = $derived(Math.min(100, Math.max(0, percent)));
+	const dashOffset = $derived(circumference - (clampedPercent / 100) * circumference);
 	const center = $derived(size / 2);
 	const labelFontSize = HEALTH_RING_DEFAULTS.labelFontSize;
+	const labelFontWeight = HEALTH_RING_DEFAULTS.labelFontWeight;
 </script>
 
 <svg width={size} height={size} viewBox="0 0 {size} {size}" aria-label={label ? `${label}: ${percent}%` : `${percent}%`}>
@@ -51,7 +53,7 @@
 			text-anchor="middle"
 			dominant-baseline="central"
 			font-size={labelFontSize}
-			font-weight="600"
+			font-weight={labelFontWeight}
 			fill="var(--color-ring-label)"
 		>
 			{label}

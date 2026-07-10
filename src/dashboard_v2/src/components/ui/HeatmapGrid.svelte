@@ -36,7 +36,7 @@
 	const svgHeight = $derived(colLabelHeight + gridHeight + 4);
 </script>
 
-<svg width={svgWidth} height={svgHeight} aria-label={HEATMAP_GRID_STRINGS.ariaLabel}>
+<svg width={svgWidth} height={svgHeight} role="img" aria-label={HEATMAP_GRID_STRINGS.ariaLabel}>
 	<!-- Column labels -->
 	{#each colLabels as label, ci}
 		<text
@@ -60,7 +60,7 @@
 			font-size={fontSize}
 			fill={labelColor}
 		>
-			{rowLabels[ri]}
+			{rowLabels[ri] ?? ''}
 		</text>
 
 		{#each row as cell, ci}
