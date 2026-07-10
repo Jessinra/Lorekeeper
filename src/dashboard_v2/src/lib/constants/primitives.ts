@@ -13,13 +13,13 @@ export function scoreColor(score: number): string {
 }
 
 // ── NamespaceDot ──
-export const NAMESPACE_COLORS: Record<string, string> = {
+export const NAMESPACE_COLORS = {
 	code: 'var(--color-ns-code)',
 	user: 'var(--color-ns-user)',
 	system: 'var(--color-ns-system)',
 	project: 'var(--color-ns-project)',
 	concept: 'var(--color-ns-concept)',
-};
+} as const;
 
 export const NAMESPACE_DEFAULT_COLOR = 'var(--color-ns-default)';
 
@@ -33,13 +33,13 @@ export interface RelationStyle {
 	text: string;
 }
 
-export const RELATION_STYLES: Record<string, RelationStyle> = {
+export const RELATION_STYLES = {
 	references: { bg: 'var(--color-rel-references-bg)', text: 'var(--color-rel-references-text)' },
 	implements: { bg: 'var(--color-rel-implements-bg)', text: 'var(--color-rel-implements-text)' },
 	depends_on: { bg: 'var(--color-rel-depends-on-bg)', text: 'var(--color-rel-depends-on-text)' },
 	conflicts_with: { bg: 'var(--color-rel-conflicts-with-bg)', text: 'var(--color-rel-conflicts-with-text)' },
 	part_of: { bg: 'var(--color-rel-part-of-bg)', text: 'var(--color-rel-part-of-text)' },
-};
+} as const;
 
 export const RELATION_FALLBACK_STYLE: RelationStyle = {
 	bg: 'var(--color-rel-fallback-bg)',

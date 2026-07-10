@@ -1,7 +1,7 @@
 ---
 name: lorekeeper-code-reviewer
 description: "Lorekeeper-specific BLOCKER patterns, severity tiers, and review checklist — used when reviewing any PR touching src/lorekeeper/"
-version: 1.18.0
+version: 1.19.0
 author: Diana
 ---
 
@@ -232,6 +232,35 @@ Every migration script (`scripts/migrate-*.py`) must be idempotent: running it t
 - Magic numbers not in named constants or `Settings`
 - Dead code, commented-out blocks, unused imports
 - `logging.error()` should be `logging.exception()` in except blocks
+
+## Dashboard V2 (Svelte 5) — Hardcoded Value Check
+
+**Scope:** `src/dashboard_v2/` Svelte 5 components with Tailwind v4 + CSS variables.
+
+**Principle:** Extract a value into `primitives.ts` or `@theme` only when it serves a real purpose:
+
+1. **Shared across components** — same value used in 2+ places (e.g. `padding-inline: 10px` in ScorePill, RelationPill, and FilterChip → extract to a shared constant or `@theme` token)
+2. **Consistency anchor** — a value that defines the design system's identity (e.g. brand purple, border-radius for pills, font-size for stat values)
+3. **Configurable at runtime** — a value a consumer might want to override (e.g. `HEATMAP_DEFAULTS.cellSize`)
+
+**❌ DON'T extract:**
+
+- One-off values unique to a single component — a Tailwind class (`h-7`) or `<style>` rule is fine
+- Just because it's a "magic number" — a 28px stat value that only StatTile uses is not a problem
+- Prematurely — if you're unsure, leave it inline. The cost of extracting later is trivial
+
+**Check sequence when reviewing dashboard_v2 changes:**
+
+1. `grep -n 'font-size:\|font-weight:\|padding-inline:\|padding:' src/dashboard_v2/src/components/**/*.svelte | grep -v 'var(' | grep -v 'transition'` — find values in `<style>` blocks
+2. For each match, ask: **"Is this value used in more than one component?"** If yes, it should be a `@theme` token. If no, leave it.
+3. `grep -n 'px-3.*py-1\|h-7\|h-2\|w-2\|py-1\.5' src/dashboard_v2/src/components/**/*.svelte` — find Tailwind class literals that repeat across components
+4. For each match, ask: **"Would changing this value require changing multiple components?"** If yes, extract to a constant. If no, leave it.
+5. Cross-reference `primitives.ts` for existing `*_DEFAULTS` objects — if a new component shares the same dimension pattern (e.g. another pill component), add to the existing group, don't create a new one-off
+
+**Key question for every hardcoded value:** _"If the designer changes this value tomorrow, how many files do I need to touch?"_
+
+- **1 file** → fine, leave it inline
+- **2+ files** → extract to a shared constant or `@theme` token
 
 ## 🔵 NIT — Never Block
 

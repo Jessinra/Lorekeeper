@@ -96,33 +96,15 @@ export const CONFIRM_STRINGS = {
 
 // ── UI Primitives (LKPR-126) ──────────────────────────────────────────────────
 
-// ── ScorePill ──
-export const SCORE_PILL_STRINGS = {} as const;
-
 // ── NamespaceDot ──
 export const NAMESPACE_DOT_STRINGS = {
 	ariaHidden: 'true' as const,
 } as const;
 
-// ── RelationPill ──
-export const RELATION_PILL_STRINGS = {} as const;
-
-// ── FilterChip ──
-export const FILTER_CHIP_STRINGS = {} as const;
-
-// ── SegmentedControl ──
-export const SEGMENTED_CONTROL_STRINGS = {} as const;
-
-// ── ToggleSwitch ──
-export const TOGGLE_SWITCH_STRINGS = {} as const;
-
 // ── StatTile ──
 export const STAT_TILE_STRINGS = {
 	iconAriaHidden: 'true' as const,
 } as const;
-
-// ── HealthRing ──
-export const HEALTH_RING_STRINGS = {} as const;
 
 // ── EmptyState ──
 export const EMPTY_STATE_STRINGS = {
