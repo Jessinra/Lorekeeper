@@ -93,3 +93,25 @@ export const CONFIRM_STRINGS = {
 	/** Default label for the cancel button (overridable via prop) */
 	cancelLabel: 'Cancel',
 } as const;
+
+// ── UI Primitives (LKPR-126) ──────────────────────────────────────────────────
+
+// ── NamespaceDot ──
+export const NAMESPACE_DOT_STRINGS = {
+	ariaHidden: 'true' as const,
+} as const;
+
+// ── StatTile ──
+export const STAT_TILE_STRINGS = {
+	iconAriaHidden: 'true' as const,
+} as const;
+
+// ── EmptyState ──
+export const EMPTY_STATE_STRINGS = {
+	iconAriaHidden: 'true' as const,
+} as const;
+
+// ── HeatmapGrid ──
+export const HEATMAP_GRID_STRINGS = {
+	ariaLabel: 'Heatmap grid' as const,
+} as const;
