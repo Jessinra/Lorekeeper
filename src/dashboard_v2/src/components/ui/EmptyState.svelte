@@ -21,7 +21,6 @@
 
 <div class="flex flex-col items-center justify-center px-6 py-16">
 	{#if icon}
-		<!-- svelte-ignore a11y_no_svg_title -->
 		<div class="mb-4 h-12 w-12" aria-hidden={EMPTY_STATE_STRINGS.iconAriaHidden} style="color: var(--color-empty-icon);">{@html icon}</div>
 	{/if}
 

@@ -29,7 +29,6 @@
 		</span>
 	{/if}
 
-	<!-- svelte-ignore a11y_no_svg_title -->
 	<div class="mb-2 h-6 w-6" aria-hidden={STAT_TILE_STRINGS.iconAriaHidden} style="color: var(--color-stat-icon);">{@html icon}</div>
 
 	<div class="stat-value" style="color: var(--color-stat-value);">{value}</div>
