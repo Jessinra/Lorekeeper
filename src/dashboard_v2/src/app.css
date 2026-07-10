@@ -25,6 +25,81 @@
 	--color-danger-text: #dc2626;
 	--color-danger-hover: #b91c1c;
 
+	/* ScorePill thresholds */
+	--color-score-high: var(--color-success-text);
+	--color-score-mid: var(--color-warning-text);
+	--color-score-low: var(--color-danger-text);
+
+	/* NamespaceDot */
+	--color-ns-code: #3b82f6;
+	--color-ns-user: #8b5cf6;
+	--color-ns-system: #10b981;
+	--color-ns-project: #f59e0b;
+	--color-ns-concept: #ec4899;
+	--color-ns-default: #6b7280;
+
+	/* RelationPill */
+	--color-rel-references-bg: #dbeafe;
+	--color-rel-references-text: #1e40af;
+	--color-rel-implements-bg: #dcfce7;
+	--color-rel-implements-text: #166534;
+	--color-rel-depends-on-bg: #fef3c7;
+	--color-rel-depends-on-text: #92400e;
+	--color-rel-conflicts-with-bg: #fce7f3;
+	--color-rel-conflicts-with-text: #9d174d;
+	--color-rel-part-of-bg: #e0e7ff;
+	--color-rel-part-of-text: #3730a3;
+	--color-rel-fallback-bg: #f3f4f6;
+	--color-rel-fallback-text: #374151;
+
+	/* FilterChip */
+	--color-chip-border: #d1d5db;
+	--color-chip-text: #6b7280;
+	--color-chip-bg: #ffffff;
+	--color-chip-active-border: #8b5cf6;
+	--color-chip-active-text: #8b5cf6;
+	--color-chip-active-bg: #f5f3ff;
+	--color-chip-hover-bg: #f9fafb;
+	--color-chip-count-bg: #d1d5db;
+	--color-chip-count-active-bg: #8b5cf6;
+	--color-chip-count-text: #ffffff;
+
+	/* SegmentedControl */
+	--color-seg-bg: #f3f4f6;
+	--color-seg-active-bg: #ffffff;
+	--color-seg-active-text: #8b5cf6;
+	--color-seg-inactive-text: #6b7280;
+
+	/* ToggleSwitch */
+	--color-toggle-off-bg: #d1d5db;
+	--color-toggle-on-bg: #8b5cf6;
+	--color-toggle-thumb-bg: #ffffff;
+
+	/* StatTile */
+	--color-stat-bg: #ffffff;
+	--color-stat-border: #e5e7eb;
+	--color-stat-icon: #6b7280;
+	--color-stat-value: #111827;
+	--color-stat-label: #6b7280;
+	--color-stat-pill-text: #ffffff;
+
+	/* HealthRing */
+	--color-ring-bg: #e5e7eb;
+	--color-ring-fg: #8b5cf6;
+	--color-ring-label: #111827;
+
+	/* EmptyState */
+	--color-empty-icon: #d1d5db;
+	--color-empty-title: #374151;
+	--color-empty-message: #6b7280;
+	--color-empty-action-bg: #8b5cf6;
+
+	/* HeatmapGrid */
+	--color-heatmap-zero: #f3f4f6;
+	--color-heatmap-low: #c4b5fd;
+	--color-heatmap-mid: #a78bfa;
+	--color-heatmap-label: #6b7280;
+
 	/* Overlay / scrim */
 	--color-scrim: rgba(0, 0, 0, 0.4);
 	--color-shadow-sm: rgba(0, 0, 0, 0.08);
