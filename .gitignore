@@ -28,4 +28,10 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
-# IDE\n.DS_Store\n.idea/\n.vscode/\n\n# Node (dashboard tests)\nnode_modules/
+# IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Node (dashboard tests)
+node_modules/
