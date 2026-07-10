@@ -27,3 +27,7 @@ Apply these rules to the static dashboard JavaScript.
 
 - If a change affects the dashboard flow, check the rendered behavior.
 - Keep code consistent with the current style and naming in the static JS tree.
+
+## Additional rules
+
+For UI primitives/components (primitives.js), see [dashboard-primitives.instructions.md](./dashboard-primitives.instructions.md) — covers reusability, constants, `DESIGN_TOKENS`, separation of logic from config, and component architecture conventions.
