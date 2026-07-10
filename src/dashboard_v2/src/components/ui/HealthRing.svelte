@@ -51,7 +51,7 @@
 			text-anchor="middle"
 			dominant-baseline="central"
 			font-size={labelFontSize}
-			font-weight="700"
+			font-weight="600"
 			fill="var(--color-ring-label)"
 		>
 			{label}

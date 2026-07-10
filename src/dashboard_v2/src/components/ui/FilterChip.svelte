@@ -20,7 +20,7 @@
 >
 	{label}
 	{#if count !== undefined}
-		<span class="ml-0.5 inline-flex items-center rounded-full px-1.5 py-0.5 font-semibold count-badge"
+		<span class="ml-0.5 inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium"
 			data-active={active}
 		>{count}</span>
 	{/if}
@@ -51,9 +51,5 @@
 	span[data-active='true'] {
 		background-color: var(--color-chip-count-active-bg);
 		color: var(--color-chip-count-text);
-	}
-
-	.count-badge {
-		font-size: 10px;
 	}
 </style>

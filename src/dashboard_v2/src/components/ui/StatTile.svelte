@@ -22,7 +22,7 @@
 <div class="relative flex flex-col rounded-xl border p-4 shadow-sm" style="background-color: var(--color-stat-bg); border-color: var(--color-stat-border);">
 	{#if statusPill}
 		<span
-			class="absolute right-3 top-3 rounded-full px-2 py-0.5 font-semibold leading-none status-pill"
+			class="absolute right-3 top-3 rounded-full px-2 py-0.5 text-xs font-medium leading-none"
 			style="background-color: {statusPill.color}; color: var(--color-stat-pill-text);"
 		>
 			{statusPill.text}
@@ -39,9 +39,5 @@
 	.stat-value {
 		font-size: 28px;
 		font-weight: 700;
-	}
-
-	.status-pill {
-		font-size: 10px;
 	}
 </style>

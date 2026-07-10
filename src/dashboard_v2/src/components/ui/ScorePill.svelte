@@ -7,7 +7,7 @@
 </script>
 
 <span
-	class="inline-flex h-7 items-center rounded-full text-xs font-semibold leading-none text-white pill"
+	class="inline-flex h-7 items-center rounded-full text-xs font-medium leading-none text-white pill"
 	style="background-color: {bgColor}"
 >
 	{score}
