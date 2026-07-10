@@ -18,13 +18,13 @@
   color: #fff;
 }
 .pr-score-pill.high {
-  background: var(--success);
+  background: var(--success, #059669);
 }
 .pr-score-pill.mid {
-  background: var(--warning);
+  background: var(--warning, #d97706);
 }
 .pr-score-pill.low {
-  background: var(--danger);
+  background: var(--danger, #dc2626);
 }
 
 /* ── NamespaceDot ── */
@@ -34,7 +34,7 @@
   gap: 5px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--text);
+  color: var(--text, #111827);
 }
 .pr-ns-dot::before {
   content: "";

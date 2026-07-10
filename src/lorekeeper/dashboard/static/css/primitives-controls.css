@@ -9,30 +9,30 @@
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border, #e8eaed);
   border-radius: 999px;
-  background: var(--surface);
-  color: var(--muted);
+  background: var(--surface, #ffffff);
+  color: var(--muted, #6b7280);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: background var(--t), color var(--t), border-color var(--t), box-shadow var(--t);
+  transition: background var(--t, 0.13s ease), color var(--t, 0.13s ease), border-color var(--t, 0.13s ease), box-shadow var(--t, 0.13s ease);
   user-select: none;
   white-space: nowrap;
 }
 .pr-filter-chip:hover {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--bg, #f8fafc);
+  color: var(--text, #111827);
   border-color: #d0d3d8;
 }
 .pr-filter-chip.active {
-  background: var(--primary);
+  background: var(--primary, #3b82f6);
   color: #fff;
-  border-color: var(--primary);
+  border-color: var(--primary, #3b82f6);
 }
 .pr-filter-chip.active:hover {
-  background: var(--primary-h);
-  border-color: var(--primary-h);
+  background: var(--primary-h, #2563eb);
+  border-color: var(--primary-h, #2563eb);
 }
 .pr-filter-chip-count {
   display: inline-flex;
@@ -44,8 +44,8 @@
   border-radius: 8px;
   font-size: 10px;
   font-weight: 700;
-  background: var(--bg);
-  color: var(--muted);
+  background: var(--bg, #f8fafc);
+  color: var(--muted, #6b7280);
   font-variant-numeric: tabular-nums;
 }
 .pr-filter-chip.active .pr-filter-chip-count {
@@ -56,8 +56,8 @@
 /* ── SegmentedControl ── */
 .pr-segmented {
   display: inline-flex;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid var(--border, #e8eaed);
+  border-radius: var(--radius, 6px);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -65,22 +65,22 @@
   padding: 5px 14px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--subtle);
+  color: var(--subtle, #9ca3af);
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: background var(--t), color var(--t);
+  transition: background var(--t, 0.13s ease), color var(--t, 0.13s ease);
 }
 .pr-seg-opt + .pr-seg-opt {
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--border, #e8eaed);
 }
 .pr-seg-opt:hover {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--bg, #f8fafc);
+  color: var(--text, #111827);
 }
 .pr-seg-opt.active {
-  background: var(--primary-bg);
-  color: var(--primary);
+  background: var(--primary-bg, #eff6ff);
+  color: var(--primary, #3b82f6);
   font-weight: 600;
 }
 
@@ -92,15 +92,15 @@
   cursor: pointer;
   user-select: none;
   font-size: 13px;
-  color: var(--text);
+  color: var(--text, #111827);
 }
 .pr-toggle-track {
   position: relative;
   width: 36px;
   height: 20px;
   border-radius: 10px;
-  background: var(--border);
-  transition: background var(--t);
+  background: var(--border, #e8eaed);
+  transition: background var(--t, 0.13s ease);
   flex-shrink: 0;
 }
 .pr-toggle-track::after {
@@ -113,7 +113,7 @@
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-  transition: transform var(--t);
+  transition: transform var(--t, 0.13s ease);
 }
 .pr-toggle.on .pr-toggle-track {
   background: #7c3aed; /* purple-600 */
