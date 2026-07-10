@@ -220,7 +220,7 @@ export function ToggleSwitch({ checked = false, onChange, label }) {
   el.appendChild(track);
 
   if (label != null) {
-    const labelSpan = document.createElement("span");
+    const labelSpan = _el("span");
     labelSpan.textContent = label;
     el.appendChild(labelSpan);
   }
@@ -396,6 +396,17 @@ const _GAP = 2;
 const _PAD_L = 0;
 const _PAD_T = 0;
 
+function _intensityToHex(i) {
+  const r = Math.round(0x82 * (1 - i));
+  const g = Math.round(0xf6 - 0x74 * i);
+  const b = 0xf6;
+  const toHex = (n) =>
+    Math.max(0, Math.min(255, n))
+      .toString(16)
+      .padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
 /**
  * @param {object} opts
  * @param {number[][]} opts.data  - 2D array of values (rows x cols)
@@ -430,8 +441,8 @@ export function HeatmapGrid({ data = [], rowLabels = [], colLabels = [] }) {
     : 0;
   const colLabelH = colLabels.length ? 16 : 0;
 
-  const w = maxRowLabelW + cols * (_CELL_S + _Gap) + _PAD_L;
-  const h = colLabelH + rows * (_CELL_S + _Gap) + _PAD_T;
+  const w = maxRowLabelW + cols * (_CELL_S + _GAP) + _PAD_L;
+  const h = colLabelH + rows * (_CELL_S + _GAP) + _PAD_T;
 
   const el = _el("div", { className: "pr-heatmap" });
 
@@ -447,7 +458,7 @@ export function HeatmapGrid({ data = [], rowLabels = [], colLabels = [] }) {
         "http://www.w3.org/2000/svg",
         "text"
       );
-      const x = maxRowLabelW + c * (_CELL_S + _Gap) + _CELL_S / 2;
+      const x = maxRowLabelW + c * (_CELL_S + _GAP) + _CELL_S / 2;
       txt.setAttribute("x", String(x));
       txt.setAttribute("y", "10");
       txt.setAttribute("text-anchor", "middle");
@@ -468,7 +479,7 @@ export function HeatmapGrid({ data = [], rowLabels = [], colLabels = [] }) {
       txt.setAttribute("x", String(maxRowLabelW - 4));
       txt.setAttribute(
         "y",
-        String(colLabelH + r * (_CELL_S + _Gap) + _CELL_S / 2 + 3)
+        String(colLabelH + r * (_CELL_S + _GAP) + _CELL_S / 2 + 3)
       );
       txt.setAttribute("text-anchor", "end");
       txt.setAttribute("fill", "var(--subtle)");
@@ -487,8 +498,8 @@ export function HeatmapGrid({ data = [], rowLabels = [], colLabels = [] }) {
         "http://www.w3.org/2000/svg",
         "rect"
       );
-      const x = maxRowLabelW + c * (_CELL_S + _Gap) + _PAD_L;
-      const y = colLabelH + r * (_CELL_S + _Gap) + _PAD_T;
+      const x = maxRowLabelW + c * (_CELL_S + _GAP) + _PAD_L;
+      const y = colLabelH + r * (_CELL_S + _GAP) + _PAD_T;
       rect.setAttribute("class", "pr-heatmap-cell");
       rect.setAttribute("x", String(x));
       rect.setAttribute("y", String(y));
@@ -515,17 +526,4 @@ export function HeatmapGrid({ data = [], rowLabels = [], colLabels = [] }) {
 
   el.appendChild(svg);
   return el;
-}
-
-const _Gap = _GAP; // alias for closure
-
-function _intensityToHex(i) {
-  const r = Math.round(0x82 * (1 - i));
-  const g = Math.round(0xf6 - 0x74 * i);
-  const b = 0xf6;
-  const toHex = (n) =>
-    Math.max(0, Math.min(255, n))
-      .toString(16)
-      .padStart(2, "0");
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
