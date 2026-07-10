@@ -3,7 +3,7 @@
 // Data visualization widgets: StatTile, HealthRing, EmptyState, HeatmapGrid.
 // ──────────────────────────────────────────────────────
 
-import { DESIGN_TOKENS, scoreTier, el } from "./primitives-core.js";
+import { scoreTier, el } from "./primitives-core.js";
 import { ScorePill } from "./primitives-badges.js";
 
 // ── 7. StatTile ──

@@ -3,7 +3,7 @@
 // Small read-only display elements: ScorePill, NamespaceDot, RelationPill.
 // ──────────────────────────────────────────────────────
 
-import { DESIGN_TOKENS, hashColor, scoreTier, el } from "./primitives-core.js";
+import { hashColor, scoreTier, el } from "./primitives-core.js";
 
 // ── 1. ScorePill ──
 
