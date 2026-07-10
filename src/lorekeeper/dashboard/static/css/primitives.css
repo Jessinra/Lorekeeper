@@ -1,0 +1,361 @@
+/* ──────────────────────────────────────────────────────
+   UI Primitives — LKPR-126
+   Shared component styles for the Lorekeeper dashboard.
+   All components use CSS custom properties from styles.css.
+   ────────────────────────────────────────────────────── */
+
+/* ── ScorePill ── */
+.pr-score-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  color: #fff;
+}
+.pr-score-pill.high {
+  background: var(--success);
+}
+.pr-score-pill.mid {
+  background: var(--warning);
+}
+.pr-score-pill.low {
+  background: var(--danger);
+}
+
+/* ── NamespaceDot ── */
+.pr-ns-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+.pr-ns-dot::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pr-ns-dot[data-color="indigo"]::before  { background: #6366f1; }
+.pr-ns-dot[data-color="teal"]::before    { background: #14b8a6; }
+.pr-ns-dot[data-color="blue"]::before    { background: #3b82f6; }
+.pr-ns-dot[data-color="amber"]::before   { background: #f59e0b; }
+.pr-ns-dot[data-color="pink"]::before    { background: #ec4899; }
+.pr-ns-dot[data-color="green"]::before   { background: #22c55e; }
+.pr-ns-dot[data-color="purple"]::before  { background: #a855f7; }
+.pr-ns-dot[data-color="red"]::before     { background: #ef4444; }
+.pr-ns-dot[data-color="cyan"]::before    { background: #06b6d4; }
+.pr-ns-dot[data-color="gray"]::before    { background: #9ca3af; }
+
+/* ── RelationPill ── */
+.pr-rel-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pr-rel-pill[data-type="auto_linked"] {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+.pr-rel-pill[data-type="related_to"] {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.pr-rel-pill[data-type="used_in"] {
+  background: #ccfbf1;
+  color: #115e59;
+}
+.pr-rel-pill[data-type="used_for"] {
+  background: #d1fae5;
+  color: #065f46;
+}
+.pr-rel-pill[data-type="used_by"] {
+  background: #fed7aa;
+  color: #9a3412;
+}
+.pr-rel-pill[data-type="used_as"] {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+.pr-rel-pill[data-type="default"] {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+/* ── FilterChip ── */
+.pr-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t), color var(--t), border-color var(--t), box-shadow var(--t);
+  user-select: none;
+  white-space: nowrap;
+}
+.pr-filter-chip:hover {
+  background: var(--bg);
+  color: var(--text);
+  border-color: #d0d3d8;
+}
+.pr-filter-chip.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.pr-filter-chip.active:hover {
+  background: var(--primary-h);
+  border-color: var(--primary-h);
+}
+.pr-filter-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--bg);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.pr-filter-chip.active .pr-filter-chip-count {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+}
+
+/* ── SegmentedControl ── */
+.pr-segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.pr-seg-opt {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--subtle);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background var(--t), color var(--t);
+}
+.pr-seg-opt + .pr-seg-opt {
+  border-left: 1px solid var(--border);
+}
+.pr-seg-opt:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+.pr-seg-opt.active {
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ── ToggleSwitch ── */
+.pr-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: var(--text);
+}
+.pr-toggle-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--border);
+  transition: background var(--t);
+  flex-shrink: 0;
+}
+.pr-toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  transition: transform var(--t);
+}
+.pr-toggle.on .pr-toggle-track {
+  background: #7c3aed; /* purple-600 */
+}
+.pr-toggle.on .pr-toggle-track::after {
+  transform: translateX(16px);
+}
+.pr-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ── StatTile ── */
+.pr-stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 120px;
+}
+.pr-stat-tile-icon {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pr-stat-tile-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pr-stat-tile-value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--text);
+}
+.pr-stat-tile-label {
+  font-size: 11px;
+  color: var(--subtle);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.pr-stat-tile-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ── HealthRing ── */
+.pr-health-ring {
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.pr-health-ring svg {
+  transform: rotate(-90deg);
+}
+.pr-health-ring-bg {
+  fill: none;
+  stroke: #f0f2f5;
+  stroke-width: 4;
+}
+.pr-health-ring-fg {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.4s ease, stroke 0.4s ease;
+}
+.pr-health-ring-label {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  line-height: 1;
+}
+.pr-health-ring-label.low {
+  color: var(--danger);
+}
+.pr-health-ring-label.mid {
+  color: var(--warning);
+}
+.pr-health-ring-label.high {
+  color: var(--success);
+}
+
+/* ── EmptyState ── */
+.pr-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+}
+.pr-empty-icon {
+  font-size: 36px;
+  line-height: 1;
+  opacity: 0.4;
+}
+.pr-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.pr-empty-message {
+  font-size: 13px;
+  color: var(--subtle);
+  line-height: 1.5;
+  max-width: 360px;
+}
+.pr-empty-action {
+  margin-top: 8px;
+}
+
+/* ── HeatmapGrid ── */
+.pr-heatmap {
+  display: inline-block;
+}
+.pr-heatmap svg {
+  font-family: var(--font-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  font-size: 10px;
+}
+.pr-heatmap-cell {
+  transition: opacity 0.12s ease;
+}
+.pr-heatmap-cell:hover {
+  opacity: 0.7;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
