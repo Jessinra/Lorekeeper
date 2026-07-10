@@ -30,37 +30,42 @@ describe("DESIGN_TOKENS", () => {
 
 describe("ScorePill", () => {
   it("returns a span with pr-score-pill class", () => {
-    const el = ScorePill(8);
+    const el = ScorePill({ score: 8 });
     expect(el.tagName).toBe("SPAN");
     expect(el.classList.contains("pr-score-pill")).toBe(true);
   });
 
   it("applies 'high' class for score >= 7", () => {
-    expect(ScorePill(10).classList.contains("high")).toBe(true);
-    expect(ScorePill(7).classList.contains("high")).toBe(true);
-    expect(ScorePill(7).textContent).toBe("7");
+    expect(ScorePill({ score: 10 }).classList.contains("high")).toBe(true);
+    expect(ScorePill({ score: 7 }).classList.contains("high")).toBe(true);
+    expect(ScorePill({ score: 7 }).textContent).toBe("7");
   });
 
   it("applies 'mid' class for score 5-6", () => {
-    const el = ScorePill(6);
+    const el = ScorePill({ score: 6 });
     expect(el.classList.contains("mid")).toBe(true);
     expect(el.textContent).toBe("6");
   });
 
   it("applies 'low' class for score < 5", () => {
-    const el = ScorePill(3);
+    const el = ScorePill({ score: 3 });
     expect(el.classList.contains("low")).toBe(true);
     expect(el.textContent).toBe("3");
   });
 
   it("handles null/undefined gracefully", () => {
-    const el = ScorePill(null);
+    const el = ScorePill({ score: null });
     expect(el.classList.contains("low")).toBe(true);
     expect(el.textContent).toBe("\u2014");
   });
 
   it("rounds scores", () => {
-    expect(ScorePill(7.8).textContent).toBe("8");
+    expect(ScorePill({ score: 7.8 }).textContent).toBe("8");
+  });
+
+  it("clamps out-of-range scores", () => {
+    expect(ScorePill({ score: -5 }).textContent).toBe("0");
+    expect(ScorePill({ score: 50 }).textContent).toBe("10");
   });
 });
 
@@ -68,23 +73,23 @@ describe("ScorePill", () => {
 
 describe("NamespaceDot", () => {
   it("returns a span with pr-ns-dot class", () => {
-    const el = NamespaceDot("core");
+    const el = NamespaceDot({ namespace: "core" });
     expect(el.tagName).toBe("SPAN");
     expect(el.classList.contains("pr-ns-dot")).toBe(true);
   });
 
   it("sets data-color attribute deterministically", () => {
-    const el1 = NamespaceDot("core");
-    const el2 = NamespaceDot("core");
+    const el1 = NamespaceDot({ namespace: "core" });
+    const el2 = NamespaceDot({ namespace: "core" });
     expect(el1.dataset.color).toBe(el2.dataset.color);
   });
 
   it("shows the namespace text", () => {
-    expect(NamespaceDot("user").textContent).toBe("user");
+    expect(NamespaceDot({ namespace: "user" }).textContent).toBe("user");
   });
 
   it("handles empty/null namespace", () => {
-    const el = NamespaceDot(null);
+    const el = NamespaceDot({ namespace: null });
     expect(el.textContent).toBe("\u2014");
     expect(el.dataset.color).toBe("gray");
   });
@@ -94,28 +99,28 @@ describe("NamespaceDot", () => {
 
 describe("RelationPill", () => {
   it("returns a span with pr-rel-pill class", () => {
-    const el = RelationPill("auto_linked");
+    const el = RelationPill({ type: "auto_linked" });
     expect(el.tagName).toBe("SPAN");
     expect(el.classList.contains("pr-rel-pill")).toBe(true);
   });
 
   it("replaces underscores with spaces in display text", () => {
-    expect(RelationPill("auto_linked").textContent).toBe("auto linked");
-    expect(RelationPill("related_to").textContent).toBe("related to");
+    expect(RelationPill({ type: "auto_linked" }).textContent).toBe("auto linked");
+    expect(RelationPill({ type: "related_to" }).textContent).toBe("related to");
   });
 
   it("sets data-type attribute", () => {
-    expect(RelationPill("used_in").dataset.type).toBe("used_in");
+    expect(RelationPill({ type: "used_in" }).dataset.type).toBe("used_in");
   });
 
   it("defaults to 'default' for unknown types", () => {
-    const el = RelationPill("unknown_type");
+    const el = RelationPill({ type: "unknown_type" });
     expect(el.dataset.type).toBe("unknown_type");
     expect(el.textContent).toBe("unknown type");
   });
 
   it("handles null/undefined type", () => {
-    const el = RelationPill(null);
+    const el = RelationPill({ type: null });
     expect(el.dataset.type).toBe("default");
     expect(el.textContent).toBe("default");
   });
@@ -287,6 +292,7 @@ describe("StatTile", () => {
   it("handles SVG icon string", () => {
     const el = StatTile({
       icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>',
+      iconIsSvg: true,
       value: "10",
       label: "items",
     });
@@ -478,9 +484,9 @@ describe("HeatmapGrid", () => {
 
 describe("All components return HTMLElement", () => {
   const cases = [
-    ["ScorePill", () => ScorePill(5)],
-    ["NamespaceDot", () => NamespaceDot("test")],
-    ["RelationPill", () => RelationPill("auto_linked")],
+    ["ScorePill", () => ScorePill({ score: 5 })],
+    ["NamespaceDot", () => NamespaceDot({ namespace: "test" })],
+    ["RelationPill", () => RelationPill({ type: "auto_linked" })],
     ["FilterChip", () => FilterChip({ label: "test" })],
     [
       "SegmentedControl",

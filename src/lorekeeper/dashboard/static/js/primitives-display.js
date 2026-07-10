@@ -11,19 +11,20 @@ import { ScorePill } from "./primitives-badges.js";
 /**
  * @param {object} opts
  * @param {string} [opts.icon] - SVG string or text label
+ * @param {boolean} [opts.iconIsSvg] - true if icon is a trusted static SVG string
  * @param {string|number} opts.value
  * @param {string} opts.label
  * @param {object} [opts.statusPill] - {score, label, color?}
  * @returns {HTMLDivElement}
  */
-export function StatTile({ icon, value, label, statusPill }) {
+export function StatTile({ icon, iconIsSvg, value, label, statusPill }) {
   const tile = el("div", { className: "pr-stat-tile" });
 
   // Icon row
   if (icon) {
     const iconWrap = el("div", { className: "pr-stat-tile-icon" });
-    if (icon.startsWith("<svg")) {
-      iconWrap.innerHTML = icon; // static SVG — safe
+    if (iconIsSvg) {
+      iconWrap.innerHTML = icon; // static SVG — safe, caller asserts trust
     } else {
       iconWrap.textContent = icon;
     }
@@ -43,7 +44,7 @@ export function StatTile({ icon, value, label, statusPill }) {
   // Status pill
   if (statusPill) {
     const statusEl = el("div", { className: "pr-stat-tile-status" });
-    const pill = ScorePill(statusPill.score);
+    const pill = ScorePill({ score: statusPill.score });
     pill.style.minWidth = "auto";
     pill.style.padding = "1px 6px";
     pill.style.fontSize = "10px";
@@ -69,7 +70,7 @@ const _RING_C = 2 * Math.PI * _RING_R; // circumference
  * @returns {HTMLDivElement}
  */
 export function HealthRing({ percent }) {
-  const pct = Math.max(0, Math.min(100, percent ?? 0));
+  const pct = Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;
   const offset = _RING_C * (1 - pct / 100);
 
   const tier = scoreTier(pct / 10);
@@ -256,7 +257,7 @@ export function HeatmapGrid({ data = [], rowLabels = [], colLabels = [] }) {
     for (let c = 0; c < cols; c++) {
       const v = data[r][c];
       const normalized = (v - minVal) / range;
-      const intensity = Math.round(0.15 + normalized * 0.65);
+      const intensity = 0.15 + normalized * 0.65;
       const hex = _intensityToHex(intensity);
 
       const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");

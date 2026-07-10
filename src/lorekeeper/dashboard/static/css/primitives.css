@@ -3,7 +3,7 @@
    Loads all primitive component stylesheets.
    ────────────────────────────────────────────────────── */
 
-@import url("tokens.css");
-@import url("primitives-badges.css");
-@import url("primitives-controls.css");
-@import url("primitives-display.css");
+@import "tokens.css";
+@import "primitives-badges.css";
+@import "primitives-controls.css";
+@import "primitives-display.css";

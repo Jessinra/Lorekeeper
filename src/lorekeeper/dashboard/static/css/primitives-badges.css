@@ -85,10 +85,7 @@
   background: #fed7aa;
   color: #9a3412;
 }
-.pr-rel-pill[data-type="used_as"] {
-  background: #f3f4f6;
-  color: #4b5563;
-}
+.pr-rel-pill[data-type="used_as"],
 .pr-rel-pill[data-type="default"] {
   background: #f3f4f6;
   color: #4b5563;

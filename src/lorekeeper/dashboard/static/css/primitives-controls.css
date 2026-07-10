@@ -128,3 +128,14 @@
   height: 0;
   pointer-events: none;
 }
+
+/* ── Focus-visible states ── */
+.pr-filter-chip:focus-visible,
+.pr-seg-opt:focus-visible {
+  outline: 2px solid var(--primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+.pr-toggle-input:focus-visible + .pr-toggle-track {
+  box-shadow: 0 0 0 2px var(--primary, #3b82f6);
+}

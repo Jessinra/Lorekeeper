@@ -8,23 +8,26 @@ import { hashColor, scoreTier, el } from "./primitives-core.js";
 // ── 1. ScorePill ──
 
 /**
- * @param {number|null|undefined} score - 0–10 scale
+ * @param {object} opts
+ * @param {number|null|undefined} opts.score - 0–10 scale
  * @returns {HTMLSpanElement}
  */
-export function ScorePill(score) {
+export function ScorePill({ score } = {}) {
   const tier = scoreTier(score);
   const pill = el("span", { className: `pr-score-pill ${tier}` });
-  pill.textContent = score != null ? String(Math.round(score)) : "\u2014";
+  const clamped = score != null ? Math.max(0, Math.min(10, Math.round(score))) : null;
+  pill.textContent = clamped != null ? String(clamped) : "\u2014";
   return pill;
 }
 
 // ── 2. NamespaceDot ──
 
 /**
- * @param {string} namespace
+ * @param {object} opts
+ * @param {string} opts.namespace
  * @returns {HTMLSpanElement}
  */
-export function NamespaceDot(namespace) {
+export function NamespaceDot({ namespace } = {}) {
   const color = hashColor(namespace);
   const dot = el("span", {
     className: "pr-ns-dot",
@@ -37,10 +40,11 @@ export function NamespaceDot(namespace) {
 // ── 3. RelationPill ──
 
 /**
- * @param {string} type - e.g. "auto_linked", "related_to", "used_in", etc.
+ * @param {object} opts
+ * @param {string} opts.type - e.g. "auto_linked", "related_to", "used_in", etc.
  * @returns {HTMLSpanElement}
  */
-export function RelationPill(type) {
+export function RelationPill({ type } = {}) {
   const t = type || "default";
   const pill = el("span", {
     className: "pr-rel-pill",
