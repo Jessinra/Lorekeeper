@@ -1,0 +1,23 @@
+/* ──────────────────────────────────────────────────────
+   Design Tokens — LKPR-126
+   Single source of truth for all CSS custom properties.
+   Imported by styles.css and primitives.css.
+   ────────────────────────────────────────────────────── */
+
+:root {
+  --bg:        #f8fafc;
+  --surface:   #ffffff;
+  --border:    #e8eaed;
+  --text:      #111827;
+  --muted:     #6b7280;
+  --subtle:    #9ca3af;
+  --primary:   #3b82f6;
+  --primary-h: #2563eb;
+  --primary-bg:#eff6ff;
+  --danger:    #dc2626;
+  --danger-h:  #b91c1c;
+  --warning:   #d97706;
+  --success:   #059669;
+  --radius:    6px;
+  --t:         0.13s ease;
+}

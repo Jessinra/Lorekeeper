@@ -1,22 +1,6 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+@import url("tokens.css");
 
-:root {
-  --bg:        #f8fafc;
-  --surface:   #ffffff;
-  --border:    #e8eaed;
-  --text:      #111827;
-  --muted:     #6b7280;
-  --subtle:    #9ca3af;
-  --primary:   #3b82f6;
-  --primary-h: #2563eb;
-  --primary-bg:#eff6ff;
-  --danger:    #dc2626;
-  --danger-h:  #b91c1c;
-  --warning:   #d97706;
-  --success:   #059669;
-  --radius:    6px;
-  --t:         0.13s ease;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
