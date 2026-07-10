@@ -1,0 +1,130 @@
+/* ──────────────────────────────────────────────────────
+   UI Primitives — Interactive Controls — LKPR-126
+   FilterChip, SegmentedControl, ToggleSwitch styles.
+   ────────────────────────────────────────────────────── */
+
+/* ── FilterChip ── */
+.pr-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t), color var(--t), border-color var(--t), box-shadow var(--t);
+  user-select: none;
+  white-space: nowrap;
+}
+.pr-filter-chip:hover {
+  background: var(--bg);
+  color: var(--text);
+  border-color: #d0d3d8;
+}
+.pr-filter-chip.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.pr-filter-chip.active:hover {
+  background: var(--primary-h);
+  border-color: var(--primary-h);
+}
+.pr-filter-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--bg);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.pr-filter-chip.active .pr-filter-chip-count {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+}
+
+/* ── SegmentedControl ── */
+.pr-segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.pr-seg-opt {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--subtle);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background var(--t), color var(--t);
+}
+.pr-seg-opt + .pr-seg-opt {
+  border-left: 1px solid var(--border);
+}
+.pr-seg-opt:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+.pr-seg-opt.active {
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ── ToggleSwitch ── */
+.pr-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: var(--text);
+}
+.pr-toggle-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--border);
+  transition: background var(--t);
+  flex-shrink: 0;
+}
+.pr-toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  transition: transform var(--t);
+}
+.pr-toggle.on .pr-toggle-track {
+  background: #7c3aed; /* purple-600 */
+}
+.pr-toggle.on .pr-toggle-track::after {
+  transform: translateX(16px);
+}
+.pr-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
