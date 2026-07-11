@@ -67,13 +67,13 @@
 		return 'var(--color-drawer-status-active)';
 	});
 
-	let formattedCreated = $derived(() => {
+	let formattedCreated = $derived.by(() => {
 		if (!memory) return '';
 		const d = new Date(memory.created_at);
 		return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 	});
 
-	let formattedUpdated = $derived(() => {
+	let formattedUpdated = $derived.by(() => {
 		if (!memory) return '';
 		const d = new Date(memory.updated_at);
 		const now = new Date();
@@ -211,10 +211,10 @@
 			<span class="meta-value">{memory.namespace}</span>
 			<span class="meta-divider" aria-hidden="true"></span>
 			<span class="meta-label">{DRAWER_STRINGS.metaCreated}</span>
-			<span class="meta-value">{formattedCreated()}</span>
+			<span class="meta-value">{formattedCreated}</span>
 			<span class="meta-divider" aria-hidden="true"></span>
 			<span class="meta-label">{DRAWER_STRINGS.metaUpdated}</span>
-			<span class="meta-value">{formattedUpdated()}</span>
+			<span class="meta-value">{formattedUpdated}</span>
 			<span class="meta-divider" aria-hidden="true"></span>
 			<ScorePill score={memory.score} />
 			<span class="meta-divider" aria-hidden="true"></span>
@@ -231,25 +231,25 @@
 			{#if editMode}
 				<!-- Edit mode: form fields -->
 				<div class="edit-field">
-					<label class="field-label">Title</label>
-					<input type="text" class="input-title" bind:value={editTitle} />
+					<label class="field-label" for="drawer-title">Title</label>
+					<input type="text" id="drawer-title" class="input-title" bind:value={editTitle} />
 				</div>
 				<div class="edit-field">
-					<label class="field-label">Description</label>
-					<textarea class="textarea-desc" bind:value={editDescription}></textarea>
+					<label class="field-label" for="drawer-desc">Description</label>
+					<textarea id="drawer-desc" class="textarea-desc" bind:value={editDescription}></textarea>
 				</div>
 				<div class="edit-field">
-					<label class="field-label">Content</label>
-					<textarea class="textarea-content" bind:value={editContent}></textarea>
+					<label class="field-label" for="drawer-content">Content</label>
+					<textarea id="drawer-content" class="textarea-content" bind:value={editContent}></textarea>
 				</div>
 				<div class="edit-field edit-field-row">
 					<div class="edit-field">
-						<label class="field-label">{DRAWER_STRINGS.metaScore}</label>
-						<input type="number" class="input-score" min="0" max="10" step="0.5" bind:value={editScore} />
+						<label class="field-label" for="drawer-score">{DRAWER_STRINGS.metaScore}</label>
+						<input type="number" id="drawer-score" class="input-score" min="0" max="10" step="0.5" bind:value={editScore} />
 					</div>
 					<div class="edit-field">
-						<label class="field-label">Source type</label>
-						<select class="select-source" bind:value={editSourceType}>
+						<label class="field-label" for="drawer-source">Source type</label>
+						<select id="drawer-source" class="select-source" bind:value={editSourceType}>
 							<option value="observed">observed</option>
 							<option value="user_stated">user_stated</option>
 							<option value="inferred">inferred</option>
