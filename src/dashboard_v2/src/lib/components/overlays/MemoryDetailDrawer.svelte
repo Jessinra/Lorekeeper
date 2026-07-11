@@ -15,7 +15,8 @@
 		memory: MemoryData | null;
 		links?: LinkData[];
 		onClose: () => void;
-		onSave: (id: string, fields: MemoryEditFields) => void;
+		onSave: (id: string, fields: MemoryEditFields) => Promise<boolean> | void;
+		onDelete: (id: string) => void;
 		onNavigate: (targetId: string) => void;
 	}
 
@@ -25,6 +26,7 @@
 		links = [],
 		onClose,
 		onSave,
+		onDelete,
 		onNavigate,
 	}: Props = $props();
 
@@ -34,11 +36,15 @@
 	let linksExpanded = $state(false);
 	let copyTooltipVisible = $state(false);
 	let drawerEl: HTMLElement | null = $state(null);
+	let saveError = $state<string | null>(null);
 
 	// Auto-focus drawer when it opens
 	$effect(() => {
 		if (open && memory && drawerEl) {
 			tick().then(() => drawerEl?.focus());
+		}
+		if (!open) {
+			saveError = null;
 		}
 	});
 
@@ -105,10 +111,36 @@
 		return type as keyof typeof RELATION_STYLES;
 	}
 
+	// ── Focus trap ─────────────────────────────────────────────────────────────
+
+	const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+
+	let previouslyFocused: HTMLElement | null = null;
+
+	function trapFocus(e: KeyboardEvent) {
+		if (e.key !== 'Tab' || !drawerEl) return;
+		const focusable = Array.from(drawerEl.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+		if (focusable.length === 0) return;
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+		if (e.shiftKey) {
+			if (document.activeElement === first) {
+				e.preventDefault();
+				last.focus();
+			}
+		} else {
+			if (document.activeElement === last) {
+				e.preventDefault();
+				first.focus();
+			}
+		}
+	}
+
 	// ── Handlers ───────────────────────────────────────────────────────────────
 
 	function enterEditMode() {
 		if (!memory) return;
+		saveError = null;
 		editTitle = memory.title;
 		editDescription = memory.description;
 		editContent = memory.content;
@@ -124,6 +156,7 @@
 		editMode = false;
 		linksExpanded = false;
 		copyTooltipVisible = false;
+		saveError = null;
 		onClose();
 	}
 
@@ -141,6 +174,7 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
+		trapFocus(e);
 		if (e.key === 'Escape') {
 			e.preventDefault();
 			handleClose();
@@ -153,33 +187,57 @@
 		}
 	}
 
-	function handleSave() {
+	function validateScore(val: number): string | null {
+		if (typeof val !== 'number' || !isFinite(val)) return 'Score must be a number';
+		if (val < 0 || val > 10) return 'Score must be between 0 and 10';
+		return null;
+	}
+
+	async function handleSave() {
 		if (!memory) return;
-		onSave(memory.lore_id, {
+
+		const scoreError = validateScore(editScore);
+		if (scoreError) {
+			saveError = scoreError;
+			return;
+		}
+
+		const result = onSave(memory.lore_id, {
 			title: editTitle,
 			description: editDescription,
 			content: editContent,
 			score: editScore,
 			source_type: editSourceType,
 		});
+
+		if (result instanceof Promise) {
+			const success = await result;
+			if (!success) {
+				saveError = 'Save failed. Please try again.';
+				return;
+			}
+		}
+
+		saveError = null;
 		editMode = false;
 	}
 
 	function handleCancel() {
 		if (dirty && !confirm(DRAWER_STRINGS.discardConfirm)) return;
+		saveError = null;
 		editMode = false;
 	}
 
 	function handleDelete() {
 		if (!memory) return;
 		if (!confirm(DRAWER_STRINGS.dangerZoneDelete)) return;
-		onSave(memory.lore_id, { soft_deleted: true } as unknown as MemoryEditFields);
+		onDelete(memory.lore_id);
 	}
 
 	function handleForget() {
 		if (!memory) return;
 		if (!confirm(DRAWER_STRINGS.dangerZoneForget)) return;
-		onSave(memory.lore_id, { soft_deleted: true } as unknown as MemoryEditFields);
+		onSave(memory.lore_id, { soft_deleted: true });
 	}
 </script>
 
@@ -191,6 +249,7 @@
 		class="drawer"
 		bind:this={drawerEl}
 		role="dialog"
+		aria-modal="true"
 		aria-label={DRAWER_STRINGS.drawerAriaLabel}
 		onkeydown={handleKeydown}
 		tabindex="-1"
@@ -266,6 +325,10 @@
 					</div>
 				</div>
 
+				{#if saveError}
+					<div class="save-error" role="alert">{saveError}</div>
+				{/if}
+
 				<!-- Danger zone -->
 				<div class="danger-zone">
 					<h3 class="danger-zone-header">{DRAWER_STRINGS.dangerZoneHeader}</h3>
@@ -303,13 +366,15 @@
 			<button
 				type="button"
 				class="links-toggle"
+				aria-expanded={linksExpanded}
+				aria-controls="drawer-links-list"
 				onclick={() => (linksExpanded = !linksExpanded)}
 			>
 				{links.length} {DRAWER_STRINGS.linksHeader}
 				<span class="toggle-arrow" data-expanded={linksExpanded}>&#9662;</span>
 			</button>
 			{#if linksExpanded}
-				<div class="links-list">
+				<div id="drawer-links-list" class="links-list">
 					{#if links.length > 0}
 						{#each links as link}
 							<button
@@ -578,6 +643,17 @@
 		width: 100%;
 		background-color: var(--color-surface);
 		font-family: inherit;
+	}
+
+	/* Save error */
+	.save-error {
+		padding: 8px 12px;
+		border-radius: var(--radius-control);
+		background-color: var(--color-drawer-danger-bg);
+		border: var(--border-width) solid var(--color-drawer-danger-border);
+		color: var(--color-drawer-danger-text);
+		font-size: 13px;
+		font-weight: 500;
 	}
 
 	/* Danger zone */

@@ -24,7 +24,7 @@
 	const labelFontWeight = HEALTH_RING_DEFAULTS.labelFontWeight;
 </script>
 
-<svg width={size} height={size} viewBox="0 0 {size} {size}" aria-label={label ? `${label}: ${percent}%` : `${percent}%`}>
+<svg width={size} height={size} viewBox="0 0 {size} {size}" aria-label={label ? `${label}: ${clampedPercent}%` : `${clampedPercent}%`}>
 	<circle
 		cx={center}
 		cy={center}

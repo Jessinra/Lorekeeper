@@ -17,7 +17,7 @@ github_issue: 292
 
 ---
 
-### Task 1: Design tokens + string constants
+## Task 1: Design tokens + string constants
 
 **Objective:** Add drawer-specific CSS variables to `app.css` and display strings to `strings.ts`.
 
@@ -96,7 +96,7 @@ export const DRAWER_STRINGS = {
 
 ---
 
-### Task 2: Create MemoryDetailDrawer.svelte — view mode
+## Task 2: Create MemoryDetailDrawer.svelte — view mode
 
 **Objective:** Create the drawer component with scrim overlay, slide-in panel, header with status badge, meta row, body section, links section, and view-mode footer.
 
@@ -237,7 +237,7 @@ export const DRAWER_STRINGS = {
 
 ---
 
-### Task 3: Edit mode + danger zone + keyboard shortcuts
+## Task 3: Edit mode + danger zone + keyboard shortcuts
 
 **Objective:** Add edit mode with form fields, danger zone, save/cancel, clipboard copy, and keyboard shortcuts.
 
@@ -329,7 +329,7 @@ function handleClose() {
 
 ---
 
-### Task 4: TypeScript types + integration verification
+## Task 4: TypeScript types + integration verification
 
 **Objective:** Create shared types for the drawer's memory data shape and verify the component compiles.
 

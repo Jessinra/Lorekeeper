@@ -35,4 +35,5 @@ export interface MemoryEditFields {
 	content?: string;
 	score?: number;
 	source_type?: string;
+	soft_deleted?: boolean;
 }

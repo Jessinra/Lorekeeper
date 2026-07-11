@@ -5,26 +5,29 @@
 		checked,
 		onChange,
 		label,
+		ariaLabel,
 	}: {
 		checked: boolean;
 		onChange?: (val: boolean) => void;
 		label?: string;
+		ariaLabel?: string;
 	} = $props();
+
+	const accessibleLabel = $derived(ariaLabel ?? (label ? `${label}, toggle` : 'Toggle switch'));
 
 	function toggle() {
 		onChange?.(!checked);
-	}
-</script>
+	}</script>
 
-<div
-	class="inline-flex items-center gap-2 cursor-pointer"
-	role="switch"
-	aria-checked={checked}
-	aria-label={label}
-	onclick={toggle}
-	onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }}}
-	tabindex="0"
->
+	<div
+		class="inline-flex items-center gap-2 cursor-pointer"
+		role="switch"
+		aria-checked={checked}
+		aria-label={accessibleLabel}
+		onclick={toggle}
+		onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }}}
+		tabindex="0"
+	>
 	<div
 		class="track"
 		data-on={checked}
