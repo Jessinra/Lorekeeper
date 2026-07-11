@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { DRAWER_STRINGS } from '$lib/constants/strings';
 	import OverlayScrim from '$lib/components/ui/OverlayScrim.svelte';
 	import ScorePill from '../../../components/ui/ScorePill.svelte';
@@ -33,6 +34,13 @@
 	let linksExpanded = $state(false);
 	let copyTooltipVisible = $state(false);
 	let drawerEl: HTMLElement | null = $state(null);
+
+	// Auto-focus drawer when it opens
+	$effect(() => {
+		if (open && memory && drawerEl) {
+			tick().then(() => drawerEl?.focus());
+		}
+	});
 
 	// Edit form state (cloned from memory on edit entry)
 	let editTitle = $state('');
