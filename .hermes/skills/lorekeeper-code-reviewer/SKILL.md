@@ -251,9 +251,9 @@ Every migration script (`scripts/migrate-*.py`) must be idempotent: running it t
 
 **Check sequence when reviewing dashboard_v2 changes:**
 
-1. `grep -n 'font-size:\|font-weight:\|padding-inline:\|padding:' src/dashboard_v2/src/components/**/*.svelte | grep -v 'var(' | grep -v 'transition'` — find values in `<style>` blocks
+1. `rg -n --glob '*.svelte' 'font-size:|font-weight:|padding-inline:|padding:' src/dashboard_v2/src/components | rg -v 'var\(|transition'` — find values in `<style>` blocks
 2. For each match, ask: **"Is this value used in more than one component?"** If yes, it should be a `@theme` token. If no, leave it.
-3. `grep -n 'px-3.*py-1\|h-7\|h-2\|w-2\|py-1\.5' src/dashboard_v2/src/components/**/*.svelte` — find Tailwind class literals that repeat across components
+3. `rg -n --glob '*.svelte' 'px-3.*py-1|h-7|h-2|w-2|py-1\.5' src/dashboard_v2/src/components` — find Tailwind class literals that repeat across components
 4. For each match, ask: **"Would changing this value require changing multiple components?"** If yes, extract to a constant. If no, leave it.
 5. Cross-reference `primitives.ts` for existing `*_DEFAULTS` objects — if a new component shares the same dimension pattern (e.g. another pill component), add to the existing group, don't create a new one-off
 

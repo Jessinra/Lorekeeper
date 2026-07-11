@@ -109,6 +109,20 @@
 	--color-shadow-lg: rgba(0, 0, 0, 0.1);
 	--color-shadow-xl: rgba(0, 0, 0, 0.2);
 
+	/* Drawer (MemoryDetailDrawer) */
+	--color-drawer-bg: #ffffff;
+	--color-drawer-border: #e5e7eb;
+	--color-drawer-divider: #e5e7eb;
+	--color-drawer-code-bg: #f9fafb;
+	--color-drawer-code-border: #e5e7eb;
+	--color-drawer-danger-bg: #fef2f2;
+	--color-drawer-danger-border: #fca5a5;
+	--color-drawer-danger-text: #dc2626;
+	--color-drawer-status-active: #16a34a;
+	--color-drawer-status-low: #d97706;
+	--color-drawer-status-decaying: #dc2626;
+	--color-drawer-status-deleted: #6b7280;
+
 	/* Solid surfaces used by toasts */
 	--color-toast-bg: rgba(17, 17, 17, 0.9);
 	--color-toast-text: #ffffff;

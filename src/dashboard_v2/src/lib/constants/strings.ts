@@ -115,3 +115,41 @@ export const EMPTY_STATE_STRINGS = {
 export const HEATMAP_GRID_STRINGS = {
 	ariaLabel: 'Heatmap grid' as const,
 } as const;
+
+// ── Memory Detail Drawer (LKPR-127) ──────────────────────────────────────────
+
+export const DRAWER_STRINGS = {
+	/** aria-label on the close button */
+	closeButtonAriaLabel: 'Close drawer',
+	/** aria-label on the drawer panel */
+	drawerAriaLabel: 'Memory detail',
+	/** Status badge labels */
+	statusActive: 'Active',
+	statusLowConfidence: 'Low confidence',
+	statusDecaying: 'Decaying',
+	statusDeleted: 'Deleted',
+	/** Danger zone section */
+	dangerZoneHeader: 'Danger Zone',
+	dangerZoneDelete: 'Delete this memory',
+	dangerZoneForget: 'Forget (soft-delete)',
+	dangerZoneAlreadyDeleted: 'Already deleted',
+	/** Meta field labels */
+	metaCreated: 'Created',
+	metaUpdated: 'Updated',
+	metaScore: 'Score',
+	metaConfidence: 'Confidence',
+	metaUsage: 'Usage count',
+	/** Links section */
+	linksHeader: 'links',
+	linksEmpty: 'No linked memories',
+	/** Body placeholders */
+	noDescription: 'No description',
+	/** Footer */
+	footerCopyId: 'Copy ID',
+	footerEdit: 'Edit',
+	footerCancel: 'Cancel',
+	footerSave: 'Save',
+	copyIdTooltip: 'Copied!',
+	/** Confirmation */
+	discardConfirm: 'Discard changes?',
+} as const;

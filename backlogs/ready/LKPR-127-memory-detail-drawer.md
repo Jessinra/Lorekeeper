@@ -13,12 +13,13 @@ github_issue: 292
 
 ## Key References
 
-Read only when you need detailed information
-
 - high level plan: docs/plans/dashboard-v2-epic.md
-- visuals: design/visuals/\*
-- mockups: design/mockups/\*
+- dashboard v2 scaffold: src/dashboard_v2/ — SvelteKit 5 + Svelte 5 + Tailwind v4 + TypeScript
 - design specification: design/Lorekeeper-Dashboard-v7-Design-Spec.md
+
+## Context
+
+This is a **Dashboard V2** ticket (LKPR-122-138 epic). The V2 dashboard lives at `src/dashboard_v2/` as a standalone SvelteKit 5 project using Svelte 5 runes (`$props`, `$state`, `$derived`), Tailwind v4, and TypeScript. UI primitives (ScorePill, NamespaceDot, RelationPill) are at `src/dashboard_v2/src/components/ui/` with barrel exports. Overlay components (Toast, ConfirmDialog, CommandPalette) are at `src/dashboard_v2/src/lib/components/overlays/`. The existing `OverlayScrim` component provides the scrim backdrop.
 
 ## Problem
 
@@ -136,24 +137,25 @@ Clicking "Copy ID" in view mode writes the memory's `lore_id` to `navigator.clip
 
 **New:**
 
-- `src/lorekeeper/dashboard/static/js/memory-drawer.js` — MemoryDetailDrawer module
-- `src/lorekeeper/dashboard/static/css/drawer.css` — drawer layout, animation, scrim styles
+- `src/dashboard_v2/src/lib/components/overlays/MemoryDetailDrawer.svelte` — MemoryDetailDrawer component (view + edit modes)
+- `src/dashboard_v2/src/lib/components/overlays/types.ts` — MemoryData and LinkData types
 
 **Modified:**
 
-- `src/lorekeeper/dashboard/routes/memories.py` — add `PATCH /api/memories/{id}` endpoint for editing memory fields
-- `src/lorekeeper/dashboard/static/index.html` — add drawer container div if needed
+- `src/dashboard_v2/src/app.css` — add drawer design tokens to `@theme` block
+- `src/dashboard_v2/src/lib/constants/strings.ts` — add DRAWER_STRINGS constants
 
 ## Dependencies
 
 - LKPR-126 (ScorePill, NamespaceDot, RelationPill primitives) — used in the meta row and links section
+- LKPR-122 (OverlayScrim, AppShell) — scrim backdrop and shell integration
 - LKPR-129 (Memories page) — provides the row-click trigger that opens the drawer
 
-PATCH endpoint depends on `MemoryStore.update_memory()` in the backend.
+PATCH endpoint already exists at `src/lorekeeper/dashboard/routes/memories.py` — no backend changes needed.
 
 ## Required Updates
 
-- **CLAUDE.md**: [ ] Add `static/js/memory-drawer.js` and `routes/memories` PATCH endpoint to project map
+- **CLAUDE.md**: [ ] Add `src/dashboard_v2/src/lib/components/overlays/` to project map
 - **README.md**: [ ] N/A
 - **Skills**: [ ] N/A
 - **Backlog**: [ ] N/A
@@ -165,7 +167,7 @@ PATCH endpoint depends on `MemoryStore.update_memory()` in the backend.
 
 ## Notes
 
-The drawer pattern mirrors the existing slide-in behavior that claude-mem's dashboard uses. The two-mode (view/edit) design keeps the default experience clean while still providing power-user editing.
+The drawer pattern mirrors the slide-in behavior of the existing `CommandPalette` overlay in the V2 dashboard. The two-mode (view/edit) design keeps the default experience clean while still providing power-user editing.
 
 This component is triggered by row clicks in the Memories page (LKPR-129) and the decay candidates table in the Health tab (LKPR-88).
 
