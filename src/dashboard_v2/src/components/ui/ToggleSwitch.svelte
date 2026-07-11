@@ -17,17 +17,18 @@
 
 	function toggle() {
 		onChange?.(!checked);
-	}</script>
+	}
+</script>
 
-	<div
-		class="inline-flex items-center gap-2 cursor-pointer"
-		role="switch"
-		aria-checked={checked}
-		aria-label={accessibleLabel}
-		onclick={toggle}
-		onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }}}
-		tabindex="0"
-	>
+<div
+	class="inline-flex items-center gap-2 cursor-pointer"
+	role="switch"
+	aria-checked={checked}
+	aria-label={accessibleLabel}
+	onclick={toggle}
+	onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }}}
+	tabindex="0"
+>
 	<div
 		class="track"
 		data-on={checked}
