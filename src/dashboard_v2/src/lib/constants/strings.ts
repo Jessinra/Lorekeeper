@@ -157,6 +157,8 @@ export const DRAWER_STRINGS = {
 // ── Relationship Drawer (LKPR-128) ────────────────────────────────────────────
 
 export const RELATION_DRAWER_STRINGS = {
+	/** aria-label on the close button */
+	closeButtonAriaLabel: 'Close drawer',
 	/** aria-label on the drawer panel */
 	drawerAriaLabel: 'Relationship',
 	/** Header subtitle prefix */
