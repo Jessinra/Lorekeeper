@@ -119,25 +119,18 @@ Drawer receives a `sourceId` and `targetId` (or a `suggestionId` for review page
 
 **New:**
 
-- `src/lorekeeper/dashboard/static/js/relation-drawer.js` — RelationshipDrawer module
-- `src/lorekeeper/dashboard/static/css/relation-drawer.css` — two-card layout, footer per-page variants
-
-**Modified:**
-
-- `src/lorekeeper/dashboard/routes/links.py` — add `DELETE /api/links/{id}` endpoint
-- `src/lorekeeper/services/link_store.py` — add `delete_link(id)` method
-- `src/lorekeeper/dashboard/static/index.html` — add relationship drawer container div
+- `src/dashboard_v2/src/lib/components/overlays/RelationshipDrawer.svelte` — RelationshipDrawer component
 
 ## Dependencies
 
 - LKPR-126 (ScorePill, NamespaceDot, RelationPill primitives) — used on the memory cards
 - LKPR-127 (MemoryDetailDrawer) — clicking a card opens the detail drawer for that memory
 
-Backend: `LinkStore.delete_link()`, `LinkSuggestionStore.update_suggestion_status()` must exist or be added.
+Backend: `LinkStore.delete_link()` must exist or be added.
 
 ## Required Updates
 
-- **CLAUDE.md**: [ ] Add `static/js/relation-drawer.js` to project map, add `DELETE /api/links/{id}` to routes
+- **CLAUDE.md**: [ ] N/A — dashboard_v2 is a separate SvelteKit app
 - **README.md**: [ ] N/A
 - **Skills**: [ ] N/A
 - **Backlog**: [ ] N/A

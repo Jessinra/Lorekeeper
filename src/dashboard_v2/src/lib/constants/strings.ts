@@ -153,3 +153,31 @@ export const DRAWER_STRINGS = {
 	/** Confirmation */
 	discardConfirm: 'Discard changes?',
 } as const;
+
+// ── Relationship Drawer (LKPR-128) ────────────────────────────────────────────
+
+export const RELATION_DRAWER_STRINGS = {
+	/** aria-label on the drawer panel */
+	drawerAriaLabel: 'Relationship',
+	/** Header subtitle prefix */
+	noDescription: 'No description',
+	/** Content preview area */
+	showFull: 'Show full',
+	/** Placeholder when content is empty */
+	noContent: 'No content',
+	/** Badge for soft-deleted memories */
+	deletedBadge: 'Deleted',
+	/** Footer: links page */
+	deleteLink: 'Delete link',
+	/** Footer: review suggestions */
+	accept: 'Accept',
+	reject: 'Reject',
+	/** Footer: review stale */
+	refresh: 'Refresh',
+	/** Loading label */
+	loading: 'Loading memories…',
+	/** Error state */
+	errorFetch: 'Failed to load memory details',
+	/** Confirmation dialog for delete */
+	deleteConfirm: 'Delete this link?',
+} as const;
