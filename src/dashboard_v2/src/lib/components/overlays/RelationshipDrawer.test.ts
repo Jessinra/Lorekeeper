@@ -241,6 +241,14 @@ describe('RelationshipDrawer', () => {
 	});
 
 	describe('page: review-suggestions footer', () => {
+		beforeEach(() => {
+			vi.useFakeTimers();
+		});
+
+		afterEach(() => {
+			vi.useRealTimers();
+		});
+
 		it('shows Accept and Reject buttons', () => {
 			const { getByText } = render(RelationshipDrawer, {
 				props: baseProps({
@@ -265,6 +273,21 @@ describe('RelationshipDrawer', () => {
 			expect(onAccept).toHaveBeenCalledWith('sug-1');
 		});
 
+		it('calls onClose after 1500ms on accept success', async () => {
+			const onClose = vi.fn();
+			const { getByText } = render(RelationshipDrawer, {
+				props: baseProps({
+					page: 'review-suggestions',
+					suggestionId: 'sug-1',
+					onClose,
+				}),
+			});
+			await fireEvent.click(getByText(S.accept));
+			expect(onClose).not.toHaveBeenCalled();
+			await vi.advanceTimersByTimeAsync(1500);
+			expect(onClose).toHaveBeenCalledOnce();
+		});
+
 		it('calls onReject on reject click', async () => {
 			const onReject = vi.fn().mockResolvedValue(true);
 			const { getByText } = render(RelationshipDrawer, {
@@ -277,14 +300,72 @@ describe('RelationshipDrawer', () => {
 			await fireEvent.click(getByText(S.reject));
 			expect(onReject).toHaveBeenCalledWith('sug-1');
 		});
+
+		it('calls onClose after 1500ms on reject success', async () => {
+			const onClose = vi.fn();
+			const { getByText } = render(RelationshipDrawer, {
+				props: baseProps({
+					page: 'review-suggestions',
+					suggestionId: 'sug-1',
+					onClose,
+				}),
+			});
+			await fireEvent.click(getByText(S.reject));
+			expect(onClose).not.toHaveBeenCalled();
+			await vi.advanceTimersByTimeAsync(1500);
+			expect(onClose).toHaveBeenCalledOnce();
+		});
+
+		it('does not call onClose on reject when timer is cleared by close', async () => {
+			const onClose = vi.fn();
+			const { getByText, getByRole } = render(RelationshipDrawer, {
+				props: baseProps({
+					page: 'review-suggestions',
+					suggestionId: 'sug-1',
+					onClose,
+				}),
+			});
+			await fireEvent.click(getByText(S.reject));
+			// Close drawer via Escape before timer fires
+			await fireEvent.keyDown(getByRole('dialog'), { key: 'Escape' });
+			expect(onClose).toHaveBeenCalledTimes(1); // from Escape
+			// Advance past the auto-close timer — should not fire again
+			await vi.advanceTimersByTimeAsync(1500);
+			expect(onClose).toHaveBeenCalledTimes(1);
+		});
 	});
 
 	describe('page: review-stale footer', () => {
-		it('shows Refresh and Delete link buttons', () => {
+		it('shows Delete link and Refresh buttons', () => {
 			const { getByText } = render(RelationshipDrawer, {
 				props: baseProps({ page: 'review-stale' }),
 			});
+			expect(getByText(S.deleteLink)).toBeInTheDocument();
 			expect(getByText(S.refresh)).toBeInTheDocument();
+		});
+
+		it('shows confirmation before calling onDelete', async () => {
+			const onDelete = vi.fn().mockResolvedValue(true);
+			const { getByText } = render(RelationshipDrawer, {
+				props: baseProps({ page: 'review-stale', onDelete }),
+			});
+			await fireEvent.click(getByText(S.deleteLink));
+			expect(onDelete).not.toHaveBeenCalled();
+			expect(getByText(S.deleteConfirm)).toBeInTheDocument();
+
+			await fireEvent.click(getByText(S.deleteConfirm));
+			expect(onDelete).toHaveBeenCalledWith('link-1');
+		});
+
+		it('Cancel button exits confirmation mode', async () => {
+			const onDelete = vi.fn();
+			const { getByText } = render(RelationshipDrawer, {
+				props: baseProps({ page: 'review-stale', onDelete }),
+			});
+			await fireEvent.click(getByText(S.deleteLink));
+			expect(getByText(S.deleteConfirm)).toBeInTheDocument();
+
+			await fireEvent.click(getByText(S.cancel));
 			expect(getByText(S.deleteLink)).toBeInTheDocument();
 		});
 
@@ -303,6 +384,26 @@ describe('RelationshipDrawer', () => {
 			const { getByText } = render(RelationshipDrawer, {
 				props: baseProps({
 					sourceMemory: null,
+					targetMemory: null,
+				}),
+			});
+			expect(getByText(S.loading)).toBeInTheDocument();
+		});
+
+		it('shows loading message when only source memory is null', () => {
+			const { getByText } = render(RelationshipDrawer, {
+				props: baseProps({
+					sourceMemory: null,
+					targetMemory: makeMemory({ lore_id: 'mem-2', title: 'Target' }),
+				}),
+			});
+			expect(getByText(S.loading)).toBeInTheDocument();
+		});
+
+		it('shows loading message when only target memory is null', () => {
+			const { getByText } = render(RelationshipDrawer, {
+				props: baseProps({
+					sourceMemory: makeMemory({ lore_id: 'mem-1', title: 'Source' }),
 					targetMemory: null,
 				}),
 			});
