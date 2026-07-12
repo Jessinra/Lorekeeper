@@ -38,7 +38,7 @@
 
 <svg width={svgWidth} height={svgHeight} role="img" aria-label={HEATMAP_GRID_STRINGS.ariaLabel}>
 	<!-- Column labels -->
-	{#each colLabels as label, ci}
+	{#each colLabels as label, ci (ci)}
 		<text
 			x={rowLabelWidth + ci * (cellSize + gap) + cellSize / 2}
 			y={colLabelHeight - 4}
@@ -51,7 +51,7 @@
 	{/each}
 
 	<!-- Row labels + cells -->
-	{#each data as row, ri}
+	{#each data as row, ri (ri)}
 		<text
 			x={rowLabelWidth - 6}
 			y={colLabelHeight + ri * (cellSize + gap) + cellSize / 2 + 1}
@@ -63,7 +63,7 @@
 			{rowLabels[ri] ?? ''}
 		</text>
 
-		{#each row as cell, ci}
+		{#each row as cell, ci (ci)}
 			<g>
 				<rect
 					x={rowLabelWidth + ci * (cellSize + gap)}

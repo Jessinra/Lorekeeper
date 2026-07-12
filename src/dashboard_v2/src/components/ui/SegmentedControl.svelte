@@ -47,7 +47,7 @@
 	style="background-color: var(--color-seg-bg);"
 	onkeydown={handleKeydown}
 >
-	{#each options as opt}
+	{#each options as opt (opt.value)}
 		<button
 			type="button"
 			class="rounded-md px-3.5 py-1 text-sm font-medium transition-colors duration-150"

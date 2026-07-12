@@ -41,7 +41,7 @@
 	// Auto-focus drawer when it opens
 	$effect(() => {
 		if (open && memory && drawerEl) {
-			tick().then(() => drawerEl?.focus());
+			void tick().then(() => { drawerEl?.focus(); });
 		}
 		if (!open) {
 			saveError = null;
@@ -115,7 +115,7 @@
 
 	const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
-	let previouslyFocused: HTMLElement | null = null;
+	
 
 	function trapFocus(e: KeyboardEvent) {
 		if (e.key !== 'Tab' || !drawerEl) return;
@@ -182,7 +182,7 @@
 		if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
 			if (editMode) {
 				e.preventDefault();
-				handleSave();
+				void handleSave();
 			}
 		}
 	}
@@ -237,12 +237,10 @@
 	function handleForget() {
 		if (!memory) return;
 		if (!confirm(DRAWER_STRINGS.dangerZoneForget)) return;
-		onSave(memory.lore_id, { soft_deleted: true });
+		void onSave(memory.lore_id, { soft_deleted: true });
 	}
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 {#if open && memory}
 	<OverlayScrim onclick={handleClose} />
 	<div
@@ -376,7 +374,7 @@
 			{#if linksExpanded}
 				<div id="drawer-links-list" class="links-list">
 					{#if links.length > 0}
-						{#each links as link}
+						{#each links as link (link.target_id)}
 							<button
 								type="button"
 								class="link-item"
