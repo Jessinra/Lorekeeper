@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from lorekeeper.dashboard.handler import DashboardHandler
@@ -21,8 +21,37 @@ def _handler(request: Request) -> DashboardHandler:
 
 
 @router.get("/api/memories")
-def list_memories(request: Request, include_deleted: bool = False) -> list[dict[str, Any]]:
-    return _handler(request).list_memories(include_deleted=include_deleted)
+def list_memories(
+    request: Request,
+    include_deleted: bool = False,
+    page: int | None = Query(None, ge=1),
+    per_page: int = Query(50, ge=1, le=200),
+    q: str = "",
+    namespace: str | None = None,
+    filter: str | None = None,
+    sort: str = "updated_at",
+    sort_dir: str = "desc",
+) -> dict[str, Any] | list[dict[str, Any]]:
+    handler = _handler(request)
+    if page is not None:
+        # Paginated mode
+        return handler.list_memories_paginated(
+            page=page, per_page=per_page, query=q,
+            namespace=namespace, include_deleted=include_deleted,
+            filter_preset=filter, sort=sort, sort_dir=sort_dir,
+        )
+    # Legacy mode — return flat list
+    return handler.list_memories(include_deleted=include_deleted)
+
+
+@router.get("/api/memories/counts")
+def memory_counts(request: Request) -> dict[str, int]:
+    return _handler(request).get_memory_counts()
+
+
+@router.get("/api/namespaces")
+def namespaces(request: Request) -> list[str]:
+    return _handler(request).list_namespaces()
 
 
 @router.get("/api/memories/{memory_id}")

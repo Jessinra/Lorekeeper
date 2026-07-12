@@ -85,6 +85,12 @@ export const PAGINATION_STRINGS = {
 	rangeLabel: 'Showing {start}–{end} of {total}',
 	/** Template for the page indicator: "Page {page} of {pages}" */
 	pageIndicator: 'Page {page} of {pages}',
+	/** aria-label for the page size <select> */
+	pageSizeLabel: 'Page size',
+	/** Page size option labels */
+	pageSize25: '25',
+	pageSize50: '50',
+	pageSize100: '100',
 } as const;
 
 // ── Confirm Dialog ────────────────────────────────────────────────────────────
@@ -114,6 +120,43 @@ export const EMPTY_STATE_STRINGS = {
 // ── HeatmapGrid ──
 export const HEATMAP_GRID_STRINGS = {
 	ariaLabel: 'Heatmap grid' as const,
+} as const;
+
+// ── Memories Page (LKPR-129) ─────────────────────────────────────────────────
+
+export const MEMORIES_STRINGS = {
+	/** Text input placeholder */
+	searchPlaceholder: 'Search memories\u2026',
+	/** Namespace dropdown default label */
+	namespaceAll: 'All',
+	/** aria-label for the namespace filter <select> */
+	namespaceAriaLabel: 'Filter by namespace',
+	/** Show deleted toggle label */
+	showDeletedLabel: 'Show deleted',
+	/** New memory button label */
+	newMemoryButton: '+ New',
+	/** Column headers */
+	colTitle: 'Title',
+	colNamespace: 'NS',
+	colScore: 'Score',
+	colConfidence: 'Conf',
+	colUsage: 'Uses',
+	colLinks: 'Links',
+	colUpdated: 'Updated',
+	/** Filter chip labels */
+	filterAll: 'All',
+	filterNeedsReview: 'Needs review',
+	filterHighConfidence: 'High confidence',
+	filterStale: 'Stale >30d',
+	/** Empty state */
+	emptyTitle: 'No memories found',
+	emptyMessage: 'Try adjusting your search or filters',
+	/** Skeleton aria-label */
+	skeletonLabel: 'Loading memories',
+	/** aria-label for the toolbar <div> */
+	toolbarGroupAriaLabel: 'Memory toolbar',
+	/** aria-label for the filter chips <div> */
+	filterGroupAriaLabel: 'Memory filter presets',
 } as const;
 
 // ── Memory Detail Drawer (LKPR-127) ──────────────────────────────────────────

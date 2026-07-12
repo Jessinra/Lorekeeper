@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import UTC, datetime
-from typing import cast
+from typing import ClassVar, cast
 
 from lorekeeper.infra.database import Database
 
@@ -143,6 +143,83 @@ class MemoryStore:
             sql += " WHERE " + " AND ".join(conditions)
 
         return self._conn.execute(sql, params).fetchall()
+
+    _FILTER_CONDITIONS: ClassVar[dict[str, str]] = {
+        "needs_review": "confidence < 5 AND score < 6",
+        "high_confidence": "confidence >= 8 AND score >= 7",
+        "stale_30d": "updated_at < datetime('now', '-30 days')",
+    }
+
+    def search_memory_rows(
+        self,
+        page: int = 1,
+        per_page: int = 50,
+        query: str = "",
+        namespace: str | None = None,
+        include_deleted: bool = False,
+        filter_preset: str | None = None,
+        sort: str = "updated_at",
+        sort_dir: str = "desc",
+    ) -> tuple[list[sqlite3.Row], int]:
+        """Paginated, filtered, sorted memory listing. Returns (rows, total_count)."""
+        conditions: list[str] = []
+        params: list[object] = []
+
+        if not include_deleted:
+            conditions.append("soft_deleted = 0")
+
+        if query:
+            conditions.append("(title LIKE ? OR content LIKE ? OR description LIKE ?)")
+            like_query = f"%{query}%"
+            params.extend([like_query, like_query, like_query])
+
+        if namespace:
+            conditions.append("namespace = ?")
+            params.append(namespace)
+
+        if filter_preset in self._FILTER_CONDITIONS:
+            conditions.append(self._FILTER_CONDITIONS[filter_preset])
+
+        where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
+        sort_dir_sql = "ASC" if sort_dir.upper() != "DESC" else "DESC"
+        allowed_sort_columns = {
+            "title", "namespace", "score", "confidence",
+            "usage_count", "updated_at", "created_at",
+        }
+        sort_col = sort if sort in allowed_sort_columns else "updated_at"
+
+        count_sql = f"SELECT COUNT(*) FROM memories{where_clause}"
+        total: int = self._conn.execute(count_sql, params).fetchone()[0]
+
+        offset = (page - 1) * per_page
+        data_sql = (
+            f"SELECT * FROM memories{where_clause}"
+            f" ORDER BY {sort_col} {sort_dir_sql} LIMIT ? OFFSET ?"
+        )
+        return self._conn.execute(data_sql, [*params, per_page, offset]).fetchall(), total
+
+    def get_counts_by_filter(self) -> dict[str, int]:
+        """Returns counts for each filter preset (excluding soft-deleted rows)."""
+        deleted_clause = "AND soft_deleted = 0"
+
+        def _count(where: str, params: list[object] | None = None) -> int:
+            row = self._conn.execute(
+                f"SELECT COUNT(*) FROM memories WHERE {where}", params or []
+            ).fetchone()
+            return row[0] if row else 0
+
+        counts: dict[str, int] = {
+            "all": _count(f"1=1 {deleted_clause}"),
+        }
+        for key, condition in self._FILTER_CONDITIONS.items():
+            counts[key] = _count(f"({condition}) {deleted_clause}")
+        return counts
+
+    def get_distinct_namespaces(self) -> list[str]:
+        rows = self._conn.execute(
+            "SELECT DISTINCT namespace FROM memories WHERE soft_deleted = 0 ORDER BY namespace"
+        ).fetchall()
+        return [r[0] for r in rows]
 
     def update_memory_fields(self, id: str, **fields: object) -> None:
         """Update memory fields. `updated_at` is always set to now — passing
