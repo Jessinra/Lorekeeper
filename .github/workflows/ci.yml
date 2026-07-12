@@ -119,7 +119,7 @@ jobs:
         run: npx @biomejs/biome check src/lorekeeper/dashboard/static/js/ 2>&1 || echo "No JS changes detected — skipping"
 
       - name: Setup Node.js for Dashboard V2
-        uses: actions/setup-node@v8
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "npm"
