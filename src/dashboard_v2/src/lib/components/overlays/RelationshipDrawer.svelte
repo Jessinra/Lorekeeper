@@ -49,6 +49,7 @@
 	let actionPending = $state(false);
 	let actionResult: 'accepted' | 'rejected' | null = $state(null);
 	let confirmDelete = $state(false);
+	let closeTimer: ReturnType<typeof setTimeout> | null = $state(null);
 
 	// Auto-focus drawer on open
 	$effect(() => {
@@ -59,6 +60,10 @@
 			actionResult = null;
 			actionPending = false;
 			confirmDelete = false;
+			if (closeTimer) {
+				clearTimeout(closeTimer);
+				closeTimer = null;
+			}
 		}
 	});
 
@@ -144,7 +149,7 @@
 			const success = await onAccept(suggestionId);
 			if (success) {
 				actionResult = 'accepted';
-				setTimeout(() => onClose(), 1500);
+				closeTimer = setTimeout(() => onClose(), 1500);
 			}
 		} finally {
 			actionPending = false;
@@ -158,7 +163,7 @@
 			const success = await onReject(suggestionId);
 			if (success) {
 				actionResult = 'rejected';
-				setTimeout(() => onClose(), 1500);
+				closeTimer = setTimeout(() => onClose(), 1500);
 			}
 		} finally {
 			actionPending = false;
@@ -220,7 +225,7 @@
 				</div>
 
 				<MemoryCard memory={targetMemory} conflictTint={hasConflictTint} onClick={() => handleCardClick(targetMemory.lore_id)} />
-			{:else if !sourceMemory && !targetMemory}
+			{:else}
 				<div class="empty-state">{S.loading}</div>
 			{/if}
 		</div>
@@ -243,7 +248,7 @@
 						disabled={actionPending}
 						onclick={handleDeleteCancel}
 					>
-						Cancel
+						{S.cancel}
 					</button>
 				{:else}
 					<button
@@ -279,14 +284,33 @@
 					</button>
 				{/if}
 			{:else if page === 'review-stale'}
-				<button
-					type="button"
-					class="btn-danger"
-					disabled={actionPending}
-					onclick={handleDelete}
-				>
-					{actionPending ? '…' : S.deleteLink}
-				</button>
+				{#if confirmDelete}
+					<button
+						type="button"
+						class="btn-confirm"
+						disabled={actionPending}
+						onclick={handleDelete}
+					>
+						{actionPending ? '…' : S.deleteConfirm}
+					</button>
+					<button
+						type="button"
+						class="btn-outline"
+						disabled={actionPending}
+						onclick={handleDeleteCancel}
+					>
+						{S.cancel}
+					</button>
+				{:else}
+					<button
+						type="button"
+						class="btn-danger"
+						disabled={actionPending}
+						onclick={handleDelete}
+					>
+						{actionPending ? '…' : S.deleteLink}
+					</button>
+				{/if}
 				<button
 					type="button"
 					class="btn-refresh"

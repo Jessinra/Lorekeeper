@@ -171,6 +171,8 @@ export const RELATION_DRAWER_STRINGS = {
 	deletedBadge: 'Deleted',
 	/** Footer: links page */
 	deleteLink: 'Delete link',
+	/** Footer: review stale / links page — cancel button in confirmation */
+	cancel: 'Cancel',
 	/** Footer: review suggestions */
 	accept: 'Accept',
 	reject: 'Reject',
@@ -178,8 +180,6 @@ export const RELATION_DRAWER_STRINGS = {
 	refresh: 'Refresh',
 	/** Loading label */
 	loading: 'Loading memories…',
-	/** Error state */
-	errorFetch: 'Failed to load memory details',
 	/** Confirmation dialog for delete */
 	deleteConfirm: 'Delete this link?',
 } as const;
