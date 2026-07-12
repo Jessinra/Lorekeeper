@@ -85,6 +85,8 @@ export const PAGINATION_STRINGS = {
 	rangeLabel: 'Showing {start}–{end} of {total}',
 	/** Template for the page indicator: "Page {page} of {pages}" */
 	pageIndicator: 'Page {page} of {pages}',
+	/** aria-label for the page size <select> */
+	pageSizeLabel: 'Page size',
 } as const;
 
 // ── Confirm Dialog ────────────────────────────────────────────────────────────
@@ -123,6 +125,8 @@ export const MEMORIES_STRINGS = {
 	searchPlaceholder: 'Search memories\u2026',
 	/** Namespace dropdown default label */
 	namespaceAll: 'All',
+	/** aria-label for the namespace filter <select> */
+	namespaceAriaLabel: 'Filter by namespace',
 	/** Show deleted toggle label */
 	showDeletedLabel: 'Show deleted',
 	/** New memory button label */
@@ -149,6 +153,10 @@ export const MEMORIES_STRINGS = {
 	pageSize100: '100',
 	/** Skeleton aria-label */
 	skeletonLabel: 'Loading memories',
+	/** aria-label for the toolbar <div> */
+	toolbarGroupAriaLabel: 'Memory toolbar',
+	/** aria-label for the filter chips <div> */
+	filterGroupAriaLabel: 'Memory filter presets',
 } as const;
 
 // ── Memory Detail Drawer (LKPR-127) ──────────────────────────────────────────

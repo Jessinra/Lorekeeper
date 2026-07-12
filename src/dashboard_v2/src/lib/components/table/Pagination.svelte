@@ -7,12 +7,14 @@
 		totalRows: number;
 		page?: number;
 		pageSize?: number;
+		showPageSize?: boolean;
 	}
 
 	let {
 		totalRows,
 		page = $bindable(1),
-		pageSize = 50
+		pageSize = $bindable(50),
+		showPageSize = false
 	}: Props = $props();
 
 	let totalPages = $derived(Math.max(1, Math.ceil(totalRows / pageSize)));
@@ -80,6 +82,18 @@
 			<Icon path={ICON_ARROW_RIGHT} size={16} />
 		</button>
 	</div>
+
+	{#if showPageSize}
+		<select
+			class="page-size-select"
+			bind:value={pageSize}
+			aria-label={PAGINATION_STRINGS.pageSizeLabel}
+		>
+			<option value={25}>25</option>
+			<option value={50}>50</option>
+			<option value={100}>100</option>
+		</select>
+	{/if}
 </div>
 
 <style>
@@ -137,5 +151,14 @@
 		white-space: nowrap;
 		min-width: var(--pagination-page-min-width);
 		text-align: center;
+	}
+
+	.page-size-select {
+		padding: 4px 8px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-input);
+		font-size: 12px;
+		background: var(--color-surface);
+		color: var(--color-text-primary);
 	}
 </style>
