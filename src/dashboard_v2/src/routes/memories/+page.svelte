@@ -109,10 +109,22 @@
 		try { namespaces = await fetchNamespaces(); } catch { /* non-critical */ }
 	}
 
-	// ── Initial load ─────────────────────────────────────────────────────────
+	// ── Initial load + react to page changes from Pagination ──────────────
+
+	let firstLoad = true;
 
 	$effect(() => {
-		void Promise.all([loadMemories(), loadCounts(), loadNamespaces()]);
+		if (firstLoad) {
+			firstLoad = false;
+			void Promise.all([loadMemories(), loadCounts(), loadNamespaces()]);
+		}
+	});
+
+	// Separate effect for Pagination page changes (prev/next via bind:page)
+	$effect(() => {
+		if (currentPage && !firstLoad) {
+			void loadMemories();
+		}
 	});
 
 	// ── Handlers ───────────────────────────────────────────────────────────────
@@ -147,10 +159,7 @@
 		void loadMemories();
 	}
 
-	function onPageChange(p: number) {
-		currentPage = p;
-		void loadMemories();
-	}
+	// onPageChange handled by Pagination's bind:page + $effect below
 
 	function onPageSizeChange(e: Event) {
 		perPage = parseInt((e.target as HTMLSelectElement).value, 10);
@@ -277,7 +286,7 @@
 			aria-label="Filter by namespace"
 		>
 			<option value="">{S.namespaceAll}</option>
-			{#each namespaces as ns}
+			{#each namespaces as ns (ns)}
 				<option value={ns}>{ns}</option>
 			{/each}
 		</select>
@@ -316,7 +325,7 @@
 	>
 		{#snippet pagination()}
 			<div class="pagination-bar">
-				<Pagination totalRows={totalMemories} page={currentPage} />
+				<Pagination totalRows={totalMemories} bind:page={currentPage} />
 				<select
 					class="page-size-select"
 					value={perPage}
