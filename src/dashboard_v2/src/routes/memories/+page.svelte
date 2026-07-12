@@ -110,9 +110,11 @@
 		}
 	});
 
-	// Separate effect for Pagination page changes (prev/next via bind:page)
+	// Separate effect for Pagination/DataTable changes (page, perPage, sort)
 	$effect(() => {
-		if (currentPage && !firstLoad) {
+		// Access reactive deps to establish tracking
+		void [currentPage, perPage, sortColumn, sortDirection];
+		if (!firstLoad) {
 			void loadMemories();
 		}
 	});

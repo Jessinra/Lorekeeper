@@ -89,9 +89,9 @@
 			bind:value={pageSize}
 			aria-label={PAGINATION_STRINGS.pageSizeLabel}
 		>
-			<option value={25}>25</option>
-			<option value={50}>50</option>
-			<option value={100}>100</option>
+			<option value={25}>{PAGINATION_STRINGS.pageSize25}</option>
+			<option value={50}>{PAGINATION_STRINGS.pageSize50}</option>
+			<option value={100}>{PAGINATION_STRINGS.pageSize100}</option>
 		</select>
 	{/if}
 </div>

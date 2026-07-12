@@ -87,6 +87,10 @@ export const PAGINATION_STRINGS = {
 	pageIndicator: 'Page {page} of {pages}',
 	/** aria-label for the page size <select> */
 	pageSizeLabel: 'Page size',
+	/** Page size option labels */
+	pageSize25: '25',
+	pageSize50: '50',
+	pageSize100: '100',
 } as const;
 
 // ── Confirm Dialog ────────────────────────────────────────────────────────────
@@ -147,10 +151,6 @@ export const MEMORIES_STRINGS = {
 	/** Empty state */
 	emptyTitle: 'No memories found',
 	emptyMessage: 'Try adjusting your search or filters',
-	/** Page size options */
-	pageSize25: '25',
-	pageSize50: '50',
-	pageSize100: '100',
 	/** Skeleton aria-label */
 	skeletonLabel: 'Loading memories',
 	/** aria-label for the toolbar <div> */

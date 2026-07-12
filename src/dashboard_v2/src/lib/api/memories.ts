@@ -71,7 +71,9 @@ function buildQuery(params: MemoriesParams): string {
 	return parts.length ? '?' + parts.join('&') : '';
 }
 
-export async function fetchMemories(params: MemoriesParams = {}): Promise<PaginatedResponse> {
+export async function fetchMemories(
+	params: MemoriesParams & { page: number } = { page: 1 },
+): Promise<PaginatedResponse> {
 	const qs = buildQuery(params);
 	return api<PaginatedResponse>('GET', `/api/memories${qs}`);
 }
