@@ -7,37 +7,27 @@
 	import FilterChip from '../../components/ui/FilterChip.svelte';
 	import ToggleSwitch from '../../components/ui/ToggleSwitch.svelte';
 	import Pagination from '$lib/components/table/Pagination.svelte';
+	import Icon from '$lib/components/ui/Icon.svelte';
 	import MemoryDetailDrawer from '$lib/components/overlays/MemoryDetailDrawer.svelte';
 	import type { MemoryData, LinkData, MemoryEditFields } from '$lib/components/overlays/types.js';
 	import { MEMORIES_STRINGS as S } from '$lib/constants/strings.js';
 	import { ICON_SEARCH, ICON_TABLE_EMPTY } from '$lib/constants/icons.js';
 	import type { MemoryRow, MemoryCounts } from '$lib/api/memories.js';
 	import { fetchMemories, fetchMemoryCounts, fetchNamespaces, fetchMemoryDetail } from '$lib/api/memories.js';
+	import { relativeTime } from '$lib/time.js';
+	import { readSearchParam, readSearchParamBool, readSearchParamInt } from '$lib/url.js';
 
 	// ── URL state helpers ──────────────────────────────────────────────────────
 
-	function readUrlParam(key: string, fallback: string): string {
-		return page.url.searchParams.get(key) ?? fallback;
-	}
-	function readUrlParamBool(key: string): boolean {
-		return page.url.searchParams.get(key) === 'true';
-	}
-	function readUrlParamInt(key: string, fallback: number): number {
-		const v = page.url.searchParams.get(key);
-		return v ? parseInt(v, 10) : fallback;
-	}
-
-	// ── Reactive state from URL ───────────────────────────────────────────────
-
-	let searchQuery = $state(readUrlParam('q', ''));
-	let selectedNamespace = $state(readUrlParam('namespace', ''));
-	let showDeleted = $state(readUrlParamBool('include_deleted'));
-	let activeFilter = $state(readUrlParam('filter', ''));
-	let currentPage = $state(readUrlParamInt('page', 1));
-	let perPage = $state(readUrlParamInt('per_page', 50));
-	let sortColumn = $state(readUrlParam('sort', 'updated_at'));
+	let searchQuery = $state(readSearchParam((k) => page.url.searchParams.get(k), 'q', ''));
+	let selectedNamespace = $state(readSearchParam((k) => page.url.searchParams.get(k), 'namespace', ''));
+	let showDeleted = $state(readSearchParamBool((k) => page.url.searchParams.get(k), 'include_deleted'));
+	let activeFilter = $state(readSearchParam((k) => page.url.searchParams.get(k), 'filter', ''));
+	let currentPage = $state(readSearchParamInt((k) => page.url.searchParams.get(k), 'page', 1));
+	let perPage = $state(readSearchParamInt((k) => page.url.searchParams.get(k), 'per_page', 50));
+	let sortColumn = $state(readSearchParam((k) => page.url.searchParams.get(k), 'sort', 'updated_at'));
 	let sortDirection = $state<'asc' | 'desc'>(
-		readUrlParam('sort_dir', 'desc') as 'asc' | 'desc',
+		readSearchParam((k) => page.url.searchParams.get(k), 'sort_dir', 'desc') as 'asc' | 'desc',
 	);
 
 	// ── Data state ────────────────────────────────────────────────────────────
@@ -134,38 +124,29 @@
 		clearTimeout(searchTimer);
 		searchTimer = setTimeout(() => {
 			searchQuery = value;
-			currentPage = 1;
 			if (activeFilter) activeFilter = '';
-			void loadMemories();
+			resetAndLoad();
 		}, 300);
 	}
 
 	function onNamespaceChange(e: Event) {
 		selectedNamespace = (e.target as HTMLSelectElement).value;
-		currentPage = 1;
-		void loadMemories();
+		resetAndLoad();
 	}
 
 	function onToggleDeleted(val: boolean) {
 		showDeleted = val;
-		currentPage = 1;
-		void loadMemories();
+		resetAndLoad();
 	}
 
 	function onFilterClick(filter: string) {
 		activeFilter = activeFilter === filter ? '' : filter;
 		if (searchQuery) searchQuery = '';
-		currentPage = 1;
-		void loadMemories();
+		resetAndLoad();
 	}
 
 	// onPageChange handled by Pagination's bind:page + $effect below
-
-	function onPageSizeChange(e: Event) {
-		perPage = parseInt((e.target as HTMLSelectElement).value, 10);
-		currentPage = 1;
-		void loadMemories();
-	}
+	// onPageSizeChange handled by Pagination's bind:pageSize + $effect below
 
 	function onRowClick(row: MemoryRow) {
 		selectedMemory = null;
@@ -198,27 +179,21 @@
 
 	// ── Helpers ────────────────────────────────────────────────────────────────
 
-	function relativeTime(iso: string): string {
-		const d = new Date(iso);
-		const now = new Date();
-		const diffMs = now.getTime() - d.getTime();
-		const diffMin = Math.floor(diffMs / 60000);
-		if (diffMin < 1) return 'now';
-		if (diffMin < 60) return `${diffMin}m ago`;
-		const diffHrs = Math.floor(diffMin / 60);
-		if (diffHrs < 24) return `${diffHrs}h ago`;
-		const diffDays = Math.floor(diffHrs / 24);
-		if (diffDays < 7) return `${diffDays}d ago`;
-		return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-	}
+	const COUNT_KEY_MAP: Record<string, keyof MemoryCounts> = {
+		'': 'all',
+		needs_review: 'needs_review',
+		high_confidence: 'high_confidence',
+		stale_30d: 'stale_30d',
+	};
 
 	function filterChipCount(key: string): number | undefined {
-		if (!counts) return undefined;
-		if (key === '') return counts.all;
-		if (key === 'needs_review') return counts.needs_review;
-		if (key === 'high_confidence') return counts.high_confidence;
-		if (key === 'stale_30d') return counts.stale_30d;
-		return undefined;
+		return counts?.[COUNT_KEY_MAP[key]];
+	}
+
+	// Reset to page 1 and reload — used by all filter/toggle/search handlers
+	function resetAndLoad() {
+		currentPage = 1;
+		void loadMemories();
 	}
 
 	// ── Derived ────────────────────────────────────────────────────────────────
@@ -267,9 +242,9 @@
 
 <PageShell title="Memories">
 	<!-- Toolbar -->
-	<div class="toolbar">
+	<div class="toolbar" aria-label={S.toolbarGroupAriaLabel}>
 		<div class="search-wrapper">
-			<span class="search-icon" aria-hidden="true" style="width:16px;height:16px;">{@html ICON_SEARCH}</span>
+			<Icon path={ICON_SEARCH} size={16} />
 			<input
 				type="search"
 				class="search-input"
@@ -283,7 +258,7 @@
 			class="ns-select"
 			value={selectedNamespace}
 			onchange={onNamespaceChange}
-			aria-label="Filter by namespace"
+			aria-label={S.namespaceAriaLabel}
 		>
 			<option value="">{S.namespaceAll}</option>
 			{#each namespaces as ns (ns)}
@@ -301,7 +276,7 @@
 	</div>
 
 	<!-- Filter chips -->
-	<div class="chip-row" role="group" aria-label="Memory filter presets">
+	<div class="chip-row" role="group" aria-label={S.filterGroupAriaLabel}>
 		{#each chips as chip (chip.key)}
 			<FilterChip
 				label={chip.label}
@@ -325,17 +300,7 @@
 	>
 		{#snippet pagination()}
 			<div class="pagination-bar">
-				<Pagination totalRows={totalMemories} bind:page={currentPage} />
-				<select
-					class="page-size-select"
-					value={perPage}
-					onchange={onPageSizeChange}
-					aria-label="Page size"
-				>
-					<option value={25}>25</option>
-					<option value={50}>50</option>
-					<option value={100}>100</option>
-				</select>
+				<Pagination totalRows={totalMemories} bind:page={currentPage} bind:pageSize={perPage} showPageSize />
 			</div>
 		{/snippet}
 	</DataTable>
@@ -367,14 +332,6 @@
 		flex: 1;
 		min-width: 200px;
 		position: relative;
-	}
-	.search-icon {
-		position: absolute;
-		left: 10px;
-		top: 50%;
-		transform: translateY(-50%);
-		color: var(--color-text-muted);
-		pointer-events: none;
 	}
 	.search-input {
 		width: 100%;
@@ -425,19 +382,11 @@
 		justify-content: space-between;
 		padding: 0 8px;
 	}
-	.page-size-select {
-		padding: 4px 8px;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-input);
-		font-size: 12px;
-		background: var(--color-surface);
-		color: var(--color-text-primary);
-	}
 	.error-banner {
 		margin: 12px 24px;
 		padding: 12px 16px;
-		background: #fef2f2;
-		color: #dc2626;
+		background: var(--color-danger-bg);
+		color: var(--color-danger-text);
 		border-radius: var(--radius-card);
 		font-size: 13px;
 	}
