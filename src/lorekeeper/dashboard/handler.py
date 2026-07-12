@@ -62,6 +62,23 @@ class DashboardHandler:
 
     # ── Memories ─────────────────────────────────────────────────────────────
 
+    @staticmethod
+    def _pagination_response(
+        items: list[dict[str, Any]],
+        total: int,
+        page: int,
+        per_page: int,
+        items_key: str = "memories",
+    ) -> dict[str, Any]:
+        """Build standard paginated response dict — reusable across handlers."""
+        return {
+            items_key: items,
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": max(1, -(-total // per_page)),
+        }
+
     def list_memories(self, include_deleted: bool = False) -> list[dict[str, Any]]:
         rows = self._memory_store.all_memory_rows(include_deleted=include_deleted)
         links = self._link_store.all_links()
@@ -93,19 +110,14 @@ class DashboardHandler:
             namespace=namespace, include_deleted=include_deleted,
             filter_preset=filter_preset, sort=sort, sort_dir=sort_dir,
         )
-        total_pages = max(1, -(-total // per_page))  # ceiling division
+        ids = [r["id"] for r in rows]
+        link_counts = self._link_store.count_links_for_memories(ids)
         result = []
         for r in rows:
             mem = serialize_memory(Memory(**dict(r)))
-            mem["links_count"] = self._link_store.count_links_for_memory(r["id"])
+            mem["links_count"] = link_counts.get(r["id"], 0)
             result.append(mem)
-        return {
-            "memories": result,
-            "total": total,
-            "page": page,
-            "per_page": per_page,
-            "total_pages": total_pages,
-        }
+        return self._pagination_response(result, total, page, per_page)
 
     def get_memory_counts(self) -> dict[str, int]:
         return self._memory_store.get_counts_by_filter()

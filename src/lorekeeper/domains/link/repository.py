@@ -144,6 +144,31 @@ class LinkStore:
         ).fetchone()
         return row[0] if row else 0
 
+    def count_links_for_memories(self, memory_ids: list[str]) -> dict[str, int]:
+        """Batch link counts for multiple memory IDs — one query, no N+1.
+
+        Returns {memory_id: count} for every ID in the input list.
+        IDs with zero links are included as 0.
+        """
+        if not memory_ids:
+            return {}
+        placeholders = ",".join("?" * len(memory_ids))
+        in_clause = f"IN ({placeholders})"
+        rows = self._conn.execute(
+            f"""
+            SELECT id, COUNT(*) AS cnt FROM (
+                SELECT source_memory_id AS id FROM memory_links WHERE source_memory_id {in_clause}
+                UNION ALL
+                SELECT target_memory_id AS id FROM memory_links WHERE target_memory_id {in_clause}
+            ) GROUP BY id
+            """,
+            (*memory_ids, *memory_ids),
+        ).fetchall()
+        result: dict[str, int] = dict.fromkeys(memory_ids, 0)
+        for r in rows:
+            result[r[0]] = r[1]
+        return result
+
 
 def _row_to_link(row: sqlite3.Row) -> MemoryLink:
     raw_type = row["relation_type"]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import UTC, datetime
-from typing import cast
+from typing import ClassVar, cast
 
 from lorekeeper.infra.database import Database
 
@@ -144,6 +144,12 @@ class MemoryStore:
 
         return self._conn.execute(sql, params).fetchall()
 
+    _FILTER_CONDITIONS: ClassVar[dict[str, str]] = {
+        "needs_review": "confidence < 5 AND score < 6",
+        "high_confidence": "confidence >= 8 AND score >= 7",
+        "stale_30d": "updated_at < datetime('now', '-30 days')",
+    }
+
     def search_memory_rows(
         self,
         page: int = 1,
@@ -171,12 +177,8 @@ class MemoryStore:
             conditions.append("namespace = ?")
             params.append(namespace)
 
-        if filter_preset == "needs_review":
-            conditions.append("confidence < 5 AND score < 6")
-        elif filter_preset == "high_confidence":
-            conditions.append("confidence >= 8 AND score >= 7")
-        elif filter_preset == "stale_30d":
-            conditions.append("updated_at < datetime('now', '-30 days') AND soft_deleted = 0")
+        if filter_preset in self._FILTER_CONDITIONS:
+            conditions.append(self._FILTER_CONDITIONS[filter_preset])
 
         where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
         sort_dir_sql = "ASC" if sort_dir.upper() != "DESC" else "DESC"
@@ -197,19 +199,21 @@ class MemoryStore:
         return self._conn.execute(data_sql, [*params, per_page, offset]).fetchall(), total
 
     def get_counts_by_filter(self) -> dict[str, int]:
-        """Returns counts for each filter preset."""
+        """Returns counts for each filter preset (excluding soft-deleted rows)."""
+        deleted_clause = "AND soft_deleted = 0"
+
         def _count(where: str, params: list[object] | None = None) -> int:
             row = self._conn.execute(
                 f"SELECT COUNT(*) FROM memories WHERE {where}", params or []
             ).fetchone()
             return row[0] if row else 0
 
-        return {
-            "all": _count("1=1"),
-            "needs_review": _count("confidence < 5 AND score < 6"),
-            "high_confidence": _count("confidence >= 8 AND score >= 7"),
-            "stale_30d": _count("updated_at < datetime('now', '-30 days') AND soft_deleted = 0"),
+        counts: dict[str, int] = {
+            "all": _count(f"1=1 {deleted_clause}"),
         }
+        for key, condition in self._FILTER_CONDITIONS.items():
+            counts[key] = _count(f"({condition}) {deleted_clause}")
+        return counts
 
     def get_distinct_namespaces(self) -> list[str]:
         rows = self._conn.execute(
