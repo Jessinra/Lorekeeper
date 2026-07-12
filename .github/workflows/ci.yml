@@ -118,6 +118,19 @@ jobs:
       - name: Biome JS lint (dashboard)
         run: npx @biomejs/biome check src/lorekeeper/dashboard/static/js/ 2>&1 || echo "No JS changes detected — skipping"
 
+      - name: Setup Node.js for Dashboard V2
+        uses: actions/setup-node@v8
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: src/dashboard_v2/package-lock.json
+
+      - name: ESLint (Dashboard V2)
+        working-directory: src/dashboard_v2
+        run: |
+          npm ci --no-audit --no-fund 2>&1 | tail -5
+          npm run lint 2>&1
+
       - name: Dependency vulnerability scan
         run: uv run pip-audit --strict 2>&1 || echo "pip-audit not installed — skipping"
 
