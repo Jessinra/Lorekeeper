@@ -116,6 +116,41 @@ export const HEATMAP_GRID_STRINGS = {
 	ariaLabel: 'Heatmap grid' as const,
 } as const;
 
+// ── Memories Page (LKPR-129) ─────────────────────────────────────────────────
+
+export const MEMORIES_STRINGS = {
+	/** Text input placeholder */
+	searchPlaceholder: 'Search memories\u2026',
+	/** Namespace dropdown default label */
+	namespaceAll: 'All',
+	/** Show deleted toggle label */
+	showDeletedLabel: 'Show deleted',
+	/** New memory button label */
+	newMemoryButton: '+ New',
+	/** Column headers */
+	colTitle: 'Title',
+	colNamespace: 'NS',
+	colScore: 'Score',
+	colConfidence: 'Conf',
+	colUsage: 'Uses',
+	colLinks: 'Links',
+	colUpdated: 'Updated',
+	/** Filter chip labels */
+	filterAll: 'All',
+	filterNeedsReview: 'Needs review',
+	filterHighConfidence: 'High confidence',
+	filterStale: 'Stale >30d',
+	/** Empty state */
+	emptyTitle: 'No memories found',
+	emptyMessage: 'Try adjusting your search or filters',
+	/** Page size options */
+	pageSize25: '25',
+	pageSize50: '50',
+	pageSize100: '100',
+	/** Skeleton aria-label */
+	skeletonLabel: 'Loading memories',
+} as const;
+
 // ── Memory Detail Drawer (LKPR-127) ──────────────────────────────────────────
 
 export const DRAWER_STRINGS = {
