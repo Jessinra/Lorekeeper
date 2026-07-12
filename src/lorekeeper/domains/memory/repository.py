@@ -199,9 +199,10 @@ class MemoryStore:
     def get_counts_by_filter(self) -> dict[str, int]:
         """Returns counts for each filter preset."""
         def _count(where: str, params: list[object] | None = None) -> int:
-            return self._conn.execute(
+            row = self._conn.execute(
                 f"SELECT COUNT(*) FROM memories WHERE {where}", params or []
-            ).fetchone()[0]
+            ).fetchone()
+            return row[0] if row else 0
 
         return {
             "all": _count("1=1"),
