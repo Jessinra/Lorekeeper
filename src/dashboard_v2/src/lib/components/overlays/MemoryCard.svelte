@@ -18,14 +18,12 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 <button
 	type="button"
 	class="memory-card"
 	class:deleted={memory.soft_deleted}
 	class:conflict-tint={conflictTint}
-	{onclick}
+	onclick={onClick}
 >
 	<div class="card-badge" class:visible={memory.soft_deleted}>
 		<span class="deleted-badge">{S.deletedBadge}</span>

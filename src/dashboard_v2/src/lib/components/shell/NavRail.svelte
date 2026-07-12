@@ -10,7 +10,7 @@
 
 {#snippet railLink(route: NavRoute)}
 	<a
-		href={route.href}
+		href={route.href} data-sveltekit-preload-data
 		class="rail-item"
 		class:active={isActive(route.href)}
 		aria-label={route.label}

@@ -86,7 +86,7 @@
 
 	$effect(() => {
 		if (open && cancelBtn) {
-			requestAnimationFrame(() => cancelBtn?.focus());
+			requestAnimationFrame(() => cancelBtn.focus());
 		}
 	});
 

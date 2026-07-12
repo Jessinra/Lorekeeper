@@ -30,6 +30,17 @@ npx --yes @biomejs/biome check src/lorekeeper/dashboard/static/js/
 echo "✅  biome passed"
 
 echo ""
+echo "🔍  eslint check (Dashboard V2)..."
+pushd src/dashboard_v2 > /dev/null
+npm run lint --if-present 2>&1 || eslint_result=$?
+popd > /dev/null
+if [ -n "${eslint_result:-}" ] && [ "$eslint_result" -ne 0 ]; then
+  echo "❌  eslint failed — fix before committing"
+  exit "$eslint_result"
+fi
+echo "✅  eslint passed"
+
+echo ""
 echo "🔍  prettier check (Markdown)..."
 while IFS= read -r -d '' f; do
   [ -f "$f" ] && printf '%s\0' "$f"

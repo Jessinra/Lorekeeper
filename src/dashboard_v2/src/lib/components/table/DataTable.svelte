@@ -15,11 +15,11 @@
 		sortDirection = $bindable('desc'),
 		onRowClick = undefined,
 		selectable = false,
-		selectedRows = new Set<unknown>(),
+		_selectedRows = new Set<unknown>(),
 		emptyMessage = TABLE_STRINGS.emptyMessage,
 		emptyIcon = ICON_TABLE_EMPTY,
 		loading = false,
-		children = undefined,
+		_children = undefined,
 		pagination = undefined
 	}: {
 		columns: Column<T>[];
@@ -79,7 +79,7 @@
 						{#if selectable}
 							<th class="col-checkbox" aria-hidden="true"></th>
 						{/if}
-						{#each columns as col}
+						{#each columns as col (col.key)}
 							<th class="th-skeleton" style={col.width ? 'width: ' + col.width : ''} aria-hidden="true">
 								<span class="skeleton-line">&nbsp;</span>
 							</th>
@@ -87,12 +87,12 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each [1, 2, 3, 4, 5] as _i}
+					{#each [1, 2, 3, 4, 5] as _i (_i)}
 						<tr class="skeleton-row" aria-hidden="true">
 							{#if selectable}
 								<td class="col-checkbox"></td>
 							{/if}
-							{#each columns as col}
+							{#each columns as col (col.key)}
 								<td style={col.width ? 'width: ' + col.width : ''}>
 									<span class="skeleton-line">&nbsp;</span>
 								</td>

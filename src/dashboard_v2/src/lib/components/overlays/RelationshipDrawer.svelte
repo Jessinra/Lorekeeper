@@ -38,9 +38,9 @@
 		onClose,
 		onNavigate,
 		onDelete,
-		onAccept = async () => true,
-		onReject = async () => true,
-		onRefresh = async () => true,
+		onAccept = async (_suggestionId: string) => await true,
+		onReject = async (_suggestionId: string) => await true,
+		onRefresh = async (_linkId: string) => await true,
 	}: Props = $props();
 
 	// ── State ──────────────────────────────────────────────────────────────────
@@ -53,7 +53,7 @@
 	// Auto-focus drawer on open
 	$effect(() => {
 		if (open && drawerEl) {
-			tick().then(() => drawerEl?.focus());
+			void tick().then(() => { drawerEl?.focus(); });
 		}
 		if (!open) {
 			actionResult = null;
@@ -86,8 +86,6 @@
 
 	const FOCUSABLE_SELECTOR =
 		'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
-
-	let previouslyFocused: HTMLElement | null = null;
 
 	function trapFocus(e: KeyboardEvent) {
 		if (e.key !== 'Tab' || !drawerEl) return;
@@ -182,8 +180,6 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 {#if open}
 	<OverlayScrim onclick={onClose} />
 	<div
