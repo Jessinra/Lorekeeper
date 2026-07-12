@@ -137,6 +137,13 @@ class LinkStore:
             "DELETE FROM memory_links WHERE id = ?", (link_id,)
         )
 
+    def count_links_for_memory(self, memory_id: str) -> int:
+        row = self._conn.execute(
+            "SELECT COUNT(*) FROM memory_links WHERE source_memory_id = ? OR target_memory_id = ?",
+            (memory_id, memory_id),
+        ).fetchone()
+        return row[0] if row else 0
+
 
 def _row_to_link(row: sqlite3.Row) -> MemoryLink:
     raw_type = row["relation_type"]

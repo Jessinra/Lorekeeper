@@ -76,6 +76,43 @@ class DashboardHandler:
             result.append(mem)
         return result
 
+    def list_memories_paginated(
+        self,
+        page: int = 1,
+        per_page: int = 50,
+        query: str = "",
+        namespace: str | None = None,
+        include_deleted: bool = False,
+        filter_preset: str | None = None,
+        sort: str = "updated_at",
+        sort_dir: str = "desc",
+    ) -> dict[str, Any]:
+        """Paginated, filtered memory listing with link counts."""
+        rows, total = self._memory_store.search_memory_rows(
+            page=page, per_page=per_page, query=query,
+            namespace=namespace, include_deleted=include_deleted,
+            filter_preset=filter_preset, sort=sort, sort_dir=sort_dir,
+        )
+        total_pages = max(1, -(-total // per_page))  # ceiling division
+        result = []
+        for r in rows:
+            mem = serialize_memory(Memory(**dict(r)))
+            mem["links_count"] = self._link_store.count_links_for_memory(r["id"])
+            result.append(mem)
+        return {
+            "memories": result,
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": total_pages,
+        }
+
+    def get_memory_counts(self) -> dict[str, int]:
+        return self._memory_store.get_counts_by_filter()
+
+    def list_namespaces(self) -> list[str]:
+        return self._memory_store.get_distinct_namespaces()
+
     def get_memory(self, memory_id: str) -> dict[str, Any] | None:
         row = self._memory_store.get_memory_row(memory_id)
         if row is None:
