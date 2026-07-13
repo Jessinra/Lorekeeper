@@ -53,6 +53,16 @@
 	--color-rel-fallback-bg: #f3f4f6;
 	--color-rel-fallback-text: #374151;
 
+	/* Task type badges */
+	--color-task-build-bg: #dcfce7;
+	--color-task-build-text: #166534;
+	--color-task-debug-bg: #fef3c7;
+	--color-task-debug-text: #92400e;
+	--color-task-review-bg: #f3e8ff;
+	--color-task-review-text: #6b21a8;
+	--color-task-design-bg: #dbeafe;
+	--color-task-design-text: #1e40af;
+
 	/* FilterChip */
 	--color-chip-border: #d1d5db;
 	--color-chip-text: #6b7280;
@@ -138,6 +148,9 @@
 	/* Radius */
 	--radius-card: 14px;
 	--radius-control: 9px;
+	--radius-input: 8px;
+	--radius-md: 8px;
+	--radius-sm: 6px;
 	--radius-pill: 999px;
 	--radius-icon: 8px;
 	--radius-kbd: 4px;
@@ -154,12 +167,20 @@
 
 	/* Typography */
 	--font-size-body: 13px;
+	--font-size-sm: 0.825rem;    /* card title, section text */
+	--font-size-xs: 0.8rem;      /* memory title, copy btn */
 	--font-size-micro: 11px;
 	--font-size-label: 10.5px;
 	--font-size-badge: 9px;
 	--font-size-heading: 20px;
 	--font-size-breadcrumb: 14px;
 	--font-family-sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+
+	/* Font weight */
+	--font-weight-normal: 400;
+	--font-weight-medium: 500;
+	--font-weight-semibold: 600;
+	--font-weight-bold: 700;
 
 	/* DataTable */
 	--table-th-padding: 10px 12px;

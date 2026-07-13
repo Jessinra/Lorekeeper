@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { replaceState } from '$app/navigation';
+	import { replaceState, goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import { SvelteMap, SvelteDate } from 'svelte/reactivity';
 	import PageShell from '$lib/components/ui/PageShell.svelte';
 	import FilterChip from '../../components/ui/FilterChip.svelte';
@@ -72,22 +73,26 @@
 		}
 	}
 
-	$effect(() => {
-		void load();
-	});
+	// ── Reload trigger ─────────────────────────────────────────────────────────
+	// Explicit signal so resetAndLoad always fires a load even if currentPage
+	// is already 1, without leaking searchQuery/activeTask as $effect deps.
 
-	// Reload when page changes via Pagination
+	let reloadSignal = $state(0);
+
 	$effect(() => {
-		void currentPage; // reactive dep
+		void currentPage;   // re-run when Pagination advances
+		void reloadSignal;  // re-run when filter/search resets trigger
 		syncUrl();
+		void load();
 	});
 
 	// ── Page activation ────────────────────────────────────────────────────────
 
+	onMount(() => { reloadSignal++; });
+
 	function resetAndLoad() {
 		currentPage = 1;
-		syncUrl();
-		void load();
+		reloadSignal++; // always fires load, even if page was already 1
 	}
 
 	// ── Search handling ────────────────────────────────────────────────────────
@@ -194,24 +199,25 @@
 
 	async function onMemorySave(id: string, fields: MemoryEditFields): Promise<boolean> {
 		try {
-			await fetch(`/api/memories/${id}`, {
+			const res = await fetch(`/api/memories/${id}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(fields),
 			});
-			return true;
+			return res.ok;
 		} catch {
 			return false;
 		}
 	}
 
 	function onMemoryDelete(id: string) {
-		// Optimistically remove from local list
+		// Optimistically remove from local list; MemoryDetailDrawer calls onSave
+		// with soft_deleted:true which persists the removal server-side.
 		selectedMemories = selectedMemories.filter((m) => m.lore_id !== id);
 	}
 
 	async function onMemoryNavigate(targetId: string) {
-		window.location.href = `/memories?open=${encodeURIComponent(targetId)}`;
+		await goto(`/memories?open=${encodeURIComponent(targetId)}`);
 	}
 </script>
 
@@ -341,7 +347,7 @@
 		padding: 8px 12px 8px 32px;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-input);
-		font-size: 13px;
+		font-size: var(--font-size-body);
 		background: var(--color-surface);
 		color: var(--color-text-primary);
 		outline: none;
@@ -368,7 +374,7 @@
 		gap: 12px;
 		padding: 80px 24px;
 		color: var(--color-text-muted);
-		font-size: 13px;
+		font-size: var(--font-size-body);
 	}
 
 	.error-banner {
@@ -377,7 +383,7 @@
 		background: var(--color-danger-bg);
 		color: var(--color-danger-text);
 		border-radius: var(--radius-card);
-		font-size: 13px;
+		font-size: var(--font-size-body);
 	}
 
 	.timeline {
@@ -394,8 +400,8 @@
 	}
 
 	.day-header {
-		font-size: 0.7rem;
-		font-weight: 700;
+		font-size: var(--font-size-label);
+		font-weight: var(--font-weight-bold);
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--color-text-muted);
@@ -474,22 +480,22 @@
 		align-items: center;
 		border-radius: 9999px;
 		padding: 1px 8px;
-		font-size: 0.65rem;
-		font-weight: 600;
+		font-size: var(--font-size-badge);
+		font-weight: var(--font-weight-semibold);
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		flex-shrink: 0;
 	}
 
-	.task-build { background-color: var(--color-task-build-bg, #dcfce7); color: var(--color-task-build-text, #166534); }
-	.task-debug { background-color: var(--color-task-debug-bg, #fef3c7); color: var(--color-task-debug-text, #92400e); }
-	.task-review { background-color: var(--color-task-review-bg, #f3e8ff); color: var(--color-task-review-text, #6b21a8); }
-	.task-design { background-color: var(--color-task-design-bg, #dbeafe); color: var(--color-task-design-text, #1e40af); }
+	.task-build { background-color: var(--color-task-build-bg); color: var(--color-task-build-text); }
+	.task-debug { background-color: var(--color-task-debug-bg); color: var(--color-task-debug-text); }
+	.task-review { background-color: var(--color-task-review-bg); color: var(--color-task-review-text); }
+	.task-design { background-color: var(--color-task-design-bg); color: var(--color-task-design-text); }
 	.task-other { background-color: var(--color-chip-bg); color: var(--color-chip-text); }
 
 	.card-title {
-		font-size: 0.825rem;
-		font-weight: 500;
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-medium);
 		color: var(--color-text);
 		white-space: nowrap;
 		overflow: hidden;
@@ -500,7 +506,7 @@
 		display: flex;
 		align-items: center;
 		gap: 6px;
-		font-size: 0.7rem;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 
@@ -514,13 +520,13 @@
 
 	.session-id-chip {
 		font-family: var(--font-mono, monospace);
-		font-size: 0.65rem;
+		font-size: var(--font-size-badge);
 		color: var(--color-text-muted);
 		opacity: 0.7;
 	}
 
 	.card-arrow {
-		font-size: 1rem;
+		font-size: var(--font-size-body);
 		color: var(--color-text-muted);
 		flex-shrink: 0;
 	}

@@ -1,0 +1,22 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "customSyntax": "postcss-html",
+  "rules": {
+    "color-no-invalid-hex": true,
+    "color-named": "never",
+    "color-function-notation": null,
+    "color-function-alias-notation": null,
+    "alpha-value-notation": null,
+
+    "declaration-property-value-disallowed-list": {
+      "font-weight": ["/^[0-9]+$/"],
+      "font-size": ["/^[0-9]+(px|rem|em)$/"]
+    },
+
+    "declaration-empty-line-before": null,
+    "no-duplicate-selectors": true,
+    "shorthand-property-no-redundant-values": true,
+    "no-descending-specificity": null
+  },
+  "ignoreFiles": ["**/*.ts", "**/*.js", "**/*.json", "node_modules/**"]
+}

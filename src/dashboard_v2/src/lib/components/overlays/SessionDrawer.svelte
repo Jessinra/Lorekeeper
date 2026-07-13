@@ -276,8 +276,8 @@
 		align-items: center;
 		border-radius: 9999px;
 		padding: 2px 10px;
-		font-size: 0.7rem;
-		font-weight: 600;
+		font-size: var(--font-size-label);
+		font-weight: var(--font-weight-semibold);
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
 		width: fit-content;
@@ -285,7 +285,7 @@
 
 	.title {
 		font-size: 1.05rem;
-		font-weight: 600;
+		font-weight: var(--font-weight-semibold);
 		color: var(--color-text);
 		margin: 0;
 		line-height: 1.3;
@@ -298,7 +298,7 @@
 		gap: var(--space-2);
 		padding: var(--space-3) var(--space-5);
 		border-bottom: var(--border-width) solid var(--color-drawer-border);
-		font-size: 0.75rem;
+		font-size: var(--font-size-micro);
 	}
 
 	.meta-label {
@@ -317,7 +317,7 @@
 
 	.meta-session-id {
 		font-family: var(--font-mono, monospace);
-		font-size: 0.7rem;
+		font-size: var(--font-size-badge);
 		color: var(--color-text-muted);
 		background-color: var(--color-drawer-code-bg, var(--color-chip-bg));
 		border: var(--border-width) solid var(--color-drawer-code-border, var(--color-chip-border));
@@ -341,8 +341,8 @@
 	}
 
 	.section-heading {
-		font-size: 0.75rem;
-		font-weight: 600;
+		font-size: var(--font-size-label);
+		font-weight: var(--font-weight-semibold);
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
 		color: var(--color-text-muted);
@@ -350,7 +350,7 @@
 	}
 
 	.section-text {
-		font-size: 0.875rem;
+		font-size: var(--font-size-sm);
 		line-height: 1.6;
 		color: var(--color-text);
 		margin: 0;
@@ -392,8 +392,8 @@
 	}
 
 	.memory-title {
-		font-size: 0.8rem;
-		font-weight: 500;
+		font-size: var(--font-size-xs);
+		font-weight: var(--font-weight-medium);
 		color: var(--color-text);
 		flex: 1;
 		white-space: nowrap;
@@ -402,7 +402,7 @@
 	}
 
 	.memory-desc {
-		font-size: 0.72rem;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 		margin: 0;
 		display: -webkit-box;
@@ -412,7 +412,7 @@
 	}
 
 	.empty-memories {
-		font-size: 0.8rem;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin: 0;
 	}
@@ -426,7 +426,7 @@
 	}
 
 	.copy-btn {
-		font-size: 0.8rem;
+		font-size: var(--font-size-xs);
 		padding: var(--space-1) var(--space-3);
 		border-radius: var(--radius-sm);
 		border: var(--border-width) solid var(--color-chip-border);
