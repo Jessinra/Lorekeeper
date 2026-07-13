@@ -228,7 +228,7 @@
 		inset-block: 0;
 		inset-inline-end: 0;
 		width: min(460px, 100vw);
-		z-index: 800;
+		z-index: var(--z-drawer);
 		background-color: var(--color-drawer-bg);
 		border-left: var(--border-width) solid var(--color-drawer-border);
 		display: flex;
@@ -251,10 +251,10 @@
 		border: none;
 		cursor: pointer;
 		color: var(--color-text-muted);
-		font-size: 1rem;
+		font-size: var(--font-size-xs);
 		padding: var(--space-1);
 		border-radius: var(--radius-sm);
-		line-height: 1;
+		line-height: var(--line-height-tight);
 	}
 
 	.close-btn:hover {
@@ -274,7 +274,7 @@
 	.task-badge {
 		display: inline-flex;
 		align-items: center;
-		border-radius: 9999px;
+		border-radius: var(--radius-pill);
 		padding: 2px 10px;
 		font-size: var(--font-size-label);
 		font-weight: var(--font-weight-semibold);
@@ -284,11 +284,11 @@
 	}
 
 	.title {
-		font-size: 1.05rem;
+		font-size: var(--font-size-xs);
 		font-weight: var(--font-weight-semibold);
 		color: var(--color-text);
 		margin: 0;
-		line-height: 1.3;
+		line-height: var(--line-height-snug);
 	}
 
 	.meta-row {
@@ -351,7 +351,7 @@
 
 	.section-text {
 		font-size: var(--font-size-sm);
-		line-height: 1.6;
+		line-height: var(--line-height-relaxed);
 		color: var(--color-text);
 		margin: 0;
 		white-space: pre-wrap;

@@ -234,7 +234,7 @@
 		top: 20vh;
 		left: 50%;
 		transform: translateX(-50%);
-		z-index: 810;
+		z-index: var(--z-drawer-top);
 
 		width: min(640px, calc(100vw - 32px));
 		max-height: 480px;
@@ -267,7 +267,7 @@
 	.palette-input-row {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: var(--space-2-5);
 		padding: 14px 16px;
 		flex-shrink: 0;
 	}
@@ -284,7 +284,7 @@
 		border: none;
 		outline: none;
 		background: transparent;
-		font-size: 15px;
+		font-size: var(--font-size-display);
 		color: var(--color-text-primary);
 		caret-color: var(--color-brand);
 	}
@@ -298,7 +298,7 @@
 		border: none;
 		cursor: pointer;
 		padding: 0;
-		line-height: 1;
+		line-height: var(--line-height-tight);
 	}
 
 	.close-btn kbd {
@@ -331,7 +331,7 @@
 	.group-header {
 		padding: 8px 16px 4px;
 		font-size: var(--font-size-label);
-		font-weight: 600;
+		font-weight: var(--font-weight-semibold);
 		color: var(--color-text-faint);
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
@@ -341,7 +341,7 @@
 	.palette-item {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: var(--space-2-5);
 		padding: 8px 16px;
 		cursor: pointer;
 		border-radius: 0;
@@ -389,7 +389,7 @@
 	/* ── Footer ───────────────────────────────────────────────────────────── */
 	.palette-footer {
 		display: flex;
-		gap: 16px;
+		gap: var(--space-4);
 		padding: 8px 16px;
 		border-top: var(--border-width) solid var(--color-border);
 		background: var(--color-background);
@@ -399,7 +399,7 @@
 	.hint-group {
 		display: flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--space-1);
 		font-size: var(--font-size-label);
 		color: var(--color-text-faint);
 	}
