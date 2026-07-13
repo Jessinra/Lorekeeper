@@ -210,10 +210,17 @@
 		}
 	}
 
-	function onMemoryDelete(id: string) {
-		// Optimistically remove from local list; MemoryDetailDrawer calls onSave
-		// with soft_deleted:true which persists the removal server-side.
+	async function onMemoryDelete(id: string) {
 		selectedMemories = selectedMemories.filter((m) => m.lore_id !== id);
+		try {
+			await fetch(`/api/memories/${id}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ soft_deleted: true }),
+			});
+		} catch {
+			// best-effort; optimistic removal already applied
+		}
 	}
 
 	async function onMemoryNavigate(targetId: string) {
