@@ -192,6 +192,7 @@
 	--font-size-title: 16px;     /* drawer titles, dialog headings */
 	--font-size-lg: 18px;        /* section headings */
 	--font-size-display: 15px;   /* command palette input */
+	--font-size-stat: 28px;      /* stat tile large value */
 	--font-family-sans: -apple-system, "Segoe UI", system-ui, sans-serif;
 
 	/* Font weight */

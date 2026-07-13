@@ -331,8 +331,8 @@
 	.toolbar {
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 16px 24px 0;
+		gap: var(--space-3);
+		padding: var(--space-4) var(--space-6) 0;
 		flex-wrap: wrap;
 	}
 
@@ -344,7 +344,7 @@
 
 	.search-input {
 		width: 100%;
-		padding: 8px 12px 8px 32px;
+		padding: var(--space-2) var(--space-3) var(--space-2) var(--space-8);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-input);
 		font-size: var(--font-size-body);
@@ -360,8 +360,8 @@
 
 	.chip-row {
 		display: flex;
-		gap: 6px;
-		padding: 12px 24px 4px;
+		gap: var(--space-1-5);
+		padding: var(--space-3) var(--space-6) var(--space-1);
 		flex-wrap: wrap;
 	}
 
@@ -371,15 +371,15 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 12px;
-		padding: 80px 24px;
+		gap: var(--space-3);
+		padding: 80px var(--space-6);
 		color: var(--color-text-muted);
 		font-size: var(--font-size-body);
 	}
 
 	.error-banner {
-		margin: 12px 24px;
-		padding: 12px 16px;
+		margin: var(--space-3) var(--space-6);
+		padding: var(--space-3) var(--space-4);
 		background: var(--color-danger-bg);
 		color: var(--color-danger-text);
 		border-radius: var(--radius-card);
@@ -387,16 +387,16 @@
 	}
 
 	.timeline {
-		padding: 16px 24px;
+		padding: var(--space-4) var(--space-6);
 		display: flex;
 		flex-direction: column;
-		gap: 32px;
+		gap: var(--space-8);
 	}
 
 	.day-section {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 
 	.day-header {
@@ -405,8 +405,8 @@
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--color-text-muted);
-		margin: 0 0 4px;
-		padding-left: 20px;
+		margin: 0 0 var(--space-1);
+		padding-left: var(--space-5);
 	}
 
 	.session-list {
@@ -414,11 +414,11 @@
 		padding: 0;
 		margin: 0;
 		border-left: 2px solid var(--color-border);
-		margin-left: 8px;
+		margin-left: var(--space-2);
 		padding-left: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--space-1);
 	}
 
 	.session-card {
@@ -429,12 +429,12 @@
 		background: var(--color-card-bg, var(--color-surface));
 		border: var(--border-width) solid var(--color-card-border, var(--color-border));
 		border-radius: var(--radius-card);
-		padding: 10px 12px 10px 0;
+		padding: var(--space-2-5) var(--space-3) var(--space-2-5) 0;
 		cursor: pointer;
 		text-align: left;
-		margin-left: 16px;
+		margin-left: var(--space-4);
 		transition: background-color 150ms, border-color 150ms;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 
 	.session-card:hover {
@@ -457,13 +457,13 @@
 		background-color: var(--color-brand, #6366f1);
 		flex-shrink: 0;
 		margin-left: -4px; /* overlap the timeline line */
-		margin-right: 12px;
+		margin-right: var(--space-3);
 	}
 
 	.card-body {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--space-1);
 		min-width: 0;
 		flex: 1;
 	}
@@ -471,15 +471,15 @@
 	.card-top {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		flex-wrap: wrap;
 	}
 
 	.task-badge {
 		display: inline-flex;
 		align-items: center;
-		border-radius: 9999px;
-		padding: 1px 8px;
+		border-radius: var(--radius-pill);
+		padding: 1px var(--space-2);
 		font-size: var(--font-size-badge);
 		font-weight: var(--font-weight-semibold);
 		letter-spacing: 0.05em;
@@ -505,7 +505,7 @@
 	.card-meta {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
@@ -532,7 +532,7 @@
 	}
 
 	.pagination-bar {
-		padding: 12px 24px;
+		padding: var(--space-3) var(--space-6);
 		display: flex;
 		justify-content: center;
 	}

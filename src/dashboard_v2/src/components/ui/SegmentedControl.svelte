@@ -70,6 +70,6 @@
 	button[aria-selected='true'] {
 		background-color: var(--color-seg-active-bg);
 		color: var(--color-seg-active-text);
-		font-weight: 600;
+		font-weight: var(--font-weight-semibold);
 	}
 </style>

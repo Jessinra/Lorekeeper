@@ -37,7 +37,7 @@
 
 <style>
 	.stat-value {
-		font-size: 28px;
-		font-weight: 700;
+		font-size: var(--font-size-stat);
+		font-weight: var(--font-weight-bold);
 	}
 </style>
