@@ -182,6 +182,20 @@
 	--font-weight-semibold: 600;
 	--font-weight-bold: 700;
 
+	/* Line height */
+	--line-height-tight: 1;
+	--line-height-snug: 1.3;
+	--line-height-normal: 1.5;
+	--line-height-relaxed: 1.6;
+
+	/* Z-index scale */
+	--z-base: 1;
+	--z-raised: 30;
+	--z-overlay: 40;
+	--z-drawer: 800;
+	--z-drawer-top: 810;
+	--z-modal: 900;
+
 	/* DataTable */
 	--table-th-padding: 10px 12px;
 	--table-th-letter-spacing: 0.05em;
