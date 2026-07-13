@@ -25,8 +25,16 @@ def get_reflection_detail(request: Request, reflection_id: str) -> dict[str, Any
 
 
 @router.get("/api/sessions")
-def list_sessions(request: Request, with_content: bool = True) -> list[dict[str, Any]]:
-    return _handler(request).list_sessions(with_content=with_content)
+def list_sessions(
+    request: Request,
+    q: str | None = None,
+    task: str | None = None,
+    page: int = 1,
+    page_size: int = 50,
+    with_content: bool = True,
+) -> dict[str, Any]:
+    """List sessions with optional search, task-type filter, and pagination."""
+    return _handler(request).list_sessions_paginated(q=q, task=task, page=page, page_size=page_size)
 
 
 @router.get("/api/sessions/{session_id}")

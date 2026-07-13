@@ -118,5 +118,19 @@ class ReflectionProcessor:
             else self._reflections.all_sessions()
         )
 
+    def list_sessions_filtered(
+        self,
+        q: str | None = None,
+        task: str | None = None,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> tuple[list[sqlite3.Row], int]:
+        return self._reflections.list_sessions_filtered(
+            q=q, task=task, page=page, page_size=page_size
+        )
+
+    def count_sessions_by_task(self) -> dict[str, int]:
+        return self._reflections.count_sessions_by_task()
+
     def get_session(self, session_id: str) -> sqlite3.Row | None:
         return self._reflections.get_session(session_id)

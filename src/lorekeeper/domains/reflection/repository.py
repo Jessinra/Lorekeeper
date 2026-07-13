@@ -127,6 +127,48 @@ class ReflectionStore:
             "ORDER BY session_date DESC, topic"
         ).fetchall()
 
+    def list_sessions_filtered(
+        self,
+        q: str | None = None,
+        task: str | None = None,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> tuple[list[sqlite3.Row], int]:
+        """Return (rows, total_count) with optional search + task-type filter."""
+        conditions: list[str] = []
+        params: list[str | int] = []
+
+        if q:
+            conditions.append(
+                "(INSTR(LOWER(session_id), LOWER(?)) > 0"
+                " OR INSTR(LOWER(COALESCE(topic,'')), LOWER(?)) > 0)"
+            )
+            params.extend([q, q])
+        if task:
+            conditions.append("task_type = ?")
+            params.append(task)
+
+        where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+        count_row = self._conn.execute(
+            f"SELECT COUNT(*) FROM sessions {where}", params
+        ).fetchone()
+        total: int = count_row[0]
+
+        offset = (page - 1) * page_size
+        rows = self._conn.execute(
+            f"SELECT * FROM sessions {where}"
+            " ORDER BY session_date DESC, reviewed_at DESC LIMIT ? OFFSET ?",
+            [*params, page_size, offset],
+        ).fetchall()
+        return rows, total
+
+    def count_sessions_by_task(self) -> dict[str, int]:
+        """Return a mapping of task_type → count for all sessions."""
+        rows = self._conn.execute(
+            "SELECT task_type, COUNT(*) as cnt FROM sessions GROUP BY task_type"
+        ).fetchall()
+        return {r["task_type"]: r["cnt"] for r in rows if r["task_type"]}
+
     def get_session(self, session_id: str) -> sqlite3.Row | None:
         return cast(sqlite3.Row | None, self._conn.execute(
             "SELECT * FROM sessions WHERE session_id = ?", (session_id,)
