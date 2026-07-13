@@ -31,7 +31,6 @@ def list_sessions(
     task: str | None = None,
     page: int = 1,
     page_size: int = 50,
-    with_content: bool = True,
 ) -> dict[str, Any]:
     """List sessions with optional search, task-type filter, and pagination."""
     return _handler(request).list_sessions_paginated(q=q, task=task, page=page, page_size=page_size)

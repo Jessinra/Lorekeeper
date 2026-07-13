@@ -11,6 +11,7 @@ importing module-level getters from ``server.py``.
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any
 
 from lorekeeper.domains.memory.models import Memory
@@ -329,12 +330,11 @@ class DashboardHandler:
         }
 
     def get_session_detail(self, session_id: str) -> dict[str, Any] | None:
-        import json
-
         row = self._refp.get_session(session_id)
         if row is None:
             return None
         reflection = None
+        ref_row = None
         if row["reflection_id"]:
             ref_row = self._refp.get_reflection(row["reflection_id"])
             if ref_row:
@@ -346,25 +346,23 @@ class DashboardHandler:
 
         # Fetch memories linked to this session via the reflection's memory_ids field
         memories: list[dict[str, Any]] = []
-        if row["reflection_id"]:
-            ref_row2 = self._refp.get_reflection(row["reflection_id"])
-            if ref_row2 and ref_row2["memory_ids"]:
-                try:
-                    ids: list[str] = json.loads(ref_row2["memory_ids"])
-                except (ValueError, TypeError):
-                    ids = []
-                if ids:
-                    mem_rows = self._memory_store.get_memory_rows(ids)
-                    for m in mem_rows:
-                        md = dict(m)
-                        memories.append({
-                            "lore_id": md["id"],
-                            "title": md["title"],
-                            "description": md.get("description") or "",
-                            "score": md["score"],
-                            "namespace": md.get("namespace") or "",
-                            "source_type": md.get("source_type") or "",
-                        })
+        if ref_row and ref_row["memory_ids"]:
+            try:
+                ids: list[str] = json.loads(ref_row["memory_ids"])
+            except (ValueError, TypeError):
+                ids = []
+            if ids:
+                mem_rows = self._memory_store.get_memory_rows(ids)
+                for m in mem_rows:
+                    md = dict(m)
+                    memories.append({
+                        "lore_id": md["id"],
+                        "title": md["title"],
+                        "description": md.get("description") or "",
+                        "score": md["score"],
+                        "namespace": md.get("namespace") or "",
+                        "source_type": md.get("source_type") or "",
+                    })
 
         return {
             "session": serialize_session(dict(row)),

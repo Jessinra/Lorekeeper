@@ -125,6 +125,10 @@ class ReflectionProcessor:
         page: int = 1,
         page_size: int = 50,
     ) -> tuple[list[sqlite3.Row], int]:
+        if page < 1:
+            page = 1
+        if page_size < 1 or page_size > 200:
+            page_size = 50
         return self._reflections.list_sessions_filtered(
             q=q, task=task, page=page, page_size=page_size
         )
