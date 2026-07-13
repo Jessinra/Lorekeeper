@@ -151,7 +151,8 @@
 	--radius-input: 8px;
 	--radius-md: 8px;
 	--radius-sm: 6px;
-	--radius-pill: 999px;
+	--radius-xs: 3px;
+	--radius-pill: 9999px;
 	--radius-icon: 8px;
 	--radius-kbd: 4px;
 
@@ -161,6 +162,18 @@
 	--space-page-y-bottom: 44px;
 	--space-placeholder-pad: 40px;
 	--space-topbar-x: 28px;
+
+	/* Generic space scale — use these for gap, padding, margin */
+	--space-0-5: 2px;
+	--space-1: 4px;
+	--space-1-5: 6px;
+	--space-2: 8px;
+	--space-2-5: 10px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 20px;
+	--space-6: 24px;
+	--space-8: 32px;
 	--space-rail-y-top: 16px;
 	--space-rail-y-bottom: 12px;
 	--space-kbd-pad: 1px 5px;
@@ -174,6 +187,11 @@
 	--font-size-badge: 9px;
 	--font-size-heading: 20px;
 	--font-size-breadcrumb: 14px;
+	--font-size-sub: 12px;       /* secondary labels, chips */
+	--font-size-ui: 14px;        /* form inputs, drawer sections */
+	--font-size-title: 16px;     /* drawer titles, dialog headings */
+	--font-size-lg: 18px;        /* section headings */
+	--font-size-display: 15px;   /* command palette input */
 	--font-family-sans: -apple-system, "Segoe UI", system-ui, sans-serif;
 
 	/* Font weight */
