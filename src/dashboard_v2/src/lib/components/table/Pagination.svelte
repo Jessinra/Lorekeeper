@@ -154,10 +154,10 @@
 	}
 
 	.page-size-select {
-		padding: 4px 8px;
+		padding: var(--space-1) var(--space-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-input);
-		font-size: 12px;
+		font-size: var(--font-size-sub);
 		background: var(--color-surface);
 		color: var(--color-text-primary);
 	}

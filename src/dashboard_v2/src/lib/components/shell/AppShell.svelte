@@ -84,7 +84,7 @@
 		top: 0;
 		bottom: 0;
 		left: 0;
-		z-index: 40;
+		z-index: var(--z-overlay);
 	}
 
 	.brand {
@@ -93,7 +93,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin-bottom: 24px;
+		margin-bottom: var(--space-6);
 		flex-shrink: 0;
 	}
 
@@ -106,7 +106,7 @@
 	.nav-items {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--space-0-5);
 		width: 100%;
 		align-items: center;
 	}
@@ -116,14 +116,14 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 3px;
-		padding: 7px 2px 8px;
+		gap: var(--space-0-5);
+		padding: 7px var(--space-0-5) var(--space-2);
 		border: none;
 		background: transparent;
 		border-radius: var(--radius-icon);
 		color: var(--color-text-muted);
 		font-size: var(--font-size-label);
-		font-weight: 500;
+		font-weight: var(--font-weight-medium);
 		position: relative;
 		cursor: pointer;
 		text-decoration: none;
@@ -140,12 +140,12 @@
 	.rail-item.active {
 		background: var(--color-brand-tint);
 		color: var(--color-brand);
-		font-weight: 600;
+		font-weight: var(--font-weight-semibold);
 	}
 
 	.label {
 		font-size: var(--font-size-label);
-		line-height: 1;
+		line-height: var(--line-height-tight);
 	}
 
 	.badge {
@@ -155,13 +155,13 @@
 		background: var(--color-danger-text);
 		color: var(--color-surface);
 		font-size: var(--font-size-badge);
-		font-weight: 700;
+		font-weight: var(--font-weight-bold);
 		min-width: 15px;
 		height: 15px;
 		border-radius: var(--radius-pill);
 		text-align: center;
 		line-height: 15px;
-		padding: 0 3px;
+		padding: 0 var(--space-0-5);
 	}
 
 	.spacer {
@@ -172,7 +172,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 
 	.health-dot {

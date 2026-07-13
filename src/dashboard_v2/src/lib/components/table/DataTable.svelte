@@ -195,7 +195,7 @@
 	thead {
 		position: sticky;
 		top: 0;
-		z-index: 1;
+		z-index: var(--z-base);
 	}
 
 	th {
@@ -204,7 +204,7 @@
 		background: var(--color-surface);
 		padding: var(--table-th-padding);
 		font-size: var(--font-size-micro);
-		font-weight: 600;
+		font-weight: var(--font-weight-semibold);
 		color: var(--color-text-muted);
 		text-transform: uppercase;
 		letter-spacing: var(--table-th-letter-spacing);

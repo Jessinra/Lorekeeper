@@ -226,3 +226,16 @@ export const RELATION_DRAWER_STRINGS = {
 	/** Confirmation dialog for delete */
 	deleteConfirm: 'Delete this link?',
 } as const;
+
+export const SESSIONS_STRINGS = {
+	searchPlaceholder: 'Search by session ID or topic…',
+	filterAll: 'All',
+	emptyState: 'No sessions match this filter.',
+	memoriesHeading: 'Memories',
+	noMemories: 'No memories linked to this session.',
+	copyId: 'Copy session ID',
+	copyIdDone: 'Copied!',
+	drawerAriaLabel: 'Session detail',
+	closeButtonAriaLabel: 'Close drawer',
+	durationLabel: (min: number) => (min < 60 ? `${min}m` : `${Math.floor(min / 60)}h ${min % 60}m`),
+} as const;

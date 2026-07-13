@@ -51,10 +51,10 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		padding: 16px;
+		gap: var(--space-2);
+		padding: var(--space-4);
 		border: var(--border-width) solid var(--color-drawer-border);
-		border-radius: 8px;
+		border-radius: var(--radius-md);
 		background-color: var(--color-surface);
 		text-align: left;
 		font-family: inherit;
@@ -73,13 +73,13 @@
 	}
 
 	.memory-card.deleted {
-		border-color: #fca5a5;
+		border-color: var(--color-drawer-danger-border);
 		opacity: 0.85;
 	}
 
 	.memory-card.conflict-tint {
-		border-color: #fecaca;
-		background-color: #fff5f5;
+		border-color: var(--color-drawer-danger-border);
+		background-color: var(--color-drawer-danger-bg);
 	}
 
 	.card-badge {
@@ -100,14 +100,14 @@
 		background-color: var(--color-drawer-danger-bg);
 		color: var(--color-drawer-danger-text);
 		font-size: var(--font-size-label);
-		font-weight: 500;
+		font-weight: var(--font-weight-medium);
 		white-space: nowrap;
 	}
 
 	.card-title {
 		margin: 0;
-		font-size: 14px;
-		font-weight: 600;
+		font-size: var(--font-size-ui);
+		font-weight: var(--font-weight-semibold);
 		color: var(--color-text-primary);
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -121,19 +121,19 @@
 	.card-meta {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 		font-size: var(--font-size-micro);
 	}
 
 	.card-content {
 		font-family: ui-monospace, SFMono-Regular, monospace;
-		font-size: 12px;
-		line-height: 1.5;
+		font-size: var(--font-size-sub);
+		line-height: var(--line-height-normal);
 		color: var(--color-text-body);
 		background-color: var(--color-drawer-code-bg);
 		border: var(--border-width) solid var(--color-drawer-code-border);
-		border-radius: 4px;
-		padding: 8px;
+		border-radius: var(--radius-kbd);
+		padding: var(--space-2);
 		overflow: hidden;
 		display: -webkit-box;
 		-webkit-line-clamp: 3;
@@ -143,18 +143,18 @@
 
 	.card-desc {
 		margin: 0;
-		font-size: 12px;
+		font-size: var(--font-size-sub);
 		font-style: italic;
-		color: #6b7280;
+		color: var(--color-text-muted);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
 	.show-full {
-		font-size: 11px;
+		font-size: var(--font-size-micro);
 		color: var(--color-brand);
-		font-weight: 500;
+		font-weight: var(--font-weight-medium);
 		cursor: pointer;
 	}
 

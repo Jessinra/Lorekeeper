@@ -326,8 +326,8 @@
 	.toolbar {
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 16px 24px;
+		gap: var(--space-3);
+		padding: var(--space-4) var(--space-6);
 		flex-wrap: wrap;
 	}
 	.search-wrapper {
@@ -337,10 +337,10 @@
 	}
 	.search-input {
 		width: 100%;
-		padding: 8px 12px 8px 32px;
+		padding: var(--space-2) var(--space-3) var(--space-2) var(--space-8);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-input);
-		font-size: 13px;
+		font-size: var(--font-size-body);
 		background: var(--color-surface);
 		color: var(--color-text-primary);
 		outline: none;
@@ -350,22 +350,22 @@
 		box-shadow: 0 0 0 2px var(--color-brand-tint);
 	}
 	.ns-select {
-		padding: 8px 12px;
+		padding: var(--space-2) var(--space-3);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-input);
-		font-size: 13px;
+		font-size: var(--font-size-body);
 		background: var(--color-surface);
 		color: var(--color-text-primary);
 		min-width: 100px;
 	}
 	.btn-new {
-		padding: 8px 16px;
+		padding: var(--space-2) var(--space-4);
 		background: var(--color-brand);
-		color: #fff;
+		color: var(--color-text-on-filled);
 		border: none;
 		border-radius: var(--radius-input);
-		font-size: 13px;
-		font-weight: 600;
+		font-size: var(--font-size-body);
+		font-weight: var(--font-weight-semibold);
 		cursor: pointer;
 	}
 	.btn-new:disabled {
@@ -374,22 +374,22 @@
 	}
 	.chip-row {
 		display: flex;
-		gap: 6px;
-		padding: 0 24px 12px;
+		gap: var(--space-1-5);
+		padding: 0 var(--space-6) var(--space-3);
 		flex-wrap: wrap;
 	}
 	.pagination-bar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0 8px;
+		padding: 0 var(--space-2);
 	}
 	.error-banner {
-		margin: 12px 24px;
-		padding: 12px 16px;
+		margin: var(--space-3) var(--space-6);
+		padding: var(--space-3) var(--space-4);
 		background: var(--color-danger-bg);
 		color: var(--color-danger-text);
 		border-radius: var(--radius-card);
-		font-size: 13px;
+		font-size: var(--font-size-body);
 	}
 </style>

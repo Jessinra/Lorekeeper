@@ -46,11 +46,11 @@
 		bottom: 28px;
 		left: 50%;
 		transform: translateX(-50%);
-		z-index: 900;
+		z-index: var(--z-modal);
 
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 
 		background: var(--color-toast-bg);
 		color: var(--color-toast-text);
@@ -60,7 +60,7 @@
 		min-width: 200px;
 
 		font-size: var(--font-size-body);
-		line-height: 1.4;
+		line-height: var(--line-height-snug);
 		cursor: default;
 		user-select: none;
 
@@ -86,8 +86,8 @@
 		border: none;
 		color: var(--color-toast-dismiss);
 		cursor: pointer;
-		font-size: 16px;
-		line-height: 1;
+		font-size: var(--font-size-title);
+		line-height: var(--line-height-tight);
 		padding: 0 0 0 4px;
 		display: flex;
 		align-items: center;

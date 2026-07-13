@@ -145,7 +145,7 @@
 	.dialog-card {
 		position: fixed;
 		inset: 0;
-		z-index: 801;
+		z-index: var(--z-drawer-top);
 		margin: auto;
 
 		width: min(420px, calc(100vw - 32px));
@@ -175,23 +175,23 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin-bottom: 16px;
+		margin-bottom: var(--space-4);
 		flex-shrink: 0;
 	}
 
 	.dialog-title {
-		font-size: 16px;
-		font-weight: 700;
+		font-size: var(--font-size-title);
+		font-weight: var(--font-weight-bold);
 		color: var(--color-text-primary);
 		margin: 0 0 8px;
-		line-height: 1.3;
+		line-height: var(--line-height-snug);
 	}
 
 	.dialog-body {
 		font-size: var(--font-size-body);
 		color: var(--color-text-body);
 		margin: 0 0 16px;
-		line-height: 1.5;
+		line-height: var(--line-height-normal);
 	}
 
 	.item-chip {
@@ -202,7 +202,7 @@
 		padding: 4px 10px;
 		font-size: var(--font-size-body);
 		color: var(--color-text-body);
-		margin-bottom: 20px;
+		margin-bottom: var(--space-5);
 		max-width: 100%;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -212,8 +212,8 @@
 	.dialog-actions {
 		display: flex;
 		justify-content: flex-end;
-		gap: 8px;
-		margin-top: 4px;
+		gap: var(--space-2);
+		margin-top: var(--space-1);
 	}
 
 	/* Shared button base */
@@ -221,10 +221,10 @@
 		padding: 8px 16px;
 		border-radius: var(--radius-control);
 		font-size: var(--font-size-body);
-		font-weight: 500;
+		font-weight: var(--font-weight-medium);
 		cursor: pointer;
 		border: none;
-		line-height: 1;
+		line-height: var(--line-height-tight);
 		transition: background 120ms ease;
 	}
 

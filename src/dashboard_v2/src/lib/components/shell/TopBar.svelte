@@ -73,12 +73,12 @@
 		background: var(--color-surface);
 		position: sticky;
 		top: 0;
-		z-index: 30;
+		z-index: var(--z-raised);
 	}
 
 	.breadcrumb {
 		display: flex;
-		gap: 6px;
+		gap: var(--space-1-5);
 		align-items: center;
 		font-size: var(--font-size-breadcrumb);
 	}
@@ -93,17 +93,17 @@
 
 	.breadcrumb-current {
 		color: var(--color-text-primary);
-		font-weight: 600;
+		font-weight: var(--font-weight-semibold);
 	}
 
 	.search-trigger {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		border: var(--border-width) solid var(--color-border);
 		background: var(--color-background);
 		border-radius: var(--radius-control);
-		padding: 8px 10px;
+		padding: var(--space-2) var(--space-2-5);
 		color: var(--color-text-faint);
 		font-size: var(--font-size-body);
 		width: 230px;
@@ -136,7 +136,7 @@
 
 	.kbd-hints {
 		display: flex;
-		gap: 3px;
+		gap: var(--space-0-5);
 	}
 
 	kbd {

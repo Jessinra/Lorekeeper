@@ -12,7 +12,7 @@
 	.scrim {
 		position: fixed;
 		inset: 0;
-		z-index: 800;
+		z-index: var(--z-drawer);
 		background: var(--color-scrim);
 		animation: fade-in 200ms ease forwards;
 	}

@@ -19,14 +19,14 @@
 
 <style>
 	.page-header {
-		margin-bottom: 24px;
+		margin-bottom: var(--space-6);
 	}
 
 	h1 {
 		font-size: var(--font-size-heading);
-		font-weight: 700;
+		font-weight: var(--font-weight-bold);
 		color: var(--color-text-primary);
-		margin: 0 0 4px;
+		margin: 0 0 var(--space-1);
 	}
 
 	.subtitle {
