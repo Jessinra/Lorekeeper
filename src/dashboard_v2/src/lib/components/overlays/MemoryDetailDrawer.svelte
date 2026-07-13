@@ -560,7 +560,7 @@
 		border: var(--border-width) solid var(--color-drawer-code-border);
 		color: var(--color-text-body);
 		white-space: pre-wrap;
-		word-break: break-word;
+		word-break: break-all;
 		line-height: var(--line-height-normal);
 	}
 

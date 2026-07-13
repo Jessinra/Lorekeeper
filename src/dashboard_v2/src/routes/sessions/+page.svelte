@@ -415,7 +415,6 @@
 		margin: 0;
 		border-left: 2px solid var(--color-border);
 		margin-left: var(--space-2);
-		padding-left: 0;
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-1);
@@ -487,11 +486,26 @@
 		flex-shrink: 0;
 	}
 
-	.task-build { background-color: var(--color-task-build-bg); color: var(--color-task-build-text); }
-	.task-debug { background-color: var(--color-task-debug-bg); color: var(--color-task-debug-text); }
-	.task-review { background-color: var(--color-task-review-bg); color: var(--color-task-review-text); }
-	.task-design { background-color: var(--color-task-design-bg); color: var(--color-task-design-text); }
-	.task-other { background-color: var(--color-chip-bg); color: var(--color-chip-text); }
+	.task-build {
+		background-color: var(--color-task-build-bg);
+		color: var(--color-task-build-text);
+	}
+	.task-debug {
+		background-color: var(--color-task-debug-bg);
+		color: var(--color-task-debug-text);
+	}
+	.task-review {
+		background-color: var(--color-task-review-bg);
+		color: var(--color-task-review-text);
+	}
+	.task-design {
+		background-color: var(--color-task-design-bg);
+		color: var(--color-task-design-text);
+	}
+	.task-other {
+		background-color: var(--color-chip-bg);
+		color: var(--color-chip-text);
+	}
 
 	.card-title {
 		font-size: var(--font-size-sm);
