@@ -202,9 +202,11 @@ class DashboardHandler:
         sort_by: str = "weighted_score",
         sort_dir: str = "desc",
         memory_id: str | None = None,
+        status: str = "pending",
     ) -> dict[str, Any]:
         page, total = self._sugp.list_pending(
-            limit=limit, offset=offset, sort_by=sort_by, sort_dir=sort_dir, memory_id=memory_id,
+            limit=limit, offset=offset, sort_by=sort_by, sort_dir=sort_dir,
+            memory_id=memory_id, status=status,
         )
         return {
             "items": [
@@ -221,6 +223,7 @@ class DashboardHandler:
                     "temporal_score": r.temporal_score,
                     "confidence": r.confidence,
                     "created_at": r.created_at,
+                    "status": r.status,
                 }
                 for r in page
             ],

@@ -116,6 +116,7 @@ class SuggestionProcessor:
         sort_by: str = "weighted_score",
         sort_dir: str = "desc",
         memory_id: str | None = None,
+        status: str = "pending",
     ) -> tuple[list[LinkSuggestion], int]:
         """Return a page of pending suggestions and the total matching count.
 
@@ -134,22 +135,26 @@ class SuggestionProcessor:
         order = "ASC" if sort_dir.lower() == "asc" else "DESC"
 
         if memory_id:
-            total = self._suggestions.count_pending_suggestions_for_memory(memory_id)
+            if status == "pending":
+                total = self._suggestions.count_pending_suggestions_for_memory(memory_id)
+            else:
+                total = 0
             page = self._suggestions.get_suggestions_for_memory_paged(
                 memory_id,
-                status="pending",
+                status=status,
                 sort_by=sort_by,
                 sort_dir=order,
                 limit=limit,
                 offset=offset,
             )
         else:
-            total = self._suggestions.count_pending_suggestions()
+            total = self._suggestions.count_suggestions_by_status(status)
             page = self._suggestions.get_pending_suggestions(
                 limit=limit,
                 offset=offset,
                 sort_by=sort_by,
                 sort_dir=order,
+                status=status,
             )
         return page, total
 

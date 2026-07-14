@@ -48,11 +48,13 @@ def list_suggestions(
     sort_by: str = "weighted_score",
     sort_dir: str = "desc",
     memory_id: str | None = None,
+    status: str = "pending",
 ) -> dict[str, Any]:
-    """List pending suggestions with pagination."""
+    """List suggestions with pagination. status: pending | accepted | rejected."""
     try:
         return _handler(request).list_suggestions(
-            limit=limit, offset=offset, sort_by=sort_by, sort_dir=sort_dir, memory_id=memory_id,
+            limit=limit, offset=offset, sort_by=sort_by, sort_dir=sort_dir,
+            memory_id=memory_id, status=status,
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e)) from e
