@@ -107,123 +107,25 @@ hermes cron create \
   --deliver local
 ```
 
-## Efficient `gh` CLI Operations
+## gh CLI Operations
 
-### Auth & Identity
-
-```bash
-# Check current auth status
-gh auth status
-
-# Switch between bot and personal accounts (both are configured)
-gh auth switch --user jessinra-megumi-dev[bot]
-gh auth switch --user Jessinra
-
-# Get raw token (for debugging or API calls outside gh)
-gh auth token
-```
-
-### PR Lifecycle (common patterns)
-
-```bash
-# Create a PR from current branch
-gh pr create --base main --title "[LKPR-N] type: title" --body "## Summary\n\nChanges:\n- ...\n\nCloses LKPR-N"
-
-# Create a PR with Copilot reviewer
-gh pr create --base main --title "[LKPR-N] type: title" --body "..." --reviewer @copilot
-
-# View PR details
-gh pr view 12                          # specific PR number
-gh pr view --json title,body,state     # raw JSON fields
-
-# Get the PR diff for review
-gh pr diff 12
-
-# List open PRs
-gh pr list --author @me
-gh pr list --state open --limit 10
-
-# Check CI/checks status
-gh pr checks 12
-gh pr checks 12 --watch                # poll until complete
-
-# Merge (squash preferred)
-gh pr merge 12 --squash --delete-branch
-gh pr merge 12 --auto --squash         # enable auto-merge (merges when checks pass)
-
-# Add a comment
-gh pr comment 12 --body "Addressed in latest push"
-
-# Close without merging
-gh pr close 12
-```
-
-### Reading Inline Review Comments
-
-`gh pr view` doesn't show inline comments. Use the API:
-
-```bash
-gh api repos/Jessinra/Lorekeeper/pulls/12/comments --jq '.[] | {path, body, line}'
-```
-
-### GitHub API Calls (general purpose)
-
-```bash
-# GET requests
-gh api repos/Jessinra/Lorekeeper                         # repo info
-gh api repos/Jessinra/Lorekeeper/pulls                    # list PRs
-gh api repos/Jessinra/Lorekeeper/issues                   # list issues
-gh api repos/Jessinra/Lorekeeper/contents/CLAUDE.md       # file content
-
-# POST/PATCH requests
-gh api repos/Jessinra/Lorekeeper/pulls -X POST -f title="..." -f head=branch -f base=main
-gh api repos/Jessinra/Lorekeeper/issues/1/comments -X POST -f body="..."
-
-# Filter with jq
-gh api repos/Jessinra/Lorekeeper/pulls --jq '.[] | {number, title, state, created_at}'
-gh api repos/Jessinra/Lorekeeper/pulls/12 --jq '.head.ref'   # get the branch name
-
-# Pagination
-gh api repos/Jessinra/Lorekeeper/pulls --paginate --jq '.[].title'
-```
-
-### Working with the Lorekeeper Repo
-
-```bash
-# Quick branch info
-git branch --show-current                                  # current branch
-git log --oneline -5                                       # recent commits
-git diff main...HEAD --stat                                # what's changed on this branch
-
-# Push a branch and open PR (one-liner)
-git push -u origin HEAD && gh pr create --base main --title "[LKPR-N] type: title" --body "..."
-
-# Get the PR URL (useful for sharing with Jason)
-gh pr view --json url --jq '.url'
-
-# See who's ahead
-git log --oneline origin/main..HEAD                        # local commits not on main
-git log --oneline HEAD..origin/main                        # remote commits not local
-```
+Auth, PR lifecycle, API calls, and repo commands live in `references/gh-cli-reference.md`. Load it for the full command reference.
 
 ### Troubleshooting
 
-**First thing to try — just run the refresh script.** It now re-syncs the keyring too, so it fixes the `token in default is invalid` error on its own:
+**First thing to try — just run the refresh script.** It re-syncs the keyring, fixing the `token in default is invalid` error:
 
 ```bash
-python3 ~/.hermes/scripts/gh-token-refresh.py   # silent = success; prints + exits 1 on failure
-gh auth status                                   # confirm: ✓ Logged in ... (keyring)
+python3 ~/.hermes/scripts/gh-token-refresh.py
+gh auth status
 gh api repos/Jessinra/Lorekeeper --jq '.full_name'
 ```
 
-If `gh auth status` still shows the token as invalid after a refresh, the keyring write failed — check the script's stderr (run it directly, it will print the failing step). Legacy manual dance (rarely needed now):
+If `gh auth status` still shows invalid after refresh, the keyring write failed — run the script directly to see stderr. Legacy fallback:
 
 ```bash
-# Fall back to personal account
 gh auth switch --user Jessinra
-
-# Nuclear reset
 unset GH_TOKEN
 gh auth logout -h github.com -u "jessinra-megumi-dev[bot]"
-python3 ~/.hermes/scripts/gh-token-refresh.py    # re-mints + re-logs-in via keyring
+python3 ~/.hermes/scripts/gh-token-refresh.py
 ```

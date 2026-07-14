@@ -94,53 +94,25 @@ Never copy — use as _inspiration and contrast_ only.
 
 ## A/B Testing Copy Variations
 
-Use this workflow whenever evaluating headline copy, manifesto variations, or major README rewrites.
+Evaluate headline copy, manifesto variations, or README rewrites.
 
-### Step 1 — Write 3 variations with distinct personas
+### Step 1 — Write 3 variations
 
-Name each variation after its rhetorical stance:
-
-- **The Craftsperson** — tool-focused, "we built it by using it", humble specifics
-- **The Ecosystem Builder** — community-focused, names peers, vision-forward
-- **The Practitioner** — low-ego, developer-native, leads with install command
-
-Each variation should be a complete, standalone block — don't make voters interpolate.
+Name each after its rhetorical stance: **The Craftsperson** (tool-focused, humble specifics), **The Ecosystem Builder** (community-focused, vision-forward), **The Practitioner** (developer-native, leads with install).
 
 ### Step 2 — Run 11 evaluator personas via `delegate_task`
 
-Split into 3 parallel subagent calls (4 + 4 + 3 personas). Each subagent evaluates all
-variations but votes as its assigned persona(s).
+Split into 3 parallel subagent calls (4 + 4 + 3). Each evaluates all variations but votes as its assigned persona(s). Voting prompt: `"Vote: A, B, or C. 2-3 sentence reasoning. Focus on [persona-specific lens]."`
 
-**Canonical 11 personas** (copy-paste into task goals):
-
-| #   | Persona                      | What they care about                          |
-| --- | ---------------------------- | --------------------------------------------- |
-| 1   | Skeptical senior engineer    | Specifics, no hype, track record              |
-| 2   | Junior dev, first AI project | Clarity, low activation energy, one next step |
-| 3   | AI researcher                | Epistemic honesty, no overclaiming            |
-| 4   | Open source maintainer       | Community health, ecosystem generosity        |
-| 5   | Privacy-conscious developer  | Local-only, no cloud, no shutdown risk        |
-| 6   | Developer advocate / DevRel  | Shareability, quotable lines, story arc       |
-| 7   | Multi-agent systems builder  | Technical specifics, reliability, namespaces  |
-| 8   | Hacker News front-pager      | Anti-hype detector, would they upvote?        |
-| 9   | An actual AI agent           | Does it make me trust this for my memories?   |
-| 10  | Startup founder              | Signal-to-noise, value in 10 seconds          |
-| 11  | Potential contributor        | Maintainers around in 6 months? Values?       |
-
-Voting prompt template for each persona:
-
-> "Vote: A, B, or C. 2-3 sentence reasoning. Focus on [persona-specific lens]."
+**Personas:** 1. Skeptical senior engineer, 2. Junior dev first AI project, 3. AI researcher, 4. Open source maintainer, 5. Privacy-conscious developer, 6. Developer advocate, 7. Multi-agent systems builder, 8. Hacker News front-pager, 9. An actual AI agent, 10. Startup founder, 11. Potential contributor.
 
 ### Step 3 — Tally and synthesise
 
-Count votes. Note _why_ dissenters voted differently — they often surface the best
-incremental improvements. The winning variation is the base; borrow specific elements
-from runners-up (e.g. Variation B's explicit competitor name-drops into a Variation C base).
+Count votes. Note _why_ dissenters voted differently. Winning variation is the base; borrow specific elements from runners-up.
 
 ### Step 4 — Write the merged final
 
-Apply the merge before filing. Don't ship a raw variation winner — always integrate
-the best 1-2 elements from the runners-up.
+Always integrate the best 1-2 elements from runners-up before shipping.
 
 ---
 
