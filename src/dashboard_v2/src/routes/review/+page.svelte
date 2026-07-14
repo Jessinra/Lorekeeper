@@ -37,6 +37,11 @@
 
 	let sortBy = $state('weighted_score');
 	let sortDir = $state<'asc' | 'desc'>('desc');
+	let sortKey = $derived(
+		sortBy === 'weighted_score' && sortDir === 'desc' ? 'score-desc'
+		: sortBy === 'weighted_score' && sortDir === 'asc' ? 'score-asc'
+		: 'newest',
+	);
 
 	// ── Data state ─────────────────────────────────────────────────────────────
 
@@ -57,7 +62,7 @@
 
 	// ── Debounce ───────────────────────────────────────────────────────────────
 
-	let searchTimer: ReturnType<typeof setTimeout> | undefined = $state(undefined);
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
 	// ── Load ───────────────────────────────────────────────────────────────────
 
@@ -86,6 +91,7 @@
 				offset,
 				sort_by: sortBy,
 				sort_dir: sortDir,
+				status: activeTab,
 			});
 
 			// Client-side filter by search query (title match on source or target)
@@ -97,11 +103,13 @@
 					)
 				: res.items;
 
-			// Split by status — backend returns pending items; reviewed not exposed separately.
-			// For the reviewed tab we hold items in memory after batch actions.
-			pendingRows = filtered;
+			if (activeTab === 'pending') {
+				pendingRows = filtered;
+			} else {
+				reviewedRows = filtered;
+			}
 			total = filtered.length;
-			totalPages = Math.max(1, Math.ceil(res.total / perPage));
+			totalPages = Math.max(1, Math.ceil(total / perPage));
 		} catch (e) {
 			error = (e as Error).message;
 		} finally {
@@ -166,9 +174,7 @@
 		selectedIds.clear();
 		currentPage = 1;
 		syncUrl();
-		if (tab === 'pending') {
-			reloadSignal++;
-		}
+		reloadSignal++;
 	}
 
 	// ── Search ─────────────────────────────────────────────────────────────────
@@ -237,7 +243,7 @@
 		{#if activeTab === 'pending'}
 			<select
 				class="sort-select"
-				value={sortBy === 'weighted_score' && sortDir === 'desc' ? 'score-desc' : sortBy === 'weighted_score' && sortDir === 'asc' ? 'score-asc' : 'newest'}
+				value={sortKey}
 				onchange={onSortChange}
 				aria-label="Sort suggestions"
 			>
@@ -461,15 +467,15 @@
 	}
 
 	.btn-accept {
-		background: var(--color-success-subtle, #d1fae5);
-		color: var(--color-success, #065f46);
-		border-color: var(--color-success, #065f46);
+		background: var(--color-success-bg);
+		color: var(--color-success-text);
+		border-color: var(--color-success-text);
 	}
 
 	.btn-reject {
-		background: var(--color-danger-subtle, #fee2e2);
-		color: var(--color-danger, #991b1b);
-		border-color: var(--color-danger, #991b1b);
+		background: var(--color-danger-bg);
+		color: var(--color-danger-text);
+		border-color: var(--color-danger-text);
 	}
 
 	/* ── Table ────────────────────────────────────────────────────────────────── */

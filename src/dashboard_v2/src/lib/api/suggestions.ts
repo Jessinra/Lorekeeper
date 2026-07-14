@@ -43,6 +43,7 @@ export interface SuggestionsParams {
 	sort_by?: string;
 	sort_dir?: 'asc' | 'desc';
 	memory_id?: string;
+	status?: 'pending' | 'reviewed';
 }
 
 export interface BatchResultItem {
@@ -65,6 +66,7 @@ function buildQuery(params: SuggestionsParams): string {
 	if (params.sort_by) p.set('sort_by', params.sort_by);
 	if (params.sort_dir) p.set('sort_dir', params.sort_dir);
 	if (params.memory_id) p.set('memory_id', params.memory_id);
+	if (params.status) p.set('status', params.status);
 	const s = p.toString();
 	return s ? `?${s}` : '';
 }
