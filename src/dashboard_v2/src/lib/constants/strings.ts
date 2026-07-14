@@ -227,6 +227,50 @@ export const RELATION_DRAWER_STRINGS = {
 	deleteConfirm: 'Delete this link?',
 } as const;
 
+// ── Review Inbox (LKPR-131) ──────────────────────────────────────────────────
+
+export const REVIEW_STRINGS = {
+	/** Page tabs */
+	tabPending: 'Pending',
+	tabReviewed: 'Reviewed',
+	/** Toolbar */
+	searchPlaceholder: 'Filter by memory title…',
+	acceptSelected: 'Accept',
+	rejectSelected: 'Reject',
+	selectAll: 'Select all',
+	/** Sort options */
+	sortScoreDesc: 'Score ↓',
+	sortScoreAsc: 'Score ↑',
+	sortNewest: 'Newest first',
+	/** Column headers */
+	colSource: 'Source',
+	colTarget: 'Target',
+	colScore: 'Score',
+	colDate: 'Date',
+	colStatus: 'Status',
+	/** Status badges */
+	statusPending: 'Pending',
+	statusAccepted: 'Accepted',
+	statusRejected: 'Rejected',
+	/** Empty states */
+	emptyPending: 'No pending suggestions',
+	emptyPendingMessage: 'Run a sweep to generate new link candidates.',
+	emptyReviewed: 'No reviewed suggestions',
+	emptyReviewedMessage: 'Accepted and rejected items will appear here.',
+	/** Selection state */
+	noneSelected: 'Select rows to act on them',
+	selectedCount: (n: number) => `${n} selected`,
+	/** Toast messages */
+	acceptSuccess: (n: number) => `Accepted ${n} suggestion${n === 1 ? '' : 's'}`,
+	rejectSuccess: (n: number) => `Rejected ${n} suggestion${n === 1 ? '' : 's'}`,
+	batchError: 'Some items failed — check console for details',
+	/** Skeleton label */
+	skeletonLabel: 'Loading suggestions',
+	/** aria-labels */
+	toolbarAriaLabel: 'Suggestion toolbar',
+	tableAriaLabel: 'Suggestions table',
+} as const;
+
 export const SESSIONS_STRINGS = {
 	searchPlaceholder: 'Search by session ID or topic…',
 	filterAll: 'All',
