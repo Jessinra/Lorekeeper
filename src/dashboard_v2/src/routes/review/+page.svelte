@@ -11,7 +11,7 @@
 	import { fetchSuggestions, batchSuggestions } from '$lib/api/suggestions.js';
 	import type { SuggestionRow } from '$lib/api/suggestions.js';
 	import { showToast } from '$lib/toast.js';
-	import { readSearchParam } from '$lib/url.js';
+	import { readSearchParam, readSearchParamInt } from '$lib/url.js';
 	import { relativeTime } from '$lib/time.js';
 
 	// ── URL state ──────────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@
 		(readSearchParam((k) => page.url.searchParams.get(k), 'tab', 'pending') as Tab),
 	);
 	let searchQuery = $state(readSearchParam((k) => page.url.searchParams.get(k), 'q', ''));
-	let currentPage = $state(1);
+	let currentPage = $state(readSearchParamInt((k) => page.url.searchParams.get(k), 'page', 1));
 	const perPage = 50;
 
 	function syncUrl() {
@@ -81,6 +81,14 @@
 		load();
 	});
 
+	// Clear selection whenever the user navigates to a different page directly
+	// (not via resetAndLoad, which already clears it).
+	$effect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		currentPage;
+		selectedIds.clear();
+	});
+
 	async function load() {
 		loading = true;
 		error = null;
@@ -108,8 +116,9 @@
 			} else {
 				reviewedRows = filtered;
 			}
-			total = filtered.length;
-			totalPages = Math.max(1, Math.ceil(total / perPage));
+			total = res.total;
+			// Note: search is client-side (current page only); no backend q= param yet.
+			totalPages = Math.max(1, Math.ceil(res.total / perPage));
 		} catch (e) {
 			error = (e as Error).message;
 		} finally {
@@ -332,8 +341,7 @@
 							onkeydown={activeTab === 'pending'
 								? (e: KeyboardEvent) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleRow(row.id); } }
 								: undefined}
-							role={activeTab === 'pending' ? 'checkbox' : 'row'}
-							aria-checked={activeTab === 'pending' ? selectedIds.has(row.id) : undefined}
+							aria-selected={activeTab === 'pending' ? selectedIds.has(row.id) : undefined}
 						>
 							{#if activeTab === 'pending'}
 								<td class="col-check" onclick={(e) => e.stopPropagation()}>
