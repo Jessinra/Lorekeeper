@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { replaceState } from '$app/navigation';
-	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import PageShell from '$lib/components/ui/PageShell.svelte';
 	import Icon from '$lib/components/ui/Icon.svelte';
@@ -161,10 +160,13 @@
 				console.error('Batch suggestion errors:', res.errors);
 				showToast(S.batchError, 'error');
 			}
-			// Move acted rows to reviewed tab
-			const actedRows = pendingRows.filter((r) => ids.includes(r.id));
+			// Move only successfully acted rows to reviewed tab, carrying the final status
+			const successIds = new Set(
+				res.results.filter((r) => r.status === 'accepted' || r.status === 'rejected').map((r) => r.id),
+			);
+			const actedRows = pendingRows.filter((r) => successIds.has(r.id));
 			reviewedRows = [
-				...actedRows.map((r) => ({ ...r })),
+				...actedRows.map((r) => ({ ...r, status: action === 'accept' ? 'accepted' : 'rejected' as SuggestionRow['status'] })),
 				...reviewedRows,
 			];
 			resetAndLoad();
@@ -205,11 +207,7 @@
 		resetAndLoad();
 	}
 
-	// ── Mount ──────────────────────────────────────────────────────────────────
 
-	onMount(() => {
-		reloadSignal++;
-	});
 </script>
 
 <PageShell title="Review">
@@ -330,7 +328,10 @@
 						<th class="col-target">{S.colTarget}</th>
 						<th class="col-score">{S.colScore}</th>
 						<th class="col-date">{S.colDate}</th>
-					</tr>
+						{#if activeTab === 'reviewed'}
+							<th class="col-status">{S.colStatus}</th>
+						{/if}
+						</tr>
 				</thead>
 				<tbody>
 					{#each activeRows as row (row.id)}
@@ -363,7 +364,14 @@
 								<span class="score-badge">{row.weighted_score.toFixed(2)}</span>
 							</td>
 							<td class="col-date">{relativeTime(row.created_at)}</td>
-						</tr>
+							{#if activeTab === 'reviewed'}
+								<td class="col-status">
+									<span class="status-badge status-{row.status}">
+										{row.status === 'accepted' ? S.statusAccepted : S.statusRejected}
+									</span>
+								</td>
+							{/if}
+							</tr>
 					{/each}
 				</tbody>
 			</table>
@@ -555,6 +563,28 @@
 		width: 120px;
 		color: var(--color-text-muted);
 		font-size: var(--font-size-small);
+	}
+
+	.col-status {
+		width: 100px;
+	}
+
+	.status-badge {
+		display: inline-block;
+		padding: 2px var(--space-2);
+		border-radius: var(--radius-input);
+		font-size: var(--font-size-small);
+		font-weight: var(--font-weight-medium);
+	}
+
+	.status-accepted {
+		background: var(--color-success-bg);
+		color: var(--color-success-text);
+	}
+
+	.status-rejected {
+		background: var(--color-danger-bg);
+		color: var(--color-danger-text);
 	}
 
 	.memory-title {

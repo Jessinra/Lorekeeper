@@ -29,6 +29,7 @@ export interface SuggestionRow {
 	temporal_score: number;
 	confidence: number;
 	created_at: string;
+	status: 'pending' | 'accepted' | 'rejected';
 }
 
 export interface SuggestionsResponse {
