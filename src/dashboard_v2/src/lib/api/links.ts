@@ -17,8 +17,9 @@ export interface LinkRow {
 export async function fetchLinks(includeDeleted = false): Promise<LinkRow[]> {
 	const params = new URLSearchParams();
 	if (includeDeleted) params.set('include_deleted', 'true');
-	const res = await fetch(`/api/links?${params.toString()}`);
-	if (!res.ok) throw new Error(`Failed to fetch links: ${res.statusText}`);
+	const query = params.toString();
+	const res = await fetch(`/api/links${query ? `?${query}` : ''}`);
+	if (!res.ok) throw new Error(`Failed to fetch links: ${res.status} ${res.statusText}`);
 	return res.json() as Promise<LinkRow[]>;
 }
 

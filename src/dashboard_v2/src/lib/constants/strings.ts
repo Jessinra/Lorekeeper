@@ -293,6 +293,7 @@ export const LINKS_STRINGS = {
 	/** Row actions */
 	deleteSuccess: 'Link deleted',
 	deleteError: 'Failed to delete link',
+	loadError: 'Failed to load relationship details',
 } as const;
 
 export const SESSIONS_STRINGS = {

@@ -44,19 +44,24 @@
 			: allRows,
 	);
 
-	// ── Debounce ───────────────────────────────────────────────────────────────
-
-	let searchTimer: ReturnType<typeof setTimeout> | undefined;
-
 	// ── Load ───────────────────────────────────────────────────────────────────
 
 	let reloadSignal = $state(0);
 
+	// Load effect: only reruns when includeDeleted or reloadSignal changes
 	$effect(() => {
 		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		reloadSignal;
-		syncUrl();
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		includeDeleted;
 		load();
+	});
+
+	// URL sync effect: only reruns when searchQuery changes
+	$effect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		searchQuery;
+		syncUrl();
 	});
 
 	async function load() {
@@ -73,11 +78,9 @@
 
 	// ── Search ─────────────────────────────────────────────────────────────────
 
+	// Also remove the redundant timer-based URL update — URL sync is handled by the effect above
 	function onSearchInput(e: Event) {
-		const val = (e.target as HTMLInputElement).value;
-		searchQuery = val;
-		clearTimeout(searchTimer);
-		searchTimer = setTimeout(() => syncUrl(), 280);
+		searchQuery = (e.target as HTMLInputElement).value;
 	}
 
 	// ── Relationship drawer ────────────────────────────────────────────────────
@@ -87,20 +90,38 @@
 	let drawerRelationType = $state('');
 	let drawerSource = $state<MemoryData | null>(null);
 	let drawerTarget = $state<MemoryData | null>(null);
+	let drawerAbortController: AbortController | null = null;
 
 	async function openDrawer(row: LinkRow) {
-		drawerLinkId = row.id;
+		// Cancel any in-flight fetch for a previously opened row
+		drawerAbortController?.abort();
+		const controller = new AbortController();
+		drawerAbortController = controller;
+
+		const requestedLinkId = row.id;
+		drawerLinkId = requestedLinkId;
 		drawerRelationType = row.relation_type;
 		drawerSource = null;
 		drawerTarget = null;
 		drawerOpen = true;
-		// Fetch both memories in parallel
-		const [srcDetail, tgtDetail] = await Promise.all([
-			fetchMemoryDetail(row.source_memory_id),
-			fetchMemoryDetail(row.target_memory_id),
-		]);
-		drawerSource = srcDetail.memory as MemoryData;
-		drawerTarget = tgtDetail.memory as MemoryData;
+
+		try {
+			// Fetch both memories in parallel
+			const [srcDetail, tgtDetail] = await Promise.all([
+				fetchMemoryDetail(row.source_memory_id),
+				fetchMemoryDetail(row.target_memory_id),
+			]);
+			// Guard: discard results if a newer row was opened before this resolved
+			if (controller.signal.aborted || drawerLinkId !== requestedLinkId) return;
+			drawerSource = srcDetail.memory as MemoryData;
+			drawerTarget = tgtDetail.memory as MemoryData;
+		} catch (e) {
+			if (controller.signal.aborted) return;
+			// Fetch failed — close drawer rather than leaving it in a broken loading state
+			drawerOpen = false;
+			drawerLinkId = null;
+			showToast((e as Error).message || S.loadError, 'error');
+		}
 	}
 
 	function onDrawerClose() {
@@ -111,15 +132,30 @@
 	}
 
 	async function onDrawerDelete(linkId: string): Promise<boolean> {
-		const ok = await deleteLink(linkId);
-		if (ok) {
-			showToast(S.deleteSuccess, 'success');
-			allRows = allRows.filter((r) => r.id !== linkId);
-			drawerOpen = false;
-		} else {
+		// Optimistic: remove the row immediately, restore on failure
+		const removedRow = allRows.find((r) => r.id === linkId);
+		allRows = allRows.filter((r) => r.id !== linkId);
+		drawerOpen = false;
+
+		try {
+			const ok = await deleteLink(linkId);
+			if (ok) {
+				showToast(S.deleteSuccess, 'success');
+				return true;
+			} else {
+				// Non-OK response: restore row
+				if (removedRow) allRows = [...allRows, removedRow];
+				drawerOpen = true;
+				showToast(S.deleteError, 'error');
+				return false;
+			}
+		} catch (e) {
+			// Network/thrown error: restore row
+			if (removedRow) allRows = [...allRows, removedRow];
+			drawerOpen = true;
 			showToast(S.deleteError, 'error');
+			return false;
 		}
-		return ok;
 	}
 
 	function onDrawerNavigate(_memoryId: string) {
@@ -189,17 +225,14 @@
 						<tr
 							class="link-row"
 							onclick={() => openDrawer(row)}
-							tabindex="0"
-							onkeydown={(e: KeyboardEvent) => {
-								if (e.key === ' ' || e.key === 'Enter') {
-									e.preventDefault();
-									openDrawer(row);
-								}
-							}}
 							aria-label={`${row.source_title} ${row.relation_type} ${row.target_title}`}
 						>
 							<td class="col-source" title={row.source_title}>
-								<span class="memory-title">{row.source_title}</span>
+								<button
+									class="row-open-btn memory-title"
+									onclick={(e: MouseEvent) => { e.stopPropagation(); openDrawer(row); }}
+									aria-label={`Open link: ${row.source_title} ${row.relation_type} ${row.target_title}`}
+								>{row.source_title}</button>
 							</td>
 							<td class="col-relation">
 								<RelationPill type={row.relation_type as keyof typeof RELATION_STYLES} />
@@ -354,6 +387,18 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	.row-open-btn {
+		background: none;
+		border: none;
+		padding: 0;
+		margin: 0;
+		font: inherit;
+		color: inherit;
+		text-align: left;
+		cursor: pointer;
+		width: 100%;
 	}
 
 	.reason-text {
