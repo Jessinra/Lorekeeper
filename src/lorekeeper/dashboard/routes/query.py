@@ -45,7 +45,7 @@ def _signal_contributions(
 @router.post("/api/query/debug")
 def debug_query(request: Request, body: DebugQueryRequest) -> dict[str, Any]:
     handler = _handler(request)
-    settings = handler._settings  # type: ignore[attr-defined]
+    settings = handler._settings
 
     start = time.monotonic()
     results = handler._memp.search(
