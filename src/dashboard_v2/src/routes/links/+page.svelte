@@ -149,7 +149,9 @@
 				showToast(S.deleteError, 'error');
 				return false;
 			}
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		} catch (_e) {
+			// Network/thrown error: restore row
 			if (removedRow) allRows = [...allRows, removedRow];
 			drawerOpen = true;
 			showToast(S.deleteError, 'error');
