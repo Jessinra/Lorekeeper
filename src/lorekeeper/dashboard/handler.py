@@ -15,6 +15,7 @@ import json
 from typing import TYPE_CHECKING, Any
 
 from lorekeeper.domains.memory.models import Memory
+from lorekeeper.domains.memory.ranking import SearchResult
 from lorekeeper.shared.serializers import (
     serialize_memory,
     serialize_memory_link,
@@ -378,3 +379,19 @@ class DashboardHandler:
     @property
     def settings(self) -> Settings:
         return self._settings
+
+    def debug_search(
+        self,
+        query: str,
+        limit: int = 10,
+        min_score: float = 0.1,
+        include_deleted: bool = False,
+    ) -> list[SearchResult]:
+        """Run a raw search returning SearchResult objects for debug/inspection endpoints."""
+        return self._memp.search(
+            query,
+            limit=limit,
+            min_score=min_score,
+            include_deleted=include_deleted,
+            include_links=True,
+        )

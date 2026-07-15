@@ -8,7 +8,6 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from lorekeeper.dashboard.handler import DashboardHandler
-from lorekeeper.infra.settings import Settings
 
 router = APIRouter()
 
@@ -29,31 +28,34 @@ def _signal_contributions(
     keyword: float,
     memory_score: float,
     usage_count: int,
-    settings: Settings,
+    w_semantic: float,
+    w_keyword: float,
+    w_memory: float,
+    w_usage: float,
+    usage_normalisation_cap: int,
 ) -> dict[str, float]:
     """Compute the per-signal weighted contributions that sum to combined_score."""
-    cap = settings.usage_normalisation_cap
+    cap = usage_normalisation_cap
     log_usage = math.log2(1 + usage_count) / math.log2(1 + cap) if usage_count > 0 else 0.0
     return {
-        "semantic_score": settings.w_semantic * semantic,
-        "keyword_score": settings.w_keyword * keyword,
-        "memory_score": settings.w_memory * (memory_score / 10.0),
-        "usage_score": settings.w_usage * log_usage,
+        "semantic_score": w_semantic * semantic,
+        "keyword_score": w_keyword * keyword,
+        "memory_score": w_memory * (memory_score / 10.0),
+        "usage_score": w_usage * log_usage,
     }
 
 
 @router.post("/api/query/debug")
 def debug_query(request: Request, body: DebugQueryRequest) -> dict[str, Any]:
     handler = _handler(request)
-    settings = handler._settings
+    settings = handler.settings
 
     start = time.monotonic()
-    results = handler._memp.search(
+    results = handler.debug_search(
         body.query,
         limit=body.limit,
         min_score=body.min_score,
         include_deleted=body.include_deleted,
-        include_links=True,
     )
     elapsed_ms = round((time.monotonic() - start) * 1000)
 
@@ -69,7 +71,11 @@ def debug_query(request: Request, body: DebugQueryRequest) -> dict[str, Any]:
             result.keyword_score,
             mem.score,
             mem.usage_count,
-            settings,
+            w_semantic=settings.w_semantic,
+            w_keyword=settings.w_keyword,
+            w_memory=settings.w_memory,
+            w_usage=settings.w_usage,
+            usage_normalisation_cap=settings.usage_normalisation_cap,
         )
 
         rows.append({
