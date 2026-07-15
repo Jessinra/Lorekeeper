@@ -149,8 +149,7 @@
 				showToast(S.deleteError, 'error');
 				return false;
 			}
-		} catch (e) {
-			// Network/thrown error: restore row
+		} catch (_e) {
 			if (removedRow) allRows = [...allRows, removedRow];
 			drawerOpen = true;
 			showToast(S.deleteError, 'error');
