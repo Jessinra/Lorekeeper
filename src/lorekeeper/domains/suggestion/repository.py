@@ -170,6 +170,7 @@ class LinkSuggestionStore:
         min_score: float = 0.0,
         sort_by: str = "weighted_score",
         sort_dir: str = "DESC",
+        status: str = "pending",
     ) -> list[LinkSuggestion]:
         """Return pending suggestions with DB-side sort and pagination.
 
@@ -179,16 +180,19 @@ class LinkSuggestionStore:
             min_score: Minimum weighted_score filter (inclusive).
             sort_by: Column to sort by — ``weighted_score`` or ``created_at``.
             sort_dir: ``ASC`` or ``DESC``.
+            status: Suggestion status to filter by (default ``pending``).
         """
         # Whitelist to prevent SQL injection
         col = sort_by if sort_by in ("weighted_score", "created_at") else "weighted_score"
         direction = "DESC" if sort_dir.upper() != "ASC" else "ASC"
+        allowed_statuses = {"pending", "accepted", "rejected"}
+        safe_status = status if status in allowed_statuses else "pending"
         rows = self._conn.execute(
             f"""SELECT * FROM link_suggestions
-               WHERE status = 'pending' AND weighted_score >= ?
+               WHERE status = ? AND weighted_score >= ?
                ORDER BY {col} {direction}
                LIMIT ? OFFSET ?""",
-            (min_score, limit, offset),
+            (safe_status, min_score, limit, offset),
         ).fetchall()
         return [_row_to_suggestion(r) for r in rows]
 
@@ -226,6 +230,16 @@ class LinkSuggestionStore:
         """Total count of all pending suggestions (workload indicator)."""
         row = self._conn.execute(
             "SELECT COUNT(*) FROM link_suggestions WHERE status = 'pending'"
+        ).fetchone()
+        return row[0] if row else 0
+
+    def count_suggestions_by_status(self, status: str = "pending") -> int:
+        """Total count of suggestions filtered by status."""
+        allowed_statuses = {"pending", "accepted", "rejected"}
+        safe_status = status if status in allowed_statuses else "pending"
+        row = self._conn.execute(
+            "SELECT COUNT(*) FROM link_suggestions WHERE status = ?",
+            (safe_status,),
         ).fetchone()
         return row[0] if row else 0
 
