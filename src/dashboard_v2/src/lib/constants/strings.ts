@@ -271,6 +271,30 @@ export const REVIEW_STRINGS = {
 	tableAriaLabel: 'Suggestions table',
 } as const;
 
+// ── Links (LKPR-132) ─────────────────────────────────────────────────────────
+
+export const LINKS_STRINGS = {
+	/** Toolbar */
+	searchPlaceholder: 'Search source or target…',
+	includeDeletedLabel: 'Include deleted',
+	/** Table columns */
+	colSource: 'Source',
+	colTarget: 'Target',
+	colRelation: 'Relation',
+	colScore: 'Score',
+	colDate: 'Created',
+	colReason: 'Reason',
+	/** Empty / error states */
+	emptyTitle: 'No links yet',
+	emptyMessage: 'Links are created when memories are connected via lore_insert.',
+	skeletonLabel: 'Loading links…',
+	tableAriaLabel: 'Memory links table',
+	toolbarAriaLabel: 'Links toolbar',
+	/** Row actions */
+	deleteSuccess: 'Link deleted',
+	deleteError: 'Failed to delete link',
+} as const;
+
 export const SESSIONS_STRINGS = {
 	searchPlaceholder: 'Search by session ID or topic…',
 	filterAll: 'All',
