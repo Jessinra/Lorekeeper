@@ -14,6 +14,7 @@ from lorekeeper.dashboard.routes import (
     links,
     memories,
     metrics,
+    query,
     reflections,
     search,
     suggestions,
@@ -76,6 +77,7 @@ def index() -> Response:
 app.include_router(memories.router)
 app.include_router(links.router)
 app.include_router(search.router)
+app.include_router(query.router)
 app.include_router(config.router)
 app.include_router(reflections.router)
 app.include_router(backup.router)
