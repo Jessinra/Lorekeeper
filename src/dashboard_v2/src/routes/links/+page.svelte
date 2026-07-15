@@ -224,13 +224,12 @@
 					{#each filteredRows as row (row.id)}
 						<tr
 							class="link-row"
-							onclick={() => openDrawer(row)}
 							aria-label={`${row.source_title} ${row.relation_type} ${row.target_title}`}
 						>
 							<td class="col-source" title={row.source_title}>
 								<button
 									class="row-open-btn memory-title"
-									onclick={(e: MouseEvent) => { e.stopPropagation(); openDrawer(row); }}
+									onclick={() => openDrawer(row)}
 									aria-label={`Open link: ${row.source_title} ${row.relation_type} ${row.target_title}`}
 								>{row.source_title}</button>
 							</td>
