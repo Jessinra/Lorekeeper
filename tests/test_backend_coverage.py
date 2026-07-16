@@ -638,3 +638,84 @@ class TestDebugQueryEndpoint:
         data = resp.json()
         assert data["results"] == []
         assert data["total_results"] == 0
+
+
+# =============================================================================
+# DASHBOARD — GET /api/health
+# =============================================================================
+
+
+class TestHealthEndpoint:
+    def test_health_empty_store_returns_100_percent(self, tmp_path):
+        """Empty store → health_percent == 100 (no memories case)."""
+        from unittest.mock import patch
+
+        from lorekeeper.dashboard import app as dash_app
+        from lorekeeper.dashboard.handler import DashboardHandler
+        from lorekeeper.server import Server
+
+        svc_obj, _engine, store = _make_svc(tmp_path)
+        dashboard_handler = DashboardHandler(
+            memory_processor=svc_obj.memory_processor,
+            suggestion_processor=svc_obj.suggestion_processor,
+            reflection_processor=svc_obj.reflection_processor,
+            link_processor=svc_obj.link_processor,
+            admin_processor=svc_obj.admin_processor,
+            memory_store=svc_obj.memories,
+            link_store=svc_obj.links,
+            settings=svc_obj.settings,
+        )
+        server = Server(dashboard_handler=dashboard_handler)
+
+        with patch("lorekeeper.dashboard.app.init_service", return_value=server):
+            with TestClient(dash_app.app) as client:
+                resp = client.get("/api/health")
+        store.close()
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["health_percent"] == 100
+        assert data["total_memories"] == 0
+        assert data["recent_activity"] == []
+
+    def test_health_populated_store_returns_correct_counts(self, seeded_client):
+        """Populated store → total_memories > 0, response has all expected keys."""
+        client, _svc_obj, _ = seeded_client
+        resp = client.get("/api/health")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "health_percent" in data
+        assert "total_memories" in data
+        assert "high_confidence" in data
+        assert "needs_review" in data
+        assert "stale_30d" in data
+        assert "total_links" in data
+        assert "pending_suggestions" in data
+        assert "recent_activity" in data
+        assert isinstance(data["recent_activity"], list)
+        assert data["total_memories"] >= 1
+        assert 0 <= data["health_percent"] <= 100
+
+    def test_health_recent_activity_shape(self, seeded_client):
+        """If reflections exist, recent_activity items have required fields."""
+        client, svc_obj, _ = seeded_client
+        # Insert a reflection
+        svc_obj.reflection_processor.submit_reflection(
+            session_id="test-session-health",
+            summary="Health test session",
+            factual_discoveries=["fact1"],
+        )
+        svc_obj.db.conn.commit()
+
+        resp = client.get("/api/health")
+        assert resp.status_code == 200
+        data = resp.json()
+        if data["recent_activity"]:
+            item = data["recent_activity"][0]
+            assert "id" in item
+            assert "topic" in item
+            assert "task_type" in item
+            assert "session_date" in item
+            assert "session_count" in item
+            # session_date should now be populated from created_at
+            assert item["session_date"] != ""
