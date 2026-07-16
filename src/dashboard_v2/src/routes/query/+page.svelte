@@ -38,7 +38,7 @@
 
 	// ── Query execution ───────────────────────────────────────────────────────
 	async function runQuery() {
-		if (!queryText.trim()) return;
+		if (!queryText.trim() || loading) return;
 		loading = true;
 		error = null;
 		selectedResult = null;
@@ -63,7 +63,7 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+		if (e.key === 'Enter') {
 			e.preventDefault();
 			runQuery();
 		}
@@ -178,7 +178,7 @@
 							<div class="result-header">
 								<span class="rank">#{result.rank}</span>
 								<span class="result-title">{result.memory.title}</span>
-								<ScorePill score={result.combined_score} />
+								<ScorePill score={result.combined_score * 10} />
 							</div>
 
 							<!-- Stacked bar -->
@@ -226,7 +226,7 @@
 
 					<!-- Big score badge -->
 					<div class="score-badge">
-						<ScorePill score={selectedResult.combined_score} />
+						<ScorePill score={selectedResult.combined_score * 10} />
 					</div>
 
 					<!-- Content snippet -->

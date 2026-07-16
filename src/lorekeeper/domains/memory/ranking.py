@@ -19,6 +19,12 @@ class SearchResult:
     keyword_score: float
     links: list[MemoryLink]
     decay_factor: float = 1.0  # e^(-λ·days); 1.0 when decay disabled
+    # Per-signal weighted contributions (post-decay), sum ≈ combined_score.
+    # Set by rank_results; callers should treat these as authoritative.
+    w_semantic: float = 0.0
+    w_keyword: float = 0.0
+    w_memory: float = 0.0
+    w_usage: float = 0.0
 
 
 def hybrid_score(
@@ -163,6 +169,12 @@ def rank_results(
             continue
         decay = time_decay(mem, lam)
         final_score = combined * decay
+        cap = settings.usage_normalisation_cap
+        log_usage = (
+            math.log2(1 + mem.usage_count) / math.log2(1 + cap)
+            if mem.usage_count > 0
+            else 0.0
+        )
         results.append(SearchResult(
             memory=mem,
             combined_score=final_score,
@@ -170,6 +182,10 @@ def rank_results(
             keyword_score=kw,
             links=links_by_id.get(lore_id, []),
             decay_factor=decay,
+            w_semantic=settings.w_semantic * sem * decay,
+            w_keyword=settings.w_keyword * kw * decay,
+            w_memory=settings.w_memory * (mem.score / 10.0) * decay,
+            w_usage=settings.w_usage * log_usage * decay,
         ))
 
     # LKPR-80: sort_by — default is relevance (combined_score DESC).

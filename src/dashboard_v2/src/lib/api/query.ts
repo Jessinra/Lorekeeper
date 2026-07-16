@@ -4,6 +4,12 @@
 
 const BASE = '';
 
+class EndpointNotFoundError extends Error {
+	constructor(path: string) {
+		super(`Endpoint not found: ${path}`);
+	}
+}
+
 async function api<T>(method: string, path: string, body?: unknown): Promise<T> {
 	const res = await fetch(`${BASE}${path}`, {
 		method,
@@ -11,6 +17,9 @@ async function api<T>(method: string, path: string, body?: unknown): Promise<T> 
 		body: body ? JSON.stringify(body) : undefined,
 	});
 	if (!res.ok) {
+		if (res.status === 404) {
+			throw new EndpointNotFoundError(path);
+		}
 		throw new Error(`API ${method} ${path}: ${res.status} ${res.statusText}`);
 	}
 	return res.json() as Promise<T>;
@@ -65,7 +74,12 @@ export async function runDebugQuery(params: DebugQueryParams): Promise<DebugQuer
 			min_score: params.min_score ?? 0.1,
 			include_deleted: params.include_deleted ?? false,
 		});
-	} catch {
+	} catch (err) {
+		// Only fall back to /api/search when the debug endpoint is absent (404).
+		// Any other failure (500, network error, etc.) is a real problem — re-throw.
+		if (!(err instanceof EndpointNotFoundError)) {
+			throw err;
+		}
 		// Fallback: use /api/search and derive mock per-signal scores
 		const searchRes = await api<
 			Array<{
