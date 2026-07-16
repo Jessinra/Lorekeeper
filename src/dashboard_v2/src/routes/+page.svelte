@@ -20,7 +20,7 @@
 	onMount(async () => {
 		try {
 			health = await fetchHealth();
-		} catch (e) {
+		} catch {
 			error = S.loadError;
 		} finally {
 			loading = false;
