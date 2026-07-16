@@ -76,6 +76,12 @@ class ReflectionStore:
             "SELECT * FROM reflections ORDER BY created_at DESC"
         ).fetchall()
 
+    def recent_reflections(self, limit: int = 5) -> list[sqlite3.Row]:
+        return self._conn.execute(
+            "SELECT * FROM reflections ORDER BY created_at DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+
     # ── Sessions ──────────────────────────────────────────────────────────────
 
     def upsert_session(

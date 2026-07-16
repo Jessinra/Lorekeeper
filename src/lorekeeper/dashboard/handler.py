@@ -352,13 +352,13 @@ class DashboardHandler:
         total_links = self._link_store.count_all_links()
         pending_suggestions = self._sugp.count_pending()
 
-        recent_reflections = [dict(r) for r in self._refp.list_reflections()[:5]]
+        recent_reflections = [dict(r) for r in self._refp.recent_reflections(5)]
         activity = [
             {
                 "id": r["id"],
                 "topic": r.get("topic") or r.get("summary") or "Untitled",
                 "task_type": r.get("task_type") or "",
-                "session_date": r.get("session_date") or "",
+                "session_date": r.get("created_at") or "",
                 "session_count": r.get("session_count") or 1,
             }
             for r in recent_reflections

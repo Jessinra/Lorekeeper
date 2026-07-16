@@ -41,7 +41,7 @@
 						{#if item.session_date}<span class="activity-date">{formatDate(item.session_date)}</span>{/if}
 					</span>
 				</div>
-				<span class="activity-sessions">{item.session_count}s</span>
+				<span class="activity-sessions">{item.session_count} {item.session_count === 1 ? 'session' : 'sessions'}</span>
 			</li>
 		{/each}
 	{/if}
