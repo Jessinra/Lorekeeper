@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from lorekeeper.dashboard.routes import (
     backup,
     config,
+    health,
     links,
     memories,
     metrics,
@@ -74,6 +75,7 @@ def index() -> Response:
 
 # ── Route modules ─────────────────────────────────────────────────────────────
 
+app.include_router(health.router)
 app.include_router(memories.router)
 app.include_router(links.router)
 app.include_router(search.router)

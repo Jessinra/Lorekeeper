@@ -170,6 +170,12 @@ class LinkStore:
         return result
 
 
+    def count_all_links(self) -> int:
+        """Total count of all links in the store."""
+        row = self._conn.execute("SELECT COUNT(*) FROM memory_links").fetchone()
+        return row[0] if row else 0
+
+
 def _row_to_link(row: sqlite3.Row) -> MemoryLink:
     raw_type = row["relation_type"]
     normalized_type = TYPE_MIGRATION_MAP.get(raw_type, raw_type)

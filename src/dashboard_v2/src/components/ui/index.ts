@@ -8,3 +8,4 @@ export { default as StatTile } from './StatTile.svelte';
 export { default as HealthRing } from './HealthRing.svelte';
 export { default as EmptyState } from './EmptyState.svelte';
 export { default as HeatmapGrid } from './HeatmapGrid.svelte';
+export { default as ActivityFeed } from './ActivityFeed.svelte';
