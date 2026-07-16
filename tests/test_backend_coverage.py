@@ -581,3 +581,60 @@ class TestConfigPersistence:
         data = get_resp.json()
         assert data["w_semantic"] == pytest.approx(0.75)
         assert "w_semantic" in data["_overridden_keys"]
+
+
+# =============================================================================
+# DASHBOARD — POST /api/query/debug
+# =============================================================================
+
+
+class TestDebugQueryEndpoint:
+    def test_debug_query_happy_path(self, seeded_client):
+        """Happy path: returns results with per-signal fields."""
+        client, _, _ = seeded_client
+        resp = client.post(
+            "/api/query/debug",
+            json={"query": "test", "limit": 5, "min_score": 0.0},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "results" in data
+        assert "total_results" in data
+        assert "total_linked" in data
+        assert "elapsed_ms" in data
+        assert data["total_results"] == len(data["results"])
+
+    def test_debug_query_result_has_signal_fields(self, seeded_client):
+        """Each result row exposes the four per-signal contribution fields."""
+        client, _svc_obj, _ = seeded_client
+        resp = client.post(
+            "/api/query/debug",
+            json={"query": "test memory", "limit": 10, "min_score": 0.0},
+        )
+        assert resp.status_code == 200
+        for row in resp.json()["results"]:
+            assert "semantic_score" in row
+            assert "keyword_score" in row
+            assert "memory_score" in row
+            assert "usage_score" in row
+            assert "combined_score" in row
+            # Contributions must not exceed combined_score (allowing float epsilon)
+            total = (
+                row["semantic_score"]
+                + row["keyword_score"]
+                + row["memory_score"]
+                + row["usage_score"]
+            )
+            assert total <= row["combined_score"] + 1e-6
+
+    def test_debug_query_empty_result(self, seeded_client):
+        """Query that matches nothing returns empty results, not an error."""
+        client, _, _ = seeded_client
+        resp = client.post(
+            "/api/query/debug",
+            json={"query": "zzz_no_match_xyz", "limit": 5, "min_score": 0.99},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["results"] == []
+        assert data["total_results"] == 0
