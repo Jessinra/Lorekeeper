@@ -308,3 +308,20 @@ export const SESSIONS_STRINGS = {
 	closeButtonAriaLabel: 'Close drawer',
 	durationLabel: (min: number) => (min < 60 ? `${min}m` : `${Math.floor(min / 60)}h ${min % 60}m`),
 } as const;
+
+// ── Home ──────────────────────────────────────────────────────────────────────
+
+export const HOME_STRINGS = {
+	pageTitle: 'Home',
+	pageSubtitle: 'Knowledge health at a glance.',
+	healthCardTitle: 'Memory Health',
+	healthRingAriaLabel: 'Memory health score',
+	statMemoriesLabel: 'Total Memories',
+	statLinksLabel: 'Total Links',
+	statNeedsReviewLabel: 'Needs Review',
+	statPendingSuggestionsLabel: 'Pending Suggestions',
+	activityHeading: 'Recent Activity',
+	activityEmptyState: 'No reflections yet.',
+	loadError: 'Failed to load health data.',
+	sessionCountLabel: (n: number) => (n === 1 ? '1 session' : `${n} sessions`),
+} as const;

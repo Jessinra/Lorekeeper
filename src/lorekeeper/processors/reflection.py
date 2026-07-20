@@ -105,6 +105,9 @@ class ReflectionProcessor:
     def list_reflections(self) -> list[sqlite3.Row]:
         return self._reflections.all_reflections()
 
+    def recent_reflections(self, limit: int = 5) -> list[sqlite3.Row]:
+        return self._reflections.recent_reflections(limit)
+
     def get_reflection(self, reflection_id: str) -> sqlite3.Row | None:
         return self._reflections.get_reflection(reflection_id)
 

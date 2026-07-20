@@ -333,6 +333,48 @@ class DashboardHandler:
             "task_counts": task_counts,
         }
 
+    # ── Health ───────────────────────────────────────────────────────────────
+
+    def get_health(self) -> dict[str, Any]:
+        """Return health/overview stats for the home page dashboard."""
+        counts = self._memory_store.get_counts_by_filter()
+        total = counts.get("all", 0)
+        needs_review = counts.get("needs_review", 0)
+        high_confidence = counts.get("high_confidence", 0)
+        stale = counts.get("stale_30d", 0)
+
+        # Health score: fraction of memories that are high-confidence
+        if total > 0:
+            health_percent = round(max(0, min(100, (high_confidence / total) * 100)))
+        else:
+            health_percent = 100
+
+        total_links = self._link_store.count_all_links()
+        pending_suggestions = self._sugp.count_pending()
+
+        recent_reflections = [dict(r) for r in self._refp.recent_reflections(5)]
+        activity = [
+            {
+                "id": r["id"],
+                "topic": r.get("topic") or r.get("summary") or "Untitled",
+                "task_type": r.get("task_type") or "",
+                "session_date": r.get("created_at") or "",
+                "session_count": r.get("session_count") or 1,
+            }
+            for r in recent_reflections
+        ]
+
+        return {
+            "health_percent": health_percent,
+            "total_memories": total,
+            "high_confidence": high_confidence,
+            "needs_review": needs_review,
+            "stale_30d": stale,
+            "total_links": total_links,
+            "pending_suggestions": pending_suggestions,
+            "recent_activity": activity,
+        }
+
     def get_session_detail(self, session_id: str) -> dict[str, Any] | None:
         row = self._refp.get_session(session_id)
         if row is None:
