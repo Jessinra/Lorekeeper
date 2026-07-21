@@ -117,6 +117,10 @@
 		trapFocus(e);
 		if (e.key === 'Escape') {
 			e.preventDefault();
+			if (closeTimer) {
+				clearTimeout(closeTimer);
+				closeTimer = null;
+			}
 			onClose();
 		}
 	}

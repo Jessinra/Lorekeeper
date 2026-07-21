@@ -343,3 +343,83 @@ export const HOME_STRINGS = {
 	loadError: 'Failed to load health data.',
 	sessionCountLabel: (n: number) => (n === 1 ? '1 session' : `${n} sessions`),
 } as const;
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+
+export const SETTINGS_STRINGS = {
+	pageTitle: 'Settings',
+	pageSubtitle: 'Configure search weights, scoring, lifecycle, and maintenance.',
+
+	// Sections
+	sectionWeights: 'Search Weights',
+	sectionWeightsDesc: 'Relative importance of each scoring signal. Weights should sum to 1.0.',
+	sectionScoring: 'Scoring',
+	sectionScoringDesc: 'Score bump amounts, clamp bounds, default score, and deduplication threshold.',
+	sectionSearchLinks: 'Search & Links',
+	sectionSearchLinksDesc: 'Search result limits, link caps, decay, and auto-link behaviour.',
+	sectionLifecycle: 'Memory Lifecycle',
+	sectionLifecycleDesc: 'Soft-delete threshold and confidence window.',
+	sectionData: 'Data',
+	sectionDataDesc: 'Export a JSON dump or import one from file.',
+	sectionMaintenance: 'Maintenance',
+	sectionMaintenanceDesc: 'Sweep scheduling and immediate trigger.',
+
+	// Labels
+	labelWSemantic: 'w_semantic',
+	labelWKeyword: 'w_keyword',
+	labelWMemory: 'w_memory',
+	labelWUsage: 'w_usage',
+	labelScoreBumpUp: 'score_bump_up',
+	labelScoreBumpDown: 'score_bump_down',
+	labelScoreMin: 'score_min',
+	labelScoreMax: 'score_max',
+	labelNewMemoryDefaultScore: 'new_memory_default_score',
+	labelDuplicateThreshold: 'duplicate_threshold',
+	labelSearchLimit: 'search_limit',
+	labelMaxLinksPerMemory: 'max_links_per_memory',
+	labelUsageNormalisationCap: 'usage_normalisation_cap',
+	labelDecayLambda: 'decay_lambda',
+	labelAutoLinkEnabled: 'auto_link_enabled',
+	labelAutoLinkK: 'auto_link_k',
+	labelAutoLinkThreshold: 'auto_link_threshold',
+	labelSoftDeleteThreshold: 'soft_delete_confidence_threshold',
+	labelConfidenceWindowSize: 'confidence_window_size',
+	labelDataDir: 'data_dir',
+	labelEmbeddingModel: 'embedding_model',
+
+	// Buttons
+	saveButton: 'Save',
+	exportButton: 'Export JSON',
+	importConfirmButton: 'Confirm Import',
+	importCancelButton: 'Cancel',
+	importChooseFile: 'Choose file…',
+	importSuccess: 'Import complete.',
+	sweepTriggerButton: 'Trigger Now',
+	refreshSweepButton: 'Refresh',
+
+	// Status / hints
+	unsavedBanner: 'Unsaved changes',
+	weightSumWarning: (sum: number) =>
+		`Weights sum to ${sum.toFixed(3)} — should be 1.000 for balanced scoring.`,
+	overriddenIndicatorAriaLabel: 'Overridden from environment default',
+	readOnlyHint: 'Read-only — set at startup',
+	sweepLastRun: 'Last run',
+	sweepNextRun: 'Next run',
+	sweepNever: 'Never',
+
+	// Import preview
+	importPreviewTitle: 'Import Preview',
+	importPreviewAdded: (n: number) => `${n} memories will be added`,
+	importPreviewSkipped: (n: number) => `${n} already exist (skipped)`,
+	importPreviewLinks: (n: number) => `${n} links`,
+
+	// Toasts / errors
+	saveSuccess: 'Saved.',
+	saveError: 'Failed to save.',
+	exportError: 'Failed to export.',
+	importPreviewError: 'Failed to preview import.',
+	importConfirmError: 'Failed to import.',
+	sweepTriggered: 'Sweep triggered.',
+	sweepError: 'Failed to trigger sweep.',
+	loadError: 'Failed to load settings.',
+} as const;
