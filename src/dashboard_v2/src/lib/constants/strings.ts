@@ -390,10 +390,10 @@ export const SETTINGS_STRINGS = {
 	// Buttons
 	saveButton: 'Save',
 	exportButton: 'Export JSON',
-	importButton: 'Import',
-	importChooseFile: 'Choose file…',
 	importConfirmButton: 'Confirm Import',
 	importCancelButton: 'Cancel',
+	importChooseFile: 'Choose file…',
+	importSuccess: 'Import complete.',
 	sweepTriggerButton: 'Trigger Now',
 	refreshSweepButton: 'Refresh',
 

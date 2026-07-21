@@ -3,8 +3,8 @@
  */
 
 export interface SweepStatus {
-	last_run: string | null;
-	next_run: string | null;
+	last_run_at: string | null;
+	next_run_at: string | null;
 }
 
 export async function fetchSweepStatus(): Promise<SweepStatus> {

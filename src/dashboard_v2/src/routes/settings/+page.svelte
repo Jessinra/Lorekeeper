@@ -54,9 +54,9 @@
 	// ── Import state ────────────────────────────────────────────────────────────
 
 	interface ImportPreview {
-		added: number;
-		skipped: number;
-		links: number;
+		memories_inserted: number;
+		memories_skipped: number;
+		links_inserted: number;
 		file: File;
 	}
 	let importPreview = $state<ImportPreview | null>(null);
@@ -170,12 +170,13 @@
 	async function saveSection(
 		updates: ConfigUpdates,
 		setSaving: (v: boolean) => void,
+		resync: (cfg: ConfigData) => void = syncDrafts,
 	): Promise<boolean> {
 		setSaving(true);
 		try {
 			await patchConfig(updates);
 			config = await fetchConfig();
-			if (config) syncDrafts(config);
+			if (config) resync(config);
 			showToast(S.saveSuccess, 'success');
 			return true;
 		} catch {
@@ -187,19 +188,54 @@
 	}
 
 	async function saveWeights() {
-		await saveSection({ ...draftWeights }, (v) => (savingWeights = v));
+		if (!config) return;
+		const updates: ConfigUpdates = {};
+		if (draftWeights.w_semantic !== config.w_semantic) updates.w_semantic = draftWeights.w_semantic;
+		if (draftWeights.w_keyword !== config.w_keyword) updates.w_keyword = draftWeights.w_keyword;
+		if (draftWeights.w_memory !== config.w_memory) updates.w_memory = draftWeights.w_memory;
+		if (draftWeights.w_usage !== config.w_usage) updates.w_usage = draftWeights.w_usage;
+		await saveSection(updates, (v) => (savingWeights = v), (cfg) => {
+			draftWeights = { w_semantic: cfg.w_semantic, w_keyword: cfg.w_keyword, w_memory: cfg.w_memory, w_usage: cfg.w_usage };
+		});
 	}
 
 	async function saveScoring() {
-		await saveSection({ ...draftScoring }, (v) => (savingScoring = v));
+		if (!config) return;
+		const updates: ConfigUpdates = {};
+		if (draftScoring.score_bump_up !== config.score_bump_up) updates.score_bump_up = draftScoring.score_bump_up;
+		if (draftScoring.score_bump_down !== config.score_bump_down) updates.score_bump_down = draftScoring.score_bump_down;
+		if (draftScoring.score_min !== config.score_min) updates.score_min = draftScoring.score_min;
+		if (draftScoring.score_max !== config.score_max) updates.score_max = draftScoring.score_max;
+		if (draftScoring.new_memory_default_score !== config.new_memory_default_score) updates.new_memory_default_score = draftScoring.new_memory_default_score;
+		if (draftScoring.duplicate_threshold !== config.duplicate_threshold) updates.duplicate_threshold = draftScoring.duplicate_threshold;
+		await saveSection(updates, (v) => (savingScoring = v), (cfg) => {
+			draftScoring = { score_bump_up: cfg.score_bump_up, score_bump_down: cfg.score_bump_down, score_min: cfg.score_min, score_max: cfg.score_max, new_memory_default_score: cfg.new_memory_default_score, duplicate_threshold: cfg.duplicate_threshold };
+		});
 	}
 
 	async function saveSearchLinks() {
-		await saveSection({ ...draftSearchLinks }, (v) => (savingSearchLinks = v));
+		if (!config) return;
+		const updates: ConfigUpdates = {};
+		if (draftSearchLinks.search_limit !== config.search_limit) updates.search_limit = draftSearchLinks.search_limit;
+		if (draftSearchLinks.max_links_per_memory !== config.max_links_per_memory) updates.max_links_per_memory = draftSearchLinks.max_links_per_memory;
+		if (draftSearchLinks.usage_normalisation_cap !== config.usage_normalisation_cap) updates.usage_normalisation_cap = draftSearchLinks.usage_normalisation_cap;
+		if (draftSearchLinks.decay_lambda !== config.decay_lambda) updates.decay_lambda = draftSearchLinks.decay_lambda;
+		if (draftSearchLinks.auto_link_enabled !== config.auto_link_enabled) updates.auto_link_enabled = draftSearchLinks.auto_link_enabled;
+		if (draftSearchLinks.auto_link_k !== config.auto_link_k) updates.auto_link_k = draftSearchLinks.auto_link_k;
+		if (draftSearchLinks.auto_link_threshold !== config.auto_link_threshold) updates.auto_link_threshold = draftSearchLinks.auto_link_threshold;
+		await saveSection(updates, (v) => (savingSearchLinks = v), (cfg) => {
+			draftSearchLinks = { search_limit: cfg.search_limit, max_links_per_memory: cfg.max_links_per_memory, usage_normalisation_cap: cfg.usage_normalisation_cap, decay_lambda: cfg.decay_lambda, auto_link_enabled: cfg.auto_link_enabled, auto_link_k: cfg.auto_link_k, auto_link_threshold: cfg.auto_link_threshold };
+		});
 	}
 
 	async function saveLifecycle() {
-		await saveSection({ ...draftLifecycle }, (v) => (savingLifecycle = v));
+		if (!config) return;
+		const updates: ConfigUpdates = {};
+		if (draftLifecycle.soft_delete_confidence_threshold !== config.soft_delete_confidence_threshold) updates.soft_delete_confidence_threshold = draftLifecycle.soft_delete_confidence_threshold;
+		if (draftLifecycle.confidence_window_size !== config.confidence_window_size) updates.confidence_window_size = draftLifecycle.confidence_window_size;
+		await saveSection(updates, (v) => (savingLifecycle = v), (cfg) => {
+			draftLifecycle = { soft_delete_confidence_threshold: cfg.soft_delete_confidence_threshold, confidence_window_size: cfg.confidence_window_size };
+		});
 	}
 
 	// ── Export ──────────────────────────────────────────────────────────────────
@@ -215,8 +251,10 @@
 			const match = cd.match(/filename="([^"]+)"/);
 			a.download = match?.[1] ?? 'lorekeeper-export.json';
 			a.href = url;
+			document.body.appendChild(a);
 			a.click();
-			URL.revokeObjectURL(url);
+			a.remove();
+			setTimeout(() => URL.revokeObjectURL(url), 0);
 		} catch {
 			showToast(S.exportError, 'error');
 		}
@@ -235,8 +273,8 @@
 			form.append('file', file);
 			const res = await fetch('/api/import/preview', { method: 'POST', body: form });
 			if (!res.ok) throw new Error();
-			const data = (await res.json()) as { added: number; skipped: number; links?: number };
-			importPreview = { added: data.added, skipped: data.skipped, links: data.links ?? 0, file };
+			const data = (await res.json()) as { memories_inserted: number; memories_skipped: number; links_inserted?: number };
+			importPreview = { memories_inserted: data.memories_inserted, memories_skipped: data.memories_skipped, links_inserted: data.links_inserted ?? 0, file };
 		} catch {
 			showToast(S.importPreviewError, 'error');
 		} finally {
@@ -253,7 +291,7 @@
 			form.append('file', importPreview.file);
 			const res = await fetch('/api/import/confirm', { method: 'POST', body: form });
 			if (!res.ok) throw new Error();
-			showToast('Import complete.', 'success');
+			showToast(S.importSuccess, 'success');
 			importPreview = null;
 		} catch {
 			showToast(S.importConfirmError, 'error');
@@ -594,9 +632,9 @@
 					<div class="import-preview" role="region" aria-label={S.importPreviewTitle}>
 						<p class="import-preview-title">{S.importPreviewTitle}</p>
 						<ul class="import-preview-counts">
-							<li>{S.importPreviewAdded(importPreview.added)}</li>
-							<li>{S.importPreviewSkipped(importPreview.skipped)}</li>
-							<li>{S.importPreviewLinks(importPreview.links)}</li>
+							<li>{S.importPreviewAdded(importPreview.memories_inserted)}</li>
+							<li>{S.importPreviewSkipped(importPreview.memories_skipped)}</li>
+							<li>{S.importPreviewLinks(importPreview.links_inserted)}</li>
 						</ul>
 						<div class="import-preview-actions">
 							<button
@@ -625,11 +663,11 @@
 					<div class="sweep-status">
 						<div class="sweep-row">
 							<span class="field-label">{S.sweepLastRun}</span>
-							<span class="sweep-value">{formatTimestamp(sweep.last_run)}</span>
+							<span class="sweep-value">{formatTimestamp(sweep.last_run_at)}</span>
 						</div>
 						<div class="sweep-row">
 							<span class="field-label">{S.sweepNextRun}</span>
-							<span class="sweep-value">{formatTimestamp(sweep.next_run)}</span>
+							<span class="sweep-value">{formatTimestamp(sweep.next_run_at)}</span>
 						</div>
 					</div>
 				{/if}

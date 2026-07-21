@@ -83,21 +83,21 @@ describe('fetchSweepStatus', () => {
 	beforeEach(() => vi.stubGlobal('fetch', vi.fn()));
 	afterEach(() => vi.unstubAllGlobals());
 
-	it('returns last_run and next_run', async () => {
-		const status = { last_run: '2026-07-21T00:00:00Z', next_run: '2026-07-21T01:00:00Z' };
+	it('returns last_run_at and next_run_at', async () => {
+		const status = { last_run_at: '2026-07-21T00:00:00Z', next_run_at: '2026-07-21T01:00:00Z' };
 		vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => status } as Response);
 		const result = await fetchSweepStatus();
-		expect(result.last_run).toBe(status.last_run);
-		expect(result.next_run).toBe(status.next_run);
+		expect(result.last_run_at).toBe(status.last_run_at);
+		expect(result.next_run_at).toBe(status.next_run_at);
 	});
 
 	it('handles null timestamps', async () => {
 		vi.mocked(fetch).mockResolvedValue({
 			ok: true,
-			json: async () => ({ last_run: null, next_run: null }),
+			json: async () => ({ last_run_at: null, next_run_at: null }),
 		} as Response);
 		const result = await fetchSweepStatus();
-		expect(result.last_run).toBeNull();
+		expect(result.last_run_at).toBeNull();
 	});
 
 	it('throws on non-ok response', async () => {
