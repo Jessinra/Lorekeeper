@@ -60,9 +60,13 @@ export function sortRows<T>(
 			else if (isNaN(nb)) cmp = -1;
 			else cmp = na - nb;
 		} else {
-			const sa = va == null ? '' : String(va);
-			const sb = vb == null ? '' : String(vb);
-			cmp = sa.localeCompare(sb, undefined, { sensitivity: 'base' });
+			const sa = va == null || va === '' ? null : String(va);
+			const sb = vb == null || vb === '' ? null : String(vb);
+
+			if (sa === null && sb === null) cmp = 0;
+			else if (sa === null) cmp = 1;
+			else if (sb === null) cmp = -1;
+			else cmp = sa.localeCompare(sb, undefined, { sensitivity: 'base' });
 		}
 
 		return cmp * dir;
