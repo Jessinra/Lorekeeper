@@ -168,3 +168,55 @@ def test_sweep_status_falls_back_to_newest_suggestion(processor, stores):
 
     result = processor.sweep_status()
     assert result["last_run_at"] is not None
+
+
+# ── get_tool_calls ────────────────────────────────────────────────────────────
+
+
+def test_get_tool_calls_empty_returns_zero_totals(processor):
+    result = processor.get_tool_calls(hours=168)
+    assert result["hours"] == 168
+    assert result["timezone"] == "UTC"
+    assert result["total_calls"] == 0
+    assert result["avg_calls_per_day"] == 0.0
+    assert result["tools"] == []
+    assert result["tool_totals"] == {}
+    assert len(result["days"]) == 8  # 168h = 7 full days + partial day boundary
+
+
+def test_get_tool_calls_aggregates_by_day_and_hour(processor, stores):
+    # Insert two metric rows in the same day/hour
+    stores.metrics.increment_metric("lore_search")
+    stores.metrics.increment_metric("lore_search")
+    stores.metrics.increment_metric("lore_insert")
+    stores.db.commit()
+
+    result = processor.get_tool_calls(hours=168)
+    assert result["total_calls"] == 3
+    assert "lore_search" in result["tools"]
+    assert "lore_insert" in result["tools"]
+    assert result["tool_totals"]["lore_search"] == 2
+    assert result["tool_totals"]["lore_insert"] == 1
+
+
+def test_get_tool_calls_heatmap_cell_has_total_key(processor, stores):
+    stores.metrics.increment_metric("lore_reflect")
+    stores.db.commit()
+
+    result = processor.get_tool_calls(hours=168)
+    # Find the cell that has data
+    found = False
+    for day in result["days"]:
+        for _hour_str, cell in result["heatmap"][day].items():
+            assert "total" in cell
+            assert cell["total"] == sum(v for k, v in cell.items() if k != "total")
+            found = True
+    assert found, "Expected at least one non-empty heatmap cell"
+
+
+def test_get_tool_calls_all_7_days_present(processor):
+    result = processor.get_tool_calls(hours=168)
+    # Must have at least 7 day entries (boundary condition can produce 8)
+    assert len(result["days"]) >= 7
+    # Days must be sorted oldest-first
+    assert result["days"] == sorted(result["days"])
