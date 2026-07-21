@@ -220,3 +220,37 @@ def test_get_tool_calls_all_7_days_present(processor):
     assert len(result["days"]) >= 7
     # Days must be sorted oldest-first
     assert result["days"] == sorted(result["days"])
+
+
+def test_get_tool_calls_clamps_hours_below_1(processor):
+    """hours < 1 is clamped to 1 — never crashes, always returns valid shape."""
+    result = processor.get_tool_calls(hours=0)
+    assert result["hours"] == 1
+
+
+def test_get_tool_calls_clamps_hours_above_2160(processor):
+    """hours > 2160 (90d) is clamped to 2160."""
+    result = processor.get_tool_calls(hours=99999)
+    assert result["hours"] == 2160
+
+
+def test_get_tool_calls_avg_excludes_partial_today(processor, stores):
+    """avg_calls_per_day denominator must be completed days, not total days.
+
+    A 168h window spans ~8 day buckets (7 complete + current partial day).
+    If we have 7 total_calls and the denominator were 8, avg would be 0.9.
+    With the partial day excluded the denominator is 7, giving avg == 1.0.
+    """
+    for _ in range(7):
+        stores.metrics.increment_metric("lore_search")
+    stores.db.commit()
+
+    result = processor.get_tool_calls(hours=168)
+    # total_calls == 7; completed days == 7 → avg == 1.0 (not 0.9 from /8)
+    assert result["total_calls"] == 7
+    # avg should be total / completed_days; denominator is NOT len(days)
+    from datetime import UTC, datetime
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    completed = [d for d in result["days"] if d != today]
+    expected = round(7 / max(len(completed), 1), 1)
+    assert result["avg_calls_per_day"] == expected
