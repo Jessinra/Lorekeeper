@@ -309,6 +309,24 @@ export const SESSIONS_STRINGS = {
 	durationLabel: (min: number) => (min < 60 ? `${min}m` : `${Math.floor(min / 60)}h ${min % 60}m`),
 } as const;
 
+// ── Metrics ───────────────────────────────────────────────────────────────────
+
+export const METRICS_STRINGS = {
+	pageTitle: 'API Metrics',
+	pageSubtitle: 'Last 7 days of API call activity, by tool.',
+	refreshAriaLabel: 'Refresh metrics',
+	totalVolumeTitle: 'Total Volume',
+	totalCallsLabel: 'total calls · 7d',
+	avgCallsLabel: 'avg / day',
+	heatmapTitle: 'API ACTIVITY — ALL TOOLS',
+	perToolTitle: 'PER-TOOL BREAKDOWN',
+	heatmapFewerLabel: 'Fewer',
+	heatmapMoreLabel: 'More',
+	loadError: 'Failed to load metrics.',
+	emptyState: 'No API call data yet.',
+	tooltipTotal: 'total',
+} as const;
+
 // ── Home ──────────────────────────────────────────────────────────────────────
 
 export const HOME_STRINGS = {
