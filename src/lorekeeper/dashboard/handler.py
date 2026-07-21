@@ -294,6 +294,9 @@ class DashboardHandler:
     def get_metrics(self, hours: int = 24) -> dict[str, Any]:
         return self._admp.get_metrics(hours=hours)
 
+    def get_tool_calls(self, hours: int = 168) -> dict[str, Any]:
+        return self._admp.get_tool_calls(hours=hours)
+
     # ── Reflections / Sessions ───────────────────────────────────────────────
 
     def list_reflections(self) -> list[dict[str, Any]]:
