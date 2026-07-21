@@ -7,7 +7,7 @@ domains) and owns validation, metrics-bucket assembly, and commit boundaries.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -68,6 +68,91 @@ class AdminProcessor:
             "buckets": buckets,
             "tools": sorted(tools),
             "data": data,
+        }
+
+    def get_tool_calls(self, hours: int = 168) -> dict[str, Any]:
+        """Return heatmap-shaped tool call data for the last `hours` hours (default 7 days).
+
+        ``hours`` is clamped to [1, 2160] (1 hour to 90 days).
+
+        Response shape:
+        {
+            "hours": 168,
+            "timezone": "UTC",
+            "total_calls": 295,
+            "avg_calls_per_day": 42.1,
+            "tools": [...],
+            "tool_totals": {"lore_insert": 60, ...},
+            "days": ["2026-06-27", ...],     # YYYY-MM-DD, oldest first
+            "heatmap": {
+                "2026-06-27": {
+                    "0": {"lore_insert": 2, "total": 2},
+                    ...
+                },
+                ...
+            }
+        }
+        """
+        hours = max(1, min(hours, 2160))
+        rows = self._metrics.get_metrics(hours=hours)
+
+        # Build (day, hour) → {tool: count} aggregation
+        cell_data: dict[str, dict[int, dict[str, int]]] = {}
+        tool_totals: dict[str, int] = {}
+        total_calls = 0
+
+        for row in rows:
+            bucket = row["minute_bucket"]  # "YYYY-MM-DD HH:00"
+            tool = row["tool_name"]
+            count = int(row["count"])
+
+            try:
+                dt = datetime.strptime(bucket, "%Y-%m-%d %H:%M")
+            except ValueError:
+                continue
+
+            day = dt.strftime("%Y-%m-%d")
+            hour = dt.hour
+
+            cell_data.setdefault(day, {}).setdefault(hour, {})
+            cell_data[day][hour][tool] = cell_data[day][hour].get(tool, 0) + count
+            tool_totals[tool] = tool_totals.get(tool, 0) + count
+            total_calls += count
+
+        # Build the ordered days list (last `hours` hours spans up to ceil(hours/24)+1 days)
+        now = datetime.now(UTC)
+        cutoff = now - timedelta(hours=hours)
+        # Collect all days that appear in data, plus fill gap so all 7 days are present
+        all_days: set[str] = set()
+        cursor = cutoff.replace(hour=0, minute=0, second=0, microsecond=0)
+        while cursor <= now:
+            all_days.add(cursor.strftime("%Y-%m-%d"))
+            cursor += timedelta(days=1)
+        days = sorted(all_days)
+
+        # Shape heatmap: day → hour_str → {tool: count, "total": N}
+        heatmap: dict[str, dict[str, dict[str, int]]] = {}
+        for day in days:
+            heatmap[day] = {}
+            if day in cell_data:
+                for hour, tool_counts in cell_data[day].items():
+                    cell: dict[str, int] = dict(tool_counts)
+                    cell["total"] = sum(tool_counts.values())
+                    heatmap[day][str(hour)] = cell
+
+        today = now.strftime("%Y-%m-%d")
+        completed_days = [d for d in days if d != today]
+        avg_calls_per_day = round(total_calls / max(len(completed_days), 1), 1)
+
+        return {
+            "hours": hours,
+            "timezone": "UTC",
+            "total_calls": total_calls,
+            "avg_calls_per_day": avg_calls_per_day,
+            "tools": sorted(tool_totals.keys()),
+            "tool_totals": tool_totals,
+            "days": days,
+            "heatmap": heatmap,
         }
 
     # ── config ───────────────────────────────────────────────────────────────
