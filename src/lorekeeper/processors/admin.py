@@ -7,7 +7,7 @@ domains) and owns validation, metrics-bucket assembly, and commit boundaries.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -73,6 +73,8 @@ class AdminProcessor:
     def get_tool_calls(self, hours: int = 168) -> dict[str, Any]:
         """Return heatmap-shaped tool call data for the last `hours` hours (default 7 days).
 
+        ``hours`` is clamped to [1, 2160] (1 hour to 90 days).
+
         Response shape:
         {
             "hours": 168,
@@ -91,8 +93,7 @@ class AdminProcessor:
             }
         }
         """
-        from datetime import UTC, datetime, timedelta
-
+        hours = max(1, min(hours, 2160))
         rows = self._metrics.get_metrics(hours=hours)
 
         # Build (day, hour) → {tool: count} aggregation
@@ -139,7 +140,9 @@ class AdminProcessor:
                     cell["total"] = sum(tool_counts.values())
                     heatmap[day][str(hour)] = cell
 
-        avg_calls_per_day = round(total_calls / max(len(days), 1), 1)
+        today = now.strftime("%Y-%m-%d")
+        completed_days = [d for d in days if d != today]
+        avg_calls_per_day = round(total_calls / max(len(completed_days), 1), 1)
 
         return {
             "hours": hours,

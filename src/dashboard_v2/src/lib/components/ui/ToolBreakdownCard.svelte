@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { defaultColorScale } from '$lib/constants/primitives';
+	import { HEATMAP_HOURS, heatmapDayLabel } from '$lib/utils/heatmap';
 	import type { HeatmapCell } from '$lib/api/metrics';
 
 	interface Props {
@@ -12,7 +13,7 @@
 
 	let { toolName, totalCalls, days, heatmap, color }: Props = $props();
 
-	const HOURS = Array.from({ length: 24 }, (_, i) => i);
+	const HOURS = HEATMAP_HOURS;
 
 	// Compute per-tool max for color scaling
 	let maxCell = $derived.by(() => {
@@ -32,8 +33,7 @@
 	}
 
 	function dayLabel(day: string): string {
-		// "2026-07-14" → "Mon"
-		return new Date(day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short' });
+		return heatmapDayLabel(day);
 	}
 </script>
 

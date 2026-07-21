@@ -5,6 +5,7 @@
 	import ToolBreakdownCard from '$lib/components/ui/ToolBreakdownCard.svelte';
 	import { METRICS_STRINGS as S } from '$lib/constants/strings';
 	import { ICON_REFRESH } from '$lib/constants/icons';
+	import { HEATMAP_HOURS, heatmapDayLabel } from '$lib/utils/heatmap';
 	import { defaultColorScale } from '$lib/constants/primitives';
 	import { fetchToolCalls } from '$lib/api/metrics';
 	import type { ToolCallsResponse, HeatmapCell } from '$lib/api/metrics';
@@ -22,8 +23,8 @@
 		error = null;
 		try {
 			data = await fetchToolCalls(168);
-		} catch (e) {
-			error = (e as Error).message;
+		} catch {
+			error = S.loadError;
 		} finally {
 			loading = false;
 		}
@@ -33,7 +34,7 @@
 
 	// ── Heatmap helpers ────────────────────────────────────────────────────────
 
-	const HOURS = Array.from({ length: 24 }, (_, i) => i);
+	const HOURS = HEATMAP_HOURS;
 
 	let maxCellTotal = $derived.by(() => {
 		if (!data) return 1;
@@ -56,7 +57,7 @@
 	}
 
 	function dayLabel(day: string): string {
-		return new Date(day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short' });
+		return heatmapDayLabel(day);
 	}
 
 	// ── Tooltip state ──────────────────────────────────────────────────────────
@@ -78,6 +79,17 @@
 			return;
 		}
 		tooltip = { day, hour, cell, x: e.clientX, y: e.clientY };
+	}
+
+	function showTooltipAtElement(e: KeyboardEvent | FocusEvent, day: string, hour: number) {
+		if (e instanceof KeyboardEvent && e.key !== 'Enter' && e.key !== ' ') return;
+		const cell = cellData(day, hour);
+		if (!cell || cell.total === 0) {
+			tooltip = null;
+			return;
+		}
+		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		tooltip = { day, hour, cell, x: rect.right, y: rect.top };
 	}
 
 	function hideTooltip() {
@@ -163,13 +175,17 @@
 							<div class="hm-cells">
 								{#each HOURS as h (h)}
 									{@const v = cellTotal(day, h)}
-									<!-- svelte-ignore a11y_mouse_events_have_key_events -->
 									<div
 										class="hm-cell"
+										role="button"
+										tabindex={v > 0 ? 0 : -1}
 										style:background={defaultColorScale(v, maxCellTotal)}
 										aria-label="{day} {h}:00 — {v} calls"
 										onmouseover={(e) => showTooltip(e, day, h)}
 										onmouseleave={hideTooltip}
+										onfocus={(e: FocusEvent) => showTooltipAtElement(e, day, h)}
+										onblur={hideTooltip}
+										onkeydown={(e: KeyboardEvent) => showTooltipAtElement(e, day, h)}
 									></div>
 								{/each}
 							</div>
