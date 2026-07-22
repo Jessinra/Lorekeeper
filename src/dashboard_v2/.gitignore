@@ -4,3 +4,12 @@ build/
 .env
 .env.*
 !.env.example
+
+# Lock files — causes PR size gate violations
+package-lock.json
+pnpm-lock.yaml
+
+# Playwright
+tests/visual-baseline/
+test-results/
+playwright-report/

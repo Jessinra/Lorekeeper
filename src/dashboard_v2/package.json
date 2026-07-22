@@ -12,10 +12,15 @@
 		"lint": "eslint src/",
 		"lint:css": "stylelint \"src/**/*.svelte\"",
 		"test": "vitest run",
-		"test:watch": "vitest"
+		"test:watch": "vitest",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:visual": "playwright test --grep @visual",
+		"test:visual:update": "playwright test --grep @visual --update-snapshots"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
+		"@playwright/test": "^1.61.1",
 		"@sveltejs/adapter-static": "^3.0.8",
 		"@sveltejs/kit": "^2.20.6",
 		"@sveltejs/vite-plugin-svelte": "^5.1.1",
