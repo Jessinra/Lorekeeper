@@ -30,8 +30,13 @@ test.describe('Review page', () => {
 		const selectAllCheckbox = page.locator('thead input[type="checkbox"]').first();
 		if (await selectAllCheckbox.count() === 0) { test.skip(); return; }
 		await selectAllCheckbox.click();
-		// Accept button becomes enabled
+		// Accept button becomes enabled — then click it and verify operation completes
 		const acceptBtn = page.getByRole('button', { name: 'Accept' });
 		await expect(acceptBtn).toBeEnabled({ timeout: 3_000 });
+		await acceptBtn.click();
+		// After accepting, either a toast appears or the list empties (suggestions accepted)
+		await expect(
+			page.locator('[role="status"], .empty-state, [aria-live="polite"]').first()
+		).toBeVisible({ timeout: 5_000 });
 	});
 });

@@ -17,9 +17,13 @@ test.describe('Query page', () => {
 	test('running a query updates result list', async ({ page }) => {
 		await page.locator('.query-input').fill('memory');
 		await page.getByRole('button', { name: 'Run query' }).click();
-		// Result list or "no results" both confirm the query ran
-		const resultArea = page.locator('[aria-label="Query results"], .empty-state, [role="listbox"]');
+		// Wait for results or empty state — confirms the query actually ran and returned
+		const resultArea = page.locator('[aria-label="Query results"], .result-item, .empty-state, [role="listbox"]');
 		await expect(resultArea.first()).toBeVisible({ timeout: 10_000 });
+		// If results list is present, at least one item or empty-state must be rendered
+		const resultCount = await page.locator('[aria-label="Query results"] li, .result-item').count();
+		const emptyState = await page.locator('.empty-state').count();
+		expect(resultCount + emptyState).toBeGreaterThan(0);
 	});
 
 	test('Enter key triggers query', async ({ page }) => {

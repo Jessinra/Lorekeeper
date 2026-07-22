@@ -19,9 +19,9 @@ test.describe('Home page', () => {
 
 	test('stat tiles are present', async ({ page }) => {
 		await page.waitForLoadState('networkidle');
-		// At least one stat card/tile should be visible
-		const statTiles = page.locator('.stat-card, .stat-tile, .metric-card');
-		// Health card itself is a stat summary — acceptable if at least the section is present
-		await expect(page.locator('.health-card, [aria-labelledby="health-card-title"]')).toBeVisible();
+		// Home renders 4 .stat-link tile wrappers — assert their presence directly
+		await expect(page.locator('.stat-link').first()).toBeVisible({ timeout: 10_000 });
+		const count = await page.locator('.stat-link').count();
+		expect(count).toBeGreaterThanOrEqual(4);
 	});
 });

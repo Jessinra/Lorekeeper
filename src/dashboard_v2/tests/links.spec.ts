@@ -31,9 +31,9 @@ test.describe('Links page', () => {
 		const drawer = page.getByRole('dialog', { name: 'Relationship' });
 		await expect(drawer).toBeVisible({ timeout: 5_000 });
 
-		// First delete click shows confirmation state (btn-confirm class / "Delete this link?" text)
+		// "Delete link" button must exist in an open drawer
 		const deleteBtn = drawer.locator('button').filter({ hasText: /delete link/i }).first();
-		if (await deleteBtn.count() === 0) { test.skip(); return; }
+		await expect(deleteBtn).toBeVisible({ timeout: 3_000 });
 		await deleteBtn.click();
 		// Confirmation text should appear
 		await expect(drawer.locator('button').filter({ hasText: /delete this link/i })).toBeVisible({ timeout: 3_000 });
@@ -48,7 +48,7 @@ test.describe('Links page', () => {
 		await expect(drawer).toBeVisible({ timeout: 5_000 });
 
 		const deleteBtn = drawer.locator('button').filter({ hasText: /delete link/i }).first();
-		if (await deleteBtn.count() === 0) { test.skip(); return; }
+		await expect(deleteBtn).toBeVisible({ timeout: 3_000 });
 		await deleteBtn.click();
 		// Cancel button appears
 		const cancelBtn = drawer.getByRole('button', { name: /cancel/i });

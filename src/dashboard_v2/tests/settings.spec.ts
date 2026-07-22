@@ -41,7 +41,7 @@ test.describe('Settings page', () => {
 		// Click Save in any section
 		const saveBtn = page.getByRole('button', { name: 'Save' }).first();
 		await saveBtn.click();
-		// Toast fires on success or error
-		await expect(page.locator('[role="status"]')).toBeVisible({ timeout: 5_000 });
+		// Toast fires on success — filter to avoid strict-mode violation with multiple [role="status"] elements
+		await expect(page.locator('[role="status"]').filter({ hasText: /saved|success/i })).toBeVisible({ timeout: 5_000 });
 	});
 });

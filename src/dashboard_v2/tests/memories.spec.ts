@@ -10,7 +10,8 @@ test.describe('Memories page', () => {
 	});
 
 	test('loads data table', async ({ page }) => {
-		await expect(page.getByRole('group', { name: 'Memory toolbar' })).toBeVisible();
+		// Toolbar is a plain <div aria-label="Memory toolbar"> with no role="group"
+		await expect(page.locator('[aria-label="Memory toolbar"]')).toBeVisible({ timeout: 10_000 });
 		// Table renders — either rows or skeleton/empty state
 		const table = page.locator('table, [aria-label="Loading memories"], [aria-label*="memory"]');
 		await expect(table.first()).toBeVisible({ timeout: 10_000 });
@@ -24,19 +25,23 @@ test.describe('Memories page', () => {
 		await expect(page).toHaveURL(/sort=title/);
 	});
 
-	test('pagination controls render', async ({ page }) => {
+	test('pagination controls render when data present', async ({ page }) => {
 		await page.waitForLoadState('networkidle');
-		// Pagination is rendered when there are rows — check the nav/select
+		const hasRows = await page.locator('tbody tr').count();
+		if (hasRows === 0) {
+			// No data — just confirm empty state is shown
+			await expect(page.locator('table, .empty-state')).toBeVisible({ timeout: 10_000 });
+			return;
+		}
+		// Pagination component should be visible when rows exist
 		const pagination = page.locator('.pagination, [aria-label*="Pagination"], [aria-label*="page"]');
-		// Either present (with data) or table is empty — both are valid states
-		await expect(page.locator('table, .empty-state')).toBeVisible({ timeout: 10_000 });
+		await expect(pagination.first()).toBeVisible({ timeout: 10_000 });
 	});
 
 	test('row click opens Memory detail drawer', async ({ page }) => {
 		await page.waitForLoadState('networkidle');
 		const firstRow = page.locator('tbody tr').first();
-		const rowCount = await firstRow.count();
-		if (rowCount === 0) {
+		if (await firstRow.count() === 0) {
 			test.skip(); // no data in test environment
 			return;
 		}
@@ -51,11 +56,10 @@ test.describe('Memories page', () => {
 		await firstRow.click();
 		const drawer = page.getByRole('dialog', { name: 'Memory detail' });
 		await expect(drawer).toBeVisible({ timeout: 5_000 });
-		// Edit mode reveals title input field
+		// Edit mode reveals title input field — require edit button to be present
 		const editBtn = drawer.locator('button').filter({ hasText: /edit/i }).first();
-		if (await editBtn.count() > 0) {
-			await editBtn.click();
-			await expect(drawer.locator('#drawer-title')).toBeVisible();
-		}
+		await expect(editBtn).toBeVisible({ timeout: 3_000 });
+		await editBtn.click();
+		await expect(drawer.locator('#drawer-title')).toBeVisible();
 	});
 });

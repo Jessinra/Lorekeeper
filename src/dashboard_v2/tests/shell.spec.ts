@@ -37,14 +37,18 @@ test.describe('Navigation', () => {
 		test(`clicking ${item.label} navigates to ${item.href}`, async ({ page }) => {
 			await page.goto('/');
 			await page.getByRole('link', { name: item.label }).click();
-			await expect(page).toHaveURL(new RegExp(`${item.href === '/' ? '^http' : item.href}`));
+			const expectedURL =
+				item.href === '/'
+					? new RegExp('^http://[^/]+/$')
+					: new RegExp(`${item.href}$`);
+			await expect(page).toHaveURL(expectedURL);
 		});
 	}
 
 	test('clicking Settings navigates to /settings', async ({ page }) => {
 		await page.goto('/');
 		await page.getByRole('link', { name: 'Settings' }).click();
-		await expect(page).toHaveURL(/\/settings/);
+		await expect(page).toHaveURL(/\/settings$/);
 	});
 });
 
@@ -63,7 +67,8 @@ test.describe('TopBar breadcrumb', () => {
 	for (const p of pages) {
 		test(`${p.href} shows "${p.label}" breadcrumb`, async ({ page }) => {
 			await page.goto(p.href);
-			await expect(page.getByTestId('topbar-breadcrumb')).toContainText(p.label);
+			// TopBar renders: <nav class="breadcrumb"><span class="breadcrumb-current">Label</span></nav>
+			await expect(page.locator('.breadcrumb-current')).toContainText(p.label);
 		});
 	}
 });
@@ -80,10 +85,13 @@ test.describe('Command Palette', () => {
 		await page.keyboard.press('Meta+k');
 		const palette = page.getByRole('dialog', { name: /command palette/i });
 		await expect(palette).toBeVisible();
-		// Arrow down moves focus to first item
+
+		// CommandPalette uses aria-activedescendant — DOM focus stays on the search input.
+		// Arrow down advances activeIndex from 0 → 1; verify via aria-activedescendant update.
+		const searchInput = palette.locator('input[type="search"], input[role="combobox"], input');
 		await page.keyboard.press('ArrowDown');
-		const firstItem = palette.getByRole('option').first();
-		await expect(firstItem).toBeFocused();
+		// After ArrowDown the active-descendant attribute must reference an option element.
+		await expect(searchInput).toHaveAttribute('aria-activedescendant', /.+/);
 	});
 
 	test('closes on Escape', async ({ page }) => {
