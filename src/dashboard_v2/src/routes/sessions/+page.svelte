@@ -27,7 +27,15 @@
 		if (searchQuery) params.set('q', searchQuery);
 		if (activeTask) params.set('task', activeTask);
 		if (currentPage > 1) params.set('page', String(currentPage));
-		replaceState(`?${params.toString()}`, {});
+		// replaceState throws if called before SvelteKit's router is initialized
+		// (e.g. during the initial mount $effect). URL sync is cosmetic, so guard
+		// it — otherwise a throw here aborts the effect before load() runs and the
+		// page hangs on its loading state.
+		try {
+			replaceState(`?${params.toString()}`, {});
+		} catch {
+			/* router not ready yet — skip URL sync this pass */
+		}
 	}
 
 	// ── Data state ─────────────────────────────────────────────────────────────
