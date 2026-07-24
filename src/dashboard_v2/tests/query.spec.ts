@@ -17,19 +17,29 @@ test.describe('Query page', () => {
 	test('running a query updates result list', async ({ page }) => {
 		await page.locator('.query-input').fill('memory');
 		await page.getByRole('button', { name: 'Run query' }).click();
-		// Wait for results or empty state — confirms the query actually ran and returned
-		const resultArea = page.locator('[aria-label="Query results"], .result-item, .empty-state, [role="listbox"]');
-		await expect(resultArea.first()).toBeVisible({ timeout: 10_000 });
-		// If results list is present, at least one item or empty-state must be rendered
-		const resultCount = await page.locator('[aria-label="Query results"] li, .result-item').count();
+		// Wait for the outcome to actually render — either result rows (role=option
+		// inside the listbox) or an empty state — rather than just the container,
+		// which mounts before results arrive. The generous timeout absorbs the
+		// backend's one-time cold start (embedding model + BM25 index lazy-load on
+		// the first search), which can be slow under full-suite CPU contention.
+		const resultRow = page.locator('[aria-label="Query results"] [role="option"], .empty-state');
+		await expect(resultRow.first()).toBeVisible({ timeout: 25_000 });
+		const resultCount = await page.locator('[aria-label="Query results"] [role="option"]').count();
 		const emptyState = await page.locator('.empty-state').count();
 		expect(resultCount + emptyState).toBeGreaterThan(0);
 	});
 
 	test('Enter key triggers query', async ({ page }) => {
 		await page.locator('.query-input').fill('test');
+		// `.fill()` dispatches the input event, but Svelte's bind:value → queryText
+		// update flushes on a microtask. Wait for the Run button to enable, which
+		// proves queryText committed, before pressing Enter — otherwise the keydown
+		// handler reads a stale empty value and runQuery() early-returns.
+		await expect(page.getByRole('button', { name: 'Run query' })).toBeEnabled();
 		await page.locator('.query-input').press('Enter');
-		const resultArea = page.locator('[aria-label="Query results"], .empty-state');
-		await expect(resultArea.first()).toBeVisible({ timeout: 10_000 });
+		// Wait for the query outcome to render, not merely the results container.
+		// Generous timeout for the same cold-start reason as the test above.
+		const resultRow = page.locator('[aria-label="Query results"] [role="option"], .empty-state');
+		await expect(resultRow.first()).toBeVisible({ timeout: 25_000 });
 	});
 });
