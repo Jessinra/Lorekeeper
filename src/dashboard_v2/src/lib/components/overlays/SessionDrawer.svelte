@@ -131,7 +131,7 @@
 	<OverlayScrim onclick={onClose} />
 
 	<!-- Session drawer panel -->
-	<aside
+	<div
 		bind:this={drawerEl}
 		class="drawer"
 		role="dialog"
@@ -208,7 +208,7 @@
 				{copyTooltipVisible ? S.copyIdDone : S.copyId}
 			</button>
 		</div>
-	</aside>
+	</div>
 
 	<!-- Stacked MemoryDetailDrawer -->
 	<MemoryDetailDrawer
