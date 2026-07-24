@@ -15,7 +15,10 @@ import { test, expect } from '@playwright/test';
 // and in CI. To generate/refresh baselines in the target environment:
 //   RUN_VISUAL=1 npx playwright test --grep @visual --update-snapshots
 // (run inside a Linux container for CI parity, e.g. mcr.microsoft.com/playwright).
-const runVisual = process.env.RUN_VISUAL === '1';
+// Read the env off globalThis so no @types/node dependency is needed (the test
+// tsconfig scope omits it, but Playwright runs specs under Node).
+const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+const runVisual = env.RUN_VISUAL === '1';
 
 const PAGES = [
 	{ name: 'home', url: '/', readyLocator: '.stat-link' },
