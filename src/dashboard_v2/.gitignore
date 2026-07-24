@@ -4,3 +4,9 @@ build/
 .env
 .env.*
 !.env.example
+
+
+# Playwright
+tests/visual-baseline/
+test-results/
+playwright-report/
