@@ -20,15 +20,20 @@ test.describe('Review page', () => {
 	});
 
 	test('clicking Reviewed tab switches tab', async ({ page }) => {
+		// Wait for hydration to complete before clicking: the tab buttons are
+		// server-rendered, so a click that lands before Svelte attaches the
+		// onclick handler is a no-op. The page's data load settling to
+		// networkidle is a reliable post-hydration signal.
+		await page.waitForLoadState('networkidle');
 		await page.getByRole('tab', { name: /reviewed/i }).click();
 		await expect(page.getByRole('tab', { name: /reviewed/i })).toHaveAttribute('aria-selected', 'true');
 	});
 
 	test('bulk select + accept works', async ({ page }) => {
 		await page.waitForLoadState('networkidle');
-		// Select the header checkbox (select all)
+		// Seed runs a suggestion sweep, so pending candidates exist.
 		const selectAllCheckbox = page.locator('thead input[type="checkbox"]').first();
-		if (await selectAllCheckbox.count() === 0) { test.skip(); return; }
+		await expect(selectAllCheckbox).toBeVisible({ timeout: 10_000 });
 		await selectAllCheckbox.click();
 		// Accept button becomes enabled — then click it and verify operation completes
 		const acceptBtn = page.getByRole('button', { name: 'Accept' });
