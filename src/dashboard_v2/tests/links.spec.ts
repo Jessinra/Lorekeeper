@@ -16,17 +16,15 @@ test.describe('Links page', () => {
 	});
 
 	test('opens relationship drawer on row click', async ({ page }) => {
-		await page.waitForLoadState('networkidle');
 		const rowLink = page.locator('[aria-label^="Open link:"]').first();
-		if (await rowLink.count() === 0) { test.skip(); return; }
+		await expect(rowLink).toBeVisible({ timeout: 10_000 });
 		await rowLink.click();
 		await expect(page.getByRole('dialog', { name: 'Relationship' })).toBeVisible({ timeout: 5_000 });
 	});
 
 	test('relationship drawer delete requires confirmation', async ({ page }) => {
-		await page.waitForLoadState('networkidle');
 		const rowLink = page.locator('[aria-label^="Open link:"]').first();
-		if (await rowLink.count() === 0) { test.skip(); return; }
+		await expect(rowLink).toBeVisible({ timeout: 10_000 });
 		await rowLink.click();
 		const drawer = page.getByRole('dialog', { name: 'Relationship' });
 		await expect(drawer).toBeVisible({ timeout: 5_000 });
@@ -40,9 +38,8 @@ test.describe('Links page', () => {
 	});
 
 	test('relationship drawer cancel restores normal state', async ({ page }) => {
-		await page.waitForLoadState('networkidle');
 		const rowLink = page.locator('[aria-label^="Open link:"]').first();
-		if (await rowLink.count() === 0) { test.skip(); return; }
+		await expect(rowLink).toBeVisible({ timeout: 10_000 });
 		await rowLink.click();
 		const drawer = page.getByRole('dialog', { name: 'Relationship' });
 		await expect(drawer).toBeVisible({ timeout: 5_000 });

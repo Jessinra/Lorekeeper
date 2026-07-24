@@ -16,17 +16,15 @@ test.describe('Sessions page', () => {
 	});
 
 	test('opens session drawer on row click', async ({ page }) => {
-		await page.waitForLoadState('networkidle');
 		const sessionLink = page.locator('[aria-label^="Open session:"]').first();
-		if (await sessionLink.count() === 0) { test.skip(); return; }
+		await expect(sessionLink).toBeVisible({ timeout: 10_000 });
 		await sessionLink.click();
 		await expect(page.getByRole('dialog', { name: 'Session detail' })).toBeVisible({ timeout: 5_000 });
 	});
 
 	test('session drawer closes on close button', async ({ page }) => {
-		await page.waitForLoadState('networkidle');
 		const sessionLink = page.locator('[aria-label^="Open session:"]').first();
-		if (await sessionLink.count() === 0) { test.skip(); return; }
+		await expect(sessionLink).toBeVisible({ timeout: 10_000 });
 		await sessionLink.click();
 		const drawer = page.getByRole('dialog', { name: 'Session detail' });
 		await expect(drawer).toBeVisible({ timeout: 5_000 });
