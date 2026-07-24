@@ -74,17 +74,39 @@ test.describe('TopBar breadcrumb', () => {
 });
 
 test.describe('Command Palette', () => {
+	// The app (hotkeys.ts) selects its modifier from the *browser's* reported
+	// platform: navigator.userAgentData.platform === 'macOS' → metaKey, else
+	// ctrlKey. Playwright's `ControlOrMeta` alias instead resolves from the
+	// *host* OS, so on a macOS host driving a headless Chromium that reports
+	// "Windows"/"Linux", ControlOrMeta→Meta but the app is listening for Ctrl —
+	// the hotkey never fires. Read the browser platform and press the exact
+	// modifier the app listens for, keeping the test correct on every host+CI.
+	async function openPalette(page: import('@playwright/test').Page) {
+		const isMac = await page.evaluate(() => {
+			const ua = navigator as Navigator & { userAgentData?: { platform: string } };
+			return ua.userAgentData
+				? ua.userAgentData.platform === 'macOS'
+				: /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+		});
+		const modifier = isMac ? 'Meta' : 'Control';
+		const dialog = page.getByRole('dialog', { name: /command palette/i });
+		// The hotkey listener attaches in AppShell's onMount; retry the press so a
+		// keystroke that lands in the brief pre-hydration window isn't lost.
+		await expect(async () => {
+			await page.keyboard.press(`${modifier}+k`);
+			await expect(dialog).toBeVisible({ timeout: 1_000 });
+		}).toPass({ timeout: 10_000 });
+		return dialog;
+	}
+
 	test('opens on Cmd+K', async ({ page }) => {
 		await page.goto('/');
-		await page.keyboard.press('Meta+k');
-		await expect(page.getByRole('dialog', { name: /command palette/i })).toBeVisible();
+		await openPalette(page);
 	});
 
 	test('keyboard navigation works in palette', async ({ page }) => {
 		await page.goto('/');
-		await page.keyboard.press('Meta+k');
-		const palette = page.getByRole('dialog', { name: /command palette/i });
-		await expect(palette).toBeVisible();
+		const palette = await openPalette(page);
 
 		// CommandPalette uses aria-activedescendant — DOM focus stays on the search input.
 		// Arrow down advances activeIndex from 0 → 1; verify via aria-activedescendant update.
@@ -96,9 +118,8 @@ test.describe('Command Palette', () => {
 
 	test('closes on Escape', async ({ page }) => {
 		await page.goto('/');
-		await page.keyboard.press('Meta+k');
-		await expect(page.getByRole('dialog', { name: /command palette/i })).toBeVisible();
+		const palette = await openPalette(page);
 		await page.keyboard.press('Escape');
-		await expect(page.getByRole('dialog', { name: /command palette/i })).not.toBeVisible();
+		await expect(palette).not.toBeVisible();
 	});
 });
