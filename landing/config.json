@@ -1,0 +1,8 @@
+{
+  "stats": [
+    { "number": "200+", "label": "Teams using it" },
+    { "number": "5K+", "label": "Memories per server" },
+    { "number": "<30s", "label": "Setup time" },
+    { "number": "MCP", "label": "One-line config" }
+  ]
+}

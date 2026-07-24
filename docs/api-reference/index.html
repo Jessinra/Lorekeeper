@@ -1,0 +1,1467 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Self-improving memory for AI agents — open-source MCP server">
+      
+      
+      
+        <link rel="canonical" href="https://jessinra.github.io/Lorekeeper/docs/api-reference/">
+      
+      
+        <link rel="prev" href="../quickstart/">
+      
+      
+        <link rel="next" href="../positioning-manifesto/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>API Reference - Lorekeeper</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#lorekeeper-api-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Lorekeeper" class="md-header__button md-logo" aria-label="Lorekeeper" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Lorekeeper
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              API Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Jessinra/Lorekeeper" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Jessinra/Lorekeeper
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Lorekeeper" class="md-nav__button md-logo" aria-label="Lorekeeper" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    Lorekeeper
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Jessinra/Lorekeeper" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Jessinra/Lorekeeper
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_search
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="lore_search">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#two-search-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two search modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hybrid-scoring-formula" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hybrid scoring formula
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_insert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_insert
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="lore_insert">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#duplicate-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duplicate detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_remember" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_remember
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_update
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="lore_update">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quality-signal-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality signal mechanics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_forget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_forget
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_reflect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_reflect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_processed_sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_processed_sessions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_recommend_links" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_recommend_links
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_get_suggestions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_get_suggestions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_review_suggestion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_review_suggestion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../positioning-manifesto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../growth-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_search
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="lore_search">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#two-search-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two search modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hybrid-scoring-formula" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hybrid scoring formula
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_insert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_insert
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="lore_insert">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#duplicate-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duplicate detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_remember" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_remember
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_update
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="lore_update">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quality-signal-mechanics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality signal mechanics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_forget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_forget
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_reflect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_reflect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_processed_sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_processed_sessions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_recommend_links" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_recommend_links
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_get_suggestions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_get_suggestions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lore_review_suggestion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lore_review_suggestion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Variables
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="lorekeeper-api-reference">Lorekeeper API Reference</h1>
+<p>Lorekeeper exposes <strong>10 MCP tools</strong> over stdio. All tools follow the <a href="https://modelcontextprotocol.io">MCP protocol</a> — any MCP-compatible agent can use them.</p>
+<h2 id="tools">Tools</h2>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lore_search</code></td>
+<td>Hybrid semantic + keyword search with relevance scores</td>
+</tr>
+<tr>
+<td><code>lore_remember</code></td>
+<td>Fast one-shot memory save (auto-titles, auto-links)</td>
+</tr>
+<tr>
+<td><code>lore_insert</code></td>
+<td>Bulk structured insert with custom scores and links</td>
+</tr>
+<tr>
+<td><code>lore_update</code></td>
+<td>Feedback loop — rate memories, drive quality</td>
+</tr>
+<tr>
+<td><code>lore_forget</code></td>
+<td>Soft-delete wrong or outdated memories</td>
+</tr>
+<tr>
+<td><code>lore_reflect</code></td>
+<td>End-of-session: extract learnings, auto-save discoveries</td>
+</tr>
+<tr>
+<td><code>lore_processed_sessions</code></td>
+<td>Check which sessions are already processed</td>
+</tr>
+<tr>
+<td><code>lore_recommend_links</code></td>
+<td>Suggest candidate links between related memories</td>
+</tr>
+<tr>
+<td><code>lore_get_suggestions</code></td>
+<td>List pending link suggestions from the sweep engine</td>
+</tr>
+<tr>
+<td><code>lore_review_suggestion</code></td>
+<td>Accept or reject one or more link suggestions (batch)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="lore_search"><code>lore_search</code></h2>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;query&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;checkout payment flow&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;min_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;include_links&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;include_deleted&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;refine_from&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;full&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;created_after&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;updated_after&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sort_by&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;relevance&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Returns ranked memories with relevance scores and linked memories.</p>
+<h3 id="two-search-modes">Two search modes</h3>
+<p><strong>Query mode</strong> (default) — runs the hybrid semantic + BM25 pipeline:</p>
+<ul>
+<li><code>query</code> (required unless <code>ids</code> is set): search text</li>
+<li><code>min_score</code> (default <code>0.1</code>): minimum <code>combined_score</code> threshold — applied to the combined score <em>before</em> time-decay</li>
+<li><code>refine_from</code>: list of <code>lore_id</code> strings from a previous result to re-rank only within that candidate set. Unknown IDs silently ignored. Max 200 (configurable via <code>LORE_MAX_REFINE_FROM_IDS</code>)</li>
+<li><code>format</code>: <code>"full"</code> (default) returns complete memory objects with relevance scores; <code>"title"</code> returns compact <code>{id, title, score}</code> for lower token cost</li>
+<li><code>limit</code>: max results (defaults to <code>LORE_SEARCH_LIMIT</code>)</li>
+<li><code>include_links</code> (default <code>true</code>): forced off in <code>format='title'</code> mode</li>
+<li><code>include_deleted</code> (default <code>false</code>)</li>
+<li><code>created_after</code> (optional): ISO 8601 UTC timestamp — only return memories with <code>created_at ≥ T</code>. Naive strings treated as UTC. Non-UTC offsets raise an error. Composes with all other filters.</li>
+<li><code>updated_after</code> (optional): ISO 8601 UTC timestamp — only return memories with <code>updated_at ≥ T</code>. Same UTC rules as <code>created_after</code>.</li>
+<li><code>sort_by</code> (default <code>"relevance"</code>): controls result ordering. <code>"relevance"</code> ranks by hybrid score when the search pipeline runs; in <strong>ids lookup mode</strong> (when <code>ids</code> is set) there is no scoring, so <code>"relevance"</code> preserves the caller-provided <code>ids</code> order instead. <code>"recent"</code> sorts by <code>updated_at DESC</code>. <code>"frequent"</code> sorts by <code>usage_count DESC</code>. Composes with timestamp filters and <code>limit</code>.</li>
+</ul>
+<p><strong>ID lookup mode</strong> — when <code>ids</code> is set, skips the vector/BM25 pipeline entirely and fetches those specific <code>lore_id</code>s directly from SQL. <code>query</code> is ignored. Unknown IDs silently ignored. Max 50 IDs (configurable via <code>LORE_MAX_SEARCH_IDS</code>). Pair with <code>format='title'</code> for a two-step list-then-fetch workflow. <code>created_after</code>, <code>updated_after</code>, and <code>sort_by</code> all compose with the ids path.</p>
+<h3 id="hybrid-scoring-formula">Hybrid scoring formula</h3>
+<div class="highlight"><pre><span></span><code>combined = 0.45·semantic + 0.30·keyword + 0.15·(score/10) + 0.10·log_usage_norm
+final    = combined × decay
+</code></pre></div>
+<p>Where:</p>
+<ul>
+<li><code>semantic</code> — cosine similarity from the vector store (LanceDB), normalised to [0, 1]</li>
+<li><code>keyword</code> — BM25 score, top-hit normalised to 1.0</li>
+<li><code>score/10</code> — the memory's quality score (0–10), normalised</li>
+<li><code>log_usage_norm = log2(1 + usage_count) / log2(1 + cap)</code> — usage frequency signal</li>
+<li><code>decay = e^(-λ · days_since_last_used)</code> — time-decay so stale memories rank lower. <code>λ</code> defaults to <code>0.0077</code> (~90-day half-life), configurable via <code>LORE_DECAY_LAMBDA</code>. Set to <code>0</code> to disable. <code>last_used</code> updates on every retrieval; falls back to <code>created_at</code> if never retrieved</li>
+</ul>
+<p>All weights are env-configurable via <code>LORE_W_*</code> vars (see <code>config.py</code>).</p>
+<p>Semantic candidates: top 200 from Mem0. Keyword candidates: BM25. Both pools are unioned then re-ranked.</p>
+<hr />
+<h2 id="lore_insert"><code>lore_insert</code></h2>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;memories&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Mutable default args in Python&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;def f(x=[]) shares the list across all calls — use None instead.&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Token refresh interval&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Access tokens expire after 1h.&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;links&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;target_memory_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;target-uuid&gt;&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;relation_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;references&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;part of OAuth flow&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;links&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;source_memory_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;uuid&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;target_memory_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;uuid&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;relation_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;references&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Both about Python gotchas&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;force&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Each memory dict:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>title</code></td>
+<td>✅</td>
+<td>—</td>
+<td>Short unique label for the memory</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>—</td>
+<td>—</td>
+<td>Full text to store</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>—</td>
+<td>—</td>
+<td>Brief summary</td>
+</tr>
+<tr>
+<td><code>score</code></td>
+<td>—</td>
+<td><code>5.0</code></td>
+<td>Initial quality score (0–10)</td>
+</tr>
+<tr>
+<td><code>links</code></td>
+<td>—</td>
+<td>—</td>
+<td>Inline links to create after insert (see link schema)</td>
+</tr>
+</tbody>
+</table>
+<p>Top-level <code>links</code> (linking existing memories to each other) and per-memory inline <code>links</code> can be combined in one call.</p>
+<h3 id="duplicate-detection">Duplicate detection</h3>
+<p>Before inserting, a dedup score is computed: <code>0.6·semantic + 0.4·keyword</code>. If it meets or exceeds <code>LORE_DUPLICATE_THRESHOLD</code> (default <code>0.85</code>), the insert is blocked and the existing memory is returned. Set <code>force: true</code> to bypass.</p>
+<p>Note: <code>force=true</code> bypasses the semantic/keyword dedup check, but the DB still enforces <code>UNIQUE(namespace, title)</code> — inserting two memories with the same title in the same namespace will surface a constraint error in <code>errors[]</code>.</p>
+<hr />
+<h2 id="lore_remember"><code>lore_remember</code></h2>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;thought&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Hybrid search formula: 0.45 semantic + 0.30 keyword + 0.15 score + 0.10 usage&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Fast one-shot memory insert. Pass a single string; the server:</p>
+<ol>
+<li>Auto-extracts the title (first ~80 chars, sentence boundary)</li>
+<li>Stores the full content verbatim with default score <code>7.0</code></li>
+<li>Auto-links to the nearest semantic neighbor if similarity ≥ <code>0.75</code></li>
+</ol>
+<p>Returns <code>{id, title, linked_to: {id, score} | null}</code>.</p>
+<p>Uses the same dedup pipeline as <code>lore_insert</code> — exact title matches are definitive duplicates.</p>
+<p>Use <code>lore_remember</code> for quick capture. Use <code>lore_insert</code> when you need explicit titles, descriptions, scores, or manual links.</p>
+<hr />
+<h2 id="lore_update"><code>lore_update</code></h2>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;memory_feedback&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;uuid&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;useful&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="p">}],</span>
+<span class="w">  </span><span class="nt">&quot;link_feedback&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;uuid&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;useful&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="p">}]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Drives the quality signal loop. Call after every <code>lore_search</code> to keep scores calibrated.</p>
+<h3 id="quality-signal-mechanics">Quality signal mechanics</h3>
+<p>Each feedback call:</p>
+<ul>
+<li><code>useful=true</code> → score bumped up by <code>LORE_SCORE_BUMP_UP × (confidence/10)</code></li>
+<li><code>useful=false</code> → score bumped down by <code>LORE_SCORE_BUMP_DOWN × ((11-confidence)/10)</code></li>
+<li><code>useful=false</code> + <code>confidence ≤ 2</code> → memory is <strong>soft-deleted</strong> (never returned in future searches)</li>
+</ul>
+<p>Confidence is stored as a running EMA over the last 20 ratings (<code>LORE_CONFIDENCE_WINDOW_SIZE</code>).</p>
+<p>Unknown memory IDs are returned in <code>errors[]</code> — they do not raise exceptions.</p>
+<hr />
+<h2 id="lore_forget"><code>lore_forget</code></h2>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;memory_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uuid1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;uuid2&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hallucinated&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Immediately soft-deletes one or more memories. The memories are excluded from <code>lore_search</code> results after this call.</p>
+<p><code>reason</code> must be one of: <code>duplicate</code>, <code>hallucinated</code>, <code>outdated</code>, <code>expired</code>, <code>unspecified</code>. Logged for auditability.</p>
+<p>Soft-delete is reversible at the DB level, but no undelete tool is exposed via MCP.</p>
+<p>Returns:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;forgotten&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;not_found&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;errors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="lore_reflect"><code>lore_reflect</code></h2>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;session_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Implemented reflect integration; extracted 3 lessons.&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;session_date&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-05-19&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;topic&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reflect-integration&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;task_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;build&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;what_was_done&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Built the reflect integration...&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;decisions&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;- Used single-session submit for context efficiency&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;lessons_learnt&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Don&#39;t skip dedup check before inserting&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;good_patterns&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Parallelise independent API calls&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;factual_discoveries&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;BM25 rebuild costs ~10ms at 5k memories&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;memory_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uuid-a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;uuid-b&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;auto_insert&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Marks one session as processed and stores its content in the dashboard Sessions tab. Call once per session.</p>
+<p><strong>Auto-insert (default <code>auto_insert=true</code>):</strong> Each item in <code>factual_discoveries</code> and <code>lessons_learnt</code> is automatically inserted as a standalone searchable memory:</p>
+<ul>
+<li><code>factual_discoveries</code> → score <code>7.0</code>, linked with <code>"discovered_in"</code> relation</li>
+<li><code>lessons_learnt</code> → score <code>8.0</code>, linked with <code>"learned_in"</code> relation</li>
+</ul>
+<p>Duplicate-guarded: items already in the store return <code>"status": "duplicate"</code> with the existing ID; new inserts return <code>"status": "inserted"</code>. Pass <code>auto_insert=false</code> to store only in the reflection record without creating memories.</p>
+<p><strong>Idempotency:</strong> If <code>session_id</code> was already processed, returns immediately with <code>"already_processed": true</code> and <code>"memories_created": []</code>. Check <code>already_processed</code> to detect retries.</p>
+<p>Returns:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;reflection_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;session_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;memories_created&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;m-1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BM25 rebuild costs ~10ms...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;relation&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;discovered_in&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;inserted&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;m-2&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Don&#39;t skip dedup check...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;relation&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;learned_in&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;inserted&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="lore_processed_sessions"><code>lore_processed_sessions</code></h2>
+<p>No parameters.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{}</span>
+</code></pre></div>
+<p>Returns all session IDs already marked as processed by <code>lore_reflect</code>. Use this to avoid re-processing sessions.</p>
+<p>Returns:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"> </span><span class="nt">&quot;session_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;session-uuid-1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;session-uuid-2&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="lore_recommend_links"><code>lore_recommend_links</code></h2>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;lore_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;uuid&gt;&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;top_k&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Suggests link candidates between a memory and related memories. <strong>Does not write any links</strong> — returns candidates for review. Confirm by calling <code>lore_insert</code> with <code>links: [...]</code>.</p>
+<p>Parameters:</p>
+<ul>
+<li><code>lore_id</code> (required): source memory to find candidates for</li>
+<li><code>top_k</code> (optional, default from <code>LORE_LINK_TOP_M</code>): max candidates to return</li>
+</ul>
+<p>Scoring pipeline — semantic cosine, BM25, entity overlap, and temporal proximity combined into a per-signal weighted score.</p>
+<p>Returns:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;candidates&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;source_lore_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;uuid&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;target_lore_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;uuid&gt;&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;weighted_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.65</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;scores&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;cosine&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.82</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;bm25&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.45</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;entity&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;temporal&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;source_lore_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;uuid&gt;&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Per-signal <code>scores</code> let the agent make its own judgment about which candidates are worth linking — no LLM call inside Lorekeeper.</p>
+<hr />
+<h2 id="lore_get_suggestions"><code>lore_get_suggestions</code></h2>
+<p>List pending link suggestions generated by the background sweep engine.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;limit&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;min_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="p">}</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>limit</code></td>
+<td><code>int</code></td>
+<td><code>20</code></td>
+<td>Max suggestions to return (capped at 100)</td>
+</tr>
+<tr>
+<td><code>min_score</code></td>
+<td><code>float</code></td>
+<td><code>0.0</code></td>
+<td>Minimum <code>weighted_score</code> filter (0.0-1.0)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;suggestions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;source_memory_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;target_memory_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;source_title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;target_title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;weighted_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.87</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;suggested_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;references&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pending&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;total_pending&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>total_pending</code> gives agents a sense of workload without a separate count call. Only <code>status='pending'</code> suggestions are returned; <code>min_score</code> filters within that set by <code>weighted_score</code>.</p>
+<hr />
+<h2 id="lore_review_suggestion"><code>lore_review_suggestion</code></h2>
+<p>Accept or reject one or more link suggestions in a single call. Each item is processed independently — a failure on one does not abort the rest.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;suggestion_ids&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uuid1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;uuid2&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;accept&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>suggestion_ids</code></td>
+<td><code>list[str]</code></td>
+<td>One or more suggestion UUIDs</td>
+</tr>
+<tr>
+<td><code>action</code></td>
+<td><code>str</code></td>
+<td><code>"accept"</code> or <code>"reject"</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>On accept:</strong> Creates a real <code>memory_links</code> row using the suggestion's <code>suggested_type</code> (falls back to <code>'references'</code> if None or unrecognised). The suggestion is retained with <code>status='accepted'</code> for audit trail.</p>
+<p><strong>On reject:</strong> Sets <code>status='rejected'</code> on the suggestion row. Future sweeps skip this pair.</p>
+<p><strong>Idempotent:</strong> Double-accept and double-reject both return <code>status='skipped'</code> — no error.</p>
+<p><strong>Response:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;accepted&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;link_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Link created&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;accepted&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;rejected&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;skipped&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;errors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>status</code> per item is one of <code>"accepted"</code>, <code>"rejected"</code>, <code>"skipped"</code>, or <code>"error"</code>. <code>link_id</code> is the created link ID on accept, <code>null</code> on reject, skip, or error.</p>
+<p>When <code>status="error"</code>, the item is also present in <code>errors[]</code> with the exception message. Callers iterating <code>results[*].status</code> should treat <code>"error"</code> as a failure sentinel and cross-reference <code>errors[]</code> for details.</p>
+<hr />
+<h2 id="environment-variables">Environment Variables</h2>
+<p>All env vars use the <code>LORE_</code> prefix. Key configuration:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LORE_DATA_DIR</code></td>
+<td><code>~/.lorekeeper</code></td>
+<td>Where SQLite + vector DB live</td>
+</tr>
+<tr>
+<td><code>LORE_SEARCH_LIMIT</code></td>
+<td><code>10</code></td>
+<td>Default max results from <code>lore_search</code></td>
+</tr>
+<tr>
+<td><code>LORE_DUPLICATE_THRESHOLD</code></td>
+<td><code>0.85</code></td>
+<td>Dedup block threshold (<code>0.6·semantic + 0.4·keyword</code>)</td>
+</tr>
+<tr>
+<td><code>LORE_DECAY_LAMBDA</code></td>
+<td><code>0.0077</code></td>
+<td>Time-decay rate (~90-day half-life). Set <code>0</code> to disable</td>
+</tr>
+<tr>
+<td><code>LORE_W_SEMANTIC</code></td>
+<td><code>0.45</code></td>
+<td>Hybrid ranking: semantic weight</td>
+</tr>
+<tr>
+<td><code>LORE_W_KEYWORD</code></td>
+<td><code>0.30</code></td>
+<td>Hybrid ranking: BM25 weight</td>
+</tr>
+<tr>
+<td><code>LORE_W_SCORE</code></td>
+<td><code>0.15</code></td>
+<td>Hybrid ranking: quality score weight</td>
+</tr>
+<tr>
+<td><code>LORE_W_USAGE</code></td>
+<td><code>0.10</code></td>
+<td>Hybrid ranking: usage frequency weight</td>
+</tr>
+<tr>
+<td><code>LORE_SCORE_BUMP_UP</code></td>
+<td><code>0.5</code></td>
+<td>Score delta for <code>useful=true</code> feedback</td>
+</tr>
+<tr>
+<td><code>LORE_SCORE_BUMP_DOWN</code></td>
+<td><code>0.5</code></td>
+<td>Score delta for <code>useful=false</code> feedback</td>
+</tr>
+<tr>
+<td><code>LORE_CONFIDENCE_WINDOW_SIZE</code></td>
+<td><code>20</code></td>
+<td>EMA window for running confidence score</td>
+</tr>
+<tr>
+<td><code>LORE_MAX_REFINE_FROM_IDS</code></td>
+<td><code>200</code></td>
+<td>Max IDs accepted in <code>refine_from</code></td>
+</tr>
+<tr>
+<td><code>LORE_MAX_SEARCH_IDS</code></td>
+<td><code>50</code></td>
+<td>Max IDs accepted in <code>ids</code> (lookup mode)</td>
+</tr>
+<tr>
+<td><code>LORE_LINK_TOP_M</code></td>
+<td><code>10</code></td>
+<td>Default max candidates from <code>lore_recommend_links</code></td>
+</tr>
+<tr>
+<td><code>LORE_NAMESPACE</code></td>
+<td><code>shared</code></td>
+<td>Default namespace for writes</td>
+</tr>
+</tbody>
+</table>
+<p>Full list with types and defaults → <code>src/lorekeeper/config.py</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Jessinra Kai &mdash; Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/Jessinra/Lorekeeper" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
