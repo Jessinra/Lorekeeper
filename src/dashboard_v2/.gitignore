@@ -7,6 +7,7 @@ build/
 
 
 # Playwright
-tests/visual-baseline/
+# NOTE: tests/visual-baseline/ is intentionally NOT ignored — the visual
+# regression snapshots MUST be committed so CI has a baseline to diff against.
 test-results/
 playwright-report/
