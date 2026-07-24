@@ -131,11 +131,11 @@
 	<OverlayScrim onclick={onClose} />
 
 	<!-- Session drawer panel -->
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<aside
 		bind:this={drawerEl}
 		class="drawer"
-		role="complementary"
+		role="dialog"
+		aria-modal="true"
 		aria-label={S.drawerAriaLabel}
 		tabindex="-1"
 		onkeydown={(e) => {
