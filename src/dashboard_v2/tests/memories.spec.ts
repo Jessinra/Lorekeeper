@@ -26,33 +26,26 @@ test.describe('Memories page', () => {
 	});
 
 	test('pagination controls render when data present', async ({ page }) => {
-		await page.waitForLoadState('networkidle');
-		const hasRows = await page.locator('tbody tr').count();
-		if (hasRows === 0) {
-			// No data — just confirm empty state is shown
-			await expect(page.locator('table, .empty-state')).toBeVisible({ timeout: 10_000 });
-			return;
-		}
-		// Pagination component should be visible when rows exist
+		// Seed guarantees rows exist — assert loudly rather than skipping.
+		await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 10_000 });
 		const pagination = page.locator('.pagination, [aria-label*="Pagination"], [aria-label*="page"]');
 		await expect(pagination.first()).toBeVisible({ timeout: 10_000 });
 	});
 
 	test('row click opens Memory detail drawer', async ({ page }) => {
-		await page.waitForLoadState('networkidle');
-		const firstRow = page.locator('tbody tr').first();
-		if (await firstRow.count() === 0) {
-			test.skip(); // no data in test environment
-			return;
-		}
+		// Only hydrated data rows carry `.clickable`; skeleton rows shown during
+		// the client fetch are aria-hidden and non-interactive. Targeting
+		// `tbody tr.clickable` auto-waits for real rows so the click lands on a
+		// row with an attached onclick handler (not a pre-hydration skeleton).
+		const firstRow = page.locator('tbody tr.clickable').first();
+		await expect(firstRow).toBeVisible({ timeout: 10_000 });
 		await firstRow.click();
 		await expect(page.getByRole('dialog', { name: 'Memory detail' })).toBeVisible({ timeout: 5_000 });
 	});
 
 	test('memory detail drawer switches to edit mode', async ({ page }) => {
-		await page.waitForLoadState('networkidle');
-		const firstRow = page.locator('tbody tr').first();
-		if (await firstRow.count() === 0) { test.skip(); return; }
+		const firstRow = page.locator('tbody tr.clickable').first();
+		await expect(firstRow).toBeVisible({ timeout: 10_000 });
 		await firstRow.click();
 		const drawer = page.getByRole('dialog', { name: 'Memory detail' });
 		await expect(drawer).toBeVisible({ timeout: 5_000 });
