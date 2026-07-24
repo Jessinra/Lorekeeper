@@ -1,184 +1,80 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { NAV_ROUTES, UTILITY_ROUTES, matchRoute, type NavRoute } from '$lib/constants/routes.js';
-	import { NAV_RAIL_STRINGS } from '$lib/constants/strings.js';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import NavRail from '$lib/components/shell/NavRail.svelte';
+	import TopBar from '$lib/components/shell/TopBar.svelte';
+	import Toast from '$lib/components/overlays/Toast.svelte';
+	import CommandPalette from '$lib/components/overlays/CommandPalette.svelte';
+	import { attachCommandPaletteHotkey } from '$lib/hotkeys.js';
+	import { buildCommands } from '$lib/commands.js';
 
-	function isActive(href: string): boolean {
-		return matchRoute(page.url.pathname, href);
+	interface Props {
+		children: import('svelte').Snippet;
 	}
+
+	let { children }: Props = $props();
+
+	// ─── Command Palette ──────────────────────────────────────────────────────
+	// Commands are built here — the composition root that knows about SvelteKit
+	// routing. CommandPalette.svelte is a pure UI component and receives them
+	// as a prop, keeping it framework-agnostic and independently testable.
+	const paletteCommands = buildCommands({
+		navigate: (href) => {
+			goto(href);
+		},
+		openQuery: () => {
+			goto('/query');
+		},
+		openSettings: () => {
+			goto('/settings');
+		}
+	});
+
+	let paletteOpen = $state(false);
+
+	function openPalette() {
+		paletteOpen = true;
+	}
+
+	function closePalette() {
+		paletteOpen = false;
+	}
+
+	onMount(() => {
+		const cleanup = attachCommandPaletteHotkey(openPalette);
+		return cleanup;
+	});
 </script>
 
-{#snippet railLink(route: NavRoute)}
-	<a
-		data-sveltekit-preload-data="" href={route.href}
-		class="rail-item"
-		class:active={isActive(route.href)}
-		aria-label={route.label}
-		aria-current={isActive(route.href) ? 'page' : undefined}
-	>
-		<svg
-			width="19"
-			height="19"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			aria-hidden="true"
-		>
-			<path d={route.icon} />
-		</svg>
-		<span class="label">{route.label}</span>
-		{#if route.badge}
-			<span class="badge" aria-label="{route.badge} {NAV_RAIL_STRINGS.badgePendingSuffix}">{route.badge}</span>
-		{/if}
-	</a>
-{/snippet}
-
-<nav aria-label={NAV_RAIL_STRINGS.navAriaLabel}>
-	<!-- Brand mark -->
-	<div class="brand">
-		<img
-			src="/logo.svg"
-			alt={NAV_RAIL_STRINGS.logoAlt}
-			width="36"
-			height="36"
-		/>
+<div class="app-frame">
+	<NavRail />
+	<div class="main-column">
+		<TopBar onOpenPalette={openPalette} />
+		<main class="page-body">
+			{@render children()}
+		</main>
 	</div>
-
-	<!-- Primary nav items -->
-	<div class="nav-items">
-		{#each NAV_ROUTES as item (item.href)}
-			{@render railLink(item)}
-		{/each}
-	</div>
-
-	<!-- Spacer -->
-	<div class="spacer" aria-hidden="true"></div>
-
-	<!-- Utility items (settings) + health dot -->
-	<div class="bottom-section">
-		{#each UTILITY_ROUTES as item (item.href)}
-			{@render railLink(item)}
-		{/each}
-		<div
-			class="health-dot"
-			title={NAV_RAIL_STRINGS.healthDotTitle}
-			aria-label={NAV_RAIL_STRINGS.healthDotAriaLabel}
-		></div>
-	</div>
-</nav>
+	<Toast />
+	<CommandPalette open={paletteOpen} commands={paletteCommands} onClose={closePalette} />
+</div>
 
 <style>
-	nav {
-		width: var(--nav-rail-width);
-		flex-shrink: 0;
-		background: var(--color-surface);
-		border-right: var(--border-width) solid var(--color-border);
+	.app-frame {
 		display: flex;
-		flex-direction: column;
-		align-items: center;
-		padding: var(--space-rail-y-top) 0 var(--space-rail-y-bottom);
-		position: fixed;
-		top: 0;
-		bottom: 0;
-		left: 0;
-		z-index: var(--z-overlay);
+		min-height: 100vh;
 	}
 
-	.brand {
-		width: var(--brand-mark-size);
-		height: var(--brand-mark-size);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin-bottom: var(--space-6);
-		flex-shrink: 0;
-	}
-
-	.brand img {
-		width: 100%;
-		height: 100%;
-		border-radius: var(--radius-icon);
-	}
-
-	.nav-items {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-0-5);
-		width: 100%;
-		align-items: center;
-	}
-
-	.rail-item {
-		width: var(--rail-item-width);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--space-0-5);
-		padding: 7px var(--space-0-5) var(--space-2);
-		border: none;
-		background: transparent;
-		border-radius: var(--radius-icon);
-		color: var(--color-text-muted);
-		font-size: var(--font-size-label);
-		font-weight: var(--font-weight-medium);
-		position: relative;
-		cursor: pointer;
-		text-decoration: none;
-		transition:
-			background 0.1s,
-			color 0.1s;
-	}
-
-	.rail-item:hover {
-		background: var(--color-hover-bg);
-		color: var(--color-text-primary);
-	}
-
-	.rail-item.active {
-		background: var(--color-brand-tint);
-		color: var(--color-brand);
-		font-weight: var(--font-weight-semibold);
-	}
-
-	.label {
-		font-size: var(--font-size-label);
-		line-height: var(--line-height-tight);
-	}
-
-	.badge {
-		position: absolute;
-		top: 2px;
-		right: 6px;
-		background: var(--color-danger-text);
-		color: var(--color-surface);
-		font-size: var(--font-size-badge);
-		font-weight: var(--font-weight-bold);
-		min-width: 15px;
-		height: 15px;
-		border-radius: var(--radius-pill);
-		text-align: center;
-		line-height: 15px;
-		padding: 0 var(--space-0-5);
-	}
-
-	.spacer {
+	/* Offset main column past the fixed nav rail */
+	.main-column {
+		margin-left: var(--nav-rail-width);
 		flex: 1;
-	}
-
-	.bottom-section {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		gap: var(--space-1-5);
+		min-width: 0;
 	}
 
-	.health-dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		background: var(--color-success-text);
+	.page-body {
+		flex: 1;
+		padding: var(--space-page-y-top) var(--space-page-x) var(--space-page-y-bottom);
 	}
 </style>

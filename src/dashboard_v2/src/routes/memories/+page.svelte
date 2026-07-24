@@ -62,7 +62,10 @@
 		if (perPage !== 50) params.set('per_page', String(perPage));
 		if (sortColumn !== 'updated_at') params.set('sort', sortColumn);
 		if (sortDirection !== 'desc') params.set('sort_dir', sortDirection);
-		replaceState(params.toString(), page.url);
+		// SvelteKit replaceState signature is (url, state). The URL must be a
+		// string (prefix with '?') and state must be a structured-cloneable
+		// object — passing a URL object here throws "could not be cloned".
+		replaceState(`?${params.toString()}`, {});
 	}
 
 	async function loadMemories() {
