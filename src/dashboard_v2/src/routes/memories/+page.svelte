@@ -239,9 +239,16 @@
 		},
 	]);
 
-	// Map MemoryRow to { id?: unknown } for DataTable compat
+	// The backend serializes memory rows with an `id` field (serialize_memory),
+	// but this page's MemoryRow type + handlers use `lore_id`. Bridge the two:
+	// populate lore_id from the API's id, and expose id for DataTable's row key.
+	// Without this, lore_id is undefined → row click fetches /api/memories/undefined
+	// → 404 → the detail drawer never opens.
 	const tableRows = $derived(
-		memories.map((r) => ({ ...r, id: r.lore_id })),
+		memories.map((r) => {
+			const realId = r.lore_id ?? (r as unknown as { id?: string }).id;
+			return { ...r, lore_id: realId, id: realId };
+		}),
 	);
 </script>
 
